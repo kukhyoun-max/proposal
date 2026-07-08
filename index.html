@@ -796,15 +796,20 @@ async function refreshOverview(){
   }catch(e){ elS.textContent = '-'; elF.textContent = '-'; elC.textContent = '-'; }
 }
 
+function showView(viewId){
+  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView') };
+  Object.keys(views).forEach(k=>{
+    views[k].style.display = (k===viewId) ? (k==='form' ? 'flex' : 'block') : 'none';
+  });
+}
+
 document.getElementById('btnStatusToggle').addEventListener('click', ()=>{
-  document.getElementById('formView').style.display='none';
-  document.getElementById('statusView').style.display='block';
+  showView('status');
   document.getElementById('statusHeader').textContent = '기획서 현황';
   loadStatusList();
 });
 document.getElementById('btnStatusBack').addEventListener('click', ()=>{
-  document.getElementById('statusView').style.display='none';
-  document.getElementById('formView').style.display='flex';
+  showView('form');
 });
 
 let editingKey = null;
@@ -1093,13 +1098,11 @@ document.getElementById('btnAdminToggle').addEventListener('click', async ()=>{
   const pin = await showPrompt('관리자 PIN을 입력하세요');
   if(pin === null) return;
   if(pin !== ADMIN_PIN){ await showAlert('PIN이 올바르지 않아요.'); return; }
-  document.getElementById('formView').style.display='none';
-  document.getElementById('adminView').style.display='block';
+  showView('admin');
   loadSubmissions();
 });
 document.getElementById('btnAdminBack').addEventListener('click', ()=>{
-  document.getElementById('adminView').style.display='none';
-  document.getElementById('formView').style.display='flex';
+  showView('form');
 });
 
 async function loadSubmissions(){

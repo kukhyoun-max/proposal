@@ -435,7 +435,7 @@ function showPrompt(message){
 
 const STORAGE_KEY = 'content-plan:current';
 const ADMIN_PIN = '2600';
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzH2awO89L3-9sluHA6NZrUmy37EWEOd057CL4mwGae2lRyn5rW1WR_I9bt_myLKtDm/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyyI9kIHKgaH-GZOWMuz7tTg5Jck6MsZz1VDdgPvGkvZvMMfJKQy88qYDW19fptekqZ/exec';
 const STATUS_LABELS = {pending:'승인 대기', approved:'승인됨 · 촬영 예정', filming:'촬영 중', editing:'편집 중', completed:'제작 완료', rejected:'반려됨'};
 
 const COL = {
@@ -883,7 +883,8 @@ function renderStatusDetail(key, rec){
   const isAccepted = ['approved','filming','editing','completed'].includes(editingRecord.status);
   const imageSection = isAccepted ? `
     <div id="statusDocCard">${buildDocCardHTML(editingRecord)}</div>
-    <button id="statusSaveImage" style="width:100%; margin:14px 0 20px; padding:16px; border-radius:12px; border:none; background:var(--purple); color:#fff; font-weight:700; font-size:15px; cursor:pointer;">📥 이미지로 다운로드</button>
+    <button id="statusSaveImage" style="width:100%; margin:14px 0 10px; padding:16px; border-radius:12px; border:none; background:var(--purple); color:#fff; font-weight:700; font-size:15px; cursor:pointer;">📥 이미지로 다운로드</button>
+    <button id="statusSaveImageDrive" style="width:100%; margin:0 0 20px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14px; cursor:pointer;">☁️ 구글 드라이브 폴더에 저장</button>
   ` : '';
 
   let stageSection = '';
@@ -961,6 +962,35 @@ function renderStatusDetail(key, rec){
         link.click();
         imgBtn.textContent = original;
       }).catch(()=>{ imgBtn.textContent = original; showAlert('이미지 저장에 실패했어요. 다시 시도해주세요.'); });
+    });
+  }
+
+  const imgDriveBtn = document.getElementById('statusSaveImageDrive');
+  if(imgDriveBtn){
+    imgDriveBtn.addEventListener('click', async ()=>{
+      const original = imgDriveBtn.textContent;
+      imgDriveBtn.textContent = '업로드 중...';
+      imgDriveBtn.disabled = true;
+      try{
+        const canvas = await html2canvas(document.getElementById('statusDocCard'), {backgroundColor:'#ffffff', scale:2});
+        const dataUrl = canvas.toDataURL('image/png');
+        const base64 = dataUrl.split(',')[1];
+        await fetch(APPS_SCRIPT_URL, {
+          method:'POST', mode:'no-cors',
+          headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body: JSON.stringify({
+            action:'uploadImage',
+            title: editingRecord.title || '제목없음',
+            imageBase64: base64,
+            filename: (editingRecord.title||'기획서') + '.png'
+          })
+        });
+        imgDriveBtn.textContent = '업로드 요청됨 ✓';
+        await showAlert('드라이브로 업로드 요청을 보냈어요. 잠시 후 해당 기획서 폴더에서 확인해주세요.\n(no-cors 방식이라 성공 여부를 이 화면에서 바로 확인할 수는 없어요.)');
+      }catch(e){
+        showAlert('업로드 요청에 실패했어요: ' + (e && e.message ? e.message : '오류'));
+      }
+      setTimeout(()=>{ imgDriveBtn.textContent = original; imgDriveBtn.disabled = false; }, 2500);
     });
   }
 

@@ -465,7 +465,7 @@ function jsonp(params){
     document.body.appendChild(script);
     setTimeout(()=>{
       if(!finished){ reject(new Error('시간 초과')); delete window[cbName]; script.remove(); }
-    }, 10000);
+    }, 25000);
   });
 }
 

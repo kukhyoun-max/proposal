@@ -883,8 +883,7 @@ function renderStatusDetail(key, rec){
   const isAccepted = ['approved','filming','editing','completed'].includes(editingRecord.status);
   const imageSection = isAccepted ? `
     <div id="statusDocCard">${buildDocCardHTML(editingRecord)}</div>
-    <button id="statusSaveImage" style="width:100%; margin:14px 0 10px; padding:16px; border-radius:12px; border:none; background:var(--purple); color:#fff; font-weight:700; font-size:15px; cursor:pointer;">📥 이미지로 다운로드</button>
-    <button id="statusSaveImageDrive" style="width:100%; margin:0 0 20px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14px; cursor:pointer;">☁️ 구글 드라이브 폴더에 저장</button>
+    <button id="statusSaveImage" style="width:100%; margin:14px 0 20px; padding:16px; border-radius:12px; border:none; background:var(--purple); color:#fff; font-weight:700; font-size:15px; cursor:pointer;">📥 이미지로 다운로드</button>
   ` : '';
 
   let stageSection = '';
@@ -895,6 +894,8 @@ function renderStatusDetail(key, rec){
   }else if(editingRecord.status === 'editing'){
     stageSection = `<button class="save-edit-btn" id="stageBtn" style="margin-top:0; margin-bottom:20px;" data-next="completed">제작 완료 처리</button>`;
   }
+
+  const toggleEditHtml = `<button id="toggleEditBtn" style="width:100%; margin:0 0 20px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14px; cursor:pointer;">✏️ 수정하기</button>`;
 
   el.innerHTML = `
     <button class="back-link" id="statusToList">← 목록으로</button>
@@ -909,6 +910,8 @@ function renderStatusDetail(key, rec){
     </div>
     ${imageSection}
     ${stageSection}
+    ${toggleEditHtml}
+    <div id="editFormWrap" style="display:none;">
     <p class="section-title" style="margin-top:0;">콘텐츠 유형</p>
     <div class="field-sm"><select id="e_category">${catOptions}</select></div>
     <p class="section-title">제작자 정보</p>
@@ -935,6 +938,7 @@ function renderStatusDetail(key, rec){
     <div id="e_planRows"></div>
     <button class="add-plan" id="e_addPlan">+ 장면 추가</button>
     <button class="save-edit-btn" id="saveEditBtn">수정 저장</button>
+    </div>
   `;
   renderEditPlanRows();
   document.getElementById('statusToList').addEventListener('click', loadStatusList);
@@ -965,32 +969,13 @@ function renderStatusDetail(key, rec){
     });
   }
 
-  const imgDriveBtn = document.getElementById('statusSaveImageDrive');
-  if(imgDriveBtn){
-    imgDriveBtn.addEventListener('click', async ()=>{
-      const original = imgDriveBtn.textContent;
-      imgDriveBtn.textContent = '업로드 중...';
-      imgDriveBtn.disabled = true;
-      try{
-        const canvas = await html2canvas(document.getElementById('statusDocCard'), {backgroundColor:'#ffffff', scale:2});
-        const dataUrl = canvas.toDataURL('image/png');
-        const base64 = dataUrl.split(',')[1];
-        await fetch(APPS_SCRIPT_URL, {
-          method:'POST', mode:'no-cors',
-          headers:{'Content-Type':'text/plain;charset=utf-8'},
-          body: JSON.stringify({
-            action:'uploadImage',
-            title: editingRecord.title || '제목없음',
-            imageBase64: base64,
-            filename: (editingRecord.title||'기획서') + '.png'
-          })
-        });
-        imgDriveBtn.textContent = '업로드 요청됨 ✓';
-        await showAlert('드라이브로 업로드 요청을 보냈어요. 잠시 후 해당 기획서 폴더에서 확인해주세요.\n(no-cors 방식이라 성공 여부를 이 화면에서 바로 확인할 수는 없어요.)');
-      }catch(e){
-        showAlert('업로드 요청에 실패했어요: ' + (e && e.message ? e.message : '오류'));
-      }
-      setTimeout(()=>{ imgDriveBtn.textContent = original; imgDriveBtn.disabled = false; }, 2500);
+  const toggleEditBtn = document.getElementById('toggleEditBtn');
+  if(toggleEditBtn){
+    toggleEditBtn.addEventListener('click', ()=>{
+      const wrap = document.getElementById('editFormWrap');
+      const open = wrap.style.display !== 'none';
+      wrap.style.display = open ? 'none' : 'block';
+      toggleEditBtn.textContent = open ? '✏️ 수정하기' : '접기';
     });
   }
 
@@ -1197,15 +1182,53 @@ async function setSubmissionStatus(key, status, onDone){
   }catch(e){ showAlert('상태 변경에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
 }
 
+async function generateAndUploadImage(rec){
+  const container = document.createElement('div');
+  container.style.position = 'fixed';
+  container.style.left = '-9999px';
+  container.style.top = '0';
+  container.style.width = '400px';
+  container.innerHTML = buildDocCardHTML(rec);
+  document.body.appendChild(container);
+  try{
+    const canvas = await html2canvas(container.firstElementChild, {backgroundColor:'#ffffff', scale:2});
+    const dataUrl = canvas.toDataURL('image/png');
+    const base64 = dataUrl.split(',')[1];
+    await fetch(APPS_SCRIPT_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({
+        action:'uploadImage',
+        title: rec.title || '제목없음',
+        imageBase64: base64,
+        filename: (rec.title||'기획서') + '.png'
+      })
+    });
+  }finally{
+    container.remove();
+  }
+}
+
 async function approveSubmission(key){
   try{
     const result = await sheetUpdate(key, { [COL.status]:'approved', [COL.reviewedAt]: new Date().toISOString() });
     if(!result || result.ok === false) throw new Error((result && result.error) ? result.error : '시트 응답 실패');
     loadSubmissions(); refreshPendingBadge(); refreshOverview();
+
+    let imageError = null;
+    try{
+      const rows = await sheetGetAll();
+      const row = rows.find(r=>r['ID']===key);
+      if(row) await generateAndUploadImage(mapRowToRecord(row));
+    }catch(imgErr){
+      console.error('auto image upload failed:', imgErr);
+      imageError = imgErr;
+    }
+
     if(result.driveError){
       await showAlert('승인은 됐지만, 드라이브 폴더 생성에서 오류가 났어요:\n' + result.driveError + '\n\n앱스 스크립트에서 권한 승인(authorizeDriveAccess 실행)을 한 번 해주셔야 해요.');
     }else{
-      await showAlert('승인 완료! 구글 시트 업데이트와 함께 드라이브 폴더+초안 문서도 자동으로 만들어졌어요.');
+      await showAlert('승인 완료! 시트 업데이트, 드라이브 폴더+초안 문서, 완성본 이미지까지 전부 자동으로 만들어졌어요.' + (imageError ? '\n(다만 이미지 생성 중 문제가 있었을 수 있어요, 확인해주세요.)' : ''));
     }
   }catch(e){ showAlert('승인 처리에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
 }

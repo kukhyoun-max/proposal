@@ -2,17 +2,19 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>콘텐츠 기획서 작성</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
   :root{
-    --purple:#6C4CF0;
-    --purple-dark:#5637CC;
-    --purple-soft:#F1EEFE;
-    --purple-line:#7B5FF5;
+    --purple:#3D5FE0;
+    --purple-dark:#2C46B3;
+    --purple-soft:#EAF0FF;
+    --purple-line:#5878EA;
+    --gold:#FFC629;
+    --gold-dark:#B8860F;
     --ink:#19181D;
     --ink-soft:#6B6873;
     --ink-faint:#A9A6B2;
@@ -20,16 +22,23 @@
     --page-bg:#F2F1F6;
   }
   *{box-sizing:border-box;}
+  html{ -webkit-text-size-adjust:100%; }
+  html, body{
+    min-height:100%;
+    overflow-x:hidden;
+  }
   body{
     margin:0;
     font-family:'Noto Sans KR', sans-serif;
     background:var(--page-bg);
     color:var(--ink);
+    -webkit-overflow-scrolling:touch;
   }
   .phone{
     max-width:430px;
     margin:0 auto;
     min-height:100vh;
+    min-height:100dvh;
     background:#fff;
     display:flex;
     flex-direction:column;
@@ -53,6 +62,10 @@
   .reset-link{
     font-size:13px; color:var(--ink-soft); background:none; border:none; cursor:pointer;
   }
+  .progress-wrap{flex:1; margin-right:16px;}
+  .progress-track{height:4px; background:var(--line); border-radius:4px; overflow:hidden; margin-bottom:6px;}
+  .progress-fill{height:100%; width:0%; background:var(--purple); border-radius:4px; transition:width .25s ease;}
+  .progress-label{font-size:11px; color:var(--ink-faint);}
 
   .content{padding:8px 20px 24px; flex:1;}
   .step-label{
@@ -100,7 +113,8 @@
 
   .plan-row{border:1.5px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; position:relative;}
   .plan-row .plan-num{font-size:12px; font-weight:700; color:var(--purple); margin-bottom:6px;}
-  .plan-row textarea{width:100%; border:none; outline:none; font-size:13.5px; font-family:'Noto Sans KR',sans-serif; resize:vertical; min-height:44px; margin-bottom:8px; line-height:1.55;}
+  .plan-row textarea{width:100%; border:1px solid var(--line); border-radius:8px; padding:8px 10px; outline:none; font-size:13.5px; font-family:'Noto Sans KR',sans-serif; resize:vertical; min-height:52px; margin-bottom:8px; line-height:1.55; background:#fff;}
+  .plan-row textarea:focus{border-color:var(--purple-line);}
   .plan-row input{width:100%; border:1px solid var(--line); border-radius:8px; padding:7px 10px; font-size:13px; font-family:'Noto Sans KR',sans-serif;}
   .plan-row .plan-del{
     position:absolute; top:10px; right:10px; background:none; border:none; color:var(--ink-faint);
@@ -112,7 +126,7 @@
   }
 
   .bottom-bar{
-    position:sticky; bottom:0; background:#fff; padding:14px 20px 22px; border-top:1px solid var(--line);
+    position:sticky; bottom:0; background:#fff; padding:14px 20px calc(22px + env(safe-area-inset-bottom)); border-top:1px solid var(--line);
   }
   .cta{
     width:100%; padding:16px; border:none; border-radius:14px; background:var(--ink-faint);
@@ -150,7 +164,7 @@
   .status-pill.approved{background:#E6F5E9; color:#1B7A38;}
   .status-pill.filming{background:#E6EEFC; color:#1E4FA0;}
   .status-pill.editing{background:#FDEBD3; color:#95590B;}
-  .status-pill.completed{background:var(--purple-soft); color:var(--purple-dark);}
+  .status-pill.completed{background:#FFF6DC; color:var(--gold-dark);}
   .status-pill.rejected{background:#FCEAEA; color:#B23A3A;}
   .sub-card .sub-title{font-size:15px; font-weight:700; margin:2px 0 4px;}
   .sub-card .sub-meta{font-size:12px; color:var(--ink-soft); margin:0 0 10px;}
@@ -195,12 +209,9 @@
 
 <div class="phone" id="formView">
   <div class="topbar">
-    <div class="steps">
-      <div class="circle" id="c1">1</div>
-      <span class="dot3">···</span>
-      <div class="circle" id="c2">2</div>
-      <span class="dot3">···</span>
-      <div class="circle" id="c3">3</div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel">1 / 7</div>
     </div>
     <button class="reset-link" id="btnReset">처음으로</button>
   </div>
@@ -220,7 +231,7 @@
         <div class="overview-grid">
           <div class="overview-card"><span class="overview-num" id="ov_submitted">-</span><span class="overview-label">제출된<br>기획서</span></div>
           <div class="overview-card"><span class="overview-num" id="ov_filming">-</span><span class="overview-label">진행 중인<br>촬영</span></div>
-          <div class="overview-card"><span class="overview-num" id="ov_completed">-</span><span class="overview-label">완료된<br>촬영</span></div>
+          <div class="overview-card"><span class="overview-num" id="ov_completed" style="color:var(--gold-dark);">-</span><span class="overview-label">완료된<br>촬영</span></div>
         </div>
       </div>
     </div>
@@ -234,41 +245,51 @@
 
     <div class="step-panel" id="panel3">
       <p class="step-label">콘텐츠 기획서</p>
-      <h2 class="heading">세부 내용을<br>입력해주세요</h2>
-
-      <p class="section-title">제작자 정보</p>
-      <div class="grid2">
-        <div class="field-sm"><label>팀장</label><input type="text" id="f_lead"></div>
-        <div class="field-sm"><label>팀원 <span style="color:var(--ink-faint);font-weight:400;">(자동)</span></label><input type="text" id="f_member" readonly style="background:var(--purple-soft);color:var(--ink-soft);"></div>
-        <div class="field-sm"><label>촬영</label><input type="text" id="f_filming" placeholder="쉼표로 여러 명 입력"></div>
-        <div class="field-sm"><label>추가</label><input type="text" id="f_extra" placeholder="쉼표로 여러 명 입력"></div>
-        <div class="field-sm"><label>편집</label><input type="text" id="f_editing" placeholder="쉼표로 여러 명 입력"></div>
-        <div class="field-sm"><label>참여 인원 <span style="color:var(--ink-faint);font-weight:400;">(자동)</span></label><input type="text" id="f_participants" readonly style="background:var(--purple-soft);color:var(--ink-soft);"></div>
-      </div>
-
-      <p class="section-title">기본 정보</p>
+      <h2 class="heading">기본 정보를<br>입력해주세요</h2>
       <div class="field-sm"><label>제목</label><input type="text" id="f_title" placeholder="예: 체험왕 - 스타짐 체험"></div>
       <div class="field-sm"><label>한줄요약</label><input type="text" id="f_summary"></div>
-      <div class="field-sm"><label>참고 URL</label><input type="text" id="f_url"></div>
+      <div class="field-sm"><label>참고 URL</label><input type="url" id="f_url" placeholder="https://..."></div>
       <div class="field-sm">
         <label>요청사항</label>
         <textarea id="f_request"></textarea>
         <p class="req-hint">장소 대여가 필요한 경우 담당자에게 사전 연락이 필요해요.</p>
       </div>
+    </div>
 
-      <p class="section-title">제작 일정 및 장비</p>
-      <div class="grid2">
-        <div class="field-sm"><label>촬영일</label><input type="date" id="f_filmdate"></div>
-        <div class="field-sm"><label>제출일</label><input type="date" id="f_submitdate"></div>
-      </div>
-      <div class="field-sm"><label>장비</label><input type="text" id="f_equipment"></div>
+    <div class="step-panel" id="panel4">
+      <p class="step-label">콘텐츠 기획서</p>
+      <h2 class="heading">팀원 정보를<br>입력해주세요</h2>
+      <div class="field-sm"><label>팀장</label><input type="text" id="f_lead"></div>
+      <div class="field-sm"><label>촬영</label><input type="text" id="f_filming" placeholder="쉼표로 여러 명 입력"></div>
+      <div class="field-sm"><label>편집</label><input type="text" id="f_editing" placeholder="쉼표로 여러 명 입력"></div>
+      <div class="field-sm"><label>출연</label><input type="text" id="f_extra" placeholder="쉼표로 여러 명 입력"></div>
+      <div class="field-sm"><label>팀원 <span style="color:var(--ink-faint);font-weight:400;">(자동)</span></label><input type="text" id="f_member" readonly style="background:var(--purple-soft);color:var(--ink-soft);"></div>
+      <div class="field-sm"><label>참여 인원 <span style="color:var(--ink-faint);font-weight:400;">(자동)</span></label><input type="text" id="f_participants" readonly style="background:var(--purple-soft);color:var(--ink-soft);"></div>
+    </div>
 
-      <p class="section-title">기획 내용 <span style="font-weight:400;color:var(--ink-soft);font-size:12px;">(최종 영상 순서대로)</span></p>
+    <div class="step-panel" id="panel5">
+      <p class="step-label">콘텐츠 기획서</p>
+      <h2 class="heading">촬영·제출 기간을<br>선택해주세요</h2>
+      <p class="hint-caption">촬영일은 오늘로부터 7일 이내, 제출일은 촬영일로부터 4일 이내로 선택할 수 있어요.</p>
+      <div class="field-sm"><label>촬영일</label><select id="f_filmdate"></select></div>
+      <div class="field-sm"><label>제출일</label><select id="f_submitdate"><option value="">촬영일을 먼저 선택해주세요</option></select></div>
+    </div>
+
+    <div class="step-panel" id="panel6">
+      <p class="step-label">콘텐츠 기획서</p>
+      <h2 class="heading">필요한 장비를<br>입력해주세요</h2>
+      <div class="field-sm"><label>장비</label><input type="text" id="f_equipment" placeholder="예: 카메라, 짐벌, 마이크"></div>
+    </div>
+
+    <div class="step-panel" id="panel7">
+      <p class="step-label">콘텐츠 기획서</p>
+      <h2 class="heading">시나리오를<br>작성해주세요</h2>
+      <p class="hint-caption">최종 영상 순서대로 장면을 적어주세요.</p>
       <div id="planRows"></div>
       <button class="add-plan" id="addPlan">+ 장면 추가</button>
     </div>
 
-    <div class="step-panel" id="panel4">
+    <div class="step-panel" id="panel8">
       <p class="step-label">기획서 완성</p>
       <h2 class="heading">기획서가<br>완성됐어요</h2>
 
@@ -281,7 +302,7 @@
           <div><span style="color:var(--ink-soft);">팀원</span><br><b id="fd_member">-</b></div>
           <div><span style="color:var(--ink-soft);">촬영</span><br><b id="fd_filming">-</b></div>
           <div><span style="color:var(--ink-soft);">편집</span><br><b id="fd_editing">-</b></div>
-          <div><span style="color:var(--ink-soft);">추가</span><br><b id="fd_extra">-</b></div>
+          <div><span style="color:var(--ink-soft);">출연</span><br><b id="fd_extra">-</b></div>
           <div><span style="color:var(--ink-soft);">참여 인원</span><br><b id="fd_participants">-</b></div>
         </div>
 
@@ -555,7 +576,7 @@ function renderPlanRows(){
       <textarea placeholder="장면(씬) 설명, 대사 또는 연출 포인트를 적어주세요.">${row.content}</textarea>
       <input type="text" placeholder="장소" value="${(row.location||'').replace(/"/g,'&quot;')}">
     `;
-    div.querySelector('textarea').addEventListener('input', e=>{ row.content=e.target.value; scheduleAutosave(); });
+    div.querySelector('textarea').addEventListener('input', e=>{ row.content=e.target.value; updateCta(); scheduleAutosave(); });
     div.querySelector('input').addEventListener('input', e=>{ row.location=e.target.value; scheduleAutosave(); });
     div.querySelector('.plan-del').addEventListener('click', ()=>{
       data.plan.splice(i,1);
@@ -566,19 +587,18 @@ function renderPlanRows(){
   });
 }
 
+const TOTAL_STEPS = 7;
+
 function updateProgress(){
   const topbar = document.querySelector('#formView .topbar');
   const bottomBar = document.getElementById('bottomBar');
-  [1,2,3].forEach(n=>{
-    const el = document.getElementById('c'+n);
-    el.classList.remove('done','current');
-    if(n < step){ el.classList.add('done'); el.textContent='✓'; }
-    else if(n === step){ el.classList.add('current'); el.textContent=n; }
-    else{ el.textContent=n; }
-  });
+  const pct = Math.min(step, TOTAL_STEPS) / TOTAL_STEPS * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = Math.min(step, TOTAL_STEPS) + ' / ' + TOTAL_STEPS;
+
   document.querySelectorAll('.step-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel'+step).classList.add('active');
-  if(step===4){
+  if(step===8){
     topbar.style.display='none';
     bottomBar.style.display='none';
     renderFinalDoc();
@@ -590,18 +610,24 @@ function updateProgress(){
   updateCta();
 }
 
+function stepValid(n){
+  if(n===1) return data.name.trim().length>0;
+  if(n===2) return !!data.category;
+  if(n===3){
+    return data.title.trim().length>0 && data.summary.trim().length>0 && data.url.trim().length>0 && data.request.trim().length>0;
+  }
+  if(n===4) return data.lead.trim().length>0 && data.filming.trim().length>0 && data.editing.trim().length>0 && data.extra.trim().length>0;
+  if(n===5) return data.filmdate.trim().length>0 && data.submitdate.trim().length>0;
+  if(n===6) return data.equipment.trim().length>0;
+  if(n===7) return !!(data.plan[0] && data.plan[0].content && data.plan[0].content.trim().length>0);
+  return true;
+}
+
 function updateCta(){
   const btn = document.getElementById('ctaBtn');
-  if(step===1){
-    btn.textContent='이름 입력 완료';
-    btn.classList.toggle('active', data.name.trim().length>0);
-  }else if(step===2){
-    btn.textContent='콘텐츠 유형 선택하기';
-    btn.classList.toggle('active', !!data.category);
-  }else if(step===3){
-    btn.textContent='제출하기';
-    btn.classList.toggle('active', data.title.trim().length>0);
-  }
+  const labels = {1:'이름 입력 완료', 2:'콘텐츠 유형 선택하기', 3:'다음', 4:'다음', 5:'다음', 6:'다음', 7:'완성하기'};
+  btn.textContent = labels[step] || '다음';
+  btn.classList.toggle('active', stepValid(step));
 }
 
 function buildPlanLines(d){
@@ -653,7 +679,7 @@ document.getElementById('in_name').addEventListener('input', e=>{
 document.getElementById('in_name').addEventListener('focus', ()=>document.getElementById('nameBox').classList.add('focused'));
 document.getElementById('in_name').addEventListener('blur', ()=>document.getElementById('nameBox').classList.remove('focused'));
 
-const detailIds = ['lead','filming','extra','editing','title','summary','url','request','filmdate','submitdate','equipment'];
+const detailIds = ['lead','filming','extra','editing','title','summary','url','request','equipment'];
 function bindDetailInputs(){
   detailIds.forEach(k=>{
     const el = document.getElementById('f_'+k);
@@ -662,6 +688,16 @@ function bindDetailInputs(){
       if(k==='lead' || k==='filming' || k==='extra' || k==='editing') computeTeam();
       updateCta(); scheduleAutosave();
     });
+  });
+  const urlEl = document.getElementById('f_url');
+  urlEl.addEventListener('blur', ()=>{
+    let v = urlEl.value.trim();
+    if(v && !/^https?:\/\//i.test(v)){
+      v = 'https://' + v;
+      urlEl.value = v;
+      data.url = v;
+      scheduleAutosave();
+    }
   });
 }
 function parseNames(str){
@@ -683,19 +719,18 @@ document.getElementById('addPlan').addEventListener('click', ()=>{
 });
 
 document.getElementById('ctaBtn').addEventListener('click', ()=>{
-  if(step===1 && data.name.trim()){
+  if(!stepValid(step)) return;
+  if(step===1){
     document.getElementById('f_lead').value = data.lead || data.name;
     data.lead = data.lead || data.name;
     computeTeam();
-    step=2; updateProgress(); scheduleAutosave();
-  }else if(step===2 && data.category){
-    step=3; updateProgress(); scheduleAutosave();
-  }else if(step===3 && data.title.trim()){
-    step=4; updateProgress(); scheduleAutosave();
+  }
+  if(step < 8){
+    step++; updateProgress(); scheduleAutosave();
   }
 });
 
-document.getElementById('btnBackEdit').addEventListener('click', ()=>{ step=3; updateProgress(); });
+document.getElementById('btnBackEdit').addEventListener('click', ()=>{ step=7; updateProgress(); });
 
 document.getElementById('btnSaveImage').addEventListener('click', ()=>{
   const btn = document.getElementById('btnSaveImage');
@@ -761,6 +796,17 @@ async function submitForReview(){
     statusEl.textContent = '제출 완료 · 구글 시트에 저장됐어요';
     btn.textContent = '제출됨';
     refreshPendingBadge();
+
+    try{
+      const rows = await sheetGetAll();
+      const leadName = (data.lead || '').trim();
+      const count = rows.filter(r => (r['작성자(팀장)']||'').trim() === leadName).length;
+      if(leadName && count > 0){
+        await showAlert(`${leadName}님 ${count}번째 영상이네요! 곧 쿠우쿠우에서 만나요 🍽️`);
+      }
+    }catch(countErr){
+      console.error('submission count check failed:', countErr);
+    }
   }catch(e){
     console.error('sheetCreate failed:', e);
     statusEl.textContent = '제출 실패: ' + (e && e.message ? e.message : '알 수 없는 오류') + ' — 아래 "파일로 저장" 또는 "텍스트 복사"로 대신 보내주세요.';
@@ -924,7 +970,7 @@ function renderStatusDetail(key, rec){
       <div class="field-sm"><label>팀장</label><input type="text" id="e_lead" value="${(editingRecord.lead||'').replace(/"/g,'&quot;')}"></div>
       <div class="field-sm"><label>팀원 (자동)</label><input type="text" id="e_member" readonly style="background:var(--purple-soft);color:var(--ink-soft);" value="${(editingRecord.member||'').replace(/"/g,'&quot;')}"></div>
       <div class="field-sm"><label>촬영</label><input type="text" id="e_filming" value="${(editingRecord.filming||'').replace(/"/g,'&quot;')}"></div>
-      <div class="field-sm"><label>추가</label><input type="text" id="e_extra" value="${(editingRecord.extra||'').replace(/"/g,'&quot;')}"></div>
+      <div class="field-sm"><label>출연</label><input type="text" id="e_extra" value="${(editingRecord.extra||'').replace(/"/g,'&quot;')}"></div>
       <div class="field-sm"><label>편집</label><input type="text" id="e_editing" value="${(editingRecord.editing||'').replace(/"/g,'&quot;')}"></div>
       <div class="field-sm"><label>참여 인원 (자동)</label><input type="text" id="e_participants" readonly style="background:var(--purple-soft);color:var(--ink-soft);" value="${editingRecord.participants||''}"></div>
     </div>
@@ -1019,7 +1065,7 @@ function buildDocCardHTML(rec){
         <div><span style="color:var(--ink-soft);">팀원</span><br><b>${esc(rec.member)||'-'}</b></div>
         <div><span style="color:var(--ink-soft);">촬영</span><br><b>${esc(rec.filming)||'-'}</b></div>
         <div><span style="color:var(--ink-soft);">편집</span><br><b>${esc(rec.editing)||'-'}</b></div>
-        <div><span style="color:var(--ink-soft);">추가</span><br><b>${esc(rec.extra)||'-'}</b></div>
+        <div><span style="color:var(--ink-soft);">출연</span><br><b>${esc(rec.extra)||'-'}</b></div>
         <div><span style="color:var(--ink-soft);">참여 인원</span><br><b>${rec.participants? rec.participants+'명':'-'}</b></div>
       </div>
       <p style="font-size:13px; color:var(--ink); margin:0 0 4px;">${esc(rec.summary)}</p>
@@ -1267,7 +1313,7 @@ document.getElementById('btnReset').addEventListener('click', async ()=>{
 function syncFormFromData(){
   document.getElementById('in_name').value = data.name;
   detailIds.forEach(k=>{ document.getElementById('f_'+k).value = data[k]||''; });
-  computeTeam(); renderTypeCards(); renderPlanRows(); updateProgress();
+  computeTeam(); renderTypeCards(); renderPlanRows(); applyDateLimits(); updateProgress();
 }
 
 let autosaveTimer=null;
@@ -1300,6 +1346,63 @@ async function loadAutosave(){
     }
   }catch(e){}
   syncFormFromData();
+}
+
+function formatDateLabel(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  const days = ['일','월','화','수','목','금','토'];
+  return `${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+}
+
+function dateRangeArray(startDate, count){
+  const arr = [];
+  for(let i=0;i<count;i++){
+    const d = new Date(startDate);
+    d.setDate(d.getDate()+i);
+    arr.push(d.toISOString().slice(0,10));
+  }
+  return arr;
+}
+
+function applyDateLimits(){
+  const filmEl = document.getElementById('f_filmdate');
+  const submitEl = document.getElementById('f_submitdate');
+  if(!filmEl || !submitEl) return;
+
+  const filmDates = dateRangeArray(new Date(), 8);
+  filmEl.innerHTML = '<option value="">선택해주세요</option>' + filmDates.map(d=>`<option value="${d}">${formatDateLabel(d)}</option>`).join('');
+  filmEl.value = filmDates.includes(data.filmdate) ? data.filmdate : '';
+
+  function refreshSubmitOptions(){
+    if(filmEl.value){
+      const submitDates = dateRangeArray(new Date(filmEl.value+'T00:00:00'), 5);
+      submitEl.disabled = false;
+      const keepValue = submitDates.includes(data.submitdate) ? data.submitdate : '';
+      submitEl.innerHTML = '<option value="">선택해주세요</option>' + submitDates.map(d=>`<option value="${d}">${formatDateLabel(d)}</option>`).join('');
+      submitEl.value = keepValue;
+      if(!keepValue && data.submitdate){ data.submitdate = ''; scheduleAutosave(); }
+    }else{
+      submitEl.disabled = true;
+      submitEl.innerHTML = '<option value="">촬영일을 먼저 선택해주세요</option>';
+      submitEl.value = '';
+      if(data.submitdate){ data.submitdate = ''; scheduleAutosave(); }
+    }
+  }
+
+  filmEl.addEventListener('change', ()=>{
+    data.filmdate = filmEl.value;
+    refreshSubmitOptions();
+    updateCta();
+    scheduleAutosave();
+  });
+
+  submitEl.addEventListener('change', ()=>{
+    data.submitdate = submitEl.value;
+    updateCta();
+    scheduleAutosave();
+  });
+
+  refreshSubmitOptions();
 }
 
 bindDetailInputs();

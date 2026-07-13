@@ -242,12 +242,18 @@
   .suggest-item{padding:9px 12px; font-size:13.5px; cursor:pointer;}
   .suggest-item:hover{background:var(--purple-soft);}
   .suggest-empty{padding:9px 12px; font-size:12.5px; color:var(--ink-faint);}
+
+  .equip-tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:4px;}
+  .equip-tag{
+    display:inline-block; background:var(--purple-soft); color:var(--purple-dark);
+    font-size:11.5px; font-weight:700; padding:4px 9px; border-radius:20px;
+  }
 </style>
 </head>
 <body>
 
 <div class="admin-topbar">
-  <span>콘텐츠 기획서 시스템</span>
+  <button id="btnHome" style="background:none; border:none; color:#fff; font-size:13px; font-weight:700; padding:0; cursor:pointer;">콘텐츠 기획서 시스템</button>
   <div style="display:flex; gap:8px;">
     <button id="btnStatusToggle">기획서 현황</button>
     <button id="btnAdminToggle">관리자 검토 <span id="pendingBadge" style="display:none; background:#E24B4A; border-radius:10px; padding:1px 7px; margin-left:4px;">0</span></button>
@@ -767,6 +773,13 @@ function equipmentItemText(item){
   return `${item.name} #${item.label}`;
 }
 
+function equipmentTagsHTML(equipmentStr){
+  const items = (equipmentStr||'').split(',').map(s=>s.trim()).filter(Boolean);
+  if(items.length===0) return '-';
+  const esc = s => s.replace(/</g,'&lt;');
+  return `<div class="equip-tags">${items.map(i=>`<span class="equip-tag">${esc(i)}</span>`).join('')}</div>`;
+}
+
 function renderSelectedEquipmentChips(){
   const wrap = document.getElementById('equipSelectedWrap');
   const chipsEl = document.getElementById('equipSelectedChips');
@@ -1018,7 +1031,8 @@ function renderFinalDoc(){
   set('fd_participants', data.participants ? data.participants+'명' : '');
   document.getElementById('fd_summary').textContent = data.summary || '';
   document.getElementById('fd_url').textContent = data.url || '';
-  set('fd_filmdate', data.filmdate); set('fd_submitdate', data.submitdate); set('fd_equipment', data.equipment);
+  set('fd_filmdate', data.filmdate); set('fd_submitdate', data.submitdate);
+  document.getElementById('fd_equipment').innerHTML = equipmentTagsHTML(data.equipment);
   const reqWrap = document.getElementById('fd_request_wrap');
   if(data.request && data.request.trim()){
     reqWrap.style.display='block';
@@ -1212,6 +1226,12 @@ function showView(viewId){
     views[k].style.display = (k===viewId) ? (k==='form' ? 'flex' : 'block') : 'none';
   });
 }
+
+document.getElementById('btnHome').addEventListener('click', ()=>{
+  showView('form');
+  step = 1;
+  updateProgress();
+});
 
 document.getElementById('btnStatusToggle').addEventListener('click', ()=>{
   showView('status');
@@ -1437,7 +1457,7 @@ function buildDocCardHTML(rec){
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:12.5px; margin-bottom:14px; padding-top:14px; border-top:1px solid var(--line);">
         <div><span style="color:var(--ink-soft);">촬영일</span><br><b>${rec.filmdate||'-'}</b></div>
         <div><span style="color:var(--ink-soft);">제출일</span><br><b>${rec.submitdate||'-'}</b></div>
-        <div style="grid-column:1/-1;"><span style="color:var(--ink-soft);">장비</span><br><b>${esc(rec.equipment)||'-'}</b></div>
+        <div style="grid-column:1/-1;"><span style="color:var(--ink-soft);">장비</span>${equipmentTagsHTML(rec.equipment)}</div>
       </div>
       ${rec.request? `<div style="margin-bottom:14px;"><p style="font-size:12px;color:var(--ink-soft);margin:0 0 2px;">요청사항</p><p style="font-size:13px;margin:0;">${esc(rec.request)}</p></div>` : ''}
       <p style="font-size:12px; color:var(--ink-soft); margin:14px 0 6px; padding-top:14px; border-top:1px solid var(--line);">기획 내용</p>

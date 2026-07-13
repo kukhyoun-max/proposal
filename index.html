@@ -63,8 +63,10 @@
     font-size:13px; color:var(--ink-soft); background:none; border:none; cursor:pointer;
   }
   .progress-wrap{flex:1; margin-right:16px;}
-  .progress-track{height:4px; background:var(--line); border-radius:4px; overflow:hidden; margin-bottom:6px;}
-  .progress-fill{height:100%; width:0%; background:var(--purple); border-radius:4px; transition:width .25s ease;}
+  .progress-track{display:flex; gap:4px; margin-bottom:6px;}
+  .progress-seg{flex:1; height:5px; border-radius:4px; background:var(--line); border:none; padding:0; cursor:default;}
+  .progress-seg.done{background:var(--purple); cursor:pointer;}
+  .progress-seg.current{background:var(--purple);}
   .progress-label{font-size:11px; color:var(--ink-faint);}
 
   .content{padding:8px 20px 24px; flex:1;}
@@ -195,6 +197,51 @@
   .modal-actions button{flex:1; padding:12px; border-radius:10px; font-weight:700; font-size:14px; cursor:pointer;}
   .modal-cancel{border:1.5px solid var(--line); background:#fff; color:var(--ink-soft);}
   .modal-ok{border:none; background:var(--purple); color:#fff;}
+
+  .equip-group{margin-bottom:10px; border:1.5px solid var(--line); border-radius:12px; overflow:hidden;}
+  .equip-group-header{
+    width:100%; display:flex; align-items:center; justify-content:space-between; background:#FAFAFC;
+    border:none; padding:12px 14px; cursor:pointer; text-align:left;
+  }
+  .equip-count{font-weight:400; color:var(--ink-faint); font-size:11.5px; margin-left:4px;}
+  .equip-chevron{color:var(--ink-faint); transition:transform .2s; font-size:13px;}
+  .equip-chevron.open{transform:rotate(180deg); color:var(--purple);}
+  .equip-group-body{display:none; padding:10px 12px 4px;}
+  .equip-group-body.open{display:block;}
+  .equip-group-title{font-size:12.5px; font-weight:700; color:var(--purple-dark); margin:0 0 8px;}
+  .equip-item{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border:1.5px solid var(--line);
+    border-radius:10px; margin-bottom:6px; cursor:pointer;
+  }
+  .equip-item input[type=checkbox]{width:17px; height:17px; accent-color:var(--purple); flex-shrink:0;}
+  .equip-item .equip-name{font-size:13.5px; flex:1;}
+  .equip-item .equip-brand{font-size:11.5px; color:var(--ink-faint);}
+  .equip-item.booked{
+    background:#F7F6F9; border-color:var(--line); cursor:not-allowed; opacity:0.6;
+  }
+  .equip-item.booked .equip-name{text-decoration:line-through; color:var(--ink-faint);}
+  .equip-item.booked-tag{font-size:11px; color:#B23A3A; font-weight:700; white-space:nowrap;}
+  .equip-loading{font-size:12.5px; color:var(--ink-faint); padding:8px 0;}
+
+  .name-picker{position:relative;}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;}
+  .chip{
+    display:flex; align-items:center; gap:5px; background:var(--purple-soft); color:var(--purple-dark);
+    font-size:12.5px; font-weight:700; padding:5px 8px 5px 10px; border-radius:20px;
+  }
+  .chip button{
+    background:none; border:none; color:var(--purple-dark); font-size:13px; cursor:pointer; padding:0;
+    line-height:1; opacity:0.7;
+  }
+  .suggest-list{
+    position:absolute; left:0; right:0; top:100%; margin-top:2px; background:#fff;
+    border:1.5px solid var(--line); border-radius:10px; box-shadow:0 4px 14px rgba(0,0,0,0.08);
+    max-height:180px; overflow-y:auto; z-index:20; display:none;
+  }
+  .suggest-list.open{display:block;}
+  .suggest-item{padding:9px 12px; font-size:13.5px; cursor:pointer;}
+  .suggest-item:hover{background:var(--purple-soft);}
+  .suggest-empty{padding:9px 12px; font-size:12.5px; color:var(--ink-faint);}
 </style>
 </head>
 <body>
@@ -210,7 +257,7 @@
 <div class="phone" id="formView">
   <div class="topbar">
     <div class="progress-wrap">
-      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-track" id="progressTrack"></div>
       <div class="progress-label" id="progressLabel">1 / 7</div>
     </div>
     <button class="reset-link" id="btnReset">처음으로</button>
@@ -260,9 +307,28 @@
       <p class="step-label">콘텐츠 기획서</p>
       <h2 class="heading">팀원 정보를<br>입력해주세요</h2>
       <div class="field-sm"><label>팀장</label><input type="text" id="f_lead"></div>
-      <div class="field-sm"><label>촬영</label><input type="text" id="f_filming" placeholder="쉼표로 여러 명 입력"></div>
-      <div class="field-sm"><label>편집</label><input type="text" id="f_editing" placeholder="쉼표로 여러 명 입력"></div>
-      <div class="field-sm"><label>출연</label><input type="text" id="f_extra" placeholder="쉼표로 여러 명 입력"></div>
+
+      <div class="field-sm name-picker">
+        <label>촬영</label>
+        <div class="chips" id="chips_filming"></div>
+        <input type="text" id="search_filming" placeholder="이름으로 검색해서 추가" autocomplete="off">
+        <div class="suggest-list" id="suggest_filming"></div>
+      </div>
+
+      <div class="field-sm name-picker">
+        <label>편집</label>
+        <div class="chips" id="chips_editing"></div>
+        <input type="text" id="search_editing" placeholder="이름으로 검색해서 추가" autocomplete="off">
+        <div class="suggest-list" id="suggest_editing"></div>
+      </div>
+
+      <div class="field-sm name-picker">
+        <label>출연</label>
+        <div class="chips" id="chips_extra"></div>
+        <input type="text" id="search_extra" placeholder="이름으로 검색해서 추가" autocomplete="off">
+        <div class="suggest-list" id="suggest_extra"></div>
+      </div>
+
       <div class="field-sm"><label>팀원 <span style="color:var(--ink-faint);font-weight:400;">(자동)</span></label><input type="text" id="f_member" readonly style="background:var(--purple-soft);color:var(--ink-soft);"></div>
       <div class="field-sm"><label>참여 인원 <span style="color:var(--ink-faint);font-weight:400;">(자동)</span></label><input type="text" id="f_participants" readonly style="background:var(--purple-soft);color:var(--ink-soft);"></div>
     </div>
@@ -277,8 +343,13 @@
 
     <div class="step-panel" id="panel6">
       <p class="step-label">콘텐츠 기획서</p>
-      <h2 class="heading">필요한 장비를<br>입력해주세요</h2>
-      <div class="field-sm"><label>장비</label><input type="text" id="f_equipment" placeholder="예: 카메라, 짐벌, 마이크"></div>
+      <h2 class="heading">필요한 장비를<br>선택해주세요</h2>
+      <p class="hint-caption" id="equipHint">촬영일 기준으로 이미 예약된 장비는 자동으로 선택이 막혀요.</p>
+      <div id="equipSelectedWrap" style="display:none; margin-bottom:16px;">
+        <p style="font-size:12px; font-weight:700; color:var(--purple-dark); margin:0 0 8px;">선택한 장비 <span id="equipSelectedCount" style="color:var(--ink-faint); font-weight:400;"></span></p>
+        <div class="chips" id="equipSelectedChips"></div>
+      </div>
+      <div id="equipmentPicker"></div>
     </div>
 
     <div class="step-panel" id="panel7">
@@ -523,7 +594,7 @@ function mapRowToRecord(row){
     category: row['콘텐츠유형'] || '', member: row['팀원'] || '', filming: row['촬영'] || '',
     editing: row['편집'] || '', extra: row['추가'] || '', participants: row['참여인원'] || '',
     title: row['제목'] || '', summary: row['한줄요약'] || '', url: row['참고URL'] || '',
-    request: row['요청사항'] || '', filmdate: row['촬영일'] || '', submitdate: row['제출일(영상)'] || '',
+    request: row['요청사항'] || '', filmdate: normalizeDateStr(row['촬영일']), submitdate: normalizeDateStr(row['제출일(영상)']),
     equipment: row['장비'] || '', plan: parsePlanText(row['기획내용'] || ''), rejectReason: row['반려사유'] || ''
   };
 }
@@ -536,6 +607,282 @@ let data = {
   filmdate:'', submitdate:'', equipment:'',
   plan:[{content:'', location:''},{content:'', location:''},{content:'', location:''}]
 };
+
+const AMBASSADOR_ROSTER = [
+  '김지훈','홍찬영','김현아','최승훈','이지민','한민서','정수현','변수현','백가민',
+  '한가온','이예은','최도연','김세영','오화종','이서연','장서영','이은채','이다희'
+];
+
+const namePickers = {};
+
+function refreshNamePickerChips(key){
+  if(namePickers[key]) namePickers[key].renderChips();
+}
+
+function initNamePicker(key){
+  const searchEl = document.getElementById('search_'+key);
+  const chipsEl = document.getElementById('chips_'+key);
+  const suggestEl = document.getElementById('suggest_'+key);
+  if(!searchEl) return;
+
+  function getNames(){
+    return parseNames(data[key]);
+  }
+  function setNames(names){
+    data[key] = names.join(', ');
+    computeTeam();
+    renderChips();
+    updateCta();
+    scheduleAutosave();
+  }
+  function renderChips(){
+    const names = getNames();
+    chipsEl.innerHTML = names.map(n=>`
+      <span class="chip">${n}<button type="button" data-name="${n}">✕</button></span>
+    `).join('');
+    chipsEl.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        setNames(getNames().filter(n=>n!==btn.dataset.name));
+      });
+    });
+  }
+  function renderSuggestions(){
+    const q = searchEl.value.trim();
+    const current = getNames();
+    if(!q){ suggestEl.classList.remove('open'); suggestEl.innerHTML=''; return; }
+    const matches = AMBASSADOR_ROSTER.filter(n => n.includes(q) && !current.includes(n));
+    if(matches.length===0){
+      suggestEl.innerHTML = '<div class="suggest-empty">일치하는 홍보대사가 없어요. 목록에 없으면 직접 이름을 입력해도 돼요.</div>';
+    }else{
+      suggestEl.innerHTML = matches.map(n=>`<div class="suggest-item" data-name="${n}">${n}</div>`).join('');
+    }
+    suggestEl.classList.add('open');
+    suggestEl.querySelectorAll('.suggest-item').forEach(item=>{
+      item.addEventListener('click', ()=>{
+        setNames([...getNames(), item.dataset.name]);
+        searchEl.value = '';
+        suggestEl.classList.remove('open');
+      });
+    });
+  }
+
+  searchEl.addEventListener('input', renderSuggestions);
+  searchEl.addEventListener('focus', renderSuggestions);
+  searchEl.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      const q = searchEl.value.trim();
+      if(q && !getNames().includes(q)){
+        setNames([...getNames(), q]);
+        searchEl.value = '';
+        suggestEl.classList.remove('open');
+      }
+    }
+  });
+  document.addEventListener('click', e=>{
+    if(!searchEl.contains(e.target) && !suggestEl.contains(e.target)){
+      suggestEl.classList.remove('open');
+    }
+  });
+
+  namePickers[key] = { renderChips };
+  renderChips();
+}
+
+const EQUIPMENT_LIST = [
+  {cat:'카메라', label:1, name:'A7C2', brand:'SONY'},
+  {cat:'카메라', label:2, name:'A7C2', brand:'SONY'},
+  {cat:'카메라', label:3, name:'A7C2', brand:'SONY'},
+  {cat:'카메라', label:4, name:'EOS 6D mark2', brand:'CANON'},
+  {cat:'카메라', label:5, name:'EOS 6D mark2', brand:'CANON'},
+  {cat:'카메라', label:6, name:'EOS 6D mark2', brand:'CANON'},
+  {cat:'카메라', label:7, name:'고프로 세트(+체스트마운트)', brand:'고프로'},
+  {cat:'카메라', label:8, name:'MAVIC 2 PRO', brand:'DJI'},
+  {cat:'렌즈', label:9, name:'24-70 GM F2.8', brand:'SONY'},
+  {cat:'렌즈', label:10, name:'20-70 G F4', brand:'SONY'},
+  {cat:'렌즈', label:11, name:'20-70 G F4', brand:'SONY'},
+  {cat:'렌즈', label:12, name:'ef 24-105mm', brand:'CANON'},
+  {cat:'렌즈', label:13, name:'ef 24-105mm', brand:'CANON'},
+  {cat:'렌즈', label:14, name:'ef 24-105mm', brand:'CANON'},
+  {cat:'렌즈 필터', label:15, name:'1-5 스탑 가변 ND필터', brand:'NISI'},
+  {cat:'렌즈 필터', label:16, name:'1-5 스탑 가변 ND필터', brand:'NISI'},
+  {cat:'배터리', label:17, name:'NP-FZ100', brand:'SONY'},
+  {cat:'배터리', label:18, name:'NP-FZ100', brand:'SONY'},
+  {cat:'배터리', label:19, name:'NP-FZ100', brand:'SONY'},
+  {cat:'배터리', label:20, name:'NP-FZ100', brand:'SONY'},
+  {cat:'배터리', label:21, name:'NP-FZ100', brand:'SONY'},
+  {cat:'배터리', label:22, name:'NP-FZ100', brand:'SONY'},
+  {cat:'배터리', label:23, name:'캐논 카메라 배터리', brand:'CANON'},
+  {cat:'마이크', label:24, name:'와이어리스 프로(+악세사리 케이스)', brand:'RODE'},
+  {cat:'마이크', label:25, name:'와이어리스 프로(+악세사리 케이스)', brand:'RODE'},
+  {cat:'마이크', label:26, name:'카메라 마이크 (윈드스크린 포함)', brand:'RODE'},
+  {cat:'마이크', label:27, name:'카메라 마이크 (윈드스크린 포함)', brand:'SmallRig'},
+  {cat:'마이크', label:28, name:'카메라 마이크 (윈드스크린 포함)', brand:'SmallRig'},
+  {cat:'마이크', label:29, name:'MV7+ (팟캐스트 마이크)', brand:'SHURE'},
+  {cat:'마이크', label:30, name:'MV7+ (팟캐스트 마이크)', brand:'SHURE'},
+  {cat:'삼각대', label:31, name:'여행용 삼각대', brand:'레오포토'},
+  {cat:'삼각대', label:32, name:'여행용 삼각대', brand:'레오포토'},
+  {cat:'삼각대', label:33, name:'여행용 삼각대', brand:'레오포토'},
+  {cat:'삼각대', label:34, name:'아이풋티지 삼각대', brand:'아이풋티지'},
+  {cat:'삼각대', label:35, name:'아이풋티지 삼각대', brand:'아이풋티지'},
+  {cat:'삼각대', label:36, name:'아이풋티지 삼각대', brand:'아이풋티지'},
+  {cat:'조명', label:37, name:'패널라이트 EX600U', brand:'포멕스'},
+  {cat:'조명', label:38, name:'패널라이트 EX600U', brand:'포멕스'},
+  {cat:'조명', label:39, name:'SL200', brand:'고독스'},
+  {cat:'조명', label:40, name:'SL60', brand:'고독스'},
+  {cat:'조명', label:41, name:'SL60', brand:'고독스'},
+  {cat:'조명', label:42, name:'LEDP260C', brand:'고독스'},
+  {cat:'조명', label:43, name:'LEDP260C', brand:'고독스'},
+  {cat:'기타', label:44, name:'폴리 완장', brand:'반사판'},
+  {cat:'기타', label:45, name:'폴리 반장', brand:'반사판'},
+  {cat:'조명', label:46, name:'반사판', brand:'고독스'},
+  {cat:'배터리', label:47, name:'970배터리', brand:''},
+  {cat:'기타', label:48, name:'캠핑웨건', brand:'캠프365'},
+  {cat:'기타', label:49, name:'부감샷 세트(C스탠드 + 카메라 마운트 홀더)', brand:''},
+  {cat:'기타', label:50, name:'크랩 클램프 매직암', brand:'스몰리그'},
+  {cat:'기타', label:51, name:'크랩 클램프 매직암', brand:'스몰리그'},
+  {cat:'기타', label:52, name:'T자 붐 마이크스탠드', brand:'SMI'},
+  {cat:'기타', label:53, name:'T자 붐 마이크스탠드', brand:'SMI'},
+  {cat:'SD 카드', label:54, name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
+  {cat:'SD 카드', label:55, name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
+  {cat:'SD 카드', label:56, name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
+  {cat:'SD 카드', label:57, name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
+  {cat:'SD 카드', label:58, name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
+  {cat:'SD 카드', label:59, name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
+  {cat:'SD 카드', label:60, name:'Extreme Pro 256GB SD카드', brand:'SanDisk'}
+];
+
+const BOOKED_STATUSES = ['approved','filming','editing','completed'];
+
+function selectedEquipmentLabels(){
+  const set = new Set();
+  (data.equipment||'').split(',').forEach(part=>{
+    const m = part.match(/#(\d+)/);
+    if(m) set.add(Number(m[1]));
+  });
+  return set;
+}
+
+function equipmentItemText(item){
+  return `${item.name} #${item.label}`;
+}
+
+function renderSelectedEquipmentChips(){
+  const wrap = document.getElementById('equipSelectedWrap');
+  const chipsEl = document.getElementById('equipSelectedChips');
+  const countEl = document.getElementById('equipSelectedCount');
+  const set = selectedEquipmentLabels();
+  const items = EQUIPMENT_LIST.filter(i=>set.has(i.label));
+  if(items.length===0){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  countEl.textContent = `(${items.length}개)`;
+  chipsEl.innerHTML = items.map(item=>`
+    <span class="chip">${item.name} #${item.label}<button type="button" data-label="${item.label}">✕</button></span>
+  `).join('');
+  chipsEl.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const label = Number(btn.dataset.label);
+      const cb = document.querySelector(`#equipmentPicker input[data-label="${label}"]`);
+      if(cb){ cb.checked = false; cb.dispatchEvent(new Event('change')); }
+    });
+  });
+}
+
+function normalizeDateStr(val){
+  if(!val) return '';
+  const s = String(val).trim();
+  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+  const dotMatch = s.match(/^(\d{4})[.\s]+(\d{1,2})[.\s]+(\d{1,2})/);
+  if(dotMatch) return `${dotMatch[1]}-${String(dotMatch[2]).padStart(2,'0')}-${String(dotMatch[3]).padStart(2,'0')}`;
+  const asDate = new Date(s);
+  if(!isNaN(asDate.getTime())) return toLocalDateStr(asDate);
+  return s;
+}
+
+async function renderEquipmentPicker(){
+  const wrap = document.getElementById('equipmentPicker');
+  const hint = document.getElementById('equipHint');
+  wrap.innerHTML = '<p class="equip-loading">예약 현황 확인 중...</p>';
+
+  let bookedLabels = new Set();
+  let fetchFailed = false;
+  if(data.filmdate){
+    try{
+      const rows = await jsonp(APPS_SCRIPT_URL, {action:'list'});
+      const targetDate = normalizeDateStr(data.filmdate);
+      (rows||[]).forEach(r=>{
+        if(normalizeDateStr(r['촬영일']) === targetDate && BOOKED_STATUSES.includes(r['상태'])){
+          (r['장비']||'').split(',').forEach(part=>{
+            const m = part.match(/#(\d+)/);
+            if(m) bookedLabels.add(Number(m[1]));
+          });
+        }
+      });
+      hint.textContent = '촬영일(' + data.filmdate + ') 기준으로 이미 예약된 장비는 선택할 수 없어요.';
+    }catch(e){
+      fetchFailed = true;
+      hint.textContent = '예약 현황을 불러오지 못했어요 — 중복 예약이 있을 수 있으니 담당자에게 한 번 더 확인해주세요.';
+    }
+  }else{
+    hint.textContent = '촬영일을 먼저 선택하면 예약 현황을 확인해드려요.';
+  }
+
+  const selected = selectedEquipmentLabels();
+  const cats = [];
+  EQUIPMENT_LIST.forEach(item=>{ if(!cats.includes(item.cat)) cats.push(item.cat); });
+
+  wrap.innerHTML = cats.map(cat=>{
+    const items = EQUIPMENT_LIST.filter(i=>i.cat===cat);
+    const selectedCount = items.filter(i=>selected.has(i.label)).length;
+    const rows = items.map(item=>{
+      const booked = bookedLabels.has(item.label);
+      const checked = selected.has(item.label);
+      return `
+        <label class="equip-item ${booked?'booked':''}">
+          <input type="checkbox" data-label="${item.label}" ${checked?'checked':''} ${booked?'disabled':''}>
+          <span class="equip-name">${item.name}</span>
+          <span class="equip-brand">${item.brand||''}</span>
+          ${booked? '<span class="booked-tag">예약됨</span>' : ''}
+        </label>
+      `;
+    }).join('');
+    const openByDefault = selectedCount > 0;
+    return `
+      <div class="equip-group">
+        <button type="button" class="equip-group-header" data-cat="${cat}">
+          <span class="equip-group-title">${cat} <span class="equip-count">${items.length}개${selectedCount? ` · ${selectedCount}개 선택됨` : ''}</span></span>
+          <span class="equip-chevron ${openByDefault?'open':''}">▾</span>
+        </button>
+        <div class="equip-group-body ${openByDefault?'open':''}">${rows}</div>
+      </div>
+    `;
+  }).join('');
+
+  wrap.querySelectorAll('.equip-group-header').forEach(header=>{
+    header.addEventListener('click', ()=>{
+      const body = header.nextElementSibling;
+      const chevron = header.querySelector('.equip-chevron');
+      const open = body.classList.toggle('open');
+      chevron.classList.toggle('open', open);
+    });
+  });
+
+  wrap.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      const label = Number(cb.dataset.label);
+      const item = EQUIPMENT_LIST.find(i=>i.label===label);
+      const set = selectedEquipmentLabels();
+      if(cb.checked){ set.add(label); } else { set.delete(label); }
+      data.equipment = EQUIPMENT_LIST.filter(i=>set.has(i.label)).map(equipmentItemText).join(', ');
+      renderSelectedEquipmentChips();
+      updateCta();
+      scheduleAutosave();
+    });
+  });
+
+  renderSelectedEquipmentChips();
+}
 
 const CATEGORIES = [
   {id:'vlog', title:'브이로그', desc:'일상적인 캠퍼스 생활을 자연스럽게 담는 콘텐츠예요.'},
@@ -589,12 +936,28 @@ function renderPlanRows(){
 
 const TOTAL_STEPS = 7;
 
+let maxStepReached = 1;
+
 function updateProgress(){
   const topbar = document.querySelector('#formView .topbar');
   const bottomBar = document.getElementById('bottomBar');
-  const pct = Math.min(step, TOTAL_STEPS) / TOTAL_STEPS * 100;
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressLabel').textContent = Math.min(step, TOTAL_STEPS) + ' / ' + TOTAL_STEPS;
+  const shownStep = Math.min(step, TOTAL_STEPS);
+  if(step <= TOTAL_STEPS){ maxStepReached = Math.max(maxStepReached, step); }
+  document.getElementById('progressLabel').textContent = shownStep + ' / ' + TOTAL_STEPS;
+
+  const track = document.getElementById('progressTrack');
+  track.innerHTML = '';
+  for(let n=1; n<=TOTAL_STEPS; n++){
+    const seg = document.createElement('button');
+    seg.type = 'button';
+    seg.className = 'progress-seg';
+    if(n === step) seg.classList.add('current');
+    else if(n < step) seg.classList.add('done');
+    if(n <= maxStepReached && n !== step){
+      seg.addEventListener('click', ()=>{ step = n; updateProgress(); });
+    }
+    track.appendChild(seg);
+  }
 
   document.querySelectorAll('.step-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel'+step).classList.add('active');
@@ -607,6 +970,7 @@ function updateProgress(){
     bottomBar.style.display='block';
   }
   if(step===1){ refreshOverview(); }
+  if(step===6){ renderEquipmentPicker(); }
   updateCta();
 }
 
@@ -679,7 +1043,7 @@ document.getElementById('in_name').addEventListener('input', e=>{
 document.getElementById('in_name').addEventListener('focus', ()=>document.getElementById('nameBox').classList.add('focused'));
 document.getElementById('in_name').addEventListener('blur', ()=>document.getElementById('nameBox').classList.remove('focused'));
 
-const detailIds = ['lead','filming','extra','editing','title','summary','url','request','equipment'];
+const detailIds = ['lead','title','summary','url','request'];
 function bindDetailInputs(){
   detailIds.forEach(k=>{
     const el = document.getElementById('f_'+k);
@@ -705,10 +1069,10 @@ function parseNames(str){
 }
 function computeTeam(){
   const leadSet = new Set(parseNames(data.lead));
-  const memberSet = new Set([...parseNames(data.filming), ...parseNames(data.editing), ...parseNames(data.extra)].filter(n=>!leadSet.has(n)));
+  const memberSet = new Set([...leadSet, ...parseNames(data.filming), ...parseNames(data.editing), ...parseNames(data.extra)]);
   data.member = Array.from(memberSet).join(', ');
   document.getElementById('f_member').value = data.member;
-  const allSet = new Set([...leadSet, ...memberSet]);
+  const allSet = memberSet;
   data.participants = String(allSet.size);
   document.getElementById('f_participants').value = data.participants;
 }
@@ -1084,11 +1448,10 @@ function buildDocCardHTML(rec){
 
 function recomputeEditTeam(){
   const leadSet = new Set(parseNames(editingRecord.lead));
-  const memberSet = new Set([...parseNames(editingRecord.filming), ...parseNames(editingRecord.editing), ...parseNames(editingRecord.extra)].filter(n=>!leadSet.has(n)));
+  const memberSet = new Set([...leadSet, ...parseNames(editingRecord.filming), ...parseNames(editingRecord.editing), ...parseNames(editingRecord.extra)]);
   editingRecord.member = Array.from(memberSet).join(', ');
   document.getElementById('e_member').value = editingRecord.member;
-  const allSet = new Set([...leadSet, ...memberSet]);
-  editingRecord.participants = String(allSet.size);
+  editingRecord.participants = String(memberSet.size);
   document.getElementById('e_participants').value = editingRecord.participants;
 }
 
@@ -1304,6 +1667,7 @@ document.getElementById('btnReset').addEventListener('click', async ()=>{
     plan:[{content:'', location:''},{content:'', location:''},{content:'', location:''}]
   };
   step=1;
+  maxStepReached = 1;
   const subBtn = document.getElementById('btnSubmitReview');
   subBtn.disabled = false; subBtn.textContent = '제출하기';
   document.getElementById('submitStatus').textContent = '';
@@ -1313,7 +1677,9 @@ document.getElementById('btnReset').addEventListener('click', async ()=>{
 function syncFormFromData(){
   document.getElementById('in_name').value = data.name;
   detailIds.forEach(k=>{ document.getElementById('f_'+k).value = data[k]||''; });
-  computeTeam(); renderTypeCards(); renderPlanRows(); applyDateLimits(); updateProgress();
+  computeTeam(); renderTypeCards(); renderPlanRows(); applyDateLimits();
+  ['filming','editing','extra'].forEach(refreshNamePickerChips);
+  updateProgress();
 }
 
 let autosaveTimer=null;
@@ -1354,12 +1720,19 @@ function formatDateLabel(dateStr){
   return `${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
 }
 
+function toLocalDateStr(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
 function dateRangeArray(startDate, count){
   const arr = [];
   for(let i=0;i<count;i++){
     const d = new Date(startDate);
     d.setDate(d.getDate()+i);
-    arr.push(d.toISOString().slice(0,10));
+    arr.push(toLocalDateStr(d));
   }
   return arr;
 }
@@ -1406,6 +1779,9 @@ function applyDateLimits(){
 }
 
 bindDetailInputs();
+initNamePicker('filming');
+initNamePicker('editing');
+initNamePicker('extra');
 loadAutosave();
 </script>
 

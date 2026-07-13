@@ -1637,10 +1637,14 @@ async function approveSubmission(key){
       imageError = imgErr;
     }
 
-    if(result.driveError){
-      await showAlert('승인은 됐지만, 드라이브 폴더 생성에서 오류가 났어요:\n' + result.driveError + '\n\n앱스 스크립트에서 권한 승인(authorizeDriveAccess 실행)을 한 번 해주셔야 해요.');
+    const problems = [];
+    if(result.driveError) problems.push('드라이브 폴더 생성 오류: ' + result.driveError);
+    if(result.calendarError) problems.push('캘린더 일정 등록 오류: ' + result.calendarError);
+
+    if(problems.length){
+      await showAlert('승인은 됐지만 일부 자동화에서 문제가 났어요:\n' + problems.join('\n') + '\n\n앱스 스크립트에서 권한 승인(authorizeDriveAccess 실행)이 필요할 수 있어요.');
     }else{
-      await showAlert('승인 완료! 시트 업데이트, 드라이브 폴더+초안 문서, 완성본 이미지까지 전부 자동으로 만들어졌어요.' + (imageError ? '\n(다만 이미지 생성 중 문제가 있었을 수 있어요, 확인해주세요.)' : ''));
+      await showAlert('승인 완료! 시트 업데이트, 드라이브 폴더+초안 문서, 캘린더 일정, 완성본 이미지까지 전부 자동으로 만들어졌어요.' + (imageError ? '\n(다만 이미지 생성 중 문제가 있었을 수 있어요, 확인해주세요.)' : ''));
     }
   }catch(e){ showAlert('승인 처리에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
 }

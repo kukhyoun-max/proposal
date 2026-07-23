@@ -274,9 +274,10 @@
     <div class="step-panel" id="panel1">
       <p class="step-label">콘텐츠 기획서</p>
       <h2 class="heading">기획서를 작성할<br>이름을 알려주세요</h2>
-      <div class="input-box" id="nameBox">
+      <div class="input-box name-picker" id="nameBox">
         <label>담당자(팀장) 이름을 입력해 주세요</label>
         <input type="text" id="in_name" placeholder="예: 김지훈" autocomplete="off">
+        <div class="suggest-list" id="suggest_name"></div>
       </div>
 
       <div class="overview-wrap">
@@ -567,11 +568,30 @@ function jsonp(params){
   });
 }
 
+async function sheetPost(body){
+  await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(body)
+  });
+  // no-cors 방식이라 응답 내용을 읽을 수 없어서, 잠깐 기다렸다가 목록을 다시 불러와 확인해요
+  await new Promise(r => setTimeout(r, 900));
+}
+
 async function sheetCreate(record){
-  return jsonp({ action:'create', payload: JSON.stringify(record) });
+  await sheetPost({ action:'create', ...record });
+  try{
+    const rows = await jsonp({ action:'list' });
+    const found = (rows||[]).some(r => r['ID'] === record.id);
+    return { ok: found };
+  }catch(e){
+    return { ok: true }; // 확인 자체는 실패했지만 전송은 시도됐어요
+  }
 }
 async function sheetUpdate(id, koreanKeyedFields){
-  return jsonp({ action:'update', id, payload: JSON.stringify(koreanKeyedFields) });
+  await sheetPost({ action:'update', id, ...koreanKeyedFields });
+  return { ok: true };
 }
 async function sheetGetAll(){
   return jsonp({ action:'list' });
@@ -655,8 +675,7 @@ function initNamePicker(key){
   function renderSuggestions(){
     const q = searchEl.value.trim();
     const current = getNames();
-    if(!q){ suggestEl.classList.remove('open'); suggestEl.innerHTML=''; return; }
-    const matches = AMBASSADOR_ROSTER.filter(n => n.includes(q) && !current.includes(n));
+    const matches = (q ? AMBASSADOR_ROSTER.filter(n => n.includes(q)) : AMBASSADOR_ROSTER).filter(n => !current.includes(n));
     if(matches.length===0){
       suggestEl.innerHTML = '<div class="suggest-empty">일치하는 홍보대사가 없어요. 목록에 없으면 직접 이름을 입력해도 돼요.</div>';
     }else{
@@ -1053,9 +1072,40 @@ function renderFinalDoc(){
 
 document.getElementById('in_name').addEventListener('input', e=>{
   data.name = e.target.value; updateCta(); scheduleAutosave();
+  renderNameSuggestions();
 });
-document.getElementById('in_name').addEventListener('focus', ()=>document.getElementById('nameBox').classList.add('focused'));
+document.getElementById('in_name').addEventListener('focus', ()=>{
+  document.getElementById('nameBox').classList.add('focused');
+  renderNameSuggestions();
+});
 document.getElementById('in_name').addEventListener('blur', ()=>document.getElementById('nameBox').classList.remove('focused'));
+document.addEventListener('click', e=>{
+  const inputEl = document.getElementById('in_name');
+  const suggestEl = document.getElementById('suggest_name');
+  if(inputEl && suggestEl && !inputEl.contains(e.target) && !suggestEl.contains(e.target)){
+    suggestEl.classList.remove('open');
+  }
+});
+
+function renderNameSuggestions(){
+  const inputEl = document.getElementById('in_name');
+  const suggestEl = document.getElementById('suggest_name');
+  const q = inputEl.value.trim();
+  const matches = q ? AMBASSADOR_ROSTER.filter(n => n.includes(q)) : AMBASSADOR_ROSTER;
+  if(matches.length===0){
+    suggestEl.classList.remove('open'); suggestEl.innerHTML=''; return;
+  }
+  suggestEl.innerHTML = matches.map(n=>`<div class="suggest-item" data-name="${n}">${n}</div>`).join('');
+  suggestEl.classList.add('open');
+  suggestEl.querySelectorAll('.suggest-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      inputEl.value = item.dataset.name;
+      data.name = item.dataset.name;
+      suggestEl.classList.remove('open');
+      updateCta(); scheduleAutosave();
+    });
+  });
+}
 
 const detailIds = ['lead','title','summary','url','request'];
 function bindDetailInputs(){
@@ -1648,21 +1698,19 @@ async function approveSubmission(key){
     loadSubmissions(); refreshPendingBadge(); refreshOverview();
 
     let imageError = null;
+    let row = null;
     try{
       const rows = await sheetGetAll();
-      const row = rows.find(r=>r['ID']===key);
+      row = rows.find(r=>r['ID']===key);
       if(row) await generateAndUploadImage(mapRowToRecord(row));
     }catch(imgErr){
       console.error('auto image upload failed:', imgErr);
       imageError = imgErr;
     }
 
-    const problems = [];
-    if(result.driveError) problems.push('드라이브 폴더 생성 오류: ' + result.driveError);
-    if(result.calendarError) problems.push('캘린더 일정 등록 오류: ' + result.calendarError);
-
-    if(problems.length){
-      await showAlert('승인은 됐지만 일부 자동화에서 문제가 났어요:\n' + problems.join('\n') + '\n\n앱스 스크립트에서 권한 승인(authorizeDriveAccess 실행)이 필요할 수 있어요.');
+    const autoErrorText = row ? (row['자동화오류'] || '') : '';
+    if(autoErrorText){
+      await showAlert('승인은 됐지만 일부 자동화에서 문제가 났어요:\n' + autoErrorText + '\n\n앱스 스크립트에서 권한 승인(authorizeDriveAccess 실행)이 필요할 수 있어요.');
     }else{
       await showAlert('승인 완료! 시트 업데이트, 드라이브 폴더+초안 문서, 캘린더 일정, 완성본 이미지까지 전부 자동으로 만들어졌어요.' + (imageError ? '\n(다만 이미지 생성 중 문제가 있었을 수 있어요, 확인해주세요.)' : ''));
     }

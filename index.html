@@ -637,7 +637,7 @@ let data = {
 const AMBASSADOR_ROSTER = [
   '김지훈','홍찬영','김현아','최승훈','이지민','한민서','정수현','변수현','백가민',
   '한가온','이예은','최도연','김세영','오화종','이서연','장서영','이은채','이다희'
-];
+].sort((a,b)=>a.localeCompare(b,'ko'));
 
 const namePickers = {};
 
@@ -1611,7 +1611,6 @@ function renderAdminList(items){
   listEl.innerHTML = items.map(({key, rec})=>{
     const catLabel = (CATEGORIES.find(c=>c.id===rec.category)||{}).title || '-';
     const when = fmtDateTime(rec.submittedAt);
-    const detailText = buildPlanLines(rec).join('\n');
     let actions = '';
     if(rec.status === 'pending'){
       actions = `<div class="sub-actions"><button class="btn-reject" data-reject="${key}">반려</button><button class="btn-approve" data-approve="${key}">승인</button></div>`;
@@ -1632,7 +1631,7 @@ function renderAdminList(items){
         </div>
         <p class="sub-title">${(rec.title||'(제목 없음)')}</p>
         <p class="sub-meta">${rec.name||'-'} · ${catLabel} · ${when}</p>
-        <div class="sub-detail" id="detail-${key}" style="display:none;">${detailText.replace(/</g,'&lt;')}</div>
+        <div class="sub-detail" id="detail-${key}" style="display:none; white-space:normal; padding:0; border:none; margin:10px 0 0;">${buildDocCardHTML(rec)}</div>
         ${actions}
       </div>
     `;

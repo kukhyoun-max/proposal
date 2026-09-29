@@ -1924,6 +1924,19 @@ let mtState = {};
 let mtMeetings = {};
 let mtCancelled = false;
 
+function attendJsonp(params){
+  return new Promise((resolve, reject)=>{
+    const cbName = 'mt_' + Date.now() + '_' + Math.floor(Math.random()*100000);
+    const script = document.createElement('script');
+    let finished = false;
+    window[cbName] = (data)=>{ finished = true; resolve(data); delete window[cbName]; script.remove(); };
+    script.src = ATTEND_URL + '?' + new URLSearchParams({...params, callback: cbName}).toString();
+    script.onerror = ()=>{ if(!finished){ reject(new Error('스크립트 로드 실패')); delete window[cbName]; script.remove(); } };
+    document.body.appendChild(script);
+    setTimeout(()=>{ if(!finished){ reject(new Error('시간 초과')); delete window[cbName]; script.remove(); } }, 25000);
+  });
+}
+
 function mtYmd(d){ const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
 function mtMonday(ymd){ const d = new Date(ymd + 'T00:00:00'); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return mtYmd(d); }
 function mtWeekMondays(){

@@ -248,6 +248,36 @@
     display:inline-block; background:var(--purple-soft); color:var(--purple-dark);
     font-size:11.5px; font-weight:700; padding:4px 9px; border-radius:20px;
   }
+
+  /* ── 회의 출결 ── */
+  .mt-date{display:flex; align-items:center; gap:8px; margin-bottom:14px;}
+  .mt-date input{flex:1; padding:10px 12px; border:1.5px solid var(--line); border-radius:10px; font-family:'Noto Sans KR',sans-serif; font-size:14px; color:var(--ink);}
+  .mt-quick{font-size:12px; padding:8px 10px; border-radius:10px; border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer; white-space:nowrap;}
+  .mt-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 0; border-bottom:1px solid var(--line);}
+  .mt-name{font-size:14px; font-weight:700; min-width:52px;}
+  .mt-btns{display:flex; gap:4px;}
+  .mt-btns button{font-size:12px; padding:7px 8px; border-radius:8px; border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer; font-family:'Noto Sans KR',sans-serif;}
+  .mt-btns button.on[data-st="출석"]{background:#E6F5E9; border-color:#9ED3AE; color:#1B7A38; font-weight:700;}
+  .mt-btns button.on[data-st="지각"]{background:#FFF1DB; border-color:#F2C47C; color:#9A5B00; font-weight:700;}
+  .mt-btns button.on[data-st="불참"]{background:#FDEBD3; border-color:#EFB27A; color:#95590B; font-weight:700;}
+  .mt-btns button.on[data-st="무단불참"]{background:#FCEAEA; border-color:#F0C9C9; color:#B23A3A; font-weight:700;}
+  .mt-tools{display:flex; justify-content:space-between; align-items:center; margin:4px 0 6px;}
+  .mt-tools span{font-size:12px; color:var(--ink-faint);}
+  .mt-save{width:100%; margin-top:16px; padding:14px; border:none; border-radius:12px; background:var(--purple); color:#fff; font-size:15px; font-weight:700; cursor:pointer;}
+  .mt-save:disabled{background:var(--ink-faint);}
+  .mt-sum{width:100%; border-collapse:collapse; margin-top:10px; font-size:12.5px;}
+  .mt-sum th{font-size:11.5px; color:var(--ink-soft); font-weight:500; text-align:center; padding:6px 2px; border-bottom:1.5px solid var(--line);}
+  .mt-sum td{text-align:center; padding:7px 2px; border-bottom:1px solid var(--line);}
+  .mt-sum td:first-child, .mt-sum th:first-child{text-align:left;}
+  .mt-sum td.neg{color:#B23A3A; font-weight:700;}
+  .mt-weeks{display:flex; gap:6px; overflow-x:auto; padding:2px 0 12px; margin-bottom:6px; -webkit-overflow-scrolling:touch;}
+  .mt-week{flex:0 0 auto; min-width:74px; padding:8px 10px; border-radius:12px; border:1.5px solid var(--line); background:#fff; cursor:pointer; text-align:left; font-family:'Noto Sans KR',sans-serif;}
+  .mt-week b{display:block; font-size:13px; color:var(--ink);}
+  .mt-week small{display:block; font-size:10.5px; margin-top:2px; color:var(--ink-faint);}
+  .mt-week.done small{color:#1B7A38;} .mt-week.todo small{color:#B23A3A;} .mt-week.off small{color:var(--ink-faint);}
+  .mt-week.sel{border-color:var(--purple); background:var(--purple-soft);}
+  .mt-off{font-size:12px; padding:8px 10px; border-radius:10px; border:1.5px solid #F0C9C9; background:#fff; color:#B23A3A; cursor:pointer; white-space:nowrap;}
+  .mt-cancelled{padding:18px; border-radius:12px; background:var(--page-bg); text-align:center; font-size:13px; color:var(--ink-soft);}
 </style>
 </head>
 <body>
@@ -428,10 +458,37 @@
 <div class="phone" id="adminView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
     <h2 style="font-size:17px; font-weight:900; margin:0;">승인 대기 목록</h2>
-    <button class="reset-link" id="btnAdminBack">← 돌아가기</button>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <button class="reset-link" id="btnMeetingOpen" style="color:var(--purple); font-weight:700;">회의 출결</button>
+      <button class="reset-link" id="btnAdminBack">← 돌아가기</button>
+    </div>
   </div>
   <div class="content" id="adminList" style="padding-top:0;">
     <p style="font-size:12.5px; color:var(--ink-faint);">불러오는 중...</p>
+  </div>
+</div>
+
+<div class="phone" id="meetingView" style="display:none;">
+  <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <h2 style="font-size:17px; font-weight:900; margin:0;">회의 출결</h2>
+    <button class="reset-link" id="btnMeetingBack">← 승인 대기 목록</button>
+  </div>
+  <div class="content" style="padding-top:0;">
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 월요일마다 그 주 회의 칸이 자동으로 생겨요. 실제 회의한 날짜를 고르고 출결을 입력하세요.</p>
+    <div class="mt-weeks" id="mtWeeks"></div>
+    <div class="mt-date">
+      <input type="date" id="mtDate">
+      <button class="mt-off" id="mtCancel">이번 주 휴회</button>
+    </div>
+    <div class="mt-tools">
+      <span id="mtInfo">불러오는 중...</span>
+      <button class="mt-quick" id="mtAllPresent">전원 출석</button>
+    </div>
+    <div id="mtList"></div>
+    <button class="mt-save" id="mtSave">저장</button>
+    <p class="save-status" id="mtStatus"></p>
+    <h3 style="font-size:14px; font-weight:900; margin:26px 0 0;">누적 현황 <span id="mtCount" style="font-size:12px; font-weight:400; color:var(--ink-faint);"></span></h3>
+    <div id="mtSummary"></div>
   </div>
 </div>
 
@@ -1271,7 +1328,7 @@ async function refreshOverview(){
 }
 
 function showView(viewId){
-  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView') };
+  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView') };
   Object.keys(views).forEach(k=>{
     views[k].style.display = (k===viewId) ? (k==='form' ? 'flex' : 'block') : 'none';
   });
@@ -1854,6 +1911,147 @@ initNamePicker('filming');
 initNamePicker('editing');
 initNamePicker('extra');
 loadAutosave();
+
+/* ───────── 회의 출결 ───────── */
+const ATTEND_URL = 'https://script.google.com/macros/s/AKfycby04XfWbKhTXlq9cFQ-QpMz76GwhS6MeNLsQw-g-Q6YULmYa3j_MKQuiPdZ1ahQDtM/exec';
+const MEETING_ROSTER = [
+  '김지훈','김현아','최승훈','이지민','변수현','백가민','한가온',
+  '이예은','김세영','오화종','이서연','장서영','이은채','이다희'
+].sort((a,b)=>a.localeCompare(b,'ko'));
+const MT_STATUSES = ['출석','지각','불참','무단불참'];
+const MEETING_START = '2026-08-31';   // 이 주부터 매주 월요일마다 회의 칸 자동 생성
+let mtState = {};
+let mtMeetings = {};
+let mtCancelled = false;
+
+function mtYmd(d){ const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function mtMonday(ymd){ const d = new Date(ymd + 'T00:00:00'); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return mtYmd(d); }
+function mtWeekMondays(){
+  const out = [];
+  const d = new Date(mtMonday(MEETING_START) + 'T00:00:00');
+  const today = mtYmd(new Date());
+  while(mtYmd(d) <= today){ out.push(mtYmd(d)); d.setDate(d.getDate()+7); }
+  return out;
+}
+function mtRenderWeeks(){
+  const sel = document.getElementById('mtDate').value;
+  const selWeek = sel ? mtMonday(sel) : '';
+  const byWeek = {};  // 월요일 -> 그 주에 기록된 회의 날짜
+  Object.keys(mtMeetings).sort().forEach(d => { const w = mtMonday(d); (byWeek[w] = byWeek[w] || []).push(d); });
+  const weeks = mtWeekMondays();
+  Object.keys(byWeek).forEach(w => { if(!weeks.includes(w)) weeks.push(w); });
+  weeks.sort().reverse();
+  const md = s => { const [,m,d] = s.split('-'); return Number(m)+'/'+Number(d); };
+  const el = document.getElementById('mtWeeks');
+  el.innerHTML = weeks.map(w => {
+    const ds = byWeek[w] || [];
+    const d = ds.find(x => !mtMeetings[x].cancelled && mtMeetings[x].count) || ds[0];
+    const m = d ? mtMeetings[d] : null;
+    const cls = m && m.cancelled ? 'off' : (m && m.count ? 'done' : 'todo');
+    const label = m && m.cancelled ? '휴회' : (m && m.count ? md(d) + ' 완료' : '미입력');
+    return `<button class="mt-week ${cls} ${w===selWeek?'sel':''}" data-d="${d || w}"><b>${md(w)} 주</b><small>${label}</small></button>`;
+  }).join('');
+  el.querySelectorAll('.mt-week').forEach(b => b.addEventListener('click', ()=>{ document.getElementById('mtDate').value = b.dataset.d; mtLoad(); }));
+}
+
+function mtRenderList(){
+  const el = document.getElementById('mtList');
+  document.getElementById('mtCancel').textContent = mtCancelled ? '휴회 취소' : '이번 주 휴회';
+  document.getElementById('mtSave').style.display = mtCancelled ? 'none' : 'block';
+  document.getElementById('mtAllPresent').style.display = mtCancelled ? 'none' : 'inline-block';
+  if(mtCancelled){ el.innerHTML = '<div class="mt-cancelled">이 날짜는 휴회로 처리됐어요.<br>출결 점수에 반영되지 않아요.</div>'; return; }
+  el.innerHTML = MEETING_ROSTER.map(n => `
+    <div class="mt-row">
+      <span class="mt-name">${n}</span>
+      <div class="mt-btns">${MT_STATUSES.map(st => `<button data-name="${n}" data-st="${st}" class="${mtState[n]===st?'on':''}">${st}</button>`).join('')}</div>
+    </div>`).join('');
+  el.querySelectorAll('.mt-btns button').forEach(b => b.addEventListener('click', ()=>{
+    mtState[b.dataset.name] = (mtState[b.dataset.name] === b.dataset.st) ? '' : b.dataset.st;
+    mtRenderList(); mtUpdateInfo();
+  }));
+}
+
+function mtUpdateInfo(){
+  const done = MEETING_ROSTER.filter(n => mtState[n]).length;
+  document.getElementById('mtInfo').textContent = `${done} / ${MEETING_ROSTER.length}명 입력`;
+}
+
+function mtRenderSummary(summary, count){
+  document.getElementById('mtCount').textContent = count ? `(회의 ${count}회 기준)` : '';
+  const names = Object.keys(summary || {}).sort((a,b)=> (summary[a]['점수']-summary[b]['점수']) || a.localeCompare(b,'ko'));
+  if(!names.length){ document.getElementById('mtSummary').innerHTML = '<p style="font-size:12.5px;color:var(--ink-faint);">아직 기록이 없어요.</p>'; return; }
+  document.getElementById('mtSummary').innerHTML = `<table class="mt-sum">
+    <tr><th>이름</th><th>출석</th><th>지각</th><th>불참</th><th>무단</th><th>점수</th></tr>
+    ${names.map(n => { const s = summary[n]; return `<tr><td>${n}</td><td>${s['출석']}</td><td>${s['지각']}</td><td>${s['불참']}</td><td>${s['무단불참']}</td><td class="${s['점수']<0?'neg':''}">${s['점수']}</td></tr>`; }).join('')}
+  </table>`;
+}
+
+async function mtLoad(){
+  const date = document.getElementById('mtDate').value;
+  document.getElementById('mtInfo').textContent = '불러오는 중...';
+  document.getElementById('mtStatus').textContent = '';
+  mtState = {};
+  try{
+    const res = await attendJsonp({ action:'meetingList', date });
+    if(res && res.error) throw new Error(res.error);
+    (res.records || []).forEach(r => { mtState[r.name] = r.status; });
+    mtMeetings = res.meetings || {};
+    mtCancelled = !!res.cancelled;
+    mtRenderWeeks(); mtRenderList(); mtUpdateInfo();
+    if(mtCancelled) document.getElementById('mtInfo').textContent = '휴회';
+    mtRenderSummary(res.summary, res.meetingCount);
+    if((res.records||[]).length) document.getElementById('mtStatus').textContent = '이 날짜에 저장된 기록을 불러왔어요.';
+  }catch(e){
+    mtCancelled = false; mtRenderWeeks(); mtRenderList();
+    document.getElementById('mtInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류');
+  }
+}
+
+async function mtSave(){
+  const date = document.getElementById('mtDate').value;
+  if(!date){ showAlert('날짜를 선택해 주세요.'); return; }
+  const missing = MEETING_ROSTER.filter(n => !mtState[n]);
+  if(missing.length){ showAlert('출결이 입력되지 않은 사람이 있어요: ' + missing.join(', ')); return; }
+  const btn = document.getElementById('mtSave');
+  btn.disabled = true; btn.textContent = '저장 중...';
+  try{
+    await fetch(ATTEND_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action:'meetingSave', date, records: MEETING_ROSTER.map(n => ({ name:n, status:mtState[n] })) })
+    });
+    await new Promise(r => setTimeout(r, 1200));
+    await mtLoad();
+    document.getElementById('mtStatus').textContent = date + ' 출결을 저장했어요.';
+  }catch(e){
+    showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류'));
+  }
+  btn.disabled = false; btn.textContent = '저장';
+}
+
+document.getElementById('btnMeetingOpen').addEventListener('click', ()=>{
+  showView('meeting');
+  const input = document.getElementById('mtDate');
+  if(!input.value) input.value = mtMonday(mtYmd(new Date()));
+  mtLoad();
+});
+document.getElementById('btnMeetingBack').addEventListener('click', ()=>{ showView('admin'); });
+document.getElementById('mtDate').addEventListener('change', mtLoad);
+document.getElementById('mtCancel').addEventListener('click', async ()=>{
+  const date = document.getElementById('mtDate').value;
+  if(!date) return;
+  const btn = document.getElementById('mtCancel');
+  btn.disabled = true;
+  try{
+    await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(mtCancelled ? { action:'meetingSave', date, records: [] } : { action:'meetingSave', date, cancelled:true }) });
+    await new Promise(r => setTimeout(r, 1200));
+    await mtLoad();
+  }catch(e){ showAlert('처리에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+  btn.disabled = false;
+});
+document.getElementById('mtAllPresent').addEventListener('click', ()=>{ MEETING_ROSTER.forEach(n => { if(!mtState[n]) mtState[n] = '출석'; }); mtRenderList(); mtUpdateInfo(); });
+document.getElementById('mtSave').addEventListener('click', mtSave);
 </script>
 
 </body>

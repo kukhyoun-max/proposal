@@ -276,6 +276,7 @@
   .mt-week small{display:block; font-size:10.5px; margin-top:2px; color:var(--ink-faint);}
   .mt-week.done small{color:#1B7A38;} .mt-week.todo small{color:#B23A3A;} .mt-week.off small{color:var(--ink-faint);}
   .mt-week.sel{border-color:var(--purple); background:var(--purple-soft);}
+  .mt-week.part small{color:#9A5B00;}
   .mt-off{font-size:12px; padding:8px 10px; border-radius:10px; border:1.5px solid #F0C9C9; background:#fff; color:#B23A3A; cursor:pointer; white-space:nowrap;}
   .mt-cancelled{padding:18px; border-radius:12px; background:var(--page-bg); text-align:center; font-size:13px; color:var(--ink-soft);}
 
@@ -521,7 +522,7 @@
     <button class="reset-link" id="btnPersonalBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
-    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 월요일마다 그 주 칸이 자동으로 생겨요. 기획서·콘텐츠 제출 여부를 체크하세요.</p>
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 월요일마다 그 주 칸이 자동으로 생겨요. 기획서만 먼저 입력해 저장하고, 콘텐츠는 나중에 같은 주를 눌러 이어서 입력하면 돼요.</p>
     <div class="mt-weeks" id="pcWeeks"></div>
     <div class="mt-tools">
       <span id="pcInfo">불러오는 중...</span>
@@ -2129,8 +2130,12 @@ function pcRenderWeeks(){
   weeks.sort().reverse();
   const el = document.getElementById('pcWeeks');
   el.innerHTML = weeks.map(w => {
-    const n = pcWeeksDone[w] || 0;
-    return `<button class="mt-week ${n?'done':'todo'} ${w===pcWeek?'sel':''}" data-w="${w}"><b>${md(w)} 주</b><small>${n?'입력 완료':'미입력'}</small></button>`;
+    const info = pcWeeksDone[w];
+    const n = info ? (typeof info === 'number' ? info : info.n) : 0;
+    const pending = info && typeof info === 'object' ? info.pending : 0;
+    const cls = !n ? 'todo' : (pending ? 'part' : 'done');
+    const label = !n ? '미입력' : (pending ? `콘텐츠 대기 ${pending}` : '입력 완료');
+    return `<button class="mt-week ${cls} ${w===pcWeek?'sel':''}" data-w="${w}"><b>${md(w)} 주</b><small>${label}</small></button>`;
   }).join('');
   el.querySelectorAll('.mt-week').forEach(b => b.addEventListener('click', ()=>{ pcWeek = b.dataset.w; pcLoad(); }));
 }
@@ -2142,7 +2147,7 @@ function pcRenderList(){
     const pts = pcPts(s);
     const seg = key => `<div class="seg">${PC_OPTS.map(v => `<button data-n="${n}" data-k="${key}" data-v="${v}" class="${s[key]===v?'on':''}">${v}</button>`).join('')}</div>`;
     return `<div class="pc-row">
-      <div class="pc-name">${n}<small class="${pts<0?'neg':''}">${(s.plan&&s.content) ? (pts<0? pts+'점' : '정상') : ''}</small></div>
+      <div class="pc-name">${n}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : '콘텐츠 전'))}</small></div>
       <div class="pc-lines">
         <div class="pc-line"><span class="pc-lab">기획서</span>${seg('plan')}</div>
         <div class="pc-line"><span class="pc-lab">콘텐츠</span>${seg('content')}</div>
@@ -2157,8 +2162,9 @@ function pcRenderList(){
 }
 
 function pcUpdateInfo(){
-  const done = MEETING_ROSTER.filter(n => pcState[n] && pcState[n].plan && pcState[n].content).length;
-  document.getElementById('pcInfo').textContent = `${done} / ${MEETING_ROSTER.length}명 입력`;
+  const plan = MEETING_ROSTER.filter(n => pcState[n] && pcState[n].plan).length;
+  const content = MEETING_ROSTER.filter(n => pcState[n] && pcState[n].content).length;
+  document.getElementById('pcInfo').textContent = `기획서 ${plan} · 콘텐츠 ${content} / ${MEETING_ROSTER.length}명`;
 }
 
 function pcRenderSummary(summary, count){
@@ -2192,15 +2198,15 @@ async function pcLoad(){
 }
 
 async function pcSave(){
-  const missing = MEETING_ROSTER.filter(n => !(pcState[n] && pcState[n].plan && pcState[n].content));
-  if(missing.length){ showAlert('입력이 덜 된 사람이 있어요: ' + missing.join(', ')); return; }
+  const missing = MEETING_ROSTER.filter(n => !(pcState[n] && pcState[n].plan));
+  if(missing.length){ showAlert('기획서가 입력되지 않은 사람이 있어요: ' + missing.join(', ') + '\n(콘텐츠는 나중에 입력해도 돼요)'); return; }
   const btn = document.getElementById('pcSave');
   btn.disabled = true; btn.textContent = '저장 중...';
   try{
     await fetch(ATTEND_URL, {
       method:'POST', mode:'no-cors',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ action:'personalSave', week: pcWeek, records: MEETING_ROSTER.map(n => ({ name:n, plan:pcState[n].plan, content:pcState[n].content })) })
+      body: JSON.stringify({ action:'personalSave', week: pcWeek, records: MEETING_ROSTER.map(n => ({ name:n, plan:pcState[n].plan, content:pcState[n].content || '' })) })
     });
     await new Promise(r => setTimeout(r, 1200));
     await pcLoad();

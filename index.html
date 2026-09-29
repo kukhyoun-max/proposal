@@ -277,6 +277,16 @@
   .mt-week.done small{color:#1B7A38;} .mt-week.todo small{color:#B23A3A;} .mt-week.off small{color:var(--ink-faint);}
   .mt-week.sel{border-color:var(--purple); background:var(--purple-soft);}
   .mt-week.part small{color:#9A5B00;}
+  .ab-card{border:1.5px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px;}
+  .ab-title{font-size:13.5px; font-weight:700; margin:0 0 6px;}
+  .ab-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 0; border-top:1px solid var(--line);}
+  .ab-row:first-of-type{border-top:none;}
+  .ab-who{font-size:13.5px; font-weight:700;}
+  .ab-who small{display:block; font-size:11.5px; font-weight:400; color:var(--ink-soft); margin-top:2px;}
+  .ab-pill{font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; margin-left:6px; vertical-align:1px;}
+  .ab-pill.no{background:#FCEAEA; color:#B23A3A;} .ab-pill.ok{background:#E6F5E9; color:#1B7A38;}
+  .ab-btn{font-size:12px; padding:7px 10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer; white-space:nowrap; font-family:'Noto Sans KR',sans-serif;}
+  .ab-btn.go{border-color:var(--purple); color:var(--purple); font-weight:700;}
   .mt-off{font-size:12px; padding:8px 10px; border-radius:10px; border:1.5px solid #F0C9C9; background:#fff; color:#B23A3A; cursor:pointer; white-space:nowrap;}
   .mt-cancelled{padding:18px; border-radius:12px; background:var(--page-bg); text-align:center; font-size:13px; color:var(--ink-soft);}
 
@@ -483,7 +493,7 @@
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
     <h2 style="font-size:17px; font-weight:900; margin:0;">승인 대기 목록</h2>
     <div style="display:flex; gap:12px; align-items:center;">
-      <button class="reset-link" id="btnMeetingOpen" style="color:var(--purple); font-weight:700;">회의·개인콘텐츠</button>
+      <button class="reset-link" id="btnMeetingOpen" style="color:var(--purple); font-weight:700;">출결·점수 관리</button>
       <button class="reset-link" id="btnAdminBack">← 돌아가기</button>
     </div>
   </div>
@@ -494,7 +504,7 @@
 
 <div class="phone" id="meetingView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
-    <div class="mt-tabs"><button class="on">회의 출결</button><button data-go="personal">개인 콘텐츠</button></div>
+    <div class="mt-tabs"><button class="on">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="absent">불참 확인</button></div>
     <button class="reset-link" id="btnMeetingBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
@@ -518,7 +528,7 @@
 
 <div class="phone" id="personalView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
-    <div class="mt-tabs"><button data-go="meeting">회의 출결</button><button class="on">개인 콘텐츠</button></div>
+    <div class="mt-tabs"><button data-go="meeting">회의</button><button class="on">개인콘텐츠</button><button data-go="absent">불참 확인</button></div>
     <button class="reset-link" id="btnPersonalBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
@@ -537,6 +547,24 @@
     <p class="save-status" id="pcStatus"></p>
     <h3 style="font-size:14px; font-weight:900; margin:26px 0 0;">누적 현황 <span id="pcCount" style="font-size:12px; font-weight:400; color:var(--ink-faint);"></span></h3>
     <div id="pcSummary"></div>
+  </div>
+</div>
+
+<div class="phone" id="absentView" style="display:none;">
+  <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <div class="mt-tabs"><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button class="on">불참 확인</button></div>
+    <button class="reset-link" id="btnAbsentBack">← 돌아가기</button>
+  </div>
+  <div class="content" style="padding-top:0;">
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;">기획서에는 있지만 게시물 크레딧에 없는 사람이에요. 사정이 있었다면 <b>사유 있는 불참</b>으로 바꾸면 불참 횟수에서 빠져요. (콘텐츠 가점은 받지 않아요)</p>
+    <div class="mt-tools">
+      <span id="abInfo">불러오는 중...</span>
+      <div style="display:flex; gap:6px;">
+        <button class="mt-quick" id="abRerun">지금 다시 계산</button>
+        <a class="mt-quick" id="abSheet" target="_blank" href="https://docs.google.com/spreadsheets/d/1qmojS8eLOChWyt1fxIQOJ9UGBpgw4kWS6vzMHzVLlW8/edit" style="text-decoration:none;">종합 점수표</a>
+      </div>
+    </div>
+    <div id="abList"></div>
   </div>
 </div>
 
@@ -1376,7 +1404,7 @@ async function refreshOverview(){
 }
 
 function showView(viewId){
-  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView'), personal: document.getElementById('personalView') };
+  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView'), personal: document.getElementById('personalView'), absent: document.getElementById('absentView') };
   Object.keys(views).forEach(k=>{
     views[k].style.display = (k===viewId) ? (k==='form' ? 'flex' : 'block') : 'none';
   });
@@ -2224,8 +2252,69 @@ document.getElementById('pcSave').addEventListener('click', pcSave);
 document.getElementById('btnPersonalBack').addEventListener('click', ()=>{ showView('admin'); });
 document.querySelectorAll('.mt-tabs button[data-go]').forEach(b => b.addEventListener('click', ()=>{
   if(b.dataset.go === 'personal'){ showView('personal'); pcLoad(); }
+  else if(b.dataset.go === 'absent'){ showView('absent'); abLoad(); }
   else { showView('meeting'); const input = document.getElementById('mtDate'); if(!input.value) input.value = mtMonday(mtYmd(new Date())); mtLoad(); }
 }));
+
+/* ───────── 팀콘 불참 확인 / 면제 ───────── */
+let abItems = [];
+function abEsc(s){ return String(s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function abRender(){
+  const el = document.getElementById('abList');
+  if(!abItems.length){ el.innerHTML = '<p style="font-size:12.5px;color:var(--ink-faint);">불참으로 잡힌 사람이 없어요.</p>'; return; }
+  const groups = {};
+  abItems.forEach((it, i) => { (groups[it.planId] = groups[it.planId] || { title: it.title, rows: [] }).rows.push(i); });
+  el.innerHTML = Object.keys(groups).map(pid => {
+    const g = groups[pid];
+    return `<div class="ab-card"><p class="ab-title">${abEsc(g.title)}</p>${g.rows.map(i => {
+      const it = abItems[i];
+      const ok = it.status === '면제';
+      return `<div class="ab-row">
+        <div class="ab-who">${abEsc(it.name)}<span class="ab-pill ${ok?'ok':'no'}">${ok?'사유 있는 불참':'불참'}</span>${ok && it.reason ? `<small>사유: ${abEsc(it.reason)}</small>` : ''}</div>
+        <button class="ab-btn ${ok?'':'go'}" data-i="${i}">${ok?'면제 취소':'사유 있는 불참'}</button>
+      </div>`; }).join('')}</div>`;
+  }).join('');
+  el.querySelectorAll('.ab-btn').forEach(b => b.addEventListener('click', ()=>abToggle(Number(b.dataset.i), b)));
+}
+async function abLoad(){
+  document.getElementById('abInfo').textContent = '불러오는 중...';
+  try{
+    const res = await attendJsonp({ action:'absentList' });
+    if(res && res.error) throw new Error(res.error);
+    abItems = res.items || [];
+    const n = abItems.filter(x => x.status !== '면제').length, m = abItems.length - n;
+    document.getElementById('abInfo').textContent = `불참 ${n} · 면제 ${m}` + (res.updated ? ` (계산 ${res.updated})` : '');
+    abRender();
+  }catch(e){ document.getElementById('abInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류'); }
+}
+async function abToggle(i, btn){
+  const it = abItems[i];
+  const on = it.status !== '면제';
+  let reason = '';
+  if(on){
+    reason = await showPrompt(`${it.name} — 불참 사유를 적어주세요`);
+    if(reason === null) return;
+    reason = String(reason).trim();
+    if(!reason){ showAlert('사유를 입력해야 면제돼요.'); return; }
+  }
+  btn.disabled = true; btn.textContent = '저장 중...';
+  try{
+    await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action:'exemptSave', planId: it.planId, title: it.title, name: it.name, reason, on }) });
+    await new Promise(r => setTimeout(r, 1500));
+    await abLoad();
+  }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); btn.disabled = false; }
+}
+document.getElementById('btnAbsentBack').addEventListener('click', ()=>{ showView('admin'); });
+document.getElementById('abRerun').addEventListener('click', async ()=>{
+  const b = document.getElementById('abRerun');
+  b.disabled = true; b.textContent = '계산 중... (약 30초)';
+  try{
+    await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'rerun' }) });
+    await abLoad();
+  }catch(e){ showAlert('다시 계산에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+  b.disabled = false; b.textContent = '지금 다시 계산';
+});
 </script>
 
 </body>

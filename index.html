@@ -278,6 +278,29 @@
   .mt-week.sel{border-color:var(--purple); background:var(--purple-soft);}
   .mt-off{font-size:12px; padding:8px 10px; border-radius:10px; border:1.5px solid #F0C9C9; background:#fff; color:#B23A3A; cursor:pointer; white-space:nowrap;}
   .mt-cancelled{padding:18px; border-radius:12px; background:var(--page-bg); text-align:center; font-size:13px; color:var(--ink-soft);}
+
+  /* ── 탭 / 개인 콘텐츠 ── */
+  .mt-tabs{display:flex; gap:4px; background:var(--page-bg); padding:4px; border-radius:12px;}
+  .mt-tabs button{border:none; background:none; padding:7px 12px; border-radius:9px; font-size:13.5px; font-weight:700; color:var(--ink-faint); cursor:pointer; font-family:'Noto Sans KR',sans-serif;}
+  .mt-tabs button.on{background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  .pc-row{display:flex; gap:10px; padding:12px 0; border-bottom:1px solid var(--line); align-items:center;}
+  .pc-name{width:56px; flex:0 0 56px; font-size:14px; font-weight:700;}
+  .pc-name small{display:block; font-size:11px; font-weight:700; margin-top:2px; color:var(--ink-faint);}
+  .pc-name small.neg{color:#B23A3A;}
+  .pc-lines{flex:1; display:flex; flex-direction:column; gap:6px;}
+  .pc-line{display:flex; align-items:center; gap:8px;}
+  .pc-lab{width:38px; flex:0 0 38px; font-size:11.5px; color:var(--ink-soft); font-weight:500;}
+  .seg{flex:1; display:flex; border:1.5px solid var(--line); border-radius:9px; overflow:hidden;}
+  .seg button{flex:1; border:none; border-left:1.5px solid var(--line); background:#fff; padding:7px 0; font-size:12px; color:var(--ink-faint); cursor:pointer; font-family:'Noto Sans KR',sans-serif;}
+  .seg button:first-child{border-left:none;}
+  .seg button.on[data-v="제출"]{background:#E6F5E9; color:#1B7A38; font-weight:700;}
+  .seg button.on[data-v="지각"]{background:#FFF1DB; color:#9A5B00; font-weight:700;}
+  .seg button.on[data-v="미제출"]{background:#FCEAEA; color:#B23A3A; font-weight:700;}
+  .pc-legend{display:flex; flex-wrap:wrap; gap:4px 10px; font-size:11px; color:var(--ink-faint); margin:0 0 4px;}
+  .pc-legend span{white-space:nowrap;}
+  .pc-legend #pcRule{flex-basis:100%; white-space:normal;}
+  .pc-legend i{display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:3px; vertical-align:0;}
+  .mt-sum td .bad{color:#B23A3A; font-weight:700;} .mt-sum td .late{color:#9A5B00; font-weight:700;}
 </style>
 </head>
 <body>
@@ -459,7 +482,7 @@
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
     <h2 style="font-size:17px; font-weight:900; margin:0;">승인 대기 목록</h2>
     <div style="display:flex; gap:12px; align-items:center;">
-      <button class="reset-link" id="btnMeetingOpen" style="color:var(--purple); font-weight:700;">회의 출결</button>
+      <button class="reset-link" id="btnMeetingOpen" style="color:var(--purple); font-weight:700;">회의·개인콘텐츠</button>
       <button class="reset-link" id="btnAdminBack">← 돌아가기</button>
     </div>
   </div>
@@ -470,8 +493,8 @@
 
 <div class="phone" id="meetingView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
-    <h2 style="font-size:17px; font-weight:900; margin:0;">회의 출결</h2>
-    <button class="reset-link" id="btnMeetingBack">← 승인 대기 목록</button>
+    <div class="mt-tabs"><button class="on">회의 출결</button><button data-go="personal">개인 콘텐츠</button></div>
+    <button class="reset-link" id="btnMeetingBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
     <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 월요일마다 그 주 회의 칸이 자동으로 생겨요. 실제 회의한 날짜를 고르고 출결을 입력하세요.</p>
@@ -489,6 +512,30 @@
     <p class="save-status" id="mtStatus"></p>
     <h3 style="font-size:14px; font-weight:900; margin:26px 0 0;">누적 현황 <span id="mtCount" style="font-size:12px; font-weight:400; color:var(--ink-faint);"></span></h3>
     <div id="mtSummary"></div>
+  </div>
+</div>
+
+<div class="phone" id="personalView" style="display:none;">
+  <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <div class="mt-tabs"><button data-go="meeting">회의 출결</button><button class="on">개인 콘텐츠</button></div>
+    <button class="reset-link" id="btnPersonalBack">← 돌아가기</button>
+  </div>
+  <div class="content" style="padding-top:0;">
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 월요일마다 그 주 칸이 자동으로 생겨요. 기획서·콘텐츠 제출 여부를 체크하세요.</p>
+    <div class="mt-weeks" id="pcWeeks"></div>
+    <div class="mt-tools">
+      <span id="pcInfo">불러오는 중...</span>
+      <div style="display:flex; gap:6px;">
+        <button class="mt-quick" id="pcAllPlan">기획서 전원 제출</button>
+        <button class="mt-quick" id="pcAllContent">콘텐츠 전원 제출</button>
+      </div>
+    </div>
+    <div class="pc-legend"><span><i style="background:#9ED3AE"></i>제출</span><span><i style="background:#F2C47C"></i>지각</span><span><i style="background:#F0A9A9"></i>미제출</span><span id="pcRule"></span></div>
+    <div id="pcList"></div>
+    <button class="mt-save" id="pcSave">저장</button>
+    <p class="save-status" id="pcStatus"></p>
+    <h3 style="font-size:14px; font-weight:900; margin:26px 0 0;">누적 현황 <span id="pcCount" style="font-size:12px; font-weight:400; color:var(--ink-faint);"></span></h3>
+    <div id="pcSummary"></div>
   </div>
 </div>
 
@@ -1328,7 +1375,7 @@ async function refreshOverview(){
 }
 
 function showView(viewId){
-  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView') };
+  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView'), personal: document.getElementById('personalView') };
   Object.keys(views).forEach(k=>{
     views[k].style.display = (k===viewId) ? (k==='form' ? 'flex' : 'block') : 'none';
   });
@@ -2065,6 +2112,114 @@ document.getElementById('mtCancel').addEventListener('click', async ()=>{
 });
 document.getElementById('mtAllPresent').addEventListener('click', ()=>{ MEETING_ROSTER.forEach(n => { if(!mtState[n]) mtState[n] = '출석'; }); mtRenderList(); mtUpdateInfo(); });
 document.getElementById('mtSave').addEventListener('click', mtSave);
+
+/* ───────── 개인 콘텐츠 제출 ───────── */
+const PC_POINTS = { plan: { '제출':0, '지각':-1, '미제출':-2.5 }, content: { '제출':0, '지각':-1.5, '미제출':-2.5 } };
+const PC_OPTS = ['제출','지각','미제출'];
+let pcWeek = '';
+let pcState = {};   // name -> { plan, content }
+let pcWeeksDone = {};
+
+function pcPts(s){ return (PC_POINTS.plan[s.plan]||0) + (PC_POINTS.content[s.content]||0); }
+
+function pcRenderWeeks(){
+  const md = s => { const [,m,d] = s.split('-'); return Number(m)+'/'+Number(d); };
+  const weeks = mtWeekMondays();
+  Object.keys(pcWeeksDone).forEach(w => { if(!weeks.includes(w)) weeks.push(w); });
+  weeks.sort().reverse();
+  const el = document.getElementById('pcWeeks');
+  el.innerHTML = weeks.map(w => {
+    const n = pcWeeksDone[w] || 0;
+    return `<button class="mt-week ${n?'done':'todo'} ${w===pcWeek?'sel':''}" data-w="${w}"><b>${md(w)} 주</b><small>${n?'입력 완료':'미입력'}</small></button>`;
+  }).join('');
+  el.querySelectorAll('.mt-week').forEach(b => b.addEventListener('click', ()=>{ pcWeek = b.dataset.w; pcLoad(); }));
+}
+
+function pcRenderList(){
+  const el = document.getElementById('pcList');
+  el.innerHTML = MEETING_ROSTER.map(n => {
+    const s = pcState[n] || {};
+    const pts = pcPts(s);
+    const seg = key => `<div class="seg">${PC_OPTS.map(v => `<button data-n="${n}" data-k="${key}" data-v="${v}" class="${s[key]===v?'on':''}">${v}</button>`).join('')}</div>`;
+    return `<div class="pc-row">
+      <div class="pc-name">${n}<small class="${pts<0?'neg':''}">${(s.plan&&s.content) ? (pts<0? pts+'점' : '정상') : ''}</small></div>
+      <div class="pc-lines">
+        <div class="pc-line"><span class="pc-lab">기획서</span>${seg('plan')}</div>
+        <div class="pc-line"><span class="pc-lab">콘텐츠</span>${seg('content')}</div>
+      </div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', ()=>{
+    const s = pcState[b.dataset.n] || (pcState[b.dataset.n] = {});
+    s[b.dataset.k] = (s[b.dataset.k] === b.dataset.v) ? '' : b.dataset.v;
+    pcRenderList(); pcUpdateInfo();
+  }));
+}
+
+function pcUpdateInfo(){
+  const done = MEETING_ROSTER.filter(n => pcState[n] && pcState[n].plan && pcState[n].content).length;
+  document.getElementById('pcInfo').textContent = `${done} / ${MEETING_ROSTER.length}명 입력`;
+}
+
+function pcRenderSummary(summary, count){
+  document.getElementById('pcCount').textContent = count ? `(${count}주 기준)` : '';
+  const names = Object.keys(summary || {}).sort((a,b)=> (summary[a]['점수']-summary[b]['점수']) || a.localeCompare(b,'ko'));
+  if(!names.length){ document.getElementById('pcSummary').innerHTML = '<p style="font-size:12.5px;color:var(--ink-faint);">아직 기록이 없어요.</p>'; return; }
+  const cell = (late, miss) => (late||miss) ? `${late?`<span class="late">지각 ${late}</span>`:''}${late&&miss?' · ':''}${miss?`<span class="bad">미제출 ${miss}</span>`:''}` : '<span style="color:var(--ink-faint)">-</span>';
+  document.getElementById('pcSummary').innerHTML = `<table class="mt-sum">
+    <tr><th>이름</th><th>기획서</th><th>콘텐츠</th><th>점수</th></tr>
+    ${names.map(n => { const s = summary[n]; return `<tr><td>${n}</td><td>${cell(s['기획서지각'], s['기획서미제출'])}</td><td>${cell(s['콘텐츠지각'], s['콘텐츠미제출'])}</td><td class="${s['점수']<0?'neg':''}">${s['점수']}</td></tr>`; }).join('')}
+  </table>`;
+}
+
+async function pcLoad(){
+  if(!pcWeek) pcWeek = mtMonday(mtYmd(new Date()));
+  document.getElementById('pcInfo').textContent = '불러오는 중...';
+  document.getElementById('pcStatus').textContent = '';
+  pcState = {};
+  try{
+    const res = await attendJsonp({ action:'personalList', week: pcWeek });
+    if(res && res.error) throw new Error(res.error);
+    (res.records || []).forEach(r => { pcState[r.name] = { plan:r.plan, content:r.content }; });
+    pcWeeksDone = res.weeks || {};
+    pcRenderWeeks(); pcRenderList(); pcUpdateInfo();
+    pcRenderSummary(res.summary, res.weekCount);
+    if((res.records||[]).length) document.getElementById('pcStatus').textContent = '이 주에 저장된 기록을 불러왔어요.';
+  }catch(e){
+    pcRenderWeeks(); pcRenderList();
+    document.getElementById('pcInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류');
+  }
+}
+
+async function pcSave(){
+  const missing = MEETING_ROSTER.filter(n => !(pcState[n] && pcState[n].plan && pcState[n].content));
+  if(missing.length){ showAlert('입력이 덜 된 사람이 있어요: ' + missing.join(', ')); return; }
+  const btn = document.getElementById('pcSave');
+  btn.disabled = true; btn.textContent = '저장 중...';
+  try{
+    await fetch(ATTEND_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action:'personalSave', week: pcWeek, records: MEETING_ROSTER.map(n => ({ name:n, plan:pcState[n].plan, content:pcState[n].content })) })
+    });
+    await new Promise(r => setTimeout(r, 1200));
+    await pcLoad();
+    document.getElementById('pcStatus').textContent = pcWeek + ' 주 제출 현황을 저장했어요.';
+  }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+  btn.disabled = false; btn.textContent = '저장';
+}
+
+function pcFillAll(key){ MEETING_ROSTER.forEach(n => { const s = pcState[n] || (pcState[n] = {}); if(!s[key]) s[key] = '제출'; }); pcRenderList(); pcUpdateInfo(); }
+
+document.getElementById('pcRule').textContent = `감점: 기획서 지각 ${PC_POINTS.plan['지각']} / 미제출 ${PC_POINTS.plan['미제출']} · 콘텐츠 지각 ${PC_POINTS.content['지각']} / 미제출 ${PC_POINTS.content['미제출']}`;
+document.getElementById('pcAllPlan').addEventListener('click', ()=>pcFillAll('plan'));
+document.getElementById('pcAllContent').addEventListener('click', ()=>pcFillAll('content'));
+document.getElementById('pcSave').addEventListener('click', pcSave);
+document.getElementById('btnPersonalBack').addEventListener('click', ()=>{ showView('admin'); });
+document.querySelectorAll('.mt-tabs button[data-go]').forEach(b => b.addEventListener('click', ()=>{
+  if(b.dataset.go === 'personal'){ showView('personal'); pcLoad(); }
+  else { showView('meeting'); const input = document.getElementById('mtDate'); if(!input.value) input.value = mtMonday(mtYmd(new Date())); mtLoad(); }
+}));
 </script>
 
 </body>

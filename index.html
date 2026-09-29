@@ -287,6 +287,19 @@
   .ab-pill.no{background:#FCEAEA; color:#B23A3A;} .ab-pill.ok{background:#E6F5E9; color:#1B7A38;}
   .ab-btn{font-size:12px; padding:7px 10px; border-radius:9px; border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer; white-space:nowrap; font-family:'Noto Sans KR',sans-serif;}
   .ab-btn.go{border-color:var(--purple); color:var(--purple); font-weight:700;}
+  .topbar:has(> .mt-tabs){flex-wrap:wrap; row-gap:10px;}
+  .topbar > .mt-tabs{order:2; flex:1 1 100%;}
+  .mt-tabs button{flex:1; padding:8px 4px; white-space:nowrap;}
+  .mt-tabs + .reset-link{order:1; margin-left:auto; white-space:nowrap;}
+  .ev-card{border:1.5px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px; cursor:pointer; background:#fff;}
+  .ev-card b{font-size:14px;} .ev-card .ev-meta{font-size:12px; color:var(--ink-soft); margin-top:3px;}
+  .ev-pts{float:right; font-size:12px; font-weight:700; color:#1B7A38; background:#E6F5E9; padding:2px 8px; border-radius:20px;}
+  .ev-form{border:1.5px solid var(--purple); border-radius:14px; padding:14px; margin-bottom:14px; background:var(--purple-soft);}
+  .ev-form label{display:block; font-size:12px; color:var(--ink-soft); margin:8px 0 4px;}
+  .ev-form input{width:100%; box-sizing:border-box; padding:10px 12px; border:1.5px solid var(--line); border-radius:10px; font-family:'Noto Sans KR',sans-serif; font-size:14px; color:var(--ink); background:#fff;}
+  .ev-chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;}
+  .ev-chips button{font-size:13px; padding:7px 11px; border-radius:20px; border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer; font-family:'Noto Sans KR',sans-serif;}
+  .ev-chips button.on{background:var(--purple); border-color:var(--purple); color:#fff; font-weight:700;}
   .mt-off{font-size:12px; padding:8px 10px; border-radius:10px; border:1.5px solid #F0C9C9; background:#fff; color:#B23A3A; cursor:pointer; white-space:nowrap;}
   .mt-cancelled{padding:18px; border-radius:12px; background:var(--page-bg); text-align:center; font-size:13px; color:var(--ink-soft);}
 
@@ -504,7 +517,7 @@
 
 <div class="phone" id="meetingView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
-    <div class="mt-tabs"><button class="on">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="absent">불참 확인</button></div>
+    <div class="mt-tabs"><button class="on">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="absent">불참 확인</button><button data-go="event">행사</button></div>
     <button class="reset-link" id="btnMeetingBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
@@ -528,7 +541,7 @@
 
 <div class="phone" id="personalView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
-    <div class="mt-tabs"><button data-go="meeting">회의</button><button class="on">개인콘텐츠</button><button data-go="absent">불참 확인</button></div>
+    <div class="mt-tabs"><button data-go="meeting">회의</button><button class="on">개인콘텐츠</button><button data-go="absent">불참 확인</button><button data-go="event">행사</button></div>
     <button class="reset-link" id="btnPersonalBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
@@ -552,7 +565,7 @@
 
 <div class="phone" id="absentView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
-    <div class="mt-tabs"><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button class="on">불참 확인</button></div>
+    <div class="mt-tabs"><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button class="on">불참 확인</button><button data-go="event">행사</button></div>
     <button class="reset-link" id="btnAbsentBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
@@ -565,6 +578,36 @@
       </div>
     </div>
     <div id="abList"></div>
+  </div>
+</div>
+
+<div class="phone" id="eventView" style="display:none;">
+  <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <div class="mt-tabs"><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="absent">불참 확인</button><button class="on">행사</button></div>
+    <button class="reset-link" id="btnEventBack">← 돌아가기</button>
+  </div>
+  <div class="content" style="padding-top:0;">
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;">지원해서 참여한 행사를 등록하면 참여자에게 가점이 들어가요. 가점은 행사마다 정할 수 있고, 종합 점수표의 <b>행사 가점</b>에 반영돼요.</p>
+    <div class="mt-tools">
+      <span id="evInfo">불러오는 중...</span>
+      <button class="mt-quick" id="evNew" style="color:var(--purple); border-color:var(--purple); font-weight:700;">+ 새 행사</button>
+    </div>
+    <div class="ev-form" id="evForm" style="display:none;">
+      <b id="evFormTitle" style="font-size:14px;">새 행사</b>
+      <label>날짜</label><input type="date" id="evDate">
+      <label>행사명</label><input type="text" id="evTitle" placeholder="예) 입시박람회 부스 운영">
+      <label>1인당 가점</label><input type="number" id="evPoints" step="0.5" min="0.5" max="20" value="2">
+      <label>참여자 <span id="evCount"></span></label>
+      <div class="ev-chips" id="evChips"></div>
+      <button class="mt-save" id="evSave">저장</button>
+      <div style="display:flex; justify-content:space-between; margin-top:10px;">
+        <button class="ab-btn" id="evCancel">닫기</button>
+        <button class="ab-btn" id="evDelete" style="color:#B23A3A; border-color:#F0C9C9;">행사 삭제</button>
+      </div>
+    </div>
+    <div id="evList"></div>
+    <h3 style="font-size:14px; font-weight:900; margin:26px 0 0;">누적 행사 가점</h3>
+    <div id="evSummary"></div>
   </div>
 </div>
 
@@ -1404,7 +1447,7 @@ async function refreshOverview(){
 }
 
 function showView(viewId){
-  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView'), personal: document.getElementById('personalView'), absent: document.getElementById('absentView') };
+  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView'), personal: document.getElementById('personalView'), absent: document.getElementById('absentView'), event: document.getElementById('eventView') };
   Object.keys(views).forEach(k=>{
     views[k].style.display = (k===viewId) ? (k==='form' ? 'flex' : 'block') : 'none';
   });
@@ -2253,6 +2296,7 @@ document.getElementById('btnPersonalBack').addEventListener('click', ()=>{ showV
 document.querySelectorAll('.mt-tabs button[data-go]').forEach(b => b.addEventListener('click', ()=>{
   if(b.dataset.go === 'personal'){ showView('personal'); pcLoad(); }
   else if(b.dataset.go === 'absent'){ showView('absent'); abLoad(); }
+  else if(b.dataset.go === 'event'){ showView('event'); evLoad(); }
   else { showView('meeting'); const input = document.getElementById('mtDate'); if(!input.value) input.value = mtMonday(mtYmd(new Date())); mtLoad(); }
 }));
 
@@ -2306,6 +2350,89 @@ async function abToggle(i, btn){
   }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); btn.disabled = false; }
 }
 document.getElementById('btnAbsentBack').addEventListener('click', ()=>{ showView('admin'); });
+
+/* ───────── 행사 참여 가점 ───────── */
+let evEvents = [], evSummaryData = {}, evEditing = null, evSel = new Set();
+async function evLoad(){
+  document.getElementById('evInfo').textContent = '불러오는 중...';
+  try{
+    const res = await attendJsonp({ action:'eventList' });
+    if(res && res.error) throw new Error(res.error);
+    evEvents = res.events || []; evSummaryData = res.summary || {};
+    document.getElementById('evInfo').textContent = `행사 ${evEvents.length}건`;
+    evRender();
+  }catch(e){ document.getElementById('evInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류'); }
+}
+function evRender(){
+  const el = document.getElementById('evList');
+  el.innerHTML = evEvents.length ? evEvents.map((ev, i) => `<div class="ev-card" data-i="${i}">
+      <span class="ev-pts">+${ev.points}점</span><b>${abEsc(ev.title)}</b>
+      <div class="ev-meta">${ev.date.slice(5).replace('-','/')} · ${ev.names.length}명 — ${ev.names.map(abEsc).join(', ')}</div>
+    </div>`).join('') : '<p style="font-size:12.5px;color:var(--ink-faint);">등록된 행사가 없어요. <b>+ 새 행사</b>로 추가하세요.</p>';
+  el.querySelectorAll('.ev-card').forEach(c => c.addEventListener('click', ()=>evOpen(evEvents[Number(c.dataset.i)])));
+  const rows = MEETING_ROSTER.map(n => ({ n, s: evSummaryData[n] || { 참여:0, 점수:0 } })).sort((a,b)=>b.s['점수']-a.s['점수']);
+  document.getElementById('evSummary').innerHTML = `<table class="mt-sum"><tr><th>이름</th><th>참여</th><th>행사 가점</th></tr>${
+    rows.map(r => `<tr><td>${r.n}</td><td>${r.s['참여']}</td><td style="${r.s['점수']>0?'color:#1B7A38;font-weight:700;':''}">${r.s['점수']>0?'+'+Math.round(r.s['점수']*100)/100:0}</td></tr>`).join('')}</table>`;
+}
+function evChips(){
+  const el = document.getElementById('evChips');
+  el.innerHTML = MEETING_ROSTER.map(n => `<button data-n="${n}" class="${evSel.has(n)?'on':''}">${n}</button>`).join('');
+  el.querySelectorAll('button').forEach(b => b.addEventListener('click', ()=>{
+    const n = b.dataset.n; evSel.has(n) ? evSel.delete(n) : evSel.add(n); evChips();
+  }));
+  document.getElementById('evCount').textContent = `(${evSel.size}명)`;
+}
+function evOpen(ev){
+  evEditing = ev || null;
+  evSel = new Set(ev ? ev.names : []);
+  document.getElementById('evFormTitle').textContent = ev ? '행사 수정' : '새 행사';
+  document.getElementById('evDate').value = ev ? ev.date : mtYmd(new Date());
+  document.getElementById('evTitle').value = ev ? ev.title : '';
+  document.getElementById('evPoints').value = ev ? ev.points : 2;
+  document.getElementById('evDelete').style.display = ev ? '' : 'none';
+  evChips();
+  const f = document.getElementById('evForm');
+  f.style.display = '';
+  f.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+async function evPost(body){
+  await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(body) });
+  await new Promise(r => setTimeout(r, 1500));
+}
+async function evSave(){
+  const date = document.getElementById('evDate').value;
+  const title = document.getElementById('evTitle').value.trim();
+  const points = Number(document.getElementById('evPoints').value);
+  if(!date){ showAlert('날짜를 선택해 주세요.'); return; }
+  if(!title){ showAlert('행사명을 입력해 주세요.'); return; }
+  if(!(points > 0 && points <= 20)){ showAlert('가점은 0.5 ~ 20 사이로 입력해 주세요.'); return; }
+  if(!evSel.size){ showAlert('참여자를 한 명 이상 선택해 주세요.'); return; }
+  if(!evEditing && evEvents.some(e => e.date === date && e.title === title)){ showAlert('같은 날짜에 같은 이름의 행사가 이미 있어요. 목록에서 눌러 수정해 주세요.'); return; }
+  const btn = document.getElementById('evSave');
+  btn.disabled = true; btn.textContent = '저장 중...';
+  try{
+    await evPost({ action:'eventSave', date, title, points, names: MEETING_ROSTER.filter(n => evSel.has(n)),
+      orig: evEditing ? { date: evEditing.date, title: evEditing.title } : null });
+    document.getElementById('evForm').style.display = 'none';
+    await evLoad();
+  }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+  btn.disabled = false; btn.textContent = '저장';
+}
+async function evRemove(){
+  if(!evEditing) return;
+  const ok = await showConfirm(`'${evEditing.title}' 행사를 삭제할까요? 참여자 가점도 함께 빠져요.`);
+  if(!ok) return;
+  try{
+    await evPost({ action:'eventDelete', date: evEditing.date, title: evEditing.title });
+    document.getElementById('evForm').style.display = 'none';
+    await evLoad();
+  }catch(e){ showAlert('삭제에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+}
+document.getElementById('evNew').addEventListener('click', ()=>evOpen(null));
+document.getElementById('evSave').addEventListener('click', evSave);
+document.getElementById('evDelete').addEventListener('click', evRemove);
+document.getElementById('evCancel').addEventListener('click', ()=>{ document.getElementById('evForm').style.display = 'none'; });
+document.getElementById('btnEventBack').addEventListener('click', ()=>{ showView('admin'); });
 document.getElementById('abRerun').addEventListener('click', async ()=>{
   const b = document.getElementById('abRerun');
   b.disabled = true; b.textContent = '계산 중... (약 30초)';

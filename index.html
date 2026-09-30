@@ -787,6 +787,7 @@ function jsonp(params){
 }
 
 async function sheetPost(body){
+  planInvalidate();
   await fetch(APPS_SCRIPT_URL, {
     method: 'POST',
     mode: 'no-cors',
@@ -811,8 +812,40 @@ async function sheetUpdate(id, koreanKeyedFields){
   await sheetPost({ action:'update', id, ...koreanKeyedFields });
   return { ok: true };
 }
+// 기획서 목록 캐시: 같은 목록을 여러 곳에서 동시에 부르면 한 번만 받아요.
+// 처음 열 때는 지난번 목록(브라우저 저장)을 바로 보여주고, 뒤에서 새로 받아 바뀐 게 있으면 화면을 다시 그려요.
+const PLAN_CACHE_KEY = 'planRowsCache_v1', PLAN_TTL = 60000;
+let planMem = null, planMemAt = 0, planInflight = null;
+function planFetch(){
+  if(!planInflight){
+    planInflight = jsonp({ action:'list' }).then(rows => {
+      planMem = rows; planMemAt = Date.now();
+      try{ localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify({ t: planMemAt, rows })); }catch(e){}
+      return rows;
+    }).finally(()=>{ planInflight = null; });
+  }
+  return planInflight;
+}
+function planInvalidate(){ planMem = null; planMemAt = 0; try{ localStorage.removeItem(PLAN_CACHE_KEY); }catch(e){} }
+function planRefreshViews(){
+  const vis = id => { const el = document.getElementById(id); return el && el.style.display !== 'none'; };
+  if(vis('formView')){ if(step === 1) refreshOverview(); refreshPendingBadge(); }
+  if(vis('adminView')) loadSubmissions();
+  if(vis('statusView') && document.querySelector('#statusContent [data-open]')) loadStatusList();
+}
+function planRevalidate(before){
+  planFetch().then(rows => { if(JSON.stringify(rows) !== before) planRefreshViews(); }).catch(()=>{});
+}
 async function sheetGetAll(){
-  return jsonp({ action:'list' });
+  if(planMem && Date.now() - planMemAt < PLAN_TTL) return planMem;
+  if(planMem){ const stale = planMem; planRevalidate(JSON.stringify(stale)); return stale; }
+  try{
+    const c = JSON.parse(localStorage.getItem(PLAN_CACHE_KEY) || 'null');
+    if(c && Array.isArray(c.rows) && Date.now() - c.t < 7 * 864e5){
+      planMem = c.rows; planMemAt = 0; planRevalidate(JSON.stringify(c.rows)); return c.rows;
+    }
+  }catch(e){}
+  return planFetch();
 }
 function planArrayToText(plan){
   return plan.map((r,i)=>`#${i+1}. ${r.content}${r.location? ' / 장소: '+r.location : ''}`).join('\n');
@@ -1887,6 +1920,7 @@ document.getElementById('btnAdminToggle').addEventListener('click', async ()=>{
   allowedTabs = PIN_ROLES[pin];
   applyTabAccess();
   openTab(allowedTabs ? allowedTabs[0] : 'admin');
+  attendPrefetch();
 });
 document.getElementById('btnAdminBack').addEventListener('click', ()=>{
   showView('form');
@@ -2176,7 +2210,28 @@ let mtState = {};
 let mtMeetings = {};
 let mtCancelled = false;
 
+// 출결·점수 목록 캐시 (60초). 저장(POST)하면 바로 비워서 항상 최신 기록을 다시 받아요.
+const attendCache = new Map();
 function attendJsonp(params){
+  const key = JSON.stringify(params);
+  const hit = attendCache.get(key);
+  if(hit && Date.now() - hit.t < 60000) return hit.p;
+  const p = attendJsonpRaw(params);
+  attendCache.set(key, { t: Date.now(), p });
+  p.catch(()=>attendCache.delete(key));
+  return p;
+}
+(function(){
+  const _fetch = window.fetch.bind(window);
+  window.fetch = (u, o) => { if(String(u) === ATTEND_URL) attendCache.clear(); return _fetch(u, o); };
+})();
+function attendPrefetch(){
+  const today = mtYmd(new Date());
+  const pre = [{ action:'meetingList', date: document.getElementById('mtDate').value || mtMonday(today) },
+    { action:'personalList', week: pcWeek || pcCycleStart(today) }, { action:'eventList' }, { action:'absentList' }];
+  pre.forEach(p => { if(!allowedTabs || allowedTabs.includes({meetingList:'meeting',personalList:'personal',eventList:'event',absentList:'absent'}[p.action])) attendJsonp(p).catch(()=>{}); });
+}
+function attendJsonpRaw(params){
   return new Promise((resolve, reject)=>{
     const cbName = 'mt_' + Date.now() + '_' + Math.floor(Math.random()*100000);
     const script = document.createElement('script');

@@ -557,8 +557,9 @@
     <button class="reset-link" id="btnPersonalBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
-    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 화요일(기획서 마감일)마다 칸이 자동으로 생겨요. 기획서만 먼저 입력해 저장하고, 콘텐츠는 나중에 같은 주를 눌러 이어서 입력하면 돼요.</p>
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 수요일(기획서 마감일)마다 칸이 생겨요. 기획서를 먼저 입력해 저장하고, 다음 주 화요일 콘텐츠 마감 뒤에 같은 칸을 눌러 콘텐츠를 이어서 입력하면 돼요.</p>
     <div class="mt-weeks" id="pcWeeks"></div>
+    <p id="pcCycle" style="font-size:12.5px; font-weight:700; color:var(--ink); margin:0 0 6px;"></p>
     <div class="mt-tools">
       <span id="pcInfo">불러오는 중...</span>
       <div style="display:flex; gap:6px;">
@@ -1454,8 +1455,8 @@ function ovFmt(ymd){ const d = new Date(ymd + 'T00:00:00'); return (d.getMonth()
 function ovRenderDeadline(){
   const p = n => String(n).padStart(2,'0');
   const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  // 개인콘텐츠 마감: 기획서 화요일, 콘텐츠 수요일
-  const DL = [{ dow: 2, label: '기획서' }, { dow: 3, label: '콘텐츠' }];
+  // 개인콘텐츠 루틴: 수요일 기획서 마감 → 다음 주 화요일 콘텐츠 마감
+  const DL = [{ dow: 3, label: '기획서' }, { dow: 2, label: '콘텐츠' }];
   const cards = DL.map(x => {
     const diff = (x.dow - today.getDay() + 7) % 7;   // 오늘이 마감일이면 0
     const due = new Date(today); due.setDate(today.getDate() + diff);
@@ -2103,10 +2104,12 @@ function mtYmd(d){ const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+
 function mtMonday(ymd){ const d = new Date(ymd + 'T00:00:00'); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return mtYmd(d); }
 const MT_DOW = ['일','월','화','수','목','금','토'];
 function mtFmt(ymd){ const d = new Date(ymd + 'T00:00:00'); return (d.getMonth()+1) + '/' + d.getDate() + '(' + MT_DOW[d.getDay()] + ')'; }
-function pcTuesday(ymd){ const d = new Date(ymd + 'T00:00:00'); d.setDate(d.getDate() - ((d.getDay() + 5) % 7)); return mtYmd(d); }
-function pcWeekTuesdays(){
+// 개인콘텐츠 회차 = 기획서 마감 수요일 (콘텐츠 마감은 6일 뒤 화요일)
+function pcCycleStart(ymd){ const d = new Date(ymd + 'T00:00:00'); d.setDate(d.getDate() - ((d.getDay() + 4) % 7)); return mtYmd(d); }
+function pcContentDue(w){ const d = new Date(w + 'T00:00:00'); d.setDate(d.getDate() + 6); return mtYmd(d); }
+function pcCycles(){
   const out = [];
-  const d = new Date(pcTuesday(MEETING_START) + 'T00:00:00');
+  const d = new Date(pcCycleStart(MEETING_START) + 'T00:00:00');
   if(mtYmd(d) < MEETING_START) d.setDate(d.getDate()+7);
   const today = mtYmd(new Date());
   while(mtYmd(d) <= today){ out.push(mtYmd(d)); d.setDate(d.getDate()+7); }
@@ -2258,7 +2261,7 @@ function pcPts(s){ return (PC_POINTS.plan[s.plan]||0) + (PC_POINTS.content[s.con
 
 function pcRenderWeeks(){
   const md = s => { const [,m,d] = s.split('-'); return Number(m)+'/'+Number(d); };
-  const weeks = pcWeekTuesdays();
+  const weeks = pcCycles();
   Object.keys(pcWeeksDone).forEach(w => { if(!weeks.includes(w)) weeks.push(w); });
   weeks.sort().reverse();
   const el = document.getElementById('pcWeeks');
@@ -2271,6 +2274,7 @@ function pcRenderWeeks(){
     return `<button class="mt-week ${cls} ${w===pcWeek?'sel':''}" data-w="${w}"><b>${mtFmt(w)}</b><small>${label}</small></button>`;
   }).join('');
   el.querySelectorAll('.mt-week').forEach(b => b.addEventListener('click', ()=>{ pcWeek = b.dataset.w; pcLoad(); }));
+  document.getElementById('pcCycle').textContent = pcWeek ? `기획서 ${mtFmt(pcWeek)} 마감 · 콘텐츠 ${mtFmt(pcContentDue(pcWeek))} 마감` : '';
 }
 
 function pcRenderList(){
@@ -2315,7 +2319,7 @@ function pcRenderSummary(summary, count){
 }
 
 async function pcLoad(){
-  if(!pcWeek) pcWeek = pcTuesday(mtYmd(new Date()));
+  if(!pcWeek) pcWeek = pcCycleStart(mtYmd(new Date()));
   document.getElementById('pcInfo').textContent = '불러오는 중...';
   document.getElementById('pcStatus').textContent = '';
   pcState = {}; pcExtra = new Set();

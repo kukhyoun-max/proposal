@@ -191,6 +191,11 @@
   .sub-card .sub-meta{font-size:12px; color:var(--ink-soft); margin:0 0 10px;}
   .sub-card .sub-detail{font-size:12.5px; color:var(--ink); margin:10px 0; padding-top:10px; border-top:1px solid var(--line); white-space:pre-wrap; line-height:1.6;}
   .sub-card .sub-actions{display:flex; gap:8px;}
+  .st-filter{display:flex; gap:6px; overflow-x:auto; margin:0 0 14px; padding-bottom:2px; scrollbar-width:none;}
+  .st-filter::-webkit-scrollbar{display:none;}
+  .st-filter button{flex:none; border:1px solid #DADCE5; background:#fff; border-radius:16px; padding:6px 11px; font-size:12px; color:var(--ink-soft); cursor:pointer;}
+  .st-filter button b{margin-left:3px; font-weight:700;}
+  .st-filter button.on{background:var(--ink); color:#fff; border-color:var(--ink);}
   .st-force{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line, #E5E5EA); font-size:11.5px; color:var(--ink-faint);}
   .st-force select{font-size:12px; padding:5px 8px; border-radius:8px; border:1px solid #D9D9E0; background:#fff; color:var(--ink);}
   .sub-card .sub-actions button{flex:1; padding:9px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; border:none;}
@@ -1741,6 +1746,18 @@ async function loadStatusList(){
   }
 }
 
+// 기획서 목록 상태 필터 (기획서 현황 / 기획서 관리 각각 기억)
+const ST_FILTERS = [['all','전체'],['pending','승인 대기'],['approved','촬영 예정'],['filming','촬영 중'],['editing','편집 중'],['completed','제작 완료'],['uploaded','업로드 완료'],['rejected','반려'],['dropped','중단']];
+const stFilter = { status:'all', admin:'all' };
+function stApply(items, which){ const f = stFilter[which]; return f === 'all' ? items : items.filter(i => i.rec.status === f); }
+function stFilterBar(items, which){
+  const n = {}; items.forEach(i => n[i.rec.status] = (n[i.rec.status] || 0) + 1);
+  return `<div class="st-filter">${ST_FILTERS.filter(([k]) => k === 'all' || n[k] || stFilter[which] === k).map(([k, label]) =>
+    `<button class="${stFilter[which] === k ? 'on' : ''}" data-stf="${k}">${label}<b>${k === 'all' ? items.length : (n[k] || 0)}</b></button>`).join('')}</div>`;
+}
+function stBindFilter(root, which, rerender){
+  root.querySelectorAll('[data-stf]').forEach(b => b.addEventListener('click', ()=>{ stFilter[which] = b.dataset.stf; rerender(); }));
+}
 function renderStatusListView(items){
   const el = document.getElementById('statusContent');
   const total = items.length;
@@ -1757,7 +1774,8 @@ function renderStatusListView(items){
     el.innerHTML = overviewHtml + '<p style="font-size:12.5px;color:var(--ink-faint);">아직 제출된 기획서가 없어요.</p>';
     return;
   }
-  const cards = items.map(({key, rec})=>{
+  const shown = stApply(items, 'status');
+  const cards = (shown.length ? '' : '<p style="font-size:12.5px;color:var(--ink-faint);">해당 상태의 기획서가 없어요.</p>') + shown.map(({key, rec})=>{
     const catLabel = (CATEGORIES.find(c=>c.id===rec.category)||{}).title || '-';
     return `
       <div class="sub-card" data-open="${key}" style="cursor:pointer;">
@@ -1770,7 +1788,8 @@ function renderStatusListView(items){
       </div>
     `;
   }).join('');
-  el.innerHTML = overviewHtml + cards;
+  el.innerHTML = overviewHtml + stFilterBar(items, 'status') + cards;
+  stBindFilter(el, 'status', ()=>renderStatusListView(items));
   el.querySelectorAll('[data-open]').forEach(card=>{
     card.addEventListener('click', async ()=>{
       const key = card.dataset.open;
@@ -2082,9 +2101,10 @@ function renderAdminList(items){
     listEl.innerHTML = '<p style="font-size:12.5px;color:var(--ink-faint);">아직 제출된 기획서가 없어요.</p>';
     return;
   }
+  const allItems = items; items = stApply(items, 'admin');
   const dropN = items.filter(i=>i.rec.status==='dropped').length;
   items = items.filter(i=>i.rec.status!=='dropped').concat(items.filter(i=>i.rec.status==='dropped'));
-  listEl.innerHTML = items.map(({key, rec}, idx)=>{
+  listEl.innerHTML = stFilterBar(allItems, 'admin') + (items.length ? '' : '<p style="font-size:12.5px;color:var(--ink-faint);">해당 상태의 기획서가 없어요.</p>') + items.map(({key, rec}, idx)=>{
     const catLabel = (CATEGORIES.find(c=>c.id===rec.category)||{}).title || '-';
     const when = fmtDateTime(rec.submittedAt);
     let actions = '';
@@ -2117,6 +2137,7 @@ function renderAdminList(items){
     `;
   }).join('');
 
+  stBindFilter(listEl, 'admin', ()=>renderAdminList(allItems));
   listEl.querySelectorAll('[data-edit]').forEach(btn=>{ btn.addEventListener('click', ()=>{
     const it = items.find(x => x.key === btn.dataset.edit); if(!it) return;
     detailFromAdmin = true; showView('status'); renderStatusDetail(it.key, it.rec);

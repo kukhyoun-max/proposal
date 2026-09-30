@@ -724,6 +724,30 @@ function showPrompt(message){
 
 const STORAGE_KEY = 'content-plan:current';
 const ADMIN_PIN = '2600';
+// PIN별 접근 권한: null = 전체, 배열 = 볼 수 있는 탭만
+const PIN_ROLES = {
+  '2600': null,            // 전체 (기획서 관리·회의·개인콘텐츠·행사·불참)
+  '0000': ['meeting'],     // 회의 출결만
+  '1234': ['personal'],    // 개인콘텐츠만
+};
+const TAB_KEYS = { '기획서 관리':'admin', '회의':'meeting', '개인콘텐츠':'personal', '행사':'event', '불참':'absent' };
+let allowedTabs = null;
+function applyTabAccess(){
+  document.querySelectorAll('.mt-tabs').forEach(bar => {
+    bar.querySelectorAll('button').forEach(b => {
+      const k = TAB_KEYS[b.textContent.trim()];
+      b.style.display = (!allowedTabs || allowedTabs.includes(k)) ? '' : 'none';
+    });
+    bar.style.display = (allowedTabs && allowedTabs.length === 1) ? 'none' : '';
+  });
+}
+function openTab(k){
+  if(k === 'admin'){ showView('admin'); loadSubmissions(); }
+  else if(k === 'personal'){ showView('personal'); pcLoad(); }
+  else if(k === 'absent'){ showView('absent'); abLoad(); }
+  else if(k === 'event'){ showView('event'); evLoad(); }
+  else { showView('meeting'); const input = document.getElementById('mtDate'); if(!input.value) input.value = mtMonday(mtYmd(new Date())); mtLoad(); }
+}
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZ-U1zoYVN6zALdZCdoaRiFjCnklHwT50rRADKYDx8jd4we48vmzBoN7JOczAS0pj_/exec';
 const STATUS_LABELS = {pending:'승인 대기', approved:'승인됨 · 촬영 예정', filming:'촬영 중', editing:'편집 중', completed:'제작 완료', rejected:'반려됨'};
 
@@ -1796,9 +1820,10 @@ async function saveEditedSubmission(){
 document.getElementById('btnAdminToggle').addEventListener('click', async ()=>{
   const pin = await showPrompt('관리자 PIN을 입력하세요');
   if(pin === null) return;
-  if(pin !== ADMIN_PIN){ await showAlert('PIN이 올바르지 않아요.'); return; }
-  showView('admin');
-  loadSubmissions();
+  if(!(pin in PIN_ROLES)){ await showAlert('PIN이 올바르지 않아요.'); return; }
+  allowedTabs = PIN_ROLES[pin];
+  applyTabAccess();
+  openTab(allowedTabs ? allowedTabs[0] : 'admin');
 });
 document.getElementById('btnAdminBack').addEventListener('click', ()=>{
   showView('form');

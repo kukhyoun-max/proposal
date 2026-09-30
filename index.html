@@ -970,7 +970,7 @@ function mapRowToRecord(row){
     id: row['ID'], status: planAutoStatus(row['상태'] || 'pending', normalizeDateStr(row['촬영일']), row['상태고정']),
     locked: !!String(row['상태고정'] || '').trim(),
     submittedAt: row['제출일시'] || '', updatedAt: row['최종수정일시'] || '',
-    reviewedAt: row['검토일시'] || '', filmingAt: row['촬영시작일시'] || '',
+    reviewedAt: row['검토일시'] || '', updatedBy: String(row['최종수정자'] || ''), filmingAt: row['촬영시작일시'] || '',
     completedAt: row['완료일시'] || '', uploadedAt: normalizeDateStr(row['업로드일']), uploadUrl: String(row['업로드URL'] || ''), lead: row['작성자(팀장)'] || '', name: row['작성자(팀장)'] || '',
     category: row['콘텐츠유형'] || '', member: row['팀원'] || '', filming: row['촬영'] || '',
     editing: row['편집'] || '', extra: row['추가'] || '', participants: row['참여인원'] || '',
@@ -1820,7 +1820,7 @@ function renderStatusDetail(key, rec){
     <div class="status-info-box">
       <span class="status-pill ${editingRecord.status}">${STATUS_LABELS[editingRecord.status]||editingRecord.status}</span>
       <p>제출일시: ${fmtDateTime(editingRecord.submittedAt)}</p>
-      ${editingRecord.updatedAt? `<p>최종 수정: ${fmtDateTime(editingRecord.updatedAt)}</p>`:''}
+      ${editingRecord.updatedAt? `<p>최종 수정: ${fmtDateTime(editingRecord.updatedAt)}${editingRecord.updatedBy ? ` <b style="color:${editingRecord.updatedBy==='관리자' ? '#1E4FA0' : '#95590B'}">(${editingRecord.updatedBy==='관리자' ? '관리자' : '팀 · 기획서 현황'})</b>` : ''}</p>`:''}
       ${editingRecord.reviewedAt? `<p>검토일시: ${fmtDateTime(editingRecord.reviewedAt)}</p>`:''}
       ${editingRecord.filmingAt? `<p>촬영 시작: ${fmtDateTime(editingRecord.filmingAt)}</p>`:''}
       ${editingRecord.completedAt? `<p>제작 완료: ${fmtDateTime(editingRecord.completedAt)}</p>`:''}
@@ -2028,6 +2028,11 @@ async function saveEditedSubmission(){
   try{
     const result = await sheetUpdate(editingKey, fields);
     if(!result || result.ok === false) throw new Error('시트 응답 실패');
+    const by = detailFromAdmin ? 'admin' : 'team';
+    await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action:'planEditor', planId: editingKey, by }) });
+    editingRecord.updatedBy = by === 'admin' ? '관리자' : '팀';
+    planInvalidate();
     if(tf !== eTimeOrig.from || tt !== eTimeOrig.to){
       await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
         body: JSON.stringify({ action:'planTime', planId: editingKey, from: tf, to: tt }) });

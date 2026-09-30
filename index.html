@@ -289,7 +289,11 @@
   .ab-btn.go{border-color:var(--purple); color:var(--purple); font-weight:700;}
   .topbar:has(> .mt-tabs){flex-wrap:wrap; row-gap:10px;}
   .topbar > .mt-tabs{order:2; flex:1 1 100%;}
-  .mt-tabs button{flex:1; padding:8px 4px; white-space:nowrap;}
+  .mt-tabs{gap:2px;} .topbar > .mt-tabs{min-width:0;}
+  @media (max-width:380px){ .mt-tabs button{font-size:11.5px; padding:8px 2px;} }
+  .mt-tabs button{flex:1 1 auto; min-width:0; padding:8px 4px; font-size:12.5px; letter-spacing:-0.3px; white-space:nowrap;}
+  .pc-add{margin-top:12px;} .pc-add .ev-chips button{font-size:12.5px;}
+  .pc-x{border:none; background:none; color:var(--ink-faint); font-size:12px; cursor:pointer; padding:0 0 0 2px;}
   .mt-tabs + .reset-link{order:1; margin-left:auto; white-space:nowrap;}
   .ev-card{border:1.5px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px; cursor:pointer; background:#fff;}
   .ev-card b{font-size:14px;} .ev-card .ev-meta{font-size:12px; color:var(--ink-soft); margin-top:3px;}
@@ -504,11 +508,8 @@
 
 <div class="phone" id="adminView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
-    <h2 style="font-size:17px; font-weight:900; margin:0;">승인 대기 목록</h2>
-    <div style="display:flex; gap:12px; align-items:center;">
-      <button class="reset-link" id="btnMeetingOpen" style="color:var(--purple); font-weight:700;">출결·점수 관리</button>
-      <button class="reset-link" id="btnAdminBack">← 돌아가기</button>
-    </div>
+    <div class="mt-tabs"><button class="on">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button></div>
+    <button class="reset-link" id="btnAdminBack">← 돌아가기</button>
   </div>
   <div class="content" id="adminList" style="padding-top:0;">
     <p style="font-size:12.5px; color:var(--ink-faint);">불러오는 중...</p>
@@ -517,7 +518,7 @@
 
 <div class="phone" id="meetingView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
-    <div class="mt-tabs"><button class="on">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="absent">불참 확인</button><button data-go="event">행사</button></div>
+    <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button class="on">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button></div>
     <button class="reset-link" id="btnMeetingBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
@@ -541,11 +542,11 @@
 
 <div class="phone" id="personalView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
-    <div class="mt-tabs"><button data-go="meeting">회의</button><button class="on">개인콘텐츠</button><button data-go="absent">불참 확인</button><button data-go="event">행사</button></div>
+    <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button class="on">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button></div>
     <button class="reset-link" id="btnPersonalBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
-    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 월요일마다 그 주 칸이 자동으로 생겨요. 기획서만 먼저 입력해 저장하고, 콘텐츠는 나중에 같은 주를 눌러 이어서 입력하면 돼요.</p>
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 화요일(기획서 마감일)마다 칸이 자동으로 생겨요. 기획서만 먼저 입력해 저장하고, 콘텐츠는 나중에 같은 주를 눌러 이어서 입력하면 돼요.</p>
     <div class="mt-weeks" id="pcWeeks"></div>
     <div class="mt-tools">
       <span id="pcInfo">불러오는 중...</span>
@@ -556,6 +557,7 @@
     </div>
     <div class="pc-legend"><span><i style="background:#9ED3AE"></i>제출</span><span><i style="background:#F2C47C"></i>지각</span><span><i style="background:#F0A9A9"></i>미제출</span><span id="pcRule"></span></div>
     <div id="pcList"></div>
+    <div class="pc-add" id="pcAdd"></div>
     <button class="mt-save" id="pcSave">저장</button>
     <p class="save-status" id="pcStatus"></p>
     <h3 style="font-size:14px; font-weight:900; margin:26px 0 0;">누적 현황 <span id="pcCount" style="font-size:12px; font-weight:400; color:var(--ink-faint);"></span></h3>
@@ -565,7 +567,7 @@
 
 <div class="phone" id="absentView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
-    <div class="mt-tabs"><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button class="on">불참 확인</button><button data-go="event">행사</button></div>
+    <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button class="on">불참</button></div>
     <button class="reset-link" id="btnAbsentBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
@@ -583,7 +585,7 @@
 
 <div class="phone" id="eventView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
-    <div class="mt-tabs"><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="absent">불참 확인</button><button class="on">행사</button></div>
+    <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button class="on">행사</button><button data-go="absent">불참</button></div>
     <button class="reset-link" id="btnEventBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
@@ -2058,6 +2060,17 @@ function attendJsonp(params){
 
 function mtYmd(d){ const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
 function mtMonday(ymd){ const d = new Date(ymd + 'T00:00:00'); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return mtYmd(d); }
+const MT_DOW = ['일','월','화','수','목','금','토'];
+function mtFmt(ymd){ const d = new Date(ymd + 'T00:00:00'); return (d.getMonth()+1) + '/' + d.getDate() + '(' + MT_DOW[d.getDay()] + ')'; }
+function pcTuesday(ymd){ const d = new Date(ymd + 'T00:00:00'); d.setDate(d.getDate() - ((d.getDay() + 5) % 7)); return mtYmd(d); }
+function pcWeekTuesdays(){
+  const out = [];
+  const d = new Date(pcTuesday(MEETING_START) + 'T00:00:00');
+  if(mtYmd(d) < MEETING_START) d.setDate(d.getDate()+7);
+  const today = mtYmd(new Date());
+  while(mtYmd(d) <= today){ out.push(mtYmd(d)); d.setDate(d.getDate()+7); }
+  return out;
+}
 function mtWeekMondays(){
   const out = [];
   const d = new Date(mtMonday(MEETING_START) + 'T00:00:00');
@@ -2080,8 +2093,8 @@ function mtRenderWeeks(){
     const d = ds.find(x => !mtMeetings[x].cancelled && mtMeetings[x].count) || ds[0];
     const m = d ? mtMeetings[d] : null;
     const cls = m && m.cancelled ? 'off' : (m && m.count ? 'done' : 'todo');
-    const label = m && m.cancelled ? '휴회' : (m && m.count ? md(d) + ' 완료' : '미입력');
-    return `<button class="mt-week ${cls} ${w===selWeek?'sel':''}" data-d="${d || w}"><b>${md(w)} 주</b><small>${label}</small></button>`;
+    const label = m && m.cancelled ? '휴회' : (m && m.count ? '입력 완료' : '미입력');
+    return `<button class="mt-week ${cls} ${w===selWeek?'sel':''}" data-d="${d || w}"><b>${mtFmt(d || w)}</b><small>${label}</small></button>`;
   }).join('');
   el.querySelectorAll('.mt-week').forEach(b => b.addEventListener('click', ()=>{ document.getElementById('mtDate').value = b.dataset.d; mtLoad(); }));
 }
@@ -2161,13 +2174,7 @@ async function mtSave(){
   btn.disabled = false; btn.textContent = '저장';
 }
 
-document.getElementById('btnMeetingOpen').addEventListener('click', ()=>{
-  showView('meeting');
-  const input = document.getElementById('mtDate');
-  if(!input.value) input.value = mtMonday(mtYmd(new Date()));
-  mtLoad();
-});
-document.getElementById('btnMeetingBack').addEventListener('click', ()=>{ showView('admin'); });
+document.getElementById('btnMeetingBack').addEventListener('click', ()=>{ showView('form'); });
 document.getElementById('mtDate').addEventListener('change', mtLoad);
 document.getElementById('mtCancel').addEventListener('click', async ()=>{
   const date = document.getElementById('mtDate').value;
@@ -2191,12 +2198,26 @@ const PC_OPTS = ['제출','지각','미제출'];
 let pcWeek = '';
 let pcState = {};   // name -> { plan, content }
 let pcWeeksDone = {};
+const PC_DEFAULT = ['김세영','김현아','오화종','이다희','이서연','이예은','이은채','임은지','장서영','한가온'];
+let pcExtra = new Set();   // 이번 주에 추가로 넣은 인원
+function pcNames(){ return MEETING_ROSTER.filter(n => PC_DEFAULT.includes(n) || pcExtra.has(n)); }
+function pcRenderAdd(){
+  const el = document.getElementById('pcAdd');
+  const rest = MEETING_ROSTER.filter(n => !pcNames().includes(n));
+  if(!rest.length){ el.innerHTML = ''; return; }
+  const open = el.dataset.open === '1';
+  el.innerHTML = open
+    ? `<div class="ev-chips">${rest.map(n => `<button data-n="${n}">+ ${n}</button>`).join('')}</div>`
+    : `<button class="mt-quick" id="pcAddBtn">+ 인원 추가</button>`;
+  if(open) el.querySelectorAll('button[data-n]').forEach(b => b.addEventListener('click', ()=>{ pcExtra.add(b.dataset.n); el.dataset.open = ''; pcRenderList(); pcUpdateInfo(); }));
+  else document.getElementById('pcAddBtn').addEventListener('click', ()=>{ el.dataset.open = '1'; pcRenderAdd(); });
+}
 
 function pcPts(s){ return (PC_POINTS.plan[s.plan]||0) + (PC_POINTS.content[s.content]||0); }
 
 function pcRenderWeeks(){
   const md = s => { const [,m,d] = s.split('-'); return Number(m)+'/'+Number(d); };
-  const weeks = mtWeekMondays();
+  const weeks = pcWeekTuesdays();
   Object.keys(pcWeeksDone).forEach(w => { if(!weeks.includes(w)) weeks.push(w); });
   weeks.sort().reverse();
   const el = document.getElementById('pcWeeks');
@@ -2206,19 +2227,19 @@ function pcRenderWeeks(){
     const pending = info && typeof info === 'object' ? info.pending : 0;
     const cls = !n ? 'todo' : (pending ? 'part' : 'done');
     const label = !n ? '미입력' : (pending ? `콘텐츠 대기 ${pending}` : '입력 완료');
-    return `<button class="mt-week ${cls} ${w===pcWeek?'sel':''}" data-w="${w}"><b>${md(w)} 주</b><small>${label}</small></button>`;
+    return `<button class="mt-week ${cls} ${w===pcWeek?'sel':''}" data-w="${w}"><b>${mtFmt(w)}</b><small>${label}</small></button>`;
   }).join('');
   el.querySelectorAll('.mt-week').forEach(b => b.addEventListener('click', ()=>{ pcWeek = b.dataset.w; pcLoad(); }));
 }
 
 function pcRenderList(){
   const el = document.getElementById('pcList');
-  el.innerHTML = MEETING_ROSTER.map(n => {
+  el.innerHTML = pcNames().map(n => {
     const s = pcState[n] || {};
     const pts = pcPts(s);
     const seg = key => `<div class="seg">${PC_OPTS.map(v => `<button data-n="${n}" data-k="${key}" data-v="${v}" class="${s[key]===v?'on':''}">${v}</button>`).join('')}</div>`;
     return `<div class="pc-row">
-      <div class="pc-name">${n}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : '콘텐츠 전'))}</small></div>
+      <div class="pc-name">${n}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : '콘텐츠 전'))}</small></div>
       <div class="pc-lines">
         <div class="pc-line"><span class="pc-lab">기획서</span>${seg('plan')}</div>
         <div class="pc-line"><span class="pc-lab">콘텐츠</span>${seg('content')}</div>
@@ -2230,12 +2251,15 @@ function pcRenderList(){
     s[b.dataset.k] = (s[b.dataset.k] === b.dataset.v) ? '' : b.dataset.v;
     pcRenderList(); pcUpdateInfo();
   }));
+  el.querySelectorAll('.pc-x').forEach(b => b.addEventListener('click', ()=>{ pcExtra.delete(b.dataset.x); delete pcState[b.dataset.x]; pcRenderList(); pcUpdateInfo(); }));
+  pcRenderAdd();
 }
 
 function pcUpdateInfo(){
-  const plan = MEETING_ROSTER.filter(n => pcState[n] && pcState[n].plan).length;
-  const content = MEETING_ROSTER.filter(n => pcState[n] && pcState[n].content).length;
-  document.getElementById('pcInfo').textContent = `기획서 ${plan} · 콘텐츠 ${content} / ${MEETING_ROSTER.length}명`;
+  const names = pcNames();
+  const plan = names.filter(n => pcState[n] && pcState[n].plan).length;
+  const content = names.filter(n => pcState[n] && pcState[n].content).length;
+  document.getElementById('pcInfo').textContent = `기획서 ${plan} · 콘텐츠 ${content} / ${names.length}명`;
 }
 
 function pcRenderSummary(summary, count){
@@ -2250,14 +2274,14 @@ function pcRenderSummary(summary, count){
 }
 
 async function pcLoad(){
-  if(!pcWeek) pcWeek = mtMonday(mtYmd(new Date()));
+  if(!pcWeek) pcWeek = pcTuesday(mtYmd(new Date()));
   document.getElementById('pcInfo').textContent = '불러오는 중...';
   document.getElementById('pcStatus').textContent = '';
-  pcState = {};
+  pcState = {}; pcExtra = new Set();
   try{
     const res = await attendJsonp({ action:'personalList', week: pcWeek });
     if(res && res.error) throw new Error(res.error);
-    (res.records || []).forEach(r => { pcState[r.name] = { plan:r.plan, content:r.content }; });
+    (res.records || []).forEach(r => { pcState[r.name] = { plan:r.plan, content:r.content }; if(!PC_DEFAULT.includes(r.name)) pcExtra.add(r.name); });
     pcWeeksDone = res.weeks || {};
     pcRenderWeeks(); pcRenderList(); pcUpdateInfo();
     pcRenderSummary(res.summary, res.weekCount);
@@ -2269,7 +2293,7 @@ async function pcLoad(){
 }
 
 async function pcSave(){
-  const missing = MEETING_ROSTER.filter(n => !(pcState[n] && pcState[n].plan));
+  const missing = pcNames().filter(n => !(pcState[n] && pcState[n].plan));
   if(missing.length){ showAlert('기획서가 입력되지 않은 사람이 있어요: ' + missing.join(', ') + '\n(콘텐츠는 나중에 입력해도 돼요)'); return; }
   const btn = document.getElementById('pcSave');
   btn.disabled = true; btn.textContent = '저장 중...';
@@ -2277,24 +2301,25 @@ async function pcSave(){
     await fetch(ATTEND_URL, {
       method:'POST', mode:'no-cors',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ action:'personalSave', week: pcWeek, records: MEETING_ROSTER.map(n => ({ name:n, plan:pcState[n].plan, content:pcState[n].content || '' })) })
+      body: JSON.stringify({ action:'personalSave', week: pcWeek, records: pcNames().map(n => ({ name:n, plan:pcState[n].plan, content:pcState[n].content || '' })) })
     });
     await new Promise(r => setTimeout(r, 1200));
     await pcLoad();
-    document.getElementById('pcStatus').textContent = pcWeek + ' 주 제출 현황을 저장했어요.';
+    document.getElementById('pcStatus').textContent = mtFmt(pcWeek) + ' 제출 현황을 저장했어요.';
   }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
   btn.disabled = false; btn.textContent = '저장';
 }
 
-function pcFillAll(key){ MEETING_ROSTER.forEach(n => { const s = pcState[n] || (pcState[n] = {}); if(!s[key]) s[key] = '제출'; }); pcRenderList(); pcUpdateInfo(); }
+function pcFillAll(key){ pcNames().forEach(n => { const s = pcState[n] || (pcState[n] = {}); if(!s[key]) s[key] = '제출'; }); pcRenderList(); pcUpdateInfo(); }
 
 document.getElementById('pcRule').textContent = `감점: 기획서 지각 ${PC_POINTS.plan['지각']} / 미제출 ${PC_POINTS.plan['미제출']} · 콘텐츠 지각 ${PC_POINTS.content['지각']} / 미제출 ${PC_POINTS.content['미제출']}`;
 document.getElementById('pcAllPlan').addEventListener('click', ()=>pcFillAll('plan'));
 document.getElementById('pcAllContent').addEventListener('click', ()=>pcFillAll('content'));
 document.getElementById('pcSave').addEventListener('click', pcSave);
-document.getElementById('btnPersonalBack').addEventListener('click', ()=>{ showView('admin'); });
+document.getElementById('btnPersonalBack').addEventListener('click', ()=>{ showView('form'); });
 document.querySelectorAll('.mt-tabs button[data-go]').forEach(b => b.addEventListener('click', ()=>{
-  if(b.dataset.go === 'personal'){ showView('personal'); pcLoad(); }
+  if(b.dataset.go === 'admin'){ showView('admin'); loadSubmissions(); }
+  else if(b.dataset.go === 'personal'){ showView('personal'); pcLoad(); }
   else if(b.dataset.go === 'absent'){ showView('absent'); abLoad(); }
   else if(b.dataset.go === 'event'){ showView('event'); evLoad(); }
   else { showView('meeting'); const input = document.getElementById('mtDate'); if(!input.value) input.value = mtMonday(mtYmd(new Date())); mtLoad(); }
@@ -2349,7 +2374,7 @@ async function abToggle(i, btn){
     await abLoad();
   }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); btn.disabled = false; }
 }
-document.getElementById('btnAbsentBack').addEventListener('click', ()=>{ showView('admin'); });
+document.getElementById('btnAbsentBack').addEventListener('click', ()=>{ showView('form'); });
 
 /* ───────── 행사 참여 가점 ───────── */
 let evEvents = [], evSummaryData = {}, evEditing = null, evSel = new Set();
@@ -2432,7 +2457,7 @@ document.getElementById('evNew').addEventListener('click', ()=>evOpen(null));
 document.getElementById('evSave').addEventListener('click', evSave);
 document.getElementById('evDelete').addEventListener('click', evRemove);
 document.getElementById('evCancel').addEventListener('click', ()=>{ document.getElementById('evForm').style.display = 'none'; });
-document.getElementById('btnEventBack').addEventListener('click', ()=>{ showView('admin'); });
+document.getElementById('btnEventBack').addEventListener('click', ()=>{ showView('form'); });
 document.getElementById('abRerun').addEventListener('click', async ()=>{
   const b = document.getElementById('abRerun');
   b.disabled = true; b.textContent = '계산 중... (약 30초)';

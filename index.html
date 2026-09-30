@@ -328,6 +328,15 @@
   .eq-row b{font-size:13.5px;} .eq-row .t{font-size:12px; color:var(--ink); font-weight:700; margin-left:6px;}
   .eq-row small{display:block; font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
   .eq-bad{font-size:10.5px; font-weight:700; color:#B23A3A; background:#FCEAEA; padding:1px 6px; border-radius:10px; margin-left:4px;}
+  .eq-team{border:1.5px solid var(--line); border-radius:12px; margin-top:10px; background:#fff; overflow:hidden;}
+  .eq-team.bad{border-color:#F0C9C9;}
+  .eq-team-head{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 14px; cursor:pointer;}
+  .eq-team-head b{font-size:14px;} .eq-team-head .t{font-size:12px; font-weight:700; margin-left:6px;}
+  .eq-team-head small{display:block; font-size:12px; color:var(--ink-soft); margin-top:3px;}
+  .eq-chev{color:var(--ink-faint); transition:transform .15s;} .eq-team.open .eq-chev{transform:rotate(180deg);}
+  .eq-team-body{display:none; padding:0 14px 12px; border-top:1px solid var(--line);}
+  .eq-team.open .eq-team-body{display:block;}
+  .eq-team-body .eq-row:last-of-type{border-bottom:none;}
   .eq-select, .ev-form select{width:100%; box-sizing:border-box; padding:10px 12px; border:1.5px solid var(--line); border-radius:10px; font-family:'Noto Sans KR',sans-serif; font-size:14px; background:#fff; color:var(--ink);}
   .mt-tabs + .reset-link{order:1; margin-left:auto; white-space:nowrap;}
   .ev-card{border:1.5px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px; cursor:pointer; background:#fff;}
@@ -689,7 +698,7 @@
     <div id="eqCalWrap">
       <div class="eq-month"><button id="eqPrev">◀</button><b id="eqMonthLabel"></b><button id="eqNext">▶</button></div>
       <div class="eq-grid" id="eqGrid"></div>
-      <p class="eq-legend">숫자 = 그날 나가는 장비 수 · 빨간 칸 = 같은 장비가 같은 시간에 겹침</p>
+      <p class="eq-legend">○팀 = 그날 장비를 빌린 팀 수 · 빨간 칸 = 같은 장비가 같은 시간에 겹침</p>
       <h3 id="eqDayTitle" style="font-size:14px; font-weight:900; margin:18px 0 0;"></h3>
       <div id="eqDayList"></div>
     </div>
@@ -2734,6 +2743,16 @@ document.getElementById('btnEventBack').addEventListener('click', ()=>{ showView
 /* ───────── 장비 대여 캘린더 ───────── */
 let eqItems = [], eqMonth = '', eqDay = '', eqEditing = null, eqMode = 'cal', eqBad = new Set();
 function eqSpan(it){ return [it.start + ' ' + (it.from || '00:00'), it.end + ' ' + (it.to || '23:59')]; }
+let eqOpenGroups = new Set(), eqBulk = null;
+function eqGroupKey(it){ return it.planId ? 'P:' + it.planId : 'M:' + it.id; }
+function eqOpenBulk(items){
+  eqOpen(items[0]);
+  eqBulk = items;
+  document.getElementById('eqFormTitle').textContent = `팀 장비 ${items.length}개 기간 수정`;
+  document.getElementById('eqLabel').disabled = true;
+  document.getElementById('eqPlanNote').textContent = `${items[0].title || '직접 추가'} — ${items.map(it => '#' + it.label).join(', ')} 에 같은 기간·시간이 적용돼요.`;
+  document.getElementById('eqDelete').textContent = '팀 대여 모두 빼기';
+}
 function eqConflicts(){
   const bad = new Set(), by = {};
   eqItems.forEach(it => (by[it.label] = by[it.label] || []).push(it));
@@ -2747,7 +2766,9 @@ function eqTimeText(it){
   const t = (it.from || it.to) ? (it.from || '00:00') + '~' + (it.to || '24:00') : '종일';
   return it.start === it.end ? t : mtFmt(it.start) + '~' + mtFmt(it.end) + (t === '종일' ? '' : ' ' + t);
 }
-function eqRowHTML(it, showDate){
+function eqRowHTML(it, showDate, inTeam){
+  if(inTeam) return `<div class="eq-row"><div><b>${abEsc(eqItemName(it.label))}</b><span class="t">${eqTimeText(it)}</span>${eqBad.has(it.id) ? '<span class="eq-bad">겹침</span>' : ''}${it.memo ? `<small>${abEsc(it.memo)}</small>` : ''}</div>
+    <button class="ab-btn" data-eq="${abEsc(it.id)}">수정</button></div>`;
   return `<div class="eq-row"><div><b>${abEsc(eqItemName(it.label))}</b><span class="t">${showDate && it.start === it.end ? mtFmt(it.start) + ' ' : ''}${eqTimeText(it)}</span>${eqBad.has(it.id) ? '<span class="eq-bad">겹침</span>' : ''}
     <small>${abEsc(it.who || '-')}${it.title ? ' · ' + abEsc(it.title) : ''}${it.memo ? ' · ' + abEsc(it.memo) : ''}</small></div>
     <button class="ab-btn" data-eq="${abEsc(it.id)}">수정</button></div>`;
@@ -2782,15 +2803,33 @@ function eqRenderCal(){
     const ymd = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const on = eqItems.filter(it => it.start <= ymd && ymd <= it.end);
     const bad = on.some(it => eqBad.has(it.id));
-    html += `<button class="eq-cell ${ymd === today ? 'today' : ''} ${ymd === eqDay ? 'sel' : ''} ${bad ? 'bad' : ''}" data-d="${ymd}"><span class="n">${d}</span>${on.length ? `<span class="c">${on.length}</span>` : ''}</button>`;
+    const teams = new Set(on.map(eqGroupKey)).size;
+    html += `<button class="eq-cell ${ymd === today ? 'today' : ''} ${ymd === eqDay ? 'sel' : ''} ${bad ? 'bad' : ''}" data-d="${ymd}"><span class="n">${d}</span>${teams ? `<span class="c">${teams}팀</span>` : ''}</button>`;
   }
   const grid = document.getElementById('eqGrid');
   grid.innerHTML = html;
   grid.querySelectorAll('.eq-cell[data-d]').forEach(c => c.addEventListener('click', ()=>{ eqDay = c.dataset.d; eqRenderCal(); }));
   const list = eqItems.filter(it => it.start <= eqDay && eqDay <= it.end).sort((a, b) => (a.from || '') < (b.from || '') ? -1 : 1);
-  document.getElementById('eqDayTitle').textContent = mtFmt(eqDay) + ` 대여 ${list.length}건`;
+  const groups = [];
+  list.forEach(it => { const k = eqGroupKey(it); let g = groups.find(x => x.key === k); if(!g) groups.push(g = { key: k, items: [] }); g.items.push(it); });
+  document.getElementById('eqDayTitle').textContent = mtFmt(eqDay) + ` · ${groups.length}팀 · 장비 ${list.length}개`;
   const el = document.getElementById('eqDayList');
-  el.innerHTML = list.length ? list.map(it => eqRowHTML(it, false)).join('') : '<p style="font-size:12.5px;color:var(--ink-faint);">이 날 나가는 장비가 없어요.</p>';
+  el.innerHTML = groups.length ? groups.map(g => {
+    const f = g.items[0], bad = g.items.filter(it => eqBad.has(it.id)).length;
+    const sameTime = g.items.every(it => eqTimeText(it) === eqTimeText(f));
+    const title = f.planId ? (f.title || f.planId) : '직접 추가한 대여';
+    return `<div class="eq-team ${bad ? 'bad' : ''} ${eqOpenGroups.has(g.key) ? 'open' : ''}" data-g="${abEsc(g.key)}">
+      <div class="eq-team-head"><div><b>${abEsc(title)}</b><span class="t">${sameTime ? eqTimeText(f) : '시간 여러 개'}</span>${bad ? `<span class="eq-bad">겹침 ${bad}</span>` : ''}
+        <small>${abEsc(f.who || '-')} · 장비 ${g.items.length}개</small></div><span class="eq-chev">▾</span></div>
+      <div class="eq-team-body">${g.items.map(it => eqRowHTML(it, false, true)).join('')}
+        ${g.items.length > 1 ? `<button class="ab-btn go" data-bulk="${abEsc(g.key)}" style="width:100%; margin-top:10px;">팀 장비 ${g.items.length}개 기간 한 번에 수정</button>` : ''}</div>
+    </div>`;
+  }).join('') : '<p style="font-size:12.5px;color:var(--ink-faint);">이 날 나가는 장비가 없어요.</p>';
+  el.querySelectorAll('.eq-team-head').forEach(h => h.addEventListener('click', ()=>{
+    const card = h.parentElement, k = card.dataset.g;
+    card.classList.toggle('open'); card.classList.contains('open') ? eqOpenGroups.add(k) : eqOpenGroups.delete(k);
+  }));
+  el.querySelectorAll('[data-bulk]').forEach(b => b.addEventListener('click', ()=>{ const g = groups.find(x => x.key === b.dataset.bulk); if(g) eqOpenBulk(g.items); }));
   eqBindRows(el);
 }
 function eqRenderItem(){
@@ -2806,7 +2845,7 @@ function eqRenderItem(){
   eqBindRows(el);
 }
 function eqOpen(it){
-  eqEditing = it || null;
+  eqEditing = it || null; eqBulk = null;
   const sel = document.getElementById('eqLabel');
   if(!sel.options.length) sel.innerHTML = EQUIPMENT_LIST.map(e => `<option value="${e.label}">[${e.cat}] ${e.name} #${e.label}</option>`).join('');
   const day = it ? it.start : (eqMode === 'cal' ? eqDay : mtYmd(new Date()));
@@ -2836,6 +2875,21 @@ async function eqSaveForm(){
   if((from && !to) || (!from && to)){ showAlert('시작·종료 시간을 둘 다 넣거나 둘 다 비워 주세요 (비우면 종일).'); return; }
   if(start === end && from && to && to <= from){ showAlert('종료 시간이 시작 시간보다 늦어야 해요.'); return; }
   const it = eqEditing;
+  if(eqBulk){
+    const ids = new Set(eqBulk.map(x => x.id));
+    const clashes = eqBulk.filter(b => eqItems.some(x => !ids.has(x.id) && Number(x.label) === Number(b.label) && (()=>{ const [a0, a1] = eqSpan({ start, end, from, to }), [b0, b1] = eqSpan(x); return a0 < b1 && b0 < a1; })()));
+    if(clashes.length && !(await showConfirm(`${clashes.map(c => '#' + c.label).join(', ')} 장비가 다른 대여와 겹쳐요. 그래도 저장할까요?`))) return;
+    const btn = document.getElementById('eqSave'); btn.disabled = true; btn.textContent = '저장 중...';
+    try{
+      await eqPost({ action:'equipSaveMany', items: eqBulk.map(x => ({ id: x.id, planId: x.planId || '', label: x.label, name: x.name || eqItemName(x.label).replace(/ #\d+$/, ''),
+        start, end, from, to, who: g('eqWho'), memo: g('eqMemo') || x.memo || '' })) });
+      document.getElementById('eqForm').style.display = 'none';
+      eqDay = start; eqMonth = start.slice(0, 7);
+      await eqLoad();
+    }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+    btn.disabled = false; btn.textContent = '저장';
+    return;
+  }
   const cand = { id: it ? it.id : '_new', label, start, end, from, to };
   const clash = eqItems.filter(x => x.id !== cand.id && Number(x.label) === label).find(x => { const [a0, a1] = eqSpan(cand), [b0, b1] = eqSpan(x); return a0 < b1 && b0 < a1; });
   if(clash && !(await showConfirm(`${eqItemName(label)}이(가) ${clash.who || '다른 대여'} (${mtFmt(clash.start)} ${eqTimeText(clash)})와 겹쳐요. 그래도 저장할까요?`))) return;
@@ -2851,6 +2905,15 @@ async function eqSaveForm(){
 }
 async function eqRemove(){
   const it = eqEditing; if(!it) return;
+  if(eqBulk){
+    if(!(await showConfirm(`이 팀의 장비 ${eqBulk.length}개 대여를 달력에서 모두 뺄까요? 기획서 내용은 그대로예요.`))) return;
+    try{
+      await eqPost({ action:'equipDeleteMany', items: eqBulk.map(x => ({ id: x.id, planId: x.planId || '', label: x.label, name: x.name || '' })) });
+      document.getElementById('eqForm').style.display = 'none';
+      await eqLoad();
+    }catch(e){ showAlert('삭제에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+    return;
+  }
   if(!(await showConfirm(`${eqItemName(it.label)} 대여(${mtFmt(it.start)})를 ${it.planId ? '달력에서 뺄까요? 기획서 내용은 그대로예요.' : '삭제할까요?'}`))) return;
   try{
     await eqPost({ action:'equipDelete', id: it.id, planId: it.planId || '', label: it.label, name: it.name || '' });

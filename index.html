@@ -392,7 +392,11 @@
     <div class="step-panel" id="panel3">
       <p class="step-label">콘텐츠 기획서</p>
       <h2 class="heading">기본 정보를<br>입력해주세요</h2>
-      <div class="field-sm"><label>제목</label><input type="text" id="f_title" placeholder="예: 체험왕 - 스타짐 체험"></div>
+      <div class="field-sm"><label id="f_seriesLabel">시리즈명</label><input type="text" id="f_series" list="seriesList" placeholder="예: 체험왕" autocomplete="off"><datalist id="seriesList"></datalist></div>
+      <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-soft); margin:-2px 0 10px;"><input type="checkbox" id="f_oneoff"> 1회성 콘텐츠 (회차 없음)</label>
+      <div class="field-sm" id="f_episodeWrap"><label>회차</label><input type="text" id="f_episode" placeholder="예: 씨름부편"></div>
+      <input type="hidden" id="f_title">
+      <p class="req-hint" id="f_titlePreview" style="margin:-4px 0 12px;"></p>
       <div class="field-sm"><label>한줄요약</label><input type="text" id="f_summary"></div>
       <div class="field-sm"><label>참고 URL</label><input type="url" id="f_url" placeholder="https://..."></div>
       <div class="field-sm">
@@ -1224,7 +1228,8 @@ function stepValid(n){
   if(n===1) return data.name.trim().length>0;
   if(n===2) return !!data.category;
   if(n===3){
-    return data.title.trim().length>0 && data.summary.trim().length>0 && data.url.trim().length>0 && data.request.trim().length>0;
+    const tp = titleParts(data.title);
+    return tp.series.length>0 && (data.oneoff || tp.episode.length>0) && data.summary.trim().length>0 && data.url.trim().length>0 && data.request.trim().length>0;
   }
   if(n===4) return data.lead.trim().length>0 && data.filming.trim().length>0 && data.editing.trim().length>0 && data.extra.trim().length>0;
   if(n===5) return data.filmdate.trim().length>0 && data.submitdate.trim().length>0;
@@ -1320,6 +1325,54 @@ function renderNameSuggestions(){
     });
   });
 }
+
+// 제목 = "시리즈명 | 회차" (1회성은 제목만) — 캡션 크레딧 첫 줄 "🎬 시리즈명 | 회차"와 그대로 맞춰져요
+const SERIES_SEED = ['체험왕','1234!','아바타 소개팅','끝나는 인터뷰','오늘의 전주대 질문'];
+function titleParts(t){
+  const s = String(t||''); const i = s.indexOf('|');
+  return i < 0 ? { series: s.trim(), episode: '' } : { series: s.slice(0,i).trim(), episode: s.slice(i+1).trim() };
+}
+function composeTitle(){
+  const series = document.getElementById('f_series').value.trim();
+  const episode = document.getElementById('f_episode').value.trim();
+  data.oneoff = document.getElementById('f_oneoff').checked;
+  data.title = (data.oneoff || !episode) ? series : series + ' | ' + episode;
+  document.getElementById('f_title').value = data.title;
+  syncTitleUi();
+  updateCta(); scheduleAutosave();
+}
+function syncTitleUi(){
+  const oneoff = !!data.oneoff;
+  document.getElementById('f_episodeWrap').style.display = oneoff ? 'none' : '';
+  document.getElementById('f_seriesLabel').textContent = oneoff ? '제목' : '시리즈명';
+  document.getElementById('f_series').placeholder = oneoff ? '예: 전주대 벚꽃 명소' : '예: 체험왕';
+  document.getElementById('f_titlePreview').textContent = data.title ? '캡션 크레딧: 🎬 ' + data.title : '';
+}
+function syncTitleFields(){
+  const tp = titleParts(data.title);
+  document.getElementById('f_series').value = tp.series;
+  document.getElementById('f_episode').value = tp.episode;
+  document.getElementById('f_oneoff').checked = !!data.oneoff;
+  syncTitleUi();
+}
+const MEMBER_DEPT = { '김지훈':'경영학과','김현아':'외식산업학과','최승훈':'영화방송학과','이지민':'영화방송학과','변수현':'영화방송학과','백가민':'영화방송학과','한가온':'경영학과','이예은':'사회복지학과','김세영':'경영학과','오화종':'외식산업조리학과','이서연':'관광경영학과','장서영':'경영학과','이은채':'경영학과','이다희':'가정교육과','임은지':'한식조리학과' };
+function buildCreditText(rec){
+  const seen = new Set(), lines = [];
+  ['lead','member','filming','editing','extra'].forEach(k => String(rec[k]||'').split(/[,\n]/).forEach(raw => {
+    raw = raw.trim(); if(!raw) return;
+    const base = raw.replace(/\(.*?\)/g,'').trim();
+    if(seen.has(base)) return; seen.add(base);
+    lines.push('▪️' + (MEMBER_DEPT[base] ? base + ' | ' + MEMBER_DEPT[base] : raw));
+  }));
+  return ['-','-','🎬 ' + (rec.title||'').trim()].concat(lines).join('\n');
+}
+function fillSeriesList(rows){
+  const set = new Set(SERIES_SEED);
+  (rows||[]).forEach(r => { const t = String(r['제목']||''); if(t.includes('|')) set.add(titleParts(t).series); });
+  document.getElementById('seriesList').innerHTML = [...set].filter(Boolean).map(s => `<option value="${s.replace(/"/g,'&quot;')}"></option>`).join('');
+}
+['f_series','f_episode'].forEach(id => document.getElementById(id).addEventListener('input', composeTitle));
+document.getElementById('f_oneoff').addEventListener('change', composeTitle);
 
 const detailIds = ['lead','title','summary','url','request'];
 function bindDetailInputs(){
@@ -1499,6 +1552,7 @@ async function refreshOverview(){
   const listEl = document.getElementById('ov_list');
   try{
     const rows = await sheetGetAll();
+    try{ fillSeriesList(rows); }catch(e){}
     const items = [];
     (rows || []).forEach(r => {
       const st = r['상태'], title = r['제목'] || '(제목 없음)', lead = r['작성자(팀장)'] || '';
@@ -1612,7 +1666,8 @@ function renderStatusDetail(key, rec){
   const isAccepted = ['approved','filming','editing','completed'].includes(editingRecord.status);
   const imageSection = isAccepted ? `
     <div id="statusDocCard">${buildDocCardHTML(editingRecord)}</div>
-    <button id="statusSaveImage" style="width:100%; margin:14px 0 20px; padding:16px; border-radius:12px; border:none; background:var(--purple); color:#fff; font-weight:700; font-size:15px; cursor:pointer;">📥 이미지로 다운로드</button>
+    <button id="statusSaveImage" style="width:100%; margin:14px 0 8px; padding:16px; border-radius:12px; border:none; background:var(--purple); color:#fff; font-weight:700; font-size:15px; cursor:pointer;">📥 이미지로 다운로드</button>
+    <button id="statusCopyCredit" style="width:100%; margin:0 0 20px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14.5px; cursor:pointer;">📋 캡션 크레딧 복사</button>
   ` : '';
 
   let stageSection = '';
@@ -1653,7 +1708,7 @@ function renderStatusDetail(key, rec){
       <div class="field-sm"><label>참여 인원 (자동)</label><input type="text" id="e_participants" readonly style="background:var(--purple-soft);color:var(--ink-soft);" value="${editingRecord.participants||''}"></div>
     </div>
     <p class="section-title">기본 정보</p>
-    <div class="field-sm"><label>제목</label><input type="text" id="e_title" value="${(editingRecord.title||'').replace(/"/g,'&quot;')}"></div>
+    <div class="field-sm"><label>제목 <span style="color:var(--ink-faint);">(시리즈명 | 회차 · 1회성은 제목만)</span></label><input type="text" id="e_title" value="${(editingRecord.title||'').replace(/"/g,'&quot;')}"></div>
     <div class="field-sm"><label>한줄요약</label><input type="text" id="e_summary" value="${(editingRecord.summary||'').replace(/"/g,'&quot;')}"></div>
     <div class="field-sm"><label>참고 URL</label><input type="text" id="e_url" value="${(editingRecord.url||'').replace(/"/g,'&quot;')}"></div>
     <div class="field-sm"><label>요청사항</label><textarea id="e_request">${editingRecord.request||''}</textarea></div>
@@ -1683,6 +1738,14 @@ function renderStatusDetail(key, rec){
   });
   document.getElementById('saveEditBtn').addEventListener('click', saveEditedSubmission);
 
+  const creditBtn = document.getElementById('statusCopyCredit');
+  if(creditBtn){
+    creditBtn.addEventListener('click', async ()=>{
+      const text = buildCreditText(editingRecord);
+      try{ await navigator.clipboard.writeText(text); creditBtn.textContent = '복사됨! 캡션 맨 아래에 붙여 주세요'; setTimeout(()=>{ creditBtn.textContent = '📋 캡션 크레딧 복사'; }, 2500); }
+      catch(e){ showAlert('복사에 실패했어요. 아래 내용을 직접 복사해 주세요.\n\n' + text); }
+    });
+  }
   const imgBtn = document.getElementById('statusSaveImage');
   if(imgBtn){
     imgBtn.addEventListener('click', ()=>{
@@ -1993,6 +2056,7 @@ document.getElementById('btnReset').addEventListener('click', async ()=>{
 function syncFormFromData(){
   document.getElementById('in_name').value = data.name;
   detailIds.forEach(k=>{ document.getElementById('f_'+k).value = data[k]||''; });
+  syncTitleFields();
   computeTeam(); renderTypeCards(); renderPlanRows(); applyDateLimits();
   ['filming','editing','extra'].forEach(refreshNamePickerChips);
   updateProgress();

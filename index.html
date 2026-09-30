@@ -181,6 +181,11 @@
   .status-pill.filming{background:#E6EEFC; color:#1E4FA0;}
   .status-pill.editing{background:#FDEBD3; color:#95590B;}
   .status-pill.completed{background:#FFF6DC; color:var(--gold-dark);}
+  .status-pill.uploaded{background:#EEE8FB; color:#5B3FB0;}
+  .status-pill.dropped{background:#EEEEF1; color:#6B6B75;}
+  .drop-head{font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:22px 0 8px;}
+  .sub-card.is-dropped{opacity:.6;}
+  .up-link{display:inline-block; margin-top:6px; font-size:12px; color:#5B3FB0; font-weight:700; text-decoration:none;}
   .status-pill.rejected{background:#FCEAEA; color:#B23A3A;}
   .sub-card .sub-title{font-size:15px; font-weight:700; margin:2px 0 4px;}
   .sub-card .sub-meta{font-size:12px; color:var(--ink-soft); margin:0 0 10px;}
@@ -843,7 +848,7 @@ function openTab(k){
   else { showView('meeting'); const input = document.getElementById('mtDate'); if(!input.value) input.value = mtMonday(mtYmd(new Date())); mtLoad(); }
 }
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZ-U1zoYVN6zALdZCdoaRiFjCnklHwT50rRADKYDx8jd4we48vmzBoN7JOczAS0pj_/exec';
-const STATUS_LABELS = {pending:'승인 대기', approved:'승인됨 · 촬영 예정', filming:'촬영 중', editing:'편집 중', completed:'제작 완료', rejected:'반려됨'};
+const STATUS_LABELS = {pending:'승인 대기', approved:'승인됨 · 촬영 예정', filming:'촬영 중', editing:'편집 중', completed:'제작 완료', uploaded:'업로드 완료', dropped:'제작 중단', rejected:'반려됨'};
 
 const COL = {
   status:'상태', submittedAt:'제출일시', updatedAt:'최종수정일시', reviewedAt:'검토일시',
@@ -966,7 +971,7 @@ function mapRowToRecord(row){
     locked: !!String(row['상태고정'] || '').trim(),
     submittedAt: row['제출일시'] || '', updatedAt: row['최종수정일시'] || '',
     reviewedAt: row['검토일시'] || '', filmingAt: row['촬영시작일시'] || '',
-    completedAt: row['완료일시'] || '', lead: row['작성자(팀장)'] || '', name: row['작성자(팀장)'] || '',
+    completedAt: row['완료일시'] || '', uploadedAt: normalizeDateStr(row['업로드일']), uploadUrl: String(row['업로드URL'] || ''), lead: row['작성자(팀장)'] || '', name: row['작성자(팀장)'] || '',
     category: row['콘텐츠유형'] || '', member: row['팀원'] || '', filming: row['촬영'] || '',
     editing: row['편집'] || '', extra: row['추가'] || '', participants: row['참여인원'] || '',
     title: row['제목'] || '', summary: row['한줄요약'] || '', url: row['참고URL'] || '',
@@ -1127,7 +1132,7 @@ const EQUIPMENT_LIST = [
   {cat:'SD 카드', label:60, name:'Extreme Pro 256GB SD카드', brand:'SanDisk'}
 ];
 
-const BOOKED_STATUSES = ['approved','filming','editing','completed'];
+const BOOKED_STATUSES = ['approved','filming','editing','completed','uploaded'];
 
 function selectedEquipmentLabels(){
   const set = new Set();
@@ -1738,7 +1743,7 @@ function renderStatusListView(items){
   const el = document.getElementById('statusContent');
   const total = items.length;
   const pending = items.filter(i=>i.rec.status==='pending').length;
-  const approvedTotal = items.filter(i=>['approved','filming','completed'].includes(i.rec.status)).length;
+  const approvedTotal = items.filter(i=>['approved','filming','editing','completed','uploaded'].includes(i.rec.status)).length;
   const overviewHtml = `
     <div class="overview-grid" style="margin-bottom:20px;">
       <div class="overview-card"><span class="overview-num">${total}</span><span class="overview-label">전체<br>제출</span></div>
@@ -1790,7 +1795,7 @@ function renderStatusDetail(key, rec){
   const el = document.getElementById('statusContent');
   const catOptions = CATEGORIES.map(c=>`<option value="${c.id}" ${c.id===editingRecord.category?'selected':''}>${c.title}</option>`).join('');
 
-  const isAccepted = ['approved','filming','editing','completed'].includes(editingRecord.status);
+  const isAccepted = ['approved','filming','editing','completed','uploaded'].includes(editingRecord.status);
   const imageSection = isAccepted ? `
     <div id="statusDocCard">${buildDocCardHTML(editingRecord)}</div>
     <button id="statusSaveImage" style="width:100%; margin:14px 0 8px; padding:16px; border-radius:12px; border:none; background:var(--purple); color:#fff; font-weight:700; font-size:15px; cursor:pointer;">📥 이미지로 다운로드</button>
@@ -1817,6 +1822,7 @@ function renderStatusDetail(key, rec){
       ${editingRecord.reviewedAt? `<p>검토일시: ${fmtDateTime(editingRecord.reviewedAt)}</p>`:''}
       ${editingRecord.filmingAt? `<p>촬영 시작: ${fmtDateTime(editingRecord.filmingAt)}</p>`:''}
       ${editingRecord.completedAt? `<p>제작 완료: ${fmtDateTime(editingRecord.completedAt)}</p>`:''}
+      ${editingRecord.uploadedAt? `<p>업로드: ${mtFmt(editingRecord.uploadedAt)}${/^https?:/.test(editingRecord.uploadUrl) ? ` · <a class="up-link" style="margin:0" href="${editingRecord.uploadUrl}" target="_blank" rel="noopener">게시물 보기</a>` : ''}</p>`:''}
       ${editingRecord.status==='rejected' && editingRecord.rejectReason? `<p>반려 사유: ${editingRecord.rejectReason}</p>`:''}
     </div>
     ${imageSection}
@@ -2044,7 +2050,9 @@ function renderAdminList(items){
     listEl.innerHTML = '<p style="font-size:12.5px;color:var(--ink-faint);">아직 제출된 기획서가 없어요.</p>';
     return;
   }
-  listEl.innerHTML = items.map(({key, rec})=>{
+  const dropN = items.filter(i=>i.rec.status==='dropped').length;
+  items = items.filter(i=>i.rec.status!=='dropped').concat(items.filter(i=>i.rec.status==='dropped'));
+  listEl.innerHTML = items.map(({key, rec}, idx)=>{
     const catLabel = (CATEGORIES.find(c=>c.id===rec.category)||{}).title || '-';
     const when = fmtDateTime(rec.submittedAt);
     let actions = '';
@@ -2060,7 +2068,8 @@ function renderAdminList(items){
       actions = `<div class="sub-actions"><button class="btn-approve" data-approve="${key}">재검토 후 승인</button></div>`;
     }
     return `
-      <div class="sub-card" data-key="${key}">
+      ${dropN && idx === items.length - dropN ? `<p class="drop-head">⏸ 제작 중단 ${dropN}건</p>` : ''}
+      <div class="sub-card${rec.status==='dropped' ? ' is-dropped' : ''}" data-key="${key}">
         <div class="sub-card-top">
           <span class="status-pill ${rec.status}">${STATUS_LABELS[rec.status]||rec.status}</span>
           <button class="toggle-detail" data-toggle="${key}">자세히 보기</button>
@@ -2069,8 +2078,9 @@ function renderAdminList(items){
         <p class="sub-meta">${rec.name||'-'} · ${catLabel} · ${when}</p>
         <div class="sub-detail" id="detail-${key}" style="display:none; white-space:normal; padding:0; border:none; margin:10px 0 0;">${buildDocCardHTML(rec)}</div>
         ${actions}
-        ${['approved','filming','editing','completed'].includes(rec.status) ? `<div class="st-force"><span>${rec.locked ? '🔒 관리자 지정' : '⏱ 촬영일 기준 자동'}</span>
-          <select data-force="${key}"><option value="">상태 직접 변경</option>${rec.locked ? '<option value="auto">자동으로 되돌리기</option>' : ''}<option value="approved">승인됨 · 촬영 예정</option><option value="filming">촬영 중</option><option value="editing">편집 중</option><option value="completed">제작 완료</option></select></div>` : ''}
+        ${rec.uploadedAt ? `<a class="up-link" ${/^https?:/.test(rec.uploadUrl) ? `href="${rec.uploadUrl}" target="_blank" rel="noopener"` : ''}>📺 ${mtFmt(rec.uploadedAt)} 업로드${/^https?:/.test(rec.uploadUrl) ? ' · 게시물 보기' : ''}</a>` : ''}
+        ${['approved','filming','editing','completed','uploaded','dropped'].includes(rec.status) ? `<div class="st-force"><span>${rec.locked ? '🔒 관리자 지정' : ({completed:'✅ 제작 완료 (관리자 처리)', uploaded:'📺 게시물 매칭으로 자동', dropped:'⏸ 중간에 접음 · 불참·장비에서 제외'}[rec.status] || '⏱ 촬영일 기준 자동')}</span>
+          <select data-force="${key}"><option value="">상태 직접 변경</option>${rec.locked ? '<option value="auto">자동으로 되돌리기</option>' : ''}<option value="approved">승인됨 · 촬영 예정</option><option value="filming">촬영 중</option><option value="editing">편집 중</option><option value="completed">제작 완료</option><option value="uploaded">업로드 완료</option><option value="dropped">제작 중단</option></select></div>` : ''}
       </div>
     `;
   }).join('');
@@ -2094,7 +2104,7 @@ function renderAdminList(items){
 async function forceStatus(key, value, sel){
   if(!value) return;
   const label = value === 'auto' ? '촬영일 기준 자동' : STATUS_LABELS[value];
-  const ok = await showConfirm(value === 'auto' ? '이 기획서를 다시 촬영일 기준 자동 상태로 돌릴까요?' : `'${label}'(으)로 고정할까요? 고정하면 날짜가 지나도 자동으로 바뀌지 않아요.`);
+  const ok = await showConfirm(value === 'auto' ? '이 기획서를 다시 촬영일 기준 자동 상태로 돌릴까요?' : value === 'dropped' ? '이 기획서를 제작 중단으로 바꿀까요? 불참 집계와 장비 대여에서 빠져요. (나중에 되돌릴 수 있어요)' : `'${label}'(으)로 고정할까요? 고정하면 날짜가 지나도 자동으로 바뀌지 않아요.`);
   if(!ok){ sel.value = ''; return; }
   sel.disabled = true;
   try{

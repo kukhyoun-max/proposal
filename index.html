@@ -1713,7 +1713,9 @@ document.getElementById('btnHome').addEventListener('click', ()=>{
   updateProgress();
 });
 
+let detailFromAdmin = false;
 document.getElementById('btnStatusToggle').addEventListener('click', ()=>{
+  detailFromAdmin = false;
   showView('status');
   document.getElementById('statusHeader').textContent = '기획서 현황';
   loadStatusList();
@@ -1850,6 +1852,10 @@ function renderStatusDetail(key, rec){
       <div class="field-sm"><label>촬영일</label><input type="date" id="e_filmdate" value="${editingRecord.filmdate||''}"></div>
       <div class="field-sm"><label>제출일</label><input type="date" id="e_submitdate" value="${editingRecord.submitdate||''}"></div>
     </div>
+    <div class="grid2">
+      <div class="field-sm"><label>촬영 시작</label><select id="e_filmfrom"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
+      <div class="field-sm"><label>촬영 종료</label><select id="e_filmto"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
+    </div>
     <div class="field-sm"><label>장비</label><input type="text" id="e_equipment" value="${(editingRecord.equipment||'').replace(/"/g,'&quot;')}"></div>
     <p class="section-title">기획 내용</p>
     <div id="e_planRows"></div>
@@ -1858,7 +1864,10 @@ function renderStatusDetail(key, rec){
     </div>
   `;
   renderEditPlanRows();
-  document.getElementById('statusToList').addEventListener('click', loadStatusList);
+  const backBtn = document.getElementById('statusToList');
+  if(detailFromAdmin){ backBtn.textContent = '← 기획서 관리로'; backBtn.addEventListener('click', ()=>{ detailFromAdmin = false; openTab('admin'); }); }
+  else backBtn.addEventListener('click', loadStatusList);
+  eFillTimes(key);
   ['lead','filming','extra','editing'].forEach(k=>{
     document.getElementById('e_'+k).addEventListener('input', e=>{ editingRecord[k]=e.target.value; recomputeEditTeam(); });
   });
@@ -1988,8 +1997,22 @@ function renderEditPlanRows(){
   });
 }
 
+// 상세 수정: 저장된 촬영 시간 불러오기 (장비 목록에 기획서별 시간이 같이 와요)
+let eTimeOrig = { from:'', to:'' };
+async function eFillTimes(key){
+  eTimeOrig = { from:'', to:'' };
+  try{
+    const res = await attendJsonp({ action:'equipList' });
+    const it = (res.items || []).find(x => x.planId === key && (x.from || x.to));
+    if(it) eTimeOrig = { from: it.from || '', to: it.to || '' };
+  }catch(e){}
+  const f = document.getElementById('e_filmfrom'), t = document.getElementById('e_filmto');
+  if(f && editingKey === key){ f.value = eTimeOrig.from; t.value = eTimeOrig.to; }
+}
 async function saveEditedSubmission(){
   const btn = document.getElementById('saveEditBtn');
+  const tf = (document.getElementById('e_filmfrom') || {}).value || '', tt = (document.getElementById('e_filmto') || {}).value || '';
+  if((tf || tt) && !(tf && tt && tf < tt)){ showAlert('촬영 종료 시간은 시작 시간보다 늦어야 해요. (둘 다 비우면 종일)'); return; }
   btn.disabled = true; btn.textContent = '저장 중...';
   const updatedAt = new Date().toISOString();
   const fields = {
@@ -2005,6 +2028,10 @@ async function saveEditedSubmission(){
   try{
     const result = await sheetUpdate(editingKey, fields);
     if(!result || result.ok === false) throw new Error('시트 응답 실패');
+    if(tf !== eTimeOrig.from || tt !== eTimeOrig.to){
+      await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action:'planTime', planId: editingKey, from: tf, to: tt }) });
+    }
     editingRecord.updatedAt = updatedAt;
     renderStatusDetail(editingKey, editingRecord);
   }catch(e){
@@ -2072,7 +2099,7 @@ function renderAdminList(items){
       <div class="sub-card${rec.status==='dropped' ? ' is-dropped' : ''}" data-key="${key}">
         <div class="sub-card-top">
           <span class="status-pill ${rec.status}">${STATUS_LABELS[rec.status]||rec.status}</span>
-          <button class="toggle-detail" data-toggle="${key}">자세히 보기</button>
+          <span style="display:flex; gap:12px;"><button class="toggle-detail" data-edit="${key}">✏️ 수정</button><button class="toggle-detail" data-toggle="${key}">자세히 보기</button></span>
         </div>
         <p class="sub-title">${(rec.title||'(제목 없음)')}</p>
         <p class="sub-meta">${rec.name||'-'} · ${catLabel} · ${when}</p>
@@ -2085,6 +2112,12 @@ function renderAdminList(items){
     `;
   }).join('');
 
+  listEl.querySelectorAll('[data-edit]').forEach(btn=>{ btn.addEventListener('click', ()=>{
+    const it = items.find(x => x.key === btn.dataset.edit); if(!it) return;
+    detailFromAdmin = true; showView('status'); renderStatusDetail(it.key, it.rec);
+    const t = document.getElementById('toggleEditBtn'); if(t) t.click();
+    window.scrollTo(0, 0);
+  }); });
   listEl.querySelectorAll('[data-force]').forEach(sel=>{ sel.addEventListener('change', ()=>forceStatus(sel.dataset.force, sel.value, sel)); });
   listEl.querySelectorAll('[data-toggle]').forEach(btn=>{
     btn.addEventListener('click', ()=>{

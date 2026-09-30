@@ -186,6 +186,8 @@
   .sub-card .sub-meta{font-size:12px; color:var(--ink-soft); margin:0 0 10px;}
   .sub-card .sub-detail{font-size:12.5px; color:var(--ink); margin:10px 0; padding-top:10px; border-top:1px solid var(--line); white-space:pre-wrap; line-height:1.6;}
   .sub-card .sub-actions{display:flex; gap:8px;}
+  .st-force{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line, #E5E5EA); font-size:11.5px; color:var(--ink-faint);}
+  .st-force select{font-size:12px; padding:5px 8px; border-radius:8px; border:1px solid #D9D9E0; background:#fff; color:var(--ink);}
   .sub-card .sub-actions button{flex:1; padding:9px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; border:none;}
   .btn-approve{background:var(--purple); color:#fff;}
   .btn-reject{background:#fff; color:#B23A3A; border:1.5px solid #F0C9C9 !important;}
@@ -950,9 +952,18 @@ function parsePlanText(text){
   });
   return rows.length ? rows : [{content:'',location:''}];
 }
+// 촬영일 전: 승인됨 · 당일: 촬영 중 · 이후: 편집 중 (앞으로만 이동). 관리자가 '상태고정' 하면 그대로 둬요.
+const PLAN_RANK = { approved:0, filming:1, editing:2 };
+function planAutoStatus(st, film, lock){
+  if(String(lock || '').trim() || !(st in PLAN_RANK) || !film) return st;
+  const today = mtYmd(new Date());
+  const auto = today < film ? 'approved' : (today === film ? 'filming' : 'editing');
+  return PLAN_RANK[auto] > PLAN_RANK[st] ? auto : st;
+}
 function mapRowToRecord(row){
   return {
-    id: row['ID'], status: row['상태'] || 'pending',
+    id: row['ID'], status: planAutoStatus(row['상태'] || 'pending', normalizeDateStr(row['촬영일']), row['상태고정']),
+    locked: !!String(row['상태고정'] || '').trim(),
     submittedAt: row['제출일시'] || '', updatedAt: row['최종수정일시'] || '',
     reviewedAt: row['검토일시'] || '', filmingAt: row['촬영시작일시'] || '',
     completedAt: row['완료일시'] || '', lead: row['작성자(팀장)'] || '', name: row['작성자(팀장)'] || '',
@@ -2058,10 +2069,13 @@ function renderAdminList(items){
         <p class="sub-meta">${rec.name||'-'} · ${catLabel} · ${when}</p>
         <div class="sub-detail" id="detail-${key}" style="display:none; white-space:normal; padding:0; border:none; margin:10px 0 0;">${buildDocCardHTML(rec)}</div>
         ${actions}
+        ${['approved','filming','editing','completed'].includes(rec.status) ? `<div class="st-force"><span>${rec.locked ? '🔒 관리자 지정' : '⏱ 촬영일 기준 자동'}</span>
+          <select data-force="${key}"><option value="">상태 직접 변경</option>${rec.locked ? '<option value="auto">자동으로 되돌리기</option>' : ''}<option value="approved">승인됨 · 촬영 예정</option><option value="filming">촬영 중</option><option value="editing">편집 중</option><option value="completed">제작 완료</option></select></div>` : ''}
       </div>
     `;
   }).join('');
 
+  listEl.querySelectorAll('[data-force]').forEach(sel=>{ sel.addEventListener('change', ()=>forceStatus(sel.dataset.force, sel.value, sel)); });
   listEl.querySelectorAll('[data-toggle]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const el = document.getElementById('detail-'+btn.dataset.toggle);
@@ -2077,6 +2091,19 @@ function renderAdminList(items){
   listEl.querySelectorAll('[data-complete-filming]').forEach(btn=>{ btn.addEventListener('click', ()=>setSubmissionStatus(btn.dataset.completeFilming, 'completed')); });
 }
 
+async function forceStatus(key, value, sel){
+  if(!value) return;
+  const label = value === 'auto' ? '촬영일 기준 자동' : STATUS_LABELS[value];
+  const ok = await showConfirm(value === 'auto' ? '이 기획서를 다시 촬영일 기준 자동 상태로 돌릴까요?' : `'${label}'(으)로 고정할까요? 고정하면 날짜가 지나도 자동으로 바뀌지 않아요.`);
+  if(!ok){ sel.value = ''; return; }
+  sel.disabled = true;
+  try{
+    await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(value === 'auto' ? { action:'planStatus', planId:key, lock:false } : { action:'planStatus', planId:key, status:value, lock:true }) });
+    await new Promise(r => setTimeout(r, 1500));
+    planInvalidate(); loadSubmissions(); refreshOverview();
+  }catch(e){ showAlert('상태 변경에 실패했어요: ' + (e && e.message ? e.message : '오류')); sel.disabled = false; }
+}
 async function setSubmissionStatus(key, status, onDone){
   try{
     const fields = { [COL.status]: status };
@@ -2325,6 +2352,8 @@ function attendPrefetch(){
     { action:'personalList', week: pcWeek || pcCycleStart(today) }, { action:'eventList' }, { action:'absentList' }, { action:'equipList' }];
   pre.forEach(p => { if(!allowedTabs || allowedTabs.includes({meetingList:'meeting',personalList:'personal',eventList:'event',absentList:'absent',equipList:'equip'}[p.action])) attendJsonp(p).catch(()=>{}); });
 }
+// 앱을 열 때 시트의 기획서 상태도 촬영일 기준으로 맞춰둬요 (화면은 이미 자동 상태로 보여요)
+setTimeout(()=>{ try{ attendJsonpRaw({ action:'planAuto' }).then(r => { if(r && r.changed) planInvalidate(); }).catch(()=>{}); }catch(e){} }, 2000);
 function attendJsonpRaw(params){
   return new Promise((resolve, reject)=>{
     const cbName = 'mt_' + Date.now() + '_' + Math.floor(Math.random()*100000);

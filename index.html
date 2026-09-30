@@ -373,6 +373,11 @@
   .pc-legend #pcRule{flex-basis:100%; white-space:normal;}
   .pc-legend i{display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:3px; vertical-align:0;}
   .mt-sum td .bad{color:#B23A3A; font-weight:700;} .mt-sum td .late{color:#9A5B00; font-weight:700;}
+  .admin-topbar{gap:8px;} .admin-topbar button{white-space:nowrap;}
+  @media (max-width:400px){ .admin-topbar{padding:10px 14px;} .admin-topbar button{padding:6px 9px; font-size:12px;} #btnHome{font-size:12px !important; text-align:left;} .admin-topbar > div{gap:5px !important;} }
+  #equipView .eq-ro-title{display:none; font-size:17px; font-weight:900; margin:0;}
+  #equipView.ro .eq-ro-title{display:block;}
+  #equipView.ro .mt-tabs, #equipView.ro #eqNew, #equipView.ro #eqForm, #equipView.ro [data-eq], #equipView.ro [data-bulk]{display:none !important;}
 </style>
 </head>
 <body>
@@ -380,6 +385,7 @@
 <div class="admin-topbar">
   <button id="btnHome" style="background:none; border:none; color:#fff; font-size:13px; font-weight:700; padding:0; cursor:pointer;">콘텐츠 기획서 시스템</button>
   <div style="display:flex; gap:8px;">
+    <button id="btnEquipPublic">장비</button>
     <button id="btnStatusToggle">기획서 현황</button>
     <button id="btnAdminToggle">관리자 검토 <span id="pendingBadge" style="display:none; background:#E24B4A; border-radius:10px; padding:1px 7px; margin-left:4px;">0</span></button>
   </div>
@@ -667,6 +673,7 @@
 <div class="phone" id="equipView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
     <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button><button class="on">장비</button></div>
+    <h2 class="eq-ro-title">장비 대여 현황</h2>
     <button class="reset-link" id="btnEquipBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
@@ -830,7 +837,7 @@ function openTab(k){
   else if(k === 'personal'){ showView('personal'); pcLoad(); }
   else if(k === 'absent'){ showView('absent'); abLoad(); }
   else if(k === 'event'){ showView('event'); evLoad(); }
-  else if(k === 'equip'){ showView('equip'); eqLoad(); }
+  else if(k === 'equip'){ eqShow(false); }
   else { showView('meeting'); const input = document.getElementById('mtDate'); if(!input.value) input.value = mtMonday(mtYmd(new Date())); mtLoad(); }
 }
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZ-U1zoYVN6zALdZCdoaRiFjCnklHwT50rRADKYDx8jd4we48vmzBoN7JOczAS0pj_/exec';
@@ -2599,7 +2606,7 @@ document.querySelectorAll('.mt-tabs').forEach(bar => {
 });
 document.querySelectorAll('.mt-tabs button[data-go]').forEach(b => b.addEventListener('click', ()=>{
   if(b.dataset.go === 'admin'){ showView('admin'); loadSubmissions(); }
-  else if(b.dataset.go === 'equip'){ showView('equip'); eqLoad(); }
+  else if(b.dataset.go === 'equip'){ eqShow(false); }
   else if(b.dataset.go === 'personal'){ showView('personal'); pcLoad(); }
   else if(b.dataset.go === 'absent'){ showView('absent'); abLoad(); }
   else if(b.dataset.go === 'event'){ showView('event'); evLoad(); }
@@ -2929,6 +2936,12 @@ document.getElementById('eqPrev').addEventListener('click', ()=>{ const [y, m] =
 document.getElementById('eqNext').addEventListener('click', ()=>{ const [y, m] = eqMonth.split('-').map(Number); const d = new Date(y, m, 1); eqMonth = mtYmd(d).slice(0, 7); eqRenderCal(); });
 document.querySelectorAll('#eqSeg button').forEach(b => b.addEventListener('click', ()=>{ eqMode = b.dataset.mode; eqRender(); }));
 document.getElementById('btnEquipBack').addEventListener('click', ()=>{ showView('form'); });
+function eqShow(readOnly){
+  document.getElementById('equipView').classList.toggle('ro', !!readOnly);
+  if(readOnly) document.getElementById('eqForm').style.display = 'none';
+  showView('equip'); eqLoad();
+}
+document.getElementById('btnEquipPublic').addEventListener('click', ()=>eqShow(true));
 document.getElementById('abRerun').addEventListener('click', async ()=>{
   const b = document.getElementById('abRerun');
   b.disabled = true; b.textContent = '계산 중... (약 30초)';

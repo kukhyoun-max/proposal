@@ -2131,6 +2131,7 @@ function renderAdminList(items){
         <div class="sub-detail" id="detail-${key}" style="display:none; white-space:normal; padding:0; border:none; margin:10px 0 0;">${buildDocCardHTML(rec)}</div>
         ${actions}
         ${rec.uploadedAt ? `<a class="up-link" ${/^https?:/.test(rec.uploadUrl) ? `href="${rec.uploadUrl}" target="_blank" rel="noopener"` : ''}>📺 ${mtFmt(rec.uploadedAt)} 업로드${/^https?:/.test(rec.uploadUrl) ? ' · 게시물 보기' : ''}</a>` : ''}
+        ${rec.status==='completed' ? `<div class="st-force" style="border-top:none; margin-top:8px; padding-top:0;"><span>제작 완료일 <small>(지연 감점 기준)</small></span><input type="date" data-done="${key}" value="${doneYmd(rec.completedAt)}" style="font-size:12px; padding:5px 8px; border-radius:8px; border:1px solid #D9D9E0;"></div>` : ''}
         ${['approved','filming','editing','completed','uploaded','dropped'].includes(rec.status) ? `<div class="st-force"><span>${rec.locked ? '🔒 관리자 지정' : ({completed:'✅ 제작 완료 (관리자 처리)', uploaded:'📺 게시물 매칭으로 자동', dropped:'⏸ 중간에 접음 · 불참·장비에서 제외'}[rec.status] || '⏱ 촬영일 기준 자동')}</span>
           <select data-force="${key}"><option value="">상태 직접 변경</option>${rec.locked ? '<option value="auto">자동으로 되돌리기</option>' : ''}<option value="approved">승인됨 · 촬영 예정</option><option value="filming">촬영 중</option><option value="editing">편집 중</option><option value="completed">제작 완료</option><option value="uploaded">업로드 완료</option><option value="dropped">제작 중단</option></select></div>` : ''}
       </div>
@@ -2144,6 +2145,7 @@ function renderAdminList(items){
     const t = document.getElementById('toggleEditBtn'); if(t) t.click();
     window.scrollTo(0, 0);
   }); });
+  listEl.querySelectorAll('[data-done]').forEach(inp=>{ inp.addEventListener('change', ()=>saveDoneDate(inp.dataset.done, inp.value, inp)); });
   listEl.querySelectorAll('[data-force]').forEach(sel=>{ sel.addEventListener('change', ()=>forceStatus(sel.dataset.force, sel.value, sel)); });
   listEl.querySelectorAll('[data-toggle]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -2160,6 +2162,24 @@ function renderAdminList(items){
   listEl.querySelectorAll('[data-complete-filming]').forEach(btn=>{ btn.addEventListener('click', ()=>setSubmissionStatus(btn.dataset.completeFilming, 'completed')); });
 }
 
+function doneYmd(v){
+  if(!v) return '';
+  const s = String(v);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const d = new Date(s); return isNaN(d.getTime()) ? normalizeDateStr(s) : toLocalDateStr(d);
+}
+// 제작 완료일 수정 → 저장 후 종합점수(제출 지연 감점) 다시 계산
+async function saveDoneDate(key, ymd, inp){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return;
+  inp.disabled = true;
+  try{
+    await sheetUpdate(key, { [COL.completedAt]: ymd });
+    await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'recalc' }) });
+    planInvalidate();
+    inp.style.borderColor = '#1B7A38';
+  }catch(e){ showAlert('완료일 저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+  inp.disabled = false;
+}
 async function forceStatus(key, value, sel){
   if(!value) return;
   const label = value === 'auto' ? '촬영일 기준 자동' : STATUS_LABELS[value];

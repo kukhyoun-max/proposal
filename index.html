@@ -158,8 +158,9 @@
   .overview-card{background:var(--purple-soft); border-radius:12px; padding:14px 6px; text-align:center;}
   .overview-num{display:block; font-size:22px; font-weight:900; color:var(--purple-dark); line-height:1;}
   .overview-label{display:block; font-size:10.5px; color:var(--ink-soft); margin-top:6px; line-height:1.3;}
-  .dl-main{display:flex; align-items:center; gap:14px; background:var(--purple-soft); border-radius:12px; padding:14px 16px;}
-  .dl-d{font-size:24px; font-weight:900; color:var(--purple-dark); min-width:58px; line-height:1;}
+  .dl-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .dl-main{display:flex; flex-direction:column; gap:8px; background:var(--purple-soft); border-radius:12px; padding:14px;}
+  .dl-d{font-size:22px; font-weight:900; color:var(--purple-dark); line-height:1;}
   .dl-main.urgent{background:#FCEAEA;} .dl-main.urgent .dl-d{color:#B23A3A;}
   .dl-txt b{display:block; font-size:13.5px; color:var(--ink);}
   .dl-txt small{display:block; font-size:12px; color:var(--ink-soft); margin-top:3px;}
@@ -376,7 +377,7 @@
 
       <div class="overview-wrap">
         <p class="overview-title">이번 주 일정</p>
-        <div class="dl-main" id="ov_deadline"><span class="dl-d">-</span><span class="dl-txt"><b>개인콘텐츠 기획서 마감</b><small>매주 화요일</small></span></div>
+        <div class="dl-grid" id="ov_deadline"></div>
         <div class="dl-list" id="ov_list"></div>
       </div>
     </div>
@@ -1453,13 +1454,17 @@ function ovFmt(ymd){ const d = new Date(ymd + 'T00:00:00'); return (d.getMonth()
 function ovRenderDeadline(){
   const p = n => String(n).padStart(2,'0');
   const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diff = (2 - today.getDay() + 7) % 7;   // 다음 화요일까지 남은 일수 (오늘이 화요일이면 0)
-  const due = new Date(today); due.setDate(today.getDate() + diff);
-  const dueYmd = due.getFullYear()+'-'+p(due.getMonth()+1)+'-'+p(due.getDate());
-  const el = document.getElementById('ov_deadline');
-  el.classList.toggle('urgent', diff <= 1);
-  el.querySelector('.dl-d').textContent = diff === 0 ? 'D-DAY' : 'D-' + diff;
-  el.querySelector('small').textContent = ovFmt(dueYmd) + (diff === 0 ? ' · 오늘 마감이에요' : diff === 1 ? ' · 내일 마감이에요' : '');
+  // 개인콘텐츠 마감: 기획서 화요일, 콘텐츠 수요일
+  const DL = [{ dow: 2, label: '기획서' }, { dow: 3, label: '콘텐츠' }];
+  const cards = DL.map(x => {
+    const diff = (x.dow - today.getDay() + 7) % 7;   // 오늘이 마감일이면 0
+    const due = new Date(today); due.setDate(today.getDate() + diff);
+    return { ...x, diff, ymd: due.getFullYear()+'-'+p(due.getMonth()+1)+'-'+p(due.getDate()) };
+  }).sort((a,b) => a.diff - b.diff);
+  document.getElementById('ov_deadline').innerHTML = cards.map(c => `<div class="dl-main ${c.diff <= 1 ? 'urgent' : ''}">
+      <span class="dl-d">${c.diff === 0 ? 'D-DAY' : 'D-' + c.diff}</span>
+      <span class="dl-txt"><b>개인 ${c.label} 마감</b><small>${ovFmt(c.ymd)}${c.diff === 0 ? ' · 오늘' : c.diff === 1 ? ' · 내일' : ''}</small></span>
+    </div>`).join('');
   const t = today.getFullYear()+'-'+p(today.getMonth()+1)+'-'+p(today.getDate());
   const end = new Date(today); end.setDate(today.getDate() + 7);
   return { today: t, end: end.getFullYear()+'-'+p(end.getMonth()+1)+'-'+p(end.getDate()) };

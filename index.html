@@ -158,6 +158,19 @@
   .overview-card{background:var(--purple-soft); border-radius:12px; padding:14px 6px; text-align:center;}
   .overview-num{display:block; font-size:22px; font-weight:900; color:var(--purple-dark); line-height:1;}
   .overview-label{display:block; font-size:10.5px; color:var(--ink-soft); margin-top:6px; line-height:1.3;}
+  .dl-main{display:flex; align-items:center; gap:14px; background:var(--purple-soft); border-radius:12px; padding:14px 16px;}
+  .dl-d{font-size:24px; font-weight:900; color:var(--purple-dark); min-width:58px; line-height:1;}
+  .dl-main.urgent{background:#FCEAEA;} .dl-main.urgent .dl-d{color:#B23A3A;}
+  .dl-txt b{display:block; font-size:13.5px; color:var(--ink);}
+  .dl-txt small{display:block; font-size:12px; color:var(--ink-soft); margin-top:3px;}
+  .dl-list{margin-top:8px;}
+  .dl-row{display:flex; align-items:center; gap:8px; padding:9px 2px; border-bottom:1px solid var(--line); font-size:12.5px;}
+  .dl-row:last-child{border-bottom:none;}
+  .dl-tag{flex:0 0 auto; font-size:11px; font-weight:700; padding:2px 7px; border-radius:20px; background:#EEF1FB; color:var(--purple-dark);}
+  .dl-tag.sub{background:#FFF1DB; color:#9A5B00;}
+  .dl-date{flex:0 0 auto; font-weight:700; color:var(--ink); min-width:56px;}
+  .dl-title{flex:1; min-width:0; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .dl-empty{font-size:12px; color:var(--ink-faint); padding:8px 2px;}
 
   .sub-card{border:1.5px solid var(--line); border-radius:14px; padding:14px; margin-bottom:12px;}
   .sub-card-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
@@ -362,12 +375,9 @@
       </div>
 
       <div class="overview-wrap">
-        <p class="overview-title">현재 콘텐츠 진행 현황</p>
-        <div class="overview-grid">
-          <div class="overview-card"><span class="overview-num" id="ov_submitted">-</span><span class="overview-label">제출된<br>기획서</span></div>
-          <div class="overview-card"><span class="overview-num" id="ov_filming">-</span><span class="overview-label">진행 중인<br>촬영</span></div>
-          <div class="overview-card"><span class="overview-num" id="ov_completed" style="color:var(--gold-dark);">-</span><span class="overview-label">완료된<br>촬영</span></div>
-        </div>
+        <p class="overview-title">이번 주 일정</p>
+        <div class="dl-main" id="ov_deadline"><span class="dl-d">-</span><span class="dl-txt"><b>개인콘텐츠 기획서 마감</b><small>매주 화요일</small></span></div>
+        <div class="dl-list" id="ov_list"></div>
       </div>
     </div>
 
@@ -1431,21 +1441,47 @@ async function refreshPendingBadge(){
   }catch(e){ console.error('refreshPendingBadge failed:', e); }
 }
 
+function ovYmd(v){
+  if(!v) return '';
+  const s = String(v).trim();
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  const d = new Date(s); if(isNaN(d)) return '';
+  const p = n => String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+function ovFmt(ymd){ const d = new Date(ymd + 'T00:00:00'); return (d.getMonth()+1) + '/' + d.getDate() + '(' + '일월화수목금토'[d.getDay()] + ')'; }
+function ovRenderDeadline(){
+  const p = n => String(n).padStart(2,'0');
+  const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diff = (2 - today.getDay() + 7) % 7;   // 다음 화요일까지 남은 일수 (오늘이 화요일이면 0)
+  const due = new Date(today); due.setDate(today.getDate() + diff);
+  const dueYmd = due.getFullYear()+'-'+p(due.getMonth()+1)+'-'+p(due.getDate());
+  const el = document.getElementById('ov_deadline');
+  el.classList.toggle('urgent', diff <= 1);
+  el.querySelector('.dl-d').textContent = diff === 0 ? 'D-DAY' : 'D-' + diff;
+  el.querySelector('small').textContent = ovFmt(dueYmd) + (diff === 0 ? ' · 오늘 마감이에요' : diff === 1 ? ' · 내일 마감이에요' : '');
+  const t = today.getFullYear()+'-'+p(today.getMonth()+1)+'-'+p(today.getDate());
+  const end = new Date(today); end.setDate(today.getDate() + 7);
+  return { today: t, end: end.getFullYear()+'-'+p(end.getMonth()+1)+'-'+p(end.getDate()) };
+}
 async function refreshOverview(){
-  const elS = document.getElementById('ov_submitted');
-  const elF = document.getElementById('ov_filming');
-  const elC = document.getElementById('ov_completed');
+  const range = ovRenderDeadline();
+  const listEl = document.getElementById('ov_list');
   try{
     const rows = await sheetGetAll();
-    let submitted=0, filming=0, completed=0;
-    rows.forEach(r=>{
-      const status = r['상태'];
-      if(status !== 'rejected') submitted++;
-      if(status === 'filming') filming++;
-      if(status === 'completed') completed++;
+    const items = [];
+    (rows || []).forEach(r => {
+      const st = r['상태'], title = r['제목'] || '(제목 없음)', lead = r['작성자(팀장)'] || '';
+      const fd = ovYmd(r['촬영일']), sd = ovYmd(r['제출일(영상)']);
+      if(['approved','filming'].includes(st) && fd && fd >= range.today && fd <= range.end) items.push({ d: fd, tag: '촬영', cls: '', title, lead });
+      if(['approved','filming','editing'].includes(st) && sd && sd >= range.today && sd <= range.end) items.push({ d: sd, tag: '영상 제출', cls: 'sub', title, lead });
     });
-    elS.textContent = submitted; elF.textContent = filming; elC.textContent = completed;
-  }catch(e){ elS.textContent = '-'; elF.textContent = '-'; elC.textContent = '-'; }
+    items.sort((a,b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    listEl.innerHTML = items.length
+      ? items.map(it => `<div class="dl-row"><span class="dl-tag ${it.cls}">${it.tag}</span><span class="dl-date">${it.d === range.today ? '오늘' : ovFmt(it.d)}</span><span class="dl-title">${esc(it.title)}${it.lead ? ' · ' + esc(it.lead) : ''}</span></div>`).join('')
+      : '<div class="dl-empty">7일 안에 잡힌 팀콘텐츠 촬영·영상 제출 일정이 없어요.</div>';
+  }catch(e){ listEl.innerHTML = ''; }
 }
 
 function showView(viewId){

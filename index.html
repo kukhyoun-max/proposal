@@ -399,6 +399,9 @@
   #equipView .eq-ro-title{display:none; font-size:17px; font-weight:900; margin:0;}
   #equipView.ro .eq-ro-title{display:block;}
   #equipView.ro .mt-tabs, #equipView.ro #eqNew, #equipView.ro #eqForm, #equipView.ro [data-eq], #equipView.ro [data-bulk]{display:none !important;}
+  .mt-tabs{overflow-x:auto; scrollbar-width:none;} .mt-tabs::-webkit-scrollbar{display:none;}
+  .mt-tabs button{flex:none; padding:7px 10px; font-size:13px;}
+  @media (max-width:400px){ #btnHome{max-width:80px; white-space:normal; line-height:1.25;} .admin-topbar button{padding:6px 8px; font-size:11.5px;} .mt-tabs button{padding:7px 8px; font-size:12.5px;} }
 </style>
 </head>
 <body>
@@ -406,7 +409,7 @@
 <div class="admin-topbar">
   <button id="btnHome" style="background:none; border:none; color:#fff; font-size:13px; font-weight:700; padding:0; cursor:pointer;">콘텐츠 기획서 시스템</button>
   <div style="display:flex; gap:8px;">
-    <button id="btnEquipPublic">장비</button>
+    <button id="btnEquipPublic">일정·장비</button>
     <button id="btnStatusToggle">기획서 현황</button>
     <button id="btnAdminToggle">관리자 검토 <span id="pendingBadge" style="display:none; background:#E24B4A; border-radius:10px; padding:1px 7px; margin-left:4px;">0</span></button>
   </div>
@@ -693,8 +696,8 @@
 
 <div class="phone" id="equipView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
-    <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button><button class="on">장비</button></div>
-    <h2 class="eq-ro-title">장비 대여 현황</h2>
+    <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button><button class="on">일정·장비</button></div>
+    <h2 class="eq-ro-title">일정·장비 현황</h2>
     <button class="reset-link" id="btnEquipBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
@@ -842,7 +845,7 @@ const PIN_ROLES = {
   '0000': ['meeting'],     // 회의 출결만
   '1234': ['personal'],    // 개인콘텐츠만
 };
-const TAB_KEYS = { '기획서 관리':'admin', '회의':'meeting', '개인콘텐츠':'personal', '행사':'event', '불참':'absent', '장비':'equip' };
+const TAB_KEYS = { '기획서 관리':'admin', '회의':'meeting', '개인콘텐츠':'personal', '행사':'event', '불참':'absent', '장비':'equip', '일정·장비':'equip' };
 let allowedTabs = null;
 function applyTabAccess(){
   document.querySelectorAll('.mt-tabs').forEach(bar => {
@@ -1719,6 +1722,8 @@ function showView(viewId){
   Object.keys(views).forEach(k=>{
     views[k].style.display = (k===viewId) ? (k==='form' ? 'flex' : 'block') : 'none';
   });
+  // 탭이 넘칠 때 현재 탭이 보이도록 스크롤
+  document.querySelectorAll('.mt-tabs button.on').forEach(t => { const bar = t.parentElement; if(bar.offsetParent) bar.scrollLeft = t.offsetLeft - bar.clientWidth / 2 + t.clientWidth / 2; });
 }
 
 document.getElementById('btnHome').addEventListener('click', ()=>{
@@ -2729,7 +2734,7 @@ document.getElementById('pcSave').addEventListener('click', pcSave);
 document.getElementById('btnPersonalBack').addEventListener('click', ()=>{ showView('form'); });
 document.querySelectorAll('.mt-tabs').forEach(bar => {
   if(bar.closest('#equipView') || bar.querySelector('[data-go="equip"]')) return;
-  const nb = document.createElement('button'); nb.dataset.go = 'equip'; nb.textContent = '장비'; bar.appendChild(nb);
+  const nb = document.createElement('button'); nb.dataset.go = 'equip'; nb.textContent = '일정·장비'; bar.appendChild(nb);
 });
 document.querySelectorAll('.mt-tabs button[data-go]').forEach(b => b.addEventListener('click', ()=>{
   if(b.dataset.go === 'admin'){ showView('admin'); loadSubmissions(); }

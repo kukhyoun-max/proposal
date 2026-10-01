@@ -345,6 +345,17 @@
   .eq-evrow .eq-ev{flex:none; font-size:11px; padding:2px 6px; border-radius:5px;}
   .eq-evrow b{font-size:13.5px; display:block;} .eq-evrow small{font-size:11.5px; color:var(--ink-soft);}
   .eq-key{display:inline-block; width:9px; height:9px; border-radius:2px; vertical-align:-1px; margin:0 3px 0 6px;}
+  #eqGrid{display:block;}
+  .eq-dows{display:grid; grid-template-columns:repeat(7,1fr); gap:3px;}
+  .eq-week{display:grid; grid-template-columns:repeat(7,1fr); column-gap:3px; row-gap:2px; margin-top:3px; min-height:50px;}
+  .eq-week .eq-cell{min-height:0; justify-content:space-between;}
+  .eq-week .eq-cell .n{display:flex; justify-content:space-between; align-items:baseline; gap:2px;}
+  .eq-week .eq-cell .c{font-size:9.5px;}
+  .eq-week .eq-cell .more{align-self:flex-end;}
+  .eq-bar{z-index:1; pointer-events:none; height:16px; line-height:16px; margin:0 2px; padding:0 4px; border-radius:4px; font-size:9.5px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;}
+  .eq-bar.cl{margin-left:-2px; border-top-left-radius:0; border-bottom-left-radius:0;} .eq-bar.cr{margin-right:-2px; border-top-right-radius:0; border-bottom-right-radius:0;}
+  .eq-bar.approved{background:#1E4FA0;} .eq-bar.prod{background:#D9822B;} .eq-bar.completed{background:#2E8B57;} .eq-bar.uploaded{background:#6A4BC4;} .eq-bar.late{background:#C8372D;}
+  .eq-evrow .eq-bar{flex:none; height:auto; font-size:11px; line-height:1.5; padding:1px 6px; border-radius:5px; margin:0;}
   .eq-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 0; border-bottom:1px solid var(--line);}
   .eq-row b{font-size:13.5px;} .eq-row .t{font-size:12px; color:var(--ink); font-weight:700; margin-left:6px;}
   .eq-row small{display:block; font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
@@ -729,7 +740,7 @@
     <div id="eqCalWrap">
       <div class="eq-month"><button id="eqPrev">◀</button><b id="eqMonthLabel"></b><button id="eqNext">▶</button></div>
       <div class="eq-grid" id="eqGrid"></div>
-      <p class="eq-legend"><span class="eq-key" style="background:#1E4FA0;margin-left:0"></span>촬영<span class="eq-key" style="background:#D9822B"></span>영상 제출<span class="eq-key" style="background:#6A4BC4"></span>업로드 · ○팀 = 장비 빌린 팀 수 · 빨간 칸 = 장비 겹침</p>
+      <p class="eq-legend">막대 = 촬영일→영상 제출일 · <span class="eq-key" style="background:#1E4FA0;margin-left:0"></span>촬영 예정<span class="eq-key" style="background:#D9822B"></span>제작 중<span class="eq-key" style="background:#C8372D"></span>제출 지남<span class="eq-key" style="background:#2E8B57"></span>제작 완료<span class="eq-key" style="background:#6A4BC4"></span>업로드 · ○팀 = 장비 빌린 팀 수 · 빨간 칸 = 장비 겹침</p>
       <h3 id="eqDayTitle" style="font-size:14px; font-weight:900; margin:18px 0 0;"></h3>
       <div id="eqDayList"></div>
     </div>
@@ -2926,21 +2937,25 @@ async function eqLoad(){
   if(!eqDay) eqDay = mtYmd(new Date());
   eqRender();
 }
-// 콘텐츠 제작 일정 (기획서 촬영일 · 영상 제출일 · 업로드일)
-let eqEvents = [];
-const EQ_EV_LABEL = { film:'촬영', due:'영상 제출', up:'업로드' };
+// 콘텐츠 제작 일정: 기획서별 촬영일 → 영상 제출일 기간을 막대로 (구글 캘린더처럼)
+let eqSpans = [];
 function eqBuildEvents(rows){
-  eqEvents = [];
+  eqSpans = [];
   rows.forEach(row => {
     const r = mapRowToRecord(row);
     if(!['approved','filming','editing','completed','uploaded'].includes(r.status)) return;
-    const base = { id: r.id, title: r.title || '(제목 없음)', lead: r.lead || '', status: r.status };
-    if(r.filmdate) eqEvents.push({ ...base, d: r.filmdate, kind:'film', done: !['approved','filming'].includes(r.status) });
-    if(r.submitdate) eqEvents.push({ ...base, d: r.submitdate, kind:'due', done: ['completed','uploaded'].includes(r.status) });
-    if(r.uploadedAt) eqEvents.push({ ...base, d: r.uploadedAt, kind:'up', done: false });
+    let s = r.filmdate || r.submitdate, e = r.submitdate || r.filmdate;
+    if(!s) return;
+    if(e < s){ const t = s; s = e; e = t; }
+    eqSpans.push({ id: r.id, title: r.title || '(제목 없음)', lead: r.lead || '', status: r.status, start: s, end: e, film: r.filmdate, due: r.submitdate, up: r.uploadedAt });
   });
-  const order = { film:0, due:1, up:2 };
-  eqEvents.sort((a, b) => order[a.kind] - order[b.kind]);
+  eqSpans.sort((a, b) => a.start < b.start ? -1 : a.start > b.start ? 1 : (a.end < b.end ? 1 : -1));
+}
+// 막대 색: 촬영 예정 파랑 · 제작 중 주황 · 제작 완료 초록 · 업로드 완료 보라 · 제출일 지남(미완료) 빨강
+function eqSpanClass(sp){
+  if(sp.status === 'completed' || sp.status === 'uploaded') return sp.status;
+  if(sp.due && sp.due < mtYmd(new Date())) return 'late';
+  return sp.status === 'approved' ? 'approved' : 'prod';
 }
 function eqFilmTime(id){ const it = eqItems.find(x => x.planId === id && (x.from || x.to)); return it ? ` · ${it.from}~${it.to}` : ''; }
 function eqRender(){
@@ -2954,16 +2969,31 @@ function eqRenderCal(){
   const [y, m] = eqMonth.split('-').map(Number);
   document.getElementById('eqMonthLabel').textContent = `${y}년 ${m}월`;
   const first = new Date(y, m - 1, 1), days = new Date(y, m, 0).getDate(), today = mtYmd(new Date());
-  let html = '일월화수목금토'.split('').map(d => `<div class="eq-dow">${d}</div>`).join('');
-  for(let i = 0; i < first.getDay(); i++) html += '<div class="eq-cell blank"></div>';
-  for(let d = 1; d <= days; d++){
-    const ymd = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const on = eqItems.filter(it => it.start <= ymd && ymd <= it.end);
-    const bad = on.some(it => eqBad.has(it.id));
-    const teams = new Set(on.map(eqGroupKey)).size;
-    const evs = eqEvents.filter(e => e.d === ymd);
-    const evHtml = evs.slice(0, 3).map(e => `<span class="eq-ev ${e.kind} ${e.done ? 'done' : ''}">${abEsc(e.title)}</span>`).join('') + (evs.length > 3 ? `<span class="more">+${evs.length - 3}</span>` : '');
-    html += `<button class="eq-cell ${ymd === today ? 'today' : ''} ${ymd === eqDay ? 'sel' : ''} ${bad ? 'bad' : ''}" data-d="${ymd}"><span class="n">${d}</span>${evHtml}${teams ? `<span class="c">${teams}팀</span>` : ''}</button>`;
+  const cells = [];
+  for(let i = 0; i < first.getDay(); i++) cells.push(null);
+  for(let d = 1; d <= days; d++) cells.push(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  while(cells.length % 7) cells.push(null);
+  const MAXL = 3;
+  let html = `<div class="eq-dows">${'일월화수목금토'.split('').map(d => `<div class="eq-dow">${d}</div>`).join('')}</div>`;
+  for(let w = 0; w < cells.length; w += 7){
+    const wk = cells.slice(w, w + 7), vis = wk.filter(Boolean), a = vis[0], b = vis[vis.length - 1];
+    const segs = eqSpans.filter(sp => sp.start <= b && sp.end >= a).map(sp => {
+      const s0 = sp.start < a ? a : sp.start, s1 = sp.end > b ? b : sp.end;
+      return { sp, c0: wk.indexOf(s0), c1: wk.indexOf(s1), cl: sp.start < a, cr: sp.end > b };
+    }).sort((p, q) => p.c0 - q.c0 || (q.c1 - q.c0) - (p.c1 - p.c0));
+    const lanes = [];
+    segs.forEach(g => { let l = lanes.findIndex(end => end < g.c0); if(l < 0){ l = lanes.length; lanes.push(-1); } lanes[l] = g.c1; g.lane = l; });
+    const shown = Math.min(lanes.length, MAXL), more = Array(7).fill(0);
+    segs.filter(g => g.lane >= MAXL).forEach(g => { for(let c = g.c0; c <= g.c1; c++) more[c]++; });
+    const cellHtml = wk.map((ymd, i) => {
+      if(!ymd) return `<div class="eq-cell blank" style="grid-column:${i + 1}; grid-row:1 / -1"></div>`;
+      const on = eqItems.filter(it => it.start <= ymd && ymd <= it.end);
+      const bad = on.some(it => eqBad.has(it.id));
+      const teams = new Set(on.map(eqGroupKey)).size;
+      return `<button class="eq-cell ${ymd === today ? 'today' : ''} ${ymd === eqDay ? 'sel' : ''} ${bad ? 'bad' : ''}" data-d="${ymd}" style="grid-column:${i + 1}; grid-row:1 / -1"><span class="n">${Number(ymd.slice(8))}${teams ? `<span class="c">${teams}팀</span>` : ''}</span>${more[i] ? `<span class="more">+${more[i]}</span>` : ''}</button>`;
+    }).join('');
+    const bars = segs.filter(g => g.lane < MAXL).map(g => `<div class="eq-bar ${eqSpanClass(g.sp)} ${g.cl ? 'cl' : ''} ${g.cr ? 'cr' : ''}" style="grid-column:${g.c0 + 1} / ${g.c1 + 2}; grid-row:${g.lane + 2}">${abEsc(g.sp.title)}</div>`).join('');
+    html += `<div class="eq-week" style="grid-template-rows:20px ${shown ? `repeat(${shown}, 16px) ` : ''}minmax(14px, auto)">${cellHtml}${bars}</div>`;
   }
   const grid = document.getElementById('eqGrid');
   grid.innerHTML = html;
@@ -2971,10 +3001,11 @@ function eqRenderCal(){
   const list = eqItems.filter(it => it.start <= eqDay && eqDay <= it.end).sort((a, b) => (a.from || '') < (b.from || '') ? -1 : 1);
   const groups = [];
   list.forEach(it => { const k = eqGroupKey(it); let g = groups.find(x => x.key === k); if(!g) groups.push(g = { key: k, items: [] }); g.items.push(it); });
-  const dayEvs = eqEvents.filter(e => e.d === eqDay);
+  const dayEvs = eqSpans.filter(sp => sp.start <= eqDay && eqDay <= sp.end).map(sp => ({ sp, label: eqDay === sp.film ? '촬영' : eqDay === sp.due ? '영상 제출' : '제작 기간' }))
+    .concat(eqSpans.filter(sp => sp.up === eqDay).map(sp => ({ sp, label: '업로드', cls: 'uploaded' })));
   document.getElementById('eqDayTitle').textContent = mtFmt(eqDay) + (dayEvs.length ? ` · 일정 ${dayEvs.length}` : '') + ` · ${groups.length}팀 · 장비 ${list.length}개`;
   const el = document.getElementById('eqDayList');
-  const evHtml = dayEvs.length ? `<div class="eq-evlist">${dayEvs.map(e => `<div class="eq-evrow"><span class="eq-ev ${e.kind} ${e.done ? 'done' : ''}">${EQ_EV_LABEL[e.kind]}</span><div><b>${abEsc(e.title)}</b><small>${abEsc(e.lead || '-')} · ${STATUS_LABELS[e.status] || e.status}${e.kind === 'film' ? eqFilmTime(e.id) : ''}</small></div></div>`).join('')}</div>` : '';
+  const evHtml = dayEvs.length ? `<div class="eq-evlist">${dayEvs.map(({ sp, label, cls }) => `<div class="eq-evrow"><span class="eq-bar ${cls || eqSpanClass(sp)}">${label}</span><div><b>${abEsc(sp.title)}</b><small>${abEsc(sp.lead || '-')} · ${STATUS_LABELS[sp.status] || sp.status} · ${sp.film ? mtFmt(sp.film) : '-'} 촬영 → ${sp.due ? mtFmt(sp.due) : '-'} 제출${label === '촬영' ? eqFilmTime(sp.id) : ''}</small></div></div>`).join('')}</div>` : '';
   el.innerHTML = evHtml + (groups.length ? groups.map(g => {
     const f = g.items[0], bad = g.items.filter(it => eqBad.has(it.id)).length;
     const sameTime = g.items.every(it => eqTimeText(it) === eqTimeText(f));

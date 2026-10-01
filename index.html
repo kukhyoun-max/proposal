@@ -336,6 +336,15 @@
   .eq-cell.sel{background:var(--purple-soft); border-color:var(--purple);}
   .eq-cell.bad{border-color:#E24B4A; background:#FCEAEA;} .eq-cell.bad .c{color:#B23A3A;}
   .eq-legend{font-size:11px; color:var(--ink-faint); margin:6px 0 0;}
+  .eq-cell{min-width:0; overflow:hidden; min-height:58px;}
+  .eq-ev{display:block; max-width:100%; font-size:9.5px; line-height:1.35; border-radius:3px; padding:0 3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff; font-weight:600;}
+  .eq-ev.film{background:#1E4FA0;} .eq-ev.due{background:#D9822B;} .eq-ev.up{background:#6A4BC4;} .eq-ev.done{opacity:.45;}
+  .eq-cell .more{font-size:9.5px; color:var(--ink-faint);}
+  .eq-evlist{margin-top:10px;}
+  .eq-evrow{display:flex; align-items:flex-start; gap:8px; padding:9px 0; border-bottom:1px solid var(--line);}
+  .eq-evrow .eq-ev{flex:none; font-size:11px; padding:2px 6px; border-radius:5px;}
+  .eq-evrow b{font-size:13.5px; display:block;} .eq-evrow small{font-size:11.5px; color:var(--ink-soft);}
+  .eq-key{display:inline-block; width:9px; height:9px; border-radius:2px; vertical-align:-1px; margin:0 3px 0 6px;}
   .eq-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 0; border-bottom:1px solid var(--line);}
   .eq-row b{font-size:13.5px;} .eq-row .t{font-size:12px; color:var(--ink); font-weight:700; margin-left:6px;}
   .eq-row small{display:block; font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
@@ -717,7 +726,7 @@
     <div id="eqCalWrap">
       <div class="eq-month"><button id="eqPrev">◀</button><b id="eqMonthLabel"></b><button id="eqNext">▶</button></div>
       <div class="eq-grid" id="eqGrid"></div>
-      <p class="eq-legend">○팀 = 그날 장비를 빌린 팀 수 · 빨간 칸 = 같은 장비가 같은 시간에 겹침</p>
+      <p class="eq-legend"><span class="eq-key" style="background:#1E4FA0;margin-left:0"></span>촬영<span class="eq-key" style="background:#D9822B"></span>영상 제출<span class="eq-key" style="background:#6A4BC4"></span>업로드 · ○팀 = 장비 빌린 팀 수 · 빨간 칸 = 장비 겹침</p>
       <h3 id="eqDayTitle" style="font-size:14px; font-weight:900; margin:18px 0 0;"></h3>
       <div id="eqDayList"></div>
     </div>
@@ -2902,15 +2911,33 @@ function eqBindRows(el){ el.querySelectorAll('[data-eq]').forEach(b => b.addEven
 async function eqLoad(){
   document.getElementById('eqInfo').textContent = '불러오는 중...';
   try{
-    const res = await attendJsonp({ action:'equipList' });
+    const [res, rows] = await Promise.all([attendJsonp({ action:'equipList' }), sheetGetAll().catch(()=>[])]);
     if(res && res.error) throw new Error(res.error);
     eqItems = res.items || [];
+    eqBuildEvents(rows || []);
     document.getElementById('eqInfo').textContent = '';
   }catch(e){ document.getElementById('eqInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류'); }
   if(!eqMonth) eqMonth = mtYmd(new Date()).slice(0, 7);
   if(!eqDay) eqDay = mtYmd(new Date());
   eqRender();
 }
+// 콘텐츠 제작 일정 (기획서 촬영일 · 영상 제출일 · 업로드일)
+let eqEvents = [];
+const EQ_EV_LABEL = { film:'촬영', due:'영상 제출', up:'업로드' };
+function eqBuildEvents(rows){
+  eqEvents = [];
+  rows.forEach(row => {
+    const r = mapRowToRecord(row);
+    if(!['approved','filming','editing','completed','uploaded'].includes(r.status)) return;
+    const base = { id: r.id, title: r.title || '(제목 없음)', lead: r.lead || '', status: r.status };
+    if(r.filmdate) eqEvents.push({ ...base, d: r.filmdate, kind:'film', done: !['approved','filming'].includes(r.status) });
+    if(r.submitdate) eqEvents.push({ ...base, d: r.submitdate, kind:'due', done: ['completed','uploaded'].includes(r.status) });
+    if(r.uploadedAt) eqEvents.push({ ...base, d: r.uploadedAt, kind:'up', done: false });
+  });
+  const order = { film:0, due:1, up:2 };
+  eqEvents.sort((a, b) => order[a.kind] - order[b.kind]);
+}
+function eqFilmTime(id){ const it = eqItems.find(x => x.planId === id && (x.from || x.to)); return it ? ` · ${it.from}~${it.to}` : ''; }
 function eqRender(){
   eqBad = eqConflicts();
   document.getElementById('eqCalWrap').style.display = eqMode === 'cal' ? '' : 'none';
@@ -2929,7 +2956,9 @@ function eqRenderCal(){
     const on = eqItems.filter(it => it.start <= ymd && ymd <= it.end);
     const bad = on.some(it => eqBad.has(it.id));
     const teams = new Set(on.map(eqGroupKey)).size;
-    html += `<button class="eq-cell ${ymd === today ? 'today' : ''} ${ymd === eqDay ? 'sel' : ''} ${bad ? 'bad' : ''}" data-d="${ymd}"><span class="n">${d}</span>${teams ? `<span class="c">${teams}팀</span>` : ''}</button>`;
+    const evs = eqEvents.filter(e => e.d === ymd);
+    const evHtml = evs.slice(0, 3).map(e => `<span class="eq-ev ${e.kind} ${e.done ? 'done' : ''}">${abEsc(e.title)}</span>`).join('') + (evs.length > 3 ? `<span class="more">+${evs.length - 3}</span>` : '');
+    html += `<button class="eq-cell ${ymd === today ? 'today' : ''} ${ymd === eqDay ? 'sel' : ''} ${bad ? 'bad' : ''}" data-d="${ymd}"><span class="n">${d}</span>${evHtml}${teams ? `<span class="c">${teams}팀</span>` : ''}</button>`;
   }
   const grid = document.getElementById('eqGrid');
   grid.innerHTML = html;
@@ -2937,9 +2966,11 @@ function eqRenderCal(){
   const list = eqItems.filter(it => it.start <= eqDay && eqDay <= it.end).sort((a, b) => (a.from || '') < (b.from || '') ? -1 : 1);
   const groups = [];
   list.forEach(it => { const k = eqGroupKey(it); let g = groups.find(x => x.key === k); if(!g) groups.push(g = { key: k, items: [] }); g.items.push(it); });
-  document.getElementById('eqDayTitle').textContent = mtFmt(eqDay) + ` · ${groups.length}팀 · 장비 ${list.length}개`;
+  const dayEvs = eqEvents.filter(e => e.d === eqDay);
+  document.getElementById('eqDayTitle').textContent = mtFmt(eqDay) + (dayEvs.length ? ` · 일정 ${dayEvs.length}` : '') + ` · ${groups.length}팀 · 장비 ${list.length}개`;
   const el = document.getElementById('eqDayList');
-  el.innerHTML = groups.length ? groups.map(g => {
+  const evHtml = dayEvs.length ? `<div class="eq-evlist">${dayEvs.map(e => `<div class="eq-evrow"><span class="eq-ev ${e.kind} ${e.done ? 'done' : ''}">${EQ_EV_LABEL[e.kind]}</span><div><b>${abEsc(e.title)}</b><small>${abEsc(e.lead || '-')} · ${STATUS_LABELS[e.status] || e.status}${e.kind === 'film' ? eqFilmTime(e.id) : ''}</small></div></div>`).join('')}</div>` : '';
+  el.innerHTML = evHtml + (groups.length ? groups.map(g => {
     const f = g.items[0], bad = g.items.filter(it => eqBad.has(it.id)).length;
     const sameTime = g.items.every(it => eqTimeText(it) === eqTimeText(f));
     const title = f.planId ? (f.title || f.planId) : '직접 추가한 대여';
@@ -2949,7 +2980,7 @@ function eqRenderCal(){
       <div class="eq-team-body">${g.items.map(it => eqRowHTML(it, false, true)).join('')}
         ${g.items.length > 1 ? `<button class="ab-btn go" data-bulk="${abEsc(g.key)}" style="width:100%; margin-top:10px;">팀 장비 ${g.items.length}개 기간 한 번에 수정</button>` : ''}</div>
     </div>`;
-  }).join('') : '<p style="font-size:12.5px;color:var(--ink-faint);">이 날 나가는 장비가 없어요.</p>';
+  }).join('') : '<p style="font-size:12.5px;color:var(--ink-faint);margin-top:10px;">이 날 나가는 장비가 없어요.</p>');
   el.querySelectorAll('.eq-team-head').forEach(h => h.addEventListener('click', ()=>{
     const card = h.parentElement, k = card.dataset.g;
     card.classList.toggle('open'); card.classList.contains('open') ? eqOpenGroups.add(k) : eqOpenGroups.delete(k);

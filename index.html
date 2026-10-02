@@ -413,6 +413,9 @@
   .mt-tabs{overflow-x:auto; scrollbar-width:none;} .mt-tabs::-webkit-scrollbar{display:none;}
   .mt-tabs button{flex:none; padding:7px 10px; font-size:13px;}
   @media (max-width:400px){ #btnHome{max-width:80px; white-space:normal; line-height:1.25;} .admin-topbar button{padding:6px 8px; font-size:11.5px;} .mt-tabs button{padding:7px 8px; font-size:12.5px;} }
+
+  /* 조회수 패치 */
+  .hb{display:none; width:2.3em; height:1em; margin-right:4px; vertical-align:-0.16em; background:center/contain no-repeat; flex:none; font-style:normal;}
 </style>
 </head>
 <body>
@@ -1047,7 +1050,7 @@ function initNamePicker(key){
   function renderChips(){
     const names = getNames();
     chipsEl.innerHTML = names.map(n=>`
-      <span class="chip">${n}<button type="button" data-name="${n}">✕</button></span>
+      <span class="chip">${nb(n)}${n}<button type="button" data-name="${n}">✕</button></span>
     `).join('');
     chipsEl.querySelectorAll('button').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -1062,7 +1065,7 @@ function initNamePicker(key){
     if(matches.length===0){
       suggestEl.innerHTML = '<div class="suggest-empty">일치하는 홍보대사가 없어요. 목록에 없으면 직접 이름을 입력해도 돼요.</div>';
     }else{
-      suggestEl.innerHTML = matches.map(n=>`<div class="suggest-item" data-name="${n}">${n}</div>`).join('');
+      suggestEl.innerHTML = matches.map(n=>`<div class="suggest-item" data-name="${n}">${nb(n)}${n}</div>`).join('');
     }
     suggestEl.classList.add('open');
     suggestEl.querySelectorAll('.suggest-item').forEach(item=>{
@@ -1472,7 +1475,7 @@ function renderNameSuggestions(){
   if(matches.length===0){
     suggestEl.classList.remove('open'); suggestEl.innerHTML=''; return;
   }
-  suggestEl.innerHTML = matches.map(n=>`<div class="suggest-item" data-name="${n}">${n}</div>`).join('');
+  suggestEl.innerHTML = matches.map(n=>`<div class="suggest-item" data-name="${n}">${nb(n)}${n}</div>`).join('');
   suggestEl.classList.add('open');
   suggestEl.querySelectorAll('.suggest-item').forEach(item=>{
     item.addEventListener('click', ()=>{
@@ -1723,7 +1726,7 @@ async function refreshOverview(){
     items.sort((a,b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
     const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     listEl.innerHTML = items.length
-      ? items.map(it => `<div class="dl-row"><span class="dl-tag ${it.cls}">${it.tag}</span><span class="dl-date">${it.d === range.today ? '오늘' : ovFmt(it.d)}</span><span class="dl-title">${esc(it.title)}${it.lead ? ' · ' + esc(it.lead) : ''}</span></div>`).join('')
+      ? items.map(it => `<div class="dl-row"><span class="dl-tag ${it.cls}">${it.tag}</span><span class="dl-date">${it.d === range.today ? '오늘' : ovFmt(it.d)}</span><span class="dl-title">${esc(it.title)}${it.lead ? ' · ' + nbList(esc(it.lead)) : ''}</span></div>`).join('')
       : '<div class="dl-empty">7일 안에 잡힌 팀콘텐츠 촬영·영상 제출 일정이 없어요.</div>';
   }catch(e){ listEl.innerHTML = ''; }
 }
@@ -1809,7 +1812,7 @@ function renderStatusListView(items){
           <span style="font-size:11px; color:var(--ink-faint);">${fmtDateTime(rec.submittedAt)}</span>
         </div>
         <p class="sub-title">${(rec.title||'(제목 없음)')}</p>
-        <p class="sub-meta">${rec.name||'-'} · ${catLabel}</p>
+        <p class="sub-meta">${nb(rec.name)}${rec.name||'-'} · ${catLabel}</p>
       </div>
     `;
   }).join('');
@@ -2152,7 +2155,7 @@ function renderAdminList(items){
           <span style="display:flex; gap:12px;"><button class="toggle-detail" data-edit="${key}">✏️ 수정</button><button class="toggle-detail" data-toggle="${key}">자세히 보기</button></span>
         </div>
         <p class="sub-title">${(rec.title||'(제목 없음)')}</p>
-        <p class="sub-meta">${rec.name||'-'} · ${catLabel} · ${when}</p>
+        <p class="sub-meta">${nb(rec.name)}${rec.name||'-'} · ${catLabel} · ${when}</p>
         <div class="sub-detail" id="detail-${key}" style="display:none; white-space:normal; padding:0; border:none; margin:10px 0 0;">${buildDocCardHTML(rec)}</div>
         ${actions}
         ${rec.uploadedAt ? `<a class="up-link" ${/^https?:/.test(rec.uploadUrl) ? `href="${rec.uploadUrl}" target="_blank" rel="noopener"` : ''}>📺 ${mtFmt(rec.uploadedAt)} 업로드${/^https?:/.test(rec.uploadUrl) ? ' · 게시물 보기' : ''}</a>` : ''}
@@ -2532,7 +2535,7 @@ function mtRenderList(){
   if(mtCancelled){ el.innerHTML = '<div class="mt-cancelled">이 날짜는 휴회로 처리됐어요.<br>출결 점수에 반영되지 않아요.</div>'; return; }
   el.innerHTML = MEETING_ROSTER.map(n => `
     <div class="mt-row">
-      <span class="mt-name">${n}</span>
+      <span class="mt-name">${nb(n)}${n}</span>
       <div class="mt-btns">${MT_STATUSES.map(st => `<button data-name="${n}" data-st="${st}" class="${mtState[n]===st?'on':''}">${st}</button>`).join('')}</div>
     </div>`).join('');
   el.querySelectorAll('.mt-btns button').forEach(b => b.addEventListener('click', ()=>{
@@ -2665,7 +2668,7 @@ function pcRenderList(){
     const pts = pcPts(s);
     const seg = key => `<div class="seg">${PC_OPTS.map(v => `<button data-n="${n}" data-k="${key}" data-v="${v}" class="${s[key]===v?'on':''}">${v}</button>`).join('')}</div>`;
     return `<div class="pc-row">
-      <div class="pc-name">${n}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : '콘텐츠 전'))}</small></div>
+      <div class="pc-name">${nb(n)}${n}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : '콘텐츠 전'))}</small></div>
       <div class="pc-lines">
         <div class="pc-line"><span class="pc-lab">기획서</span>${seg('plan')}</div>
         <div class="pc-line"><span class="pc-lab">콘텐츠</span>${seg('content')}</div>
@@ -2770,7 +2773,7 @@ function abRender(){
       const it = abItems[i];
       const ok = it.status === '면제';
       return `<div class="ab-row">
-        <div class="ab-who">${abEsc(it.name)}<span class="ab-pill ${ok?'ok':'no'}">${ok?'사유 있는 불참':'불참'}</span>${ok && it.reason ? `<small>사유: ${abEsc(it.reason)}</small>` : ''}</div>
+        <div class="ab-who">${nb(it.name)}${abEsc(it.name)}<span class="ab-pill ${ok?'ok':'no'}">${ok?'사유 있는 불참':'불참'}</span>${ok && it.reason ? `<small>사유: ${abEsc(it.reason)}</small>` : ''}</div>
         <button class="ab-btn ${ok?'':'go'}" data-i="${i}">${ok?'면제 취소':'사유 있는 불참'}</button>
       </div>`; }).join('')}</div>`;
   }).join('');
@@ -2832,7 +2835,7 @@ function evRender(){
 }
 function evChips(){
   const el = document.getElementById('evChips');
-  el.innerHTML = MEETING_ROSTER.map(n => `<button data-n="${n}" class="${evSel.has(n)?'on':''}">${n}</button>`).join('');
+  el.innerHTML = MEETING_ROSTER.map(n => `<button data-n="${n}" class="${evSel.has(n)?'on':''}">${nb(n)}${n}</button>`).join('');
   el.querySelectorAll('button').forEach(b => b.addEventListener('click', ()=>{
     const n = b.dataset.n; evSel.has(n) ? evSel.delete(n) : evSel.add(n); evChips();
   }));
@@ -3005,7 +3008,7 @@ function eqRenderCal(){
     .concat(eqSpans.filter(sp => sp.up === eqDay).map(sp => ({ sp, label: '업로드', cls: 'uploaded' })));
   document.getElementById('eqDayTitle').textContent = mtFmt(eqDay) + (dayEvs.length ? ` · 일정 ${dayEvs.length}` : '') + ` · ${groups.length}팀 · 장비 ${list.length}개`;
   const el = document.getElementById('eqDayList');
-  const evHtml = dayEvs.length ? `<div class="eq-evlist">${dayEvs.map(({ sp, label, cls }) => `<div class="eq-evrow"><span class="eq-bar ${cls || eqSpanClass(sp)}">${label}</span><div><b>${abEsc(sp.title)}</b><small>${abEsc(sp.lead || '-')} · ${STATUS_LABELS[sp.status] || sp.status} · ${sp.film ? mtFmt(sp.film) : '-'} 촬영 → ${sp.due ? mtFmt(sp.due) : '-'} 제출${label === '촬영' ? eqFilmTime(sp.id) : ''}</small></div></div>`).join('')}</div>` : '';
+  const evHtml = dayEvs.length ? `<div class="eq-evlist">${dayEvs.map(({ sp, label, cls }) => `<div class="eq-evrow"><span class="eq-bar ${cls || eqSpanClass(sp)}">${label}</span><div><b>${abEsc(sp.title)}</b><small>${nbList(abEsc(sp.lead || '-'))} · ${STATUS_LABELS[sp.status] || sp.status} · ${sp.film ? mtFmt(sp.film) : '-'} 촬영 → ${sp.due ? mtFmt(sp.due) : '-'} 제출${label === '촬영' ? eqFilmTime(sp.id) : ''}</small></div></div>`).join('')}</div>` : '';
   el.innerHTML = evHtml + (groups.length ? groups.map(g => {
     const f = g.items[0], bad = g.items.filter(it => eqBad.has(it.id)).length;
     const sameTime = g.items.every(it => eqTimeText(it) === eqTimeText(f));
@@ -3136,6 +3139,99 @@ document.getElementById('abRerun').addEventListener('click', async ()=>{
   }catch(e){ showAlert('다시 계산에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
   b.disabled = false; b.textContent = '지금 다시 계산';
 });
+
+/* ───────── 조회수 패치 (금 100만 · 은 50만 · 동 10만) ─────────
+   게시물 1개 최고 조회수 기준. 인스타 공식·홍비디오·유튜브 시트를 직접 읽어 자동 지정.
+   시트에 데이터가 추가되면 6시간 캐시가 지난 뒤(또는 새로고침 시 캐시 만료 후) 자동 반영돼요. */
+const HB_SOURCES = {
+  insta: { id:'1qejkY4IaDvwI30gqmo7O1MkS2HJkR5wqnHCkZpTE0gQ', tq:'select D, F' },                       // 미디어 캡션, 조회수
+  hong:  { id:'1eTHTdR9dFutwtNAOG2us6rFw7hqjPdMOH8-IuEYXDC4', tq:"select E, G where B = 'hong._.video'" }, // 캡션, 릴스 조회
+  yt:    { id:'1K6MHQMgs8aa_tiE_QCm9wc-dklMM5CZ3kaYZK-LXNGo', tq:'select B, C, F' }                     // 제목, 설명, 동영상 조회
+};
+// 홍비디오 캡션의 "🎬 by 아이디" → 홍보대사 이름
+const HB_HANDLES = {
+  'h.xn.a_':'김현아', 'xiyerlx':'이예은', 'wavuswl':'김세영', 'jarchiveo':'오화종', 'imseaotter':'이서연',
+  's._xo0':'장서영', '_leeunchae':'이은채', 'ee.__di':'이다희', 'l.silver_ji':'임은지'
+};
+const HB_TIERS = [
+  { key:'gold',   min:1000000, label:'100만', img:"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 28%22%3E%3Cdefs%3E%3ClinearGradient id=%22ggold%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23FFE68A%22/%3E%3Cstop offset=%220.45%22 stop-color=%22%23F5C02E%22/%3E%3Cstop offset=%221%22 stop-color=%22%23C98A0C%22/%3E%3C/linearGradient%3E%3ClinearGradient id=%22sgold%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220.85%22/%3E%3Cstop offset=%220.5%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x=%221%22 y=%221%22 width=%2262%22 height=%2226%22 rx=%2213%22 fill=%22url(%23ggold)%22 stroke=%22%239A6406%22 stroke-width=%221.5%22/%3E%3Crect x=%223.5%22 y=%223.5%22 width=%2257%22 height=%2221%22 rx=%2210.5%22 fill=%22none%22 stroke=%22%23FFF1B8%22 stroke-width=%221%22 stroke-dasharray=%222 1.6%22 opacity=%220.85%22/%3E%3Cpath d=%22M5 13 A9 9 0 0 1 14 4 H40 L30 13 Z%22 fill=%22url(%23sgold)%22/%3E%3Cpath d=%22M13 8.2l1.5 3.1 3.4.5-2.45 2.4.58 3.4L13 16l-3.03 1.6.58-3.4L8.1 11.8l3.4-.5z%22 fill=%22%23FFF8DC%22 stroke=%22%239A6406%22 stroke-width=%220.8%22 stroke-linejoin=%22round%22/%3E%3Ctext x=%2239.5%22 y=%2218.6%22 text-anchor=%22middle%22 font-family=%22'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif%22 font-size=%2212.5%22 font-weight=%22800%22 fill=%22%236B4200%22 letter-spacing=%22-0.3%22%3E100%EB%A7%8C%3C/text%3E%3C/svg%3E" },
+  { key:'silver', min:500000,  label:'50만',  img:"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 28%22%3E%3Cdefs%3E%3ClinearGradient id=%22gsilver%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23FFFFFF%22/%3E%3Cstop offset=%220.45%22 stop-color=%22%23D5DAE1%22/%3E%3Cstop offset=%221%22 stop-color=%22%239AA3AE%22/%3E%3C/linearGradient%3E%3ClinearGradient id=%22ssilver%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220.85%22/%3E%3Cstop offset=%220.5%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x=%221%22 y=%221%22 width=%2262%22 height=%2226%22 rx=%2213%22 fill=%22url(%23gsilver)%22 stroke=%22%236B7480%22 stroke-width=%221.5%22/%3E%3Crect x=%223.5%22 y=%223.5%22 width=%2257%22 height=%2221%22 rx=%2210.5%22 fill=%22none%22 stroke=%22%23FFFFFF%22 stroke-width=%221%22 stroke-dasharray=%222 1.6%22 opacity=%220.85%22/%3E%3Cpath d=%22M5 13 A9 9 0 0 1 14 4 H40 L30 13 Z%22 fill=%22url(%23ssilver)%22/%3E%3Cpath d=%22M13 8.2l1.5 3.1 3.4.5-2.45 2.4.58 3.4L13 16l-3.03 1.6.58-3.4L8.1 11.8l3.4-.5z%22 fill=%22%23FFFFFF%22 stroke=%22%236B7480%22 stroke-width=%220.8%22 stroke-linejoin=%22round%22/%3E%3Ctext x=%2239.5%22 y=%2218.6%22 text-anchor=%22middle%22 font-family=%22'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif%22 font-size=%2212.5%22 font-weight=%22800%22 fill=%22%233A414B%22 letter-spacing=%22-0.3%22%3E50%EB%A7%8C%3C/text%3E%3C/svg%3E" },
+  { key:'bronze', min:100000,  label:'10만',  img:"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 28%22%3E%3Cdefs%3E%3ClinearGradient id=%22gbronze%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23F6C8A0%22/%3E%3Cstop offset=%220.45%22 stop-color=%22%23D68A52%22/%3E%3Cstop offset=%221%22 stop-color=%22%239C5A2A%22/%3E%3C/linearGradient%3E%3ClinearGradient id=%22sbronze%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220.85%22/%3E%3Cstop offset=%220.5%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x=%221%22 y=%221%22 width=%2262%22 height=%2226%22 rx=%2213%22 fill=%22url(%23gbronze)%22 stroke=%22%236E3B17%22 stroke-width=%221.5%22/%3E%3Crect x=%223.5%22 y=%223.5%22 width=%2257%22 height=%2221%22 rx=%2210.5%22 fill=%22none%22 stroke=%22%23FCE0C8%22 stroke-width=%221%22 stroke-dasharray=%222 1.6%22 opacity=%220.85%22/%3E%3Cpath d=%22M5 13 A9 9 0 0 1 14 4 H40 L30 13 Z%22 fill=%22url(%23sbronze)%22/%3E%3Cpath d=%22M13 8.2l1.5 3.1 3.4.5-2.45 2.4.58 3.4L13 16l-3.03 1.6.58-3.4L8.1 11.8l3.4-.5z%22 fill=%22%23FFF0E2%22 stroke=%22%236E3B17%22 stroke-width=%220.8%22 stroke-linejoin=%22round%22/%3E%3Ctext x=%2239.5%22 y=%2218.6%22 text-anchor=%22middle%22 font-family=%22'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif%22 font-size=%2212.5%22 font-weight=%22800%22 fill=%22%234A2408%22 letter-spacing=%22-0.3%22%3E10%EB%A7%8C%3C/text%3E%3C/svg%3E" }
+];
+// 패치에서 제외할 사람 (본인 콘텐츠가 아닌 게시물로 잡히는 경우 등)
+const HB_EXCLUDE = ['최승훈'];
+const HB_CACHE_KEY = 'hbBadges.v2', HB_TTL = 6*60*60*1000;
+
+// 이름 앞에 붙는 패치 자리. 패치가 없는 사람은 아무것도 안 보여요.
+function hbEscAttr(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function nb(name){ const n = String(name||'').trim(); return n ? `<i class="hb" data-hb="${hbEscAttr(n)}"></i>` : ''; }
+// "김현아, 오화종" 같은 목록 문자열 → 각 이름 앞에 패치 (html은 이미 이스케이프된 문자열)
+function nbList(html){ return String(html||'').replace(/[가-힣]{2,4}/g, m => hbRoster().includes(m) ? nb(m) + m : m); }
+
+function hbRoster(){ return MEETING_ROSTER.filter(n => !HB_EXCLUDE.includes(n)); }   // 현재 활동 중인 홍보대사만 (회의 출결 명단 기준)
+
+function hbGviz(src){
+  return new Promise((resolve, reject) => {
+    const cb = '__hb' + Math.random().toString(36).slice(2);
+    const s = document.createElement('script');
+    const timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, 20000);
+    function cleanup(){ clearTimeout(timer); delete window[cb]; s.remove(); }
+    window[cb] = res => { cleanup(); res && res.status !== 'error' ? resolve(res.table) : reject(new Error('gviz error')); };
+    s.onerror = () => { cleanup(); reject(new Error('load error')); };
+    s.src = `https://docs.google.com/spreadsheets/d/${src.id}/gviz/tq?headers=1&tqx=responseHandler:${cb}&tq=${encodeURIComponent(src.tq)}`;
+    document.head.appendChild(s);
+  });
+}
+function hbRows(table){
+  return (table && table.rows || []).map(r => (r.c || []).map(c => c ? (c.v != null ? c.v : (c.f != null ? c.f : '')) : ''));
+}
+function hbNum(v){ const n = Number(String(v).replace(/[^\d.]/g,'')); return isFinite(n) ? n : 0; }
+
+async function hbCompute(){
+  const roster = hbRoster();
+  const best = {};
+  const give = (n, v) => { if(v > (best[n] || 0)) best[n] = v; };
+  const [insta, hong, yt] = await Promise.all(['insta','hong','yt'].map(k => hbGviz(HB_SOURCES[k]).then(hbRows).catch(() => null)));
+  if(!insta && !hong && !yt) throw new Error('no data');
+  (insta || []).forEach(([cap, views]) => { const v = hbNum(views); if(v < 100000) return; cap = String(cap||''); roster.forEach(n => { if(cap.includes(n)) give(n, v); }); });
+  (hong || []).forEach(([cap, views]) => {
+    const v = hbNum(views); if(v < 100000) return; cap = String(cap||'');
+    Object.entries(HB_HANDLES).forEach(([h, n]) => {
+      const re = new RegExp('(^|[^\\w.])' + h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\w.])');
+      if(re.test(cap)) give(n, v);
+    });
+    roster.forEach(n => { if(cap.includes(n)) give(n, v); });
+  });
+  (yt || []).forEach(([title, desc, views]) => { const v = hbNum(views); if(v < 100000) return; const t = String(title||'') + '\n' + String(desc||''); roster.forEach(n => { if(t.includes(n)) give(n, v); }); });
+  const badges = {};
+  Object.entries(best).forEach(([n, v]) => { const t = HB_TIERS.find(t => v >= t.min); if(t) badges[n] = { tier:t.key, views:v }; });
+  return badges;
+}
+
+function hbApply(badges){
+  window.hbBadges = badges;
+  let css = '';
+  Object.entries(badges).forEach(([n, b]) => {
+    const t = HB_TIERS.find(t => t.key === b.tier);
+    css += `.hb[data-hb="${n.replace(/"/g,'')}"]{display:inline-block;background-image:url("${t.img}");}\n`;
+  });
+  let el = document.getElementById('hbStyle');
+  if(!el){ el = document.createElement('style'); el.id = 'hbStyle'; document.head.appendChild(el); }
+  el.textContent = css;
+}
+
+(function hbInit(){
+  let cached = null;
+  try{ cached = JSON.parse(localStorage.getItem(HB_CACHE_KEY) || 'null'); }catch(e){}
+  if(cached && cached.badges) hbApply(cached.badges);
+  if(cached && Date.now() - cached.at < HB_TTL) return;
+  setTimeout(() => {
+    hbCompute().then(badges => {
+      hbApply(badges);
+      try{ localStorage.setItem(HB_CACHE_KEY, JSON.stringify({ at:Date.now(), badges })); }catch(e){}
+    }).catch(() => {});
+  }, 1500);
+})();
 </script>
 
 </body>

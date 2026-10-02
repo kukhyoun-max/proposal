@@ -414,6 +414,28 @@
   .mt-tabs button{flex:none; padding:7px 10px; font-size:13px;}
   @media (max-width:400px){ #btnHome{max-width:80px; white-space:normal; line-height:1.25;} .admin-topbar button{padding:6px 8px; font-size:11.5px;} .mt-tabs button{padding:7px 8px; font-size:12.5px;} }
 
+  /* 전체 점수표 */
+  .sc-head{display:flex; justify-content:space-between; align-items:center; gap:8px; margin:0 0 6px;}
+  .sc-head span{font-size:12px; color:var(--ink-soft);}
+  .sc-legend{font-size:11.5px; color:var(--ink-faint); margin:0 0 4px;}
+  .sc-table{width:100%; border-collapse:collapse; font-size:13px;}
+  .sc-table th{font-size:11.5px; color:var(--ink-soft); font-weight:500; padding:6px 4px; border-bottom:1.5px solid var(--line); text-align:right;}
+  .sc-table th.l, .sc-table td.l{text-align:left;}
+  .sc-table td{padding:9px 4px; border-bottom:1px solid var(--line); text-align:right; font-variant-numeric:tabular-nums;}
+  .sc-row{cursor:pointer;}
+  .sc-row:hover td{background:#FAFAFC;}
+  .sc-rank{color:var(--ink-faint); font-size:12px; width:22px;}
+  .sc-name{font-weight:700; white-space:nowrap;}
+  .sc-plus{color:#1B7A38;} .sc-minus{color:#B23A3A;}
+  .sc-net{font-weight:900; font-size:14px;}
+  .sc-pill{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:999px; margin-left:4px; vertical-align:1px;}
+  .sc-pill.warn{background:#FFF1D6; color:#9A5B00;} .sc-pill.bad{background:#FDE4E4; color:#B23A3A;}
+  .sc-detail td{background:#FAFAFC; padding:10px 12px 12px; text-align:left;}
+  .sc-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; font-size:12px;}
+  .sc-grid div{display:flex; justify-content:space-between; gap:6px; border-bottom:1px dashed var(--line); padding-bottom:4px;}
+  .sc-grid span{color:var(--ink-soft);}
+  .sc-grid b.neg{color:#B23A3A;} .sc-grid b.pos{color:#1B7A38;}
+  .sc-toggle{margin-top:12px; font-size:12px; color:var(--ink-soft); background:none; border:none; cursor:pointer; text-decoration:underline; padding:0;}
   /* 조회수 패치 */
   .hb{display:none; width:2.3em; height:1em; margin-right:4px; vertical-align:-0.16em; background:center/contain no-repeat; flex:none; font-style:normal;}
 </style>
@@ -678,6 +700,24 @@
   </div>
 </div>
 
+<div class="phone" id="scoreView" style="display:none;">
+  <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button><button class="on">점수표</button></div>
+    <button class="reset-link" id="btnScoreBack">← 돌아가기</button>
+  </div>
+  <div class="content" style="padding-top:0;">
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;">홍보대사별 가점·감점·순점수 전체 현황이에요. 이름을 누르면 항목별 내역이 보여요.</p>
+    <div class="sc-head">
+      <span id="scInfo">불러오는 중...</span>
+      <div style="display:flex; gap:6px;">
+        <button class="mt-quick" id="scRerun">지금 다시 계산</button>
+        <a class="mt-quick" target="_blank" href="https://docs.google.com/spreadsheets/d/1qmojS8eLOChWyt1fxIQOJ9UGBpgw4kWS6vzMHzVLlW8/edit" style="text-decoration:none;">시트 열기</a>
+      </div>
+    </div>
+    <div id="scList"></div>
+  </div>
+</div>
+
 <div class="phone" id="eventView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
     <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button class="on">행사</button><button data-go="absent">불참</button></div>
@@ -855,11 +895,11 @@ const STORAGE_KEY = 'content-plan:current';
 const ADMIN_PIN = '2600';
 // PIN별 접근 권한: null = 전체, 배열 = 볼 수 있는 탭만
 const PIN_ROLES = {
-  '2600': null,            // 전체 (기획서 관리·회의·개인콘텐츠·행사·불참)
+  '2600': null,            // 전체 (기획서 관리·회의·개인콘텐츠·행사·불참·점수표)
   '0000': ['meeting'],     // 회의 출결만
   '1234': ['personal'],    // 개인콘텐츠만
 };
-const TAB_KEYS = { '기획서 관리':'admin', '회의':'meeting', '개인콘텐츠':'personal', '행사':'event', '불참':'absent', '장비':'equip', '일정·장비':'equip' };
+const TAB_KEYS = { '기획서 관리':'admin', '회의':'meeting', '개인콘텐츠':'personal', '행사':'event', '불참':'absent', '장비':'equip', '일정·장비':'equip', '점수표':'score' };
 let allowedTabs = null;
 function applyTabAccess(){
   document.querySelectorAll('.mt-tabs').forEach(bar => {
@@ -876,6 +916,7 @@ function openTab(k){
   else if(k === 'absent'){ showView('absent'); abLoad(); }
   else if(k === 'event'){ showView('event'); evLoad(); }
   else if(k === 'equip'){ eqShow(false); }
+  else if(k === 'score'){ showView('score'); scLoad(); }
   else { showView('meeting'); const input = document.getElementById('mtDate'); if(!input.value) input.value = mtMonday(mtYmd(new Date())); mtLoad(); }
 }
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZ-U1zoYVN6zALdZCdoaRiFjCnklHwT50rRADKYDx8jd4we48vmzBoN7JOczAS0pj_/exec';
@@ -1732,7 +1773,7 @@ async function refreshOverview(){
 }
 
 function showView(viewId){
-  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView'), personal: document.getElementById('personalView'), absent: document.getElementById('absentView'), event: document.getElementById('eventView'), equip: document.getElementById('equipView') };
+  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView'), personal: document.getElementById('personalView'), absent: document.getElementById('absentView'), event: document.getElementById('eventView'), equip: document.getElementById('equipView'), score: document.getElementById('scoreView') };
   Object.keys(views).forEach(k=>{
     views[k].style.display = (k===viewId) ? (k==='form' ? 'flex' : 'block') : 'none';
   });
@@ -2747,12 +2788,19 @@ document.getElementById('pcAllContent').addEventListener('click', ()=>pcFillAll(
 document.getElementById('pcSave').addEventListener('click', pcSave);
 document.getElementById('btnPersonalBack').addEventListener('click', ()=>{ showView('form'); });
 document.querySelectorAll('.mt-tabs').forEach(bar => {
+  if(bar.closest('#scoreView')) return;
+  const ab = Array.from(bar.querySelectorAll('button')).find(b => b.textContent.trim() === '불참');
+  const sb = document.createElement('button'); sb.dataset.go = 'score'; sb.textContent = '점수표';
+  ab ? ab.after(sb) : bar.appendChild(sb);
+});
+document.querySelectorAll('.mt-tabs').forEach(bar => {
   if(bar.closest('#equipView') || bar.querySelector('[data-go="equip"]')) return;
   const nb = document.createElement('button'); nb.dataset.go = 'equip'; nb.textContent = '일정·장비'; bar.appendChild(nb);
 });
 document.querySelectorAll('.mt-tabs button[data-go]').forEach(b => b.addEventListener('click', ()=>{
   if(b.dataset.go === 'admin'){ showView('admin'); loadSubmissions(); }
   else if(b.dataset.go === 'equip'){ eqShow(false); }
+  else if(b.dataset.go === 'score'){ showView('score'); scLoad(); }
   else if(b.dataset.go === 'personal'){ showView('personal'); pcLoad(); }
   else if(b.dataset.go === 'absent'){ showView('absent'); abLoad(); }
   else if(b.dataset.go === 'event'){ showView('event'); evLoad(); }
@@ -3136,6 +3184,102 @@ document.getElementById('abRerun').addEventListener('click', async ()=>{
   try{
     await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'rerun' }) });
     await abLoad();
+  }catch(e){ showAlert('다시 계산에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+  b.disabled = false; b.textContent = '지금 다시 계산';
+});
+
+/* ───────── 전체 점수표 (종합점수 시트) ─────────
+   백엔드가 계산해 두는 '종합점수' 탭을 그대로 읽어 보여줘요. 열 순서가 바뀌어도 머리글 이름으로 찾아요. */
+const SC_SHEET_ID = '1qmojS8eLOChWyt1fxIQOJ9UGBpgw4kWS6vzMHzVLlW8';
+let scRows = [], scShowAll = false, scOpen = null;
+
+function scFetch(){
+  return new Promise((resolve, reject) => {
+    const cb = '__sc' + Math.random().toString(36).slice(2);
+    const s = document.createElement('script');
+    const timer = setTimeout(() => { cleanup(); reject(new Error('시간 초과')); }, 20000);
+    function cleanup(){ clearTimeout(timer); delete window[cb]; s.remove(); }
+    window[cb] = res => {
+      cleanup();
+      if(!res || res.status === 'error') return reject(new Error('시트를 읽지 못했어요'));
+      const cols = res.table.cols.map(c => String(c.label || '').trim());
+      resolve((res.table.rows || []).map(r => {
+        const o = {}; cols.forEach((k, i) => { const c = r.c && r.c[i]; o[k] = c ? (c.v != null ? c.v : '') : ''; }); return o;
+      }).filter(o => String(o['이름'] || '').trim()));
+    };
+    s.onerror = () => { cleanup(); reject(new Error('불러오기 실패')); };
+    s.src = `https://docs.google.com/spreadsheets/d/${SC_SHEET_ID}/gviz/tq?headers=1&sheet=${encodeURIComponent('종합점수')}&tqx=responseHandler:${cb}&_=${Date.now()}`;
+    document.head.appendChild(s);
+  });
+}
+const scN = v => { const n = Number(v); return isFinite(n) ? Math.round(n * 100) / 100 : 0; };
+const scSigned = n => n > 0 ? '+' + n : String(n);
+
+async function scLoad(){
+  const info = document.getElementById('scInfo');
+  info.textContent = '불러오는 중...';
+  try{
+    scRows = await scFetch();
+    scRender();
+  }catch(e){
+    info.textContent = '';
+    document.getElementById('scList').innerHTML = `<p style="font-size:12.5px;color:var(--ink-faint);">점수표를 불러오지 못했어요. (${abEsc(e && e.message || '오류')})</p>`;
+  }
+}
+
+function scRender(){
+  const cur = new Set(MEETING_ROSTER);
+  const rows = scRows.map(r => {
+    const name = String(r['이름']).trim();
+    const plus = scN(scN(r['콘텐츠 가점']) + scN(r['행사 가점']));
+    const minus = scN(r['감점 합계']);
+    const net = r['순점수(가점+감점)'] !== '' ? scN(r['순점수(가점+감점)']) : scN(plus + minus);
+    return { r, name, plus, minus, net, current: cur.has(name) };
+  }).sort((a, b) => b.net - a.net || a.name.localeCompare(b.name, 'ko'));
+  const shown = rows.filter(x => scShowAll || x.current);
+  const hidden = rows.length - rows.filter(x => x.current).length;
+  document.getElementById('scInfo').textContent = `${shown.length}명 · 순점수 높은 순`;
+  const pill = st => { st = String(st || '').trim(); if(!st) return ''; return `<span class="sc-pill ${/제적/.test(st) ? 'bad' : 'warn'}">${abEsc(st)}</span>`; };
+  const item = (label, v, extra) => { const n = scN(v); return `<div><span>${label}${extra ? ` <small>(${extra})</small>` : ''}</span><b class="${n < 0 ? 'neg' : n > 0 ? 'pos' : ''}">${scSigned(n)}</b></div>`; };
+  let rank = 0;
+  const body = shown.map(x => {
+    rank++;
+    const r = x.r, open = scOpen === x.name;
+    const detail = open ? `<tr class="sc-detail"><td colspan="5"><div class="sc-grid">
+      ${item('콘텐츠 가점', r['콘텐츠 가점'], `참여 ${scN(r['참여 콘텐츠'])}건`)}
+      ${item('행사 가점', r['행사 가점'], `참여 ${scN(r['행사 참여'])}회`)}
+      ${item('회의 감점', r['회의 감점'], `지각 ${scN(r['회의 지각'])} · 불참 ${scN(r['회의 불참'])} · 무단 ${scN(r['회의 무단불참'])}`)}
+      ${item('개인콘 감점', r['개인콘 감점'], `지각 ${scN(r['개인콘 지각'])} · 미제출 ${scN(r['개인콘 미제출'])}`)}
+      ${item('제출지연 감점', r['제출지연 감점'], `${scN(r['팀콘 제출지연(일)'])}일`)}
+      <div><span>팀콘 불참</span><b>${scN(r['팀콘 불참'])}회 <small style="font-weight:400;color:var(--ink-faint);">(면제 ${scN(r['불참 면제'])})</small></b></div>
+    </div></td></tr>` : '';
+    return `<tr class="sc-row" data-n="${abEsc(x.name)}">
+      <td class="l sc-rank">${rank}</td>
+      <td class="l sc-name">${nb(x.name)}${abEsc(x.name)}${x.current ? '' : ' <small style="font-weight:400;color:var(--ink-faint);">이전</small>'}${pill(r['상태'])}</td>
+      <td class="sc-plus">${scSigned(x.plus)}</td>
+      <td class="${x.minus < 0 ? 'sc-minus' : ''}">${scSigned(x.minus)}</td>
+      <td class="sc-net">${x.net}</td>
+    </tr>${detail}`;
+  }).join('');
+  document.getElementById('scList').innerHTML = shown.length ? `
+    <table class="sc-table">
+      <tr><th class="l"></th><th class="l">이름</th><th>가점</th><th>감점</th><th>순점수</th></tr>
+      ${body}
+    </table>
+    <p class="sc-legend" style="margin-top:8px;">가점 = 콘텐츠 가점 + 행사 가점 · 감점 = 회의·개인콘·제출지연 감점 합계</p>
+    ${hidden ? `<button class="sc-toggle" id="scToggle">${scShowAll ? '현재 멤버만 보기' : `이전 멤버 ${hidden}명도 보기`}</button>` : ''}`
+    : '<p style="font-size:12.5px;color:var(--ink-faint);">아직 점수 기록이 없어요.</p>';
+  document.querySelectorAll('#scList .sc-row').forEach(tr => tr.addEventListener('click', () => { scOpen = scOpen === tr.dataset.n ? null : tr.dataset.n; scRender(); }));
+  const t = document.getElementById('scToggle'); if(t) t.addEventListener('click', () => { scShowAll = !scShowAll; scRender(); });
+}
+
+document.getElementById('btnScoreBack').addEventListener('click', ()=>{ showView('form'); });
+document.getElementById('scRerun').addEventListener('click', async ()=>{
+  const b = document.getElementById('scRerun');
+  b.disabled = true; b.textContent = '계산 중... (약 30초)';
+  try{
+    await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'rerun' }) });
+    await scLoad();
   }catch(e){ showAlert('다시 계산에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
   b.disabled = false; b.textContent = '지금 다시 계산';
 });

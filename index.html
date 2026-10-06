@@ -1910,7 +1910,7 @@ function renderStatusDetail(key, rec){
     stageSection = `<button class="save-edit-btn" id="stageBtn" style="margin-top:0; margin-bottom:20px;" data-next="completed">제작 완료 처리</button>`;
   }
 
-  const toggleEditHtml = `<button id="toggleEditBtn" style="width:100%; margin:0 0 20px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14px; cursor:pointer;">✏️ 수정하기</button>`;
+  const toggleEditHtml = `<button id="toggleEditBtn" style="width:100%; margin:0 0 16px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14px; cursor:pointer;">✏️ 수정하기</button>`;
 
   el.innerHTML = `
     <button class="back-link" id="statusToList">← 목록으로</button>
@@ -1924,11 +1924,21 @@ function renderStatusDetail(key, rec){
       ${editingRecord.uploadedAt? `<p>업로드: ${mtFmt(editingRecord.uploadedAt)}${/^https?:/.test(editingRecord.uploadUrl) ? ` · <a class="up-link" style="margin:0" href="${editingRecord.uploadUrl}" target="_blank" rel="noopener">게시물 보기</a>` : ''}</p>`:''}
       ${editingRecord.status==='rejected' && editingRecord.rejectReason? `<p>반려 사유: ${editingRecord.rejectReason}</p>`:''}
     </div>
-    ${imageSection}
-    ${stageSection}
     ${toggleEditHtml}
-    <div id="editFormWrap" style="display:none;">
-    <p class="section-title" style="margin-top:0;">콘텐츠 유형</p>
+    <div id="editFormWrap" style="display:none; margin-bottom:24px;">
+    <p class="section-title" style="margin-top:0;">제작 일정</p>
+    <div class="grid2">
+      <div class="field-sm"><label>촬영일</label><input type="date" id="e_filmdate" value="${editingRecord.filmdate||''}"></div>
+      <div class="field-sm"><label>제출일</label><input type="date" id="e_submitdate" value="${editingRecord.submitdate||''}"></div>
+    </div>
+    <div class="grid2">
+      <div class="field-sm"><label>촬영 시작</label><select id="e_filmfrom"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
+      <div class="field-sm"><label>촬영 종료</label><select id="e_filmto"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
+    </div>
+    <button class="save-edit-btn" id="saveEditBtn" style="margin-top:4px;">수정 저장</button>
+    <button id="toggleMoreEdit" style="width:100%; margin:12px 0 0; padding:12px; border-radius:12px; border:1px dashed var(--line); background:none; color:var(--ink-soft); font-size:13.5px; cursor:pointer;">다른 항목도 수정하기 ▾</button>
+    <div id="editMoreWrap" style="display:none;">
+    <p class="section-title">콘텐츠 유형</p>
     <div class="field-sm"><select id="e_category">${catOptions}</select></div>
     <p class="section-title">제작자 정보</p>
     <div class="grid2">
@@ -1944,21 +1954,16 @@ function renderStatusDetail(key, rec){
     <div class="field-sm"><label>한줄요약</label><input type="text" id="e_summary" value="${(editingRecord.summary||'').replace(/"/g,'&quot;')}"></div>
     <div class="field-sm"><label>참고 URL</label><input type="text" id="e_url" value="${(editingRecord.url||'').replace(/"/g,'&quot;')}"></div>
     <div class="field-sm"><label>요청사항</label><textarea id="e_request">${editingRecord.request||''}</textarea></div>
-    <p class="section-title">제작 일정 및 장비</p>
-    <div class="grid2">
-      <div class="field-sm"><label>촬영일</label><input type="date" id="e_filmdate" value="${editingRecord.filmdate||''}"></div>
-      <div class="field-sm"><label>제출일</label><input type="date" id="e_submitdate" value="${editingRecord.submitdate||''}"></div>
-    </div>
-    <div class="grid2">
-      <div class="field-sm"><label>촬영 시작</label><select id="e_filmfrom"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
-      <div class="field-sm"><label>촬영 종료</label><select id="e_filmto"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
-    </div>
+    <p class="section-title">장비</p>
     <div class="field-sm"><label>장비</label><input type="text" id="e_equipment" value="${(editingRecord.equipment||'').replace(/"/g,'&quot;')}"></div>
     <p class="section-title">기획 내용</p>
     <div id="e_planRows"></div>
     <button class="add-plan" id="e_addPlan">+ 장면 추가</button>
-    <button class="save-edit-btn" id="saveEditBtn">수정 저장</button>
+    <button class="save-edit-btn" id="saveEditBtnBottom">수정 저장</button>
     </div>
+    </div>
+    ${imageSection}
+    ${stageSection}
   `;
   renderEditPlanRows();
   const backBtn = document.getElementById('statusToList');
@@ -1976,6 +1981,13 @@ function renderStatusDetail(key, rec){
     editingRecord.plan.push({content:'', location:''}); renderEditPlanRows();
   });
   document.getElementById('saveEditBtn').addEventListener('click', saveEditedSubmission);
+  document.getElementById('saveEditBtnBottom').addEventListener('click', ()=> document.getElementById('saveEditBtn').click());
+  document.getElementById('toggleMoreEdit').addEventListener('click', e=>{
+    const more = document.getElementById('editMoreWrap');
+    const open = more.style.display !== 'none';
+    more.style.display = open ? 'none' : 'block';
+    e.target.textContent = open ? '다른 항목도 수정하기 ▾' : '다른 항목 접기 ▴';
+  });
 
   const creditBtn = document.getElementById('statusCopyCredit');
   if(creditBtn){

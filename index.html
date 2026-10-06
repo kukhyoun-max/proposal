@@ -2677,7 +2677,7 @@ const PC_OPTS = ['제출','지각','미제출'];
 let pcWeek = '';
 let pcState = {};   // name -> { plan, content }
 let pcWeeksDone = {};
-const PC_DEFAULT = ['김세영','김현아','오화종','이다희','이서연','이예은','이은채','임은지','장서영','한가온'];
+const PC_DEFAULT = ['강다솔','김세영','김현아','김현우','오화종','이다희','이서연','이예은','이은채','임은지','장서영','한가온'];
 let pcExtra = new Set();   // 이번 주에 추가로 넣은 인원
 function pcNames(){ return MEETING_ROSTER.filter(n => PC_DEFAULT.includes(n) || pcExtra.has(n)); }
 function pcRenderAdd(){

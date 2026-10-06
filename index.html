@@ -1071,7 +1071,8 @@ let data = {
 
 const AMBASSADOR_ROSTER = [
   '***','***','***','***','***','***','***','***','***',
-  '***','***','***','***','***','***','***','***','***'
+  '***','***','***','***','***','***','***','***','***',
+  '***','***','***'
 ].sort((a,b)=>a.localeCompare(b,'ko'));
 
 const namePickers = {};
@@ -1565,7 +1566,7 @@ function syncTitleFields(){
   document.getElementById('f_oneoff').checked = !!data.oneoff;
   syncTitleUi();
 }
-const MEMBER_DEPT = { '***':'경영학과','***':'외식산업학과','***':'영화방송학과','***':'영화방송학과','***':'영화방송학과','***':'영화방송학과','***':'경영학과','***':'사회복지학과','***':'경영학과','***':'외식산업조리학과','***':'관광경영학과','***':'경영학과','***':'경영학과','***':'가정교육과','***':'한식조리학과' };
+const MEMBER_DEPT = { '***':'경영학과','***':'외식산업학과','***':'영화방송학과','***':'영화방송학과','***':'영화방송학과','***':'영화방송학과','***':'경영학과','***':'사회복지학과','***':'경영학과','***':'외식산업조리학과','***':'관광경영학과','***':'경영학과','***':'경영학과','***':'가정교육과','***':'한식조리학과','***':'한식조리학과','***':'태권도학과' };
 function buildCreditText(rec){
   const seen = new Set(), lines = [];
   ['lead','member','filming','editing','extra'].forEach(k => String(rec[k]||'').split(/[,\n]/).forEach(raw => {
@@ -2489,7 +2490,8 @@ loadAutosave();
 const ATTEND_URL = 'https://script.google.com/macros/s/AKfycby04XfWbKhTXlq9cFQ-QpMz76GwhS6MeNLsQw-g-Q6YULmYa3j_MKQuiPdZ1ahQDtM/exec';
 const MEETING_ROSTER = [
   '***','***','***','***','***','***','***',
-  '***','***','***','***','***','***','***','***'
+  '***','***','***','***','***','***','***','***',
+  '***','***'
 ].sort((a,b)=>a.localeCompare(b,'ko'));
 const MT_STATUSES = ['출석','지각','불참','무단불참'];
 const MEETING_START = '2026-08-31';   // 이 주부터 매주 월요일마다 회의 칸 자동 생성

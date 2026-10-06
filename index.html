@@ -2677,7 +2677,7 @@ const PC_OPTS = ['제출','지각','미제출'];
 let pcWeek = '';
 let pcState = {};   // name -> { plan, content }
 let pcWeeksDone = {};
-const PC_DEFAULT = ['***','***','***','***','***','***','***','***','***','***'];
+const PC_DEFAULT = ['***','***','***','***','***','***','***','***','***','***','***','***'];
 let pcExtra = new Set();   // 이번 주에 추가로 넣은 인원
 function pcNames(){ return MEETING_ROSTER.filter(n => PC_DEFAULT.includes(n) || pcExtra.has(n)); }
 function pcRenderAdd(){

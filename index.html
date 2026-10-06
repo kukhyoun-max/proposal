@@ -2774,19 +2774,20 @@ async function pcLoad(){
 }
 
 async function pcSave(){
+  const entered = pcNames().filter(n => pcState[n] && pcState[n].plan);
+  if(!entered.length){ showAlert('기획서 제출 여부를 한 명 이상 입력해 주세요.\n(콘텐츠는 나중에 입력해도 돼요)'); return; }
   const missing = pcNames().filter(n => !(pcState[n] && pcState[n].plan));
-  if(missing.length){ showAlert('기획서가 입력되지 않은 사람이 있어요: ' + missing.join(', ') + '\n(콘텐츠는 나중에 입력해도 돼요)'); return; }
   const btn = document.getElementById('pcSave');
   btn.disabled = true; btn.textContent = '저장 중...';
   try{
     await fetch(ATTEND_URL, {
       method:'POST', mode:'no-cors',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ action:'personalSave', week: pcWeek, records: pcNames().map(n => ({ name:n, plan:pcState[n].plan, content:pcState[n].content || '' })) })
+      body: JSON.stringify({ action:'personalSave', week: pcWeek, records: entered.map(n => ({ name:n, plan:pcState[n].plan, content:pcState[n].content || '' })) })
     });
     await new Promise(r => setTimeout(r, 1200));
     await pcLoad();
-    document.getElementById('pcStatus').textContent = mtFmt(pcWeek) + ' 제출 현황을 저장했어요.';
+    document.getElementById('pcStatus').textContent = mtFmt(pcWeek) + ' 제출 현황을 저장했어요.' + (missing.length ? ` (기획서 미입력 ${missing.length}명: ${missing.join(', ')})` : '');
   }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
   btn.disabled = false; btn.textContent = '저장';
 }

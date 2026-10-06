@@ -2634,19 +2634,20 @@ async function mtLoad(){
 async function mtSave(){
   const date = document.getElementById('mtDate').value;
   if(!date){ showAlert('날짜를 선택해 주세요.'); return; }
+  const entered = MEETING_ROSTER.filter(n => mtState[n]);
+  if(!entered.length){ showAlert('출결을 한 명 이상 입력해 주세요.'); return; }
   const missing = MEETING_ROSTER.filter(n => !mtState[n]);
-  if(missing.length){ showAlert('출결이 입력되지 않은 사람이 있어요: ' + missing.join(', ')); return; }
   const btn = document.getElementById('mtSave');
   btn.disabled = true; btn.textContent = '저장 중...';
   try{
     await fetch(ATTEND_URL, {
       method:'POST', mode:'no-cors',
       headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ action:'meetingSave', date, records: MEETING_ROSTER.map(n => ({ name:n, status:mtState[n] })) })
+      body: JSON.stringify({ action:'meetingSave', date, records: entered.map(n => ({ name:n, status:mtState[n] })) })
     });
     await new Promise(r => setTimeout(r, 1200));
     await mtLoad();
-    document.getElementById('mtStatus').textContent = date + ' 출결을 저장했어요.';
+    document.getElementById('mtStatus').textContent = date + ' 출결을 저장했어요.' + (missing.length ? ` (미입력 ${missing.length}명: ${missing.join(', ')})` : '');
   }catch(e){
     showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류'));
   }

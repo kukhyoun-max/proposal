@@ -414,6 +414,42 @@
   .mt-tabs button{flex:none; padding:7px 10px; font-size:13px;}
   @media (max-width:400px){ #btnHome{max-width:80px; white-space:normal; line-height:1.25;} .admin-topbar button{padding:6px 8px; font-size:11.5px;} .mt-tabs button{padding:7px 8px; font-size:12.5px;} }
 
+  /* 토스트 · 미입력만 보기 · D-day · 내 기획서 필터 */
+  .toast{position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px); background:var(--ink); color:#fff; font-size:13.5px; font-weight:700; padding:12px 18px; border-radius:24px; box-shadow:0 6px 20px rgba(0,0,0,.18); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:9999; max-width:calc(100vw - 32px); text-align:center;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .miss-bar{display:flex; justify-content:flex-end; margin:0 0 6px;}
+  .miss-btn{font-size:12px; padding:6px 11px; border-radius:20px; border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer; font-family:'Noto Sans KR',sans-serif;}
+  .miss-btn.on{border-color:var(--purple); background:var(--purple-soft); color:var(--purple); font-weight:700;}
+  .miss-empty{font-size:12.5px; color:var(--ink-faint); text-align:center; padding:18px 0;}
+  .dday{font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; margin-left:6px; white-space:nowrap;}
+  .dday.far{background:var(--page-bg); color:var(--ink-soft);}
+  .dday.near{background:#FFF1DB; color:#9A5B00;}
+  .dday.today{background:#FCEAEA; color:#B23A3A;}
+  .dday.late{background:#B23A3A; color:#fff;}
+  .mine-bar{display:flex; align-items:center; gap:8px; margin:0 0 12px; font-size:12.5px; color:var(--ink-soft);}
+  .mine-bar select{flex:1; padding:8px 10px; border-radius:10px; border:1.5px solid var(--line); font-size:13px; font-family:'Noto Sans KR',sans-serif; background:#fff; color:var(--ink);}
+
+  /* 화면 크기별 비율: 휴대폰은 그대로, 패드·PC는 넓게 */
+  @media (min-width:768px){
+    body{padding-bottom:32px;}
+    .phone, .admin-topbar{max-width:720px;}
+    .phone{box-shadow:0 2px 24px rgba(25,24,29,.06); min-height:calc(100vh - 52px);}
+    .content{padding:12px 36px 32px;}
+    .topbar{padding:24px 36px 0;}
+    #formView .content{max-width:620px; width:100%; margin:0 auto;}
+    .overview-grid{gap:12px;}
+    .overview-card{padding:18px 8px;}
+    #confirmModal .modal-box, #promptModal .modal-box{max-width:420px;}
+  }
+  @media (min-width:1100px){
+    .phone, .admin-topbar{max-width:960px;}
+    .content{padding:16px 48px 40px;}
+    .topbar{padding:28px 48px 0;}
+    .sub-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+    .sub-grid .sub-card{margin:0;}
+    .sub-grid > p{grid-column:1/-1;}
+  }
+
   /* 전체 점수표 */
   .sc-head{display:flex; justify-content:space-between; align-items:center; gap:8px; margin:0 0 6px;}
   .sc-head span{font-size:12px; color:var(--ink-soft);}
@@ -856,6 +892,18 @@ function showConfirm(message){
     cancelBtn.addEventListener('click', onCancel);
   });
 }
+function showToast(msg){
+  let t = document.getElementById('appToast');
+  if(!t){ t = document.createElement('div'); t.id = 'appToast'; t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(showToast._t); showToast._t = setTimeout(()=> t.classList.remove('show'), 2200);
+}
+// 저장하지 않은 입력 감지 (회의 출결 · 개인콘텐츠 · 기획서 수정)
+let mtDirty = false, pcDirty = false, editDirty = false;
+window.addEventListener('beforeunload', e => { if(mtDirty || pcDirty || editDirty){ e.preventDefault(); e.returnValue = ''; } });
+const LAST_NAME_KEY = 'proposalLastName', MINE_KEY = 'proposalMineFilter';
+function lsGet(k){ try{ return localStorage.getItem(k) || ''; }catch(e){ return ''; } }
+function lsSet(k, v){ try{ v ? localStorage.setItem(k, v) : localStorage.removeItem(k); }catch(e){} }
 function showAlert(message){
   return new Promise(resolve=>{
     const modal = document.getElementById('confirmModal');
@@ -1502,6 +1550,7 @@ function renderFinalDoc(){
 
 document.getElementById('in_name').addEventListener('input', e=>{
   data.name = e.target.value; updateCta(); scheduleAutosave();
+  if(AMBASSADOR_ROSTER.includes(data.name.trim())) lsSet(LAST_NAME_KEY, data.name.trim());
   renderNameSuggestions();
 });
 document.getElementById('in_name').addEventListener('focus', ()=>{
@@ -1531,6 +1580,7 @@ function renderNameSuggestions(){
     item.addEventListener('click', ()=>{
       inputEl.value = item.dataset.name;
       data.name = item.dataset.name;
+      lsSet(LAST_NAME_KEY, data.name);
       suggestEl.classList.remove('open');
       updateCta(); scheduleAutosave();
     });
@@ -1781,7 +1831,13 @@ async function refreshOverview(){
   }catch(e){ listEl.innerHTML = ''; }
 }
 
-function showView(viewId){
+async function showView(viewId){
+  const cur = ['meeting','personal'].find(k => { const v = document.getElementById(k + 'View'); return v && v.style.display !== 'none'; });
+  if(cur && cur !== viewId && ((cur === 'meeting' && mtDirty) || (cur === 'personal' && pcDirty))){
+    const ok = await showConfirm('저장하지 않은 입력이 있어요. 저장하지 않고 이동할까요?');
+    if(!ok) return;
+    if(cur === 'meeting') mtDirty = false; else pcDirty = false;
+  }
   const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView'), personal: document.getElementById('personalView'), absent: document.getElementById('absentView'), event: document.getElementById('eventView'), equip: document.getElementById('equipView'), score: document.getElementById('scoreView') };
   Object.keys(views).forEach(k=>{
     views[k].style.display = (k===viewId) ? (k==='form' ? 'flex' : 'block') : 'none';
@@ -1852,13 +1908,16 @@ function renderStatusListView(items){
     el.innerHTML = overviewHtml + '<p style="font-size:12.5px;color:var(--ink-faint);">아직 제출된 기획서가 없어요.</p>';
     return;
   }
-  const shown = stApply(items, 'status');
-  const cards = (shown.length ? '' : '<p style="font-size:12.5px;color:var(--ink-faint);">해당 상태의 기획서가 없어요.</p>') + shown.map(({key, rec})=>{
+  let mine = lsGet(MINE_KEY); if(mine && !AMBASSADOR_ROSTER.includes(mine)) mine = '';
+  const involves = (rec, n) => [rec.name, rec.lead, rec.member, rec.filming, rec.editing, rec.extra].some(v => parseNames(v || '').includes(n));
+  const shown = stApply(items, 'status').filter(i => !mine || involves(i.rec, mine));
+  const mineBar = `<div class="mine-bar"><span>👤 내 기획서만</span><select id="stMine"><option value="">전체 보기</option>${AMBASSADOR_ROSTER.map(n => `<option value="${n}" ${n===mine?'selected':''}>${n}</option>`).join('')}</select></div>`;
+  const cards = (shown.length ? '' : '<p style="font-size:12.5px;color:var(--ink-faint);">해당 조건의 기획서가 없어요.</p>') + shown.map(({key, rec})=>{
     const catLabel = (CATEGORIES.find(c=>c.id===rec.category)||{}).title || '-';
     return `
       <div class="sub-card" data-open="${key}" style="cursor:pointer;">
         <div class="sub-card-top">
-          <span class="status-pill ${rec.status}">${STATUS_LABELS[rec.status]||rec.status}</span>
+          <span><span class="status-pill ${rec.status}">${STATUS_LABELS[rec.status]||rec.status}</span>${ddayBadge(rec)}</span>
           <span style="font-size:11px; color:var(--ink-faint);">${fmtDateTime(rec.submittedAt)}</span>
         </div>
         <p class="sub-title">${(rec.title||'(제목 없음)')}</p>
@@ -1866,8 +1925,9 @@ function renderStatusListView(items){
       </div>
     `;
   }).join('');
-  el.innerHTML = overviewHtml + stFilterBar(items, 'status') + cards;
+  el.innerHTML = overviewHtml + mineBar + stFilterBar(items, 'status') + `<div class="sub-grid">${cards}</div>`;
   stBindFilter(el, 'status', ()=>renderStatusListView(items));
+  document.getElementById('stMine').addEventListener('change', e=>{ lsSet(MINE_KEY, e.target.value); renderStatusListView(items); });
   el.querySelectorAll('[data-open]').forEach(card=>{
     card.addEventListener('click', async ()=>{
       const key = card.dataset.open;
@@ -1879,6 +1939,17 @@ function renderStatusListView(items){
       }catch(e){ showAlert('상세 내용을 불러오지 못했어요: ' + (e && e.message ? e.message : '오류')); }
     });
   });
+}
+
+// 영상 제출일까지 남은 날 (제작 중인 기획서만)
+function ddayBadge(rec){
+  if(!rec.submitdate || !['pending','approved','filming','editing'].includes(rec.status)) return '';
+  const due = new Date(rec.submitdate + 'T00:00:00'), now = new Date(); now.setHours(0,0,0,0);
+  const d = Math.round((due - now) / 86400000);
+  if(isNaN(d)) return '';
+  if(d < 0) return `<span class="dday late">${-d}일 지연</span>`;
+  if(d === 0) return `<span class="dday today">오늘 마감</span>`;
+  return `<span class="dday ${d <= 3 ? 'near' : 'far'}">D-${d}</span>`;
 }
 
 function fmtDateTime(iso){
@@ -1966,9 +2037,14 @@ function renderStatusDetail(key, rec){
     ${stageSection}
   `;
   renderEditPlanRows();
+  editDirty = false;
+  const editWrap = document.getElementById('editFormWrap');
+  ['input','change'].forEach(ev => editWrap.addEventListener(ev, ()=>{ editDirty = true; }));
+  editWrap.addEventListener('click', e=>{ if(e.target.closest('#e_addPlan, .plan-row button')) editDirty = true; });
+  const leaveEdit = async () => { if(editDirty && !(await showConfirm('수정한 내용을 저장하지 않았어요. 그래도 나갈까요?'))) return false; editDirty = false; return true; };
   const backBtn = document.getElementById('statusToList');
-  if(detailFromAdmin){ backBtn.textContent = '← 기획서 관리로'; backBtn.addEventListener('click', ()=>{ detailFromAdmin = false; openTab('admin'); }); }
-  else backBtn.addEventListener('click', loadStatusList);
+  if(detailFromAdmin){ backBtn.textContent = '← 기획서 관리로'; backBtn.addEventListener('click', async ()=>{ if(!(await leaveEdit())) return; detailFromAdmin = false; openTab('admin'); }); }
+  else backBtn.addEventListener('click', async ()=>{ if(await leaveEdit()) loadStatusList(); });
   eFillTimes(key);
   ['lead','filming','extra','editing'].forEach(k=>{
     document.getElementById('e_'+k).addEventListener('input', e=>{ editingRecord[k]=e.target.value; recomputeEditTeam(); });
@@ -2147,7 +2223,10 @@ async function saveEditedSubmission(){
         body: JSON.stringify({ action:'planTime', planId: editingKey, from: tf, to: tt }) });
     }
     editingRecord.updatedAt = updatedAt;
+    editDirty = false;
     renderStatusDetail(editingKey, editingRecord);
+    showToast('✅ 수정 내용을 저장했어요');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }catch(e){
     showAlert('수정 저장에 실패했어요: ' + (e && e.message ? e.message : '알 수 없는 오류'));
     btn.disabled = false; btn.textContent = '수정 저장';
@@ -2377,6 +2456,7 @@ document.getElementById('btnReset').addEventListener('click', async ()=>{
 });
 
 function syncFormFromData(){
+  if(!data.name){ const last = lsGet(LAST_NAME_KEY); if(AMBASSADOR_ROSTER.includes(last)) data.name = last; }
   document.getElementById('in_name').value = data.name;
   detailIds.forEach(k=>{ document.getElementById('f_'+k).value = data[k]||''; });
   syncTitleFields(); syncFilmTimes();
@@ -2510,6 +2590,7 @@ const MEETING_START = '2026-08-31';   // 이 주부터 매주 월요일마다 �
 let mtState = {};
 let mtMeetings = {};
 let mtCancelled = false;
+let mtOnlyMissing = false, mtLoadedDate = '';
 
 // 출결·점수 목록 캐시 (60초). 저장(POST)하면 바로 비워서 항상 최신 기록을 다시 받아요.
 const attendCache = new Map();
@@ -2596,13 +2677,18 @@ function mtRenderList(){
   document.getElementById('mtSave').style.display = mtCancelled ? 'none' : 'block';
   document.getElementById('mtAllPresent').style.display = mtCancelled ? 'none' : 'inline-block';
   if(mtCancelled){ el.innerHTML = '<div class="mt-cancelled">이 날짜는 휴회로 처리됐어요.<br>출결 점수에 반영되지 않아요.</div>'; return; }
-  el.innerHTML = MEETING_ROSTER.map(n => `
+  const missN = MEETING_ROSTER.filter(n => !mtState[n]).length;
+  const list = mtOnlyMissing ? MEETING_ROSTER.filter(n => !mtState[n]) : MEETING_ROSTER;
+  el.innerHTML = `<div class="miss-bar"><button class="miss-btn ${mtOnlyMissing?'on':''}" id="mtMissBtn">${mtOnlyMissing ? '전체 보기' : '미입력만 보기 (' + missN + ')'}</button></div>`
+    + (mtOnlyMissing && !list.length ? '<div class="miss-empty">모두 입력했어요 👍</div>' : '') + list.map(n => `
     <div class="mt-row">
       <span class="mt-name">${nb(n)}${n}</span>
       <div class="mt-btns">${MT_STATUSES.map(st => `<button data-name="${n}" data-st="${st}" class="${mtState[n]===st?'on':''}">${st}</button>`).join('')}</div>
     </div>`).join('');
+  document.getElementById('mtMissBtn').addEventListener('click', ()=>{ mtOnlyMissing = !mtOnlyMissing; mtRenderList(); });
   el.querySelectorAll('.mt-btns button').forEach(b => b.addEventListener('click', ()=>{
     mtState[b.dataset.name] = (mtState[b.dataset.name] === b.dataset.st) ? '' : b.dataset.st;
+    mtDirty = true;
     mtRenderList(); mtUpdateInfo();
   }));
 }
@@ -2624,6 +2710,10 @@ function mtRenderSummary(summary, count){
 
 async function mtLoad(){
   const date = document.getElementById('mtDate').value;
+  if(mtDirty && mtLoadedDate && date !== mtLoadedDate){
+    if(!(await showConfirm('저장하지 않은 출결이 있어요. 저장하지 않고 다른 날짜로 이동할까요?'))){ document.getElementById('mtDate').value = mtLoadedDate; mtRenderWeeks(); return; }
+  }
+  mtDirty = false; mtLoadedDate = date;
   document.getElementById('mtInfo').textContent = '불러오는 중...';
   document.getElementById('mtStatus').textContent = '';
   mtState = {};
@@ -2658,7 +2748,9 @@ async function mtSave(){
       body: JSON.stringify({ action:'meetingSave', date, records: entered.map(n => ({ name:n, status:mtState[n] })) })
     });
     await new Promise(r => setTimeout(r, 1200));
+    mtDirty = false;
     await mtLoad();
+    showToast('✅ 출결을 저장했어요');
     document.getElementById('mtStatus').textContent = date + ' 출결을 저장했어요.' + (missing.length ? ` (미입력 ${missing.length}명: ${missing.join(', ')})` : '');
   }catch(e){
     showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류'));
@@ -2681,7 +2773,7 @@ document.getElementById('mtCancel').addEventListener('click', async ()=>{
   }catch(e){ showAlert('처리에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
   btn.disabled = false;
 });
-document.getElementById('mtAllPresent').addEventListener('click', ()=>{ MEETING_ROSTER.forEach(n => { if(!mtState[n]) mtState[n] = '출석'; }); mtRenderList(); mtUpdateInfo(); });
+document.getElementById('mtAllPresent').addEventListener('click', ()=>{ MEETING_ROSTER.forEach(n => { if(!mtState[n]) mtState[n] = '출석'; }); mtDirty = true; mtRenderList(); mtUpdateInfo(); });
 document.getElementById('mtSave').addEventListener('click', mtSave);
 
 /* ───────── 개인 콘텐츠 제출 ───────── */
@@ -2691,7 +2783,8 @@ let pcWeek = '';
 let pcState = {};   // name -> { plan, content }
 let pcWeeksDone = {};
 const PC_DEFAULT = ['강다솔','김세영','김현아','김현우','오화종','이다희','이서연','이예은','이은채','임은지','장서영','한가온'];
-let pcExtra = new Set();   // 이번 주에 추가로 넣은 인원
+let pcExtra = new Set();
+let pcOnlyMissing = false, pcLoadedWeek = '';   // 이번 주에 추가로 넣은 인원
 function pcNames(){ return MEETING_ROSTER.filter(n => PC_DEFAULT.includes(n) || pcExtra.has(n)); }
 function pcRenderAdd(){
   const el = document.getElementById('pcAdd');
@@ -2727,7 +2820,11 @@ function pcRenderWeeks(){
 
 function pcRenderList(){
   const el = document.getElementById('pcList');
-  el.innerHTML = pcNames().map(n => {
+  const isMiss = n => !(pcState[n] && pcState[n].plan && pcState[n].content);
+  const missN = pcNames().filter(isMiss).length;
+  const list = pcOnlyMissing ? pcNames().filter(isMiss) : pcNames();
+  el.innerHTML = `<div class="miss-bar"><button class="miss-btn ${pcOnlyMissing?'on':''}" id="pcMissBtn">${pcOnlyMissing ? '전체 보기' : '미입력만 보기 (' + missN + ')'}</button></div>`
+    + (pcOnlyMissing && !list.length ? '<div class="miss-empty">모두 입력했어요 👍</div>' : '') + list.map(n => {
     const s = pcState[n] || {};
     const pts = pcPts(s);
     const seg = key => `<div class="seg">${PC_OPTS.map(v => `<button data-n="${n}" data-k="${key}" data-v="${v}" class="${s[key]===v?'on':''}">${v}</button>`).join('')}</div>`;
@@ -2739,12 +2836,14 @@ function pcRenderList(){
       </div>
     </div>`;
   }).join('');
+  document.getElementById('pcMissBtn').addEventListener('click', ()=>{ pcOnlyMissing = !pcOnlyMissing; pcRenderList(); });
   el.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', ()=>{
     const s = pcState[b.dataset.n] || (pcState[b.dataset.n] = {});
     s[b.dataset.k] = (s[b.dataset.k] === b.dataset.v) ? '' : b.dataset.v;
+    pcDirty = true;
     pcRenderList(); pcUpdateInfo();
   }));
-  el.querySelectorAll('.pc-x').forEach(b => b.addEventListener('click', ()=>{ pcExtra.delete(b.dataset.x); delete pcState[b.dataset.x]; pcRenderList(); pcUpdateInfo(); }));
+  el.querySelectorAll('.pc-x').forEach(b => b.addEventListener('click', ()=>{ pcExtra.delete(b.dataset.x); delete pcState[b.dataset.x]; pcDirty = true; pcRenderList(); pcUpdateInfo(); }));
   pcRenderAdd();
 }
 
@@ -2768,6 +2867,10 @@ function pcRenderSummary(summary, count){
 
 async function pcLoad(){
   if(!pcWeek) pcWeek = pcCycleStart(mtYmd(new Date()));
+  if(pcDirty && pcLoadedWeek && pcWeek !== pcLoadedWeek){
+    if(!(await showConfirm('저장하지 않은 제출 현황이 있어요. 저장하지 않고 다른 주로 이동할까요?'))){ pcWeek = pcLoadedWeek; pcRenderWeeks(); return; }
+  }
+  pcDirty = false; pcLoadedWeek = pcWeek;
   document.getElementById('pcInfo').textContent = '불러오는 중...';
   document.getElementById('pcStatus').textContent = '';
   pcState = {}; pcExtra = new Set();
@@ -2799,12 +2902,13 @@ async function pcSave(){
     });
     await new Promise(r => setTimeout(r, 1200));
     await pcLoad();
+    showToast('✅ 제출 현황을 저장했어요');
     document.getElementById('pcStatus').textContent = mtFmt(pcWeek) + ' 제출 현황을 저장했어요.' + (missing.length ? ` (기획서 미입력 ${missing.length}명: ${missing.join(', ')})` : '');
   }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
   btn.disabled = false; btn.textContent = '저장';
 }
 
-function pcFillAll(key){ pcNames().forEach(n => { const s = pcState[n] || (pcState[n] = {}); if(!s[key]) s[key] = '제출'; }); pcRenderList(); pcUpdateInfo(); }
+function pcFillAll(key){ pcNames().forEach(n => { const s = pcState[n] || (pcState[n] = {}); if(!s[key]) s[key] = '제출'; }); pcDirty = true; pcRenderList(); pcUpdateInfo(); }
 
 document.getElementById('pcRule').textContent = `감점: 기획서 지각 ${PC_POINTS.plan['지각']} / 미제출 ${PC_POINTS.plan['미제출']} · 콘텐츠 지각 ${PC_POINTS.content['지각']} / 미제출 ${PC_POINTS.content['미제출']}`;
 document.getElementById('pcAllPlan').addEventListener('click', ()=>pcFillAll('plan'));

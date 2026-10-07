@@ -2613,7 +2613,9 @@ function attendJsonp(params){
 }
 (function(){
   const _fetch = window.fetch.bind(window);
-  window.fetch = (u, o) => { if(String(u) === ATTEND_URL){ attendCache.clear(); attCacheClear(); } return _fetch(u, o); };
+  // 기획서 제출·승인(APPS_SCRIPT_URL)도 장비 대여를 바꾸니 같이 비워요. 저장이 끝난 뒤에도 한 번 더 비워 그 사이에 받은 옛 목록이 남지 않게 해요.
+  const bust = () => { attendCache.clear(); attCacheClear(); };
+  window.fetch = (u, o) => { const s = String(u); if(s === ATTEND_URL || s === APPS_SCRIPT_URL){ bust(); return _fetch(u, o).finally(bust); } return _fetch(u, o); };
 })();
 function attendPrefetch(){
   const today = mtYmd(new Date());
@@ -3128,6 +3130,7 @@ function eqBindRows(el){ el.querySelectorAll('[data-eq]').forEach(b => b.addEven
 async function eqLoad(){
   document.getElementById('eqInfo').textContent = '불러오는 중...';
   try{
+    attendCache.delete(JSON.stringify({ action:'equipList' }));   // 일정·장비 화면은 열 때마다 최신 대여 목록으로
     const [res, rows] = await Promise.all([attendJsonp({ action:'equipList' }), sheetGetAll().catch(()=>[])]);
     if(res && res.error) throw new Error(res.error);
     eqItems = res.items || [];

@@ -2597,18 +2597,23 @@ let mtOnlyMissing = false, mtLoadedDate = '';
 
 // 출결·점수 목록 캐시 (60초). 저장(POST)하면 바로 비워서 항상 최신 기록을 다시 받아요.
 const attendCache = new Map();
+// 브라우저에 지난번 결과를 저장해 두고, 화면을 열면 먼저 보여준 뒤 뒤에서 최신 기록으로 바꿔요
+const ATT_LS = 'attCache_v1:';
+function attCacheGet(params){ try{ const c = JSON.parse(localStorage.getItem(ATT_LS + JSON.stringify(params)) || 'null'); return c && Date.now() - c.t < 14 * 864e5 ? c.r : null; }catch(e){ return null; } }
+function attCacheSet(params, r){ try{ localStorage.setItem(ATT_LS + JSON.stringify(params), JSON.stringify({ t: Date.now(), r })); }catch(e){} }
+function attCacheClear(){ try{ Object.keys(localStorage).forEach(k => { if(k.indexOf(ATT_LS) === 0) localStorage.removeItem(k); }); }catch(e){} }
 function attendJsonp(params){
   const key = JSON.stringify(params);
   const hit = attendCache.get(key);
   if(hit && Date.now() - hit.t < 60000) return hit.p;
   const p = attendJsonpRaw(params);
   attendCache.set(key, { t: Date.now(), p });
-  p.catch(()=>attendCache.delete(key));
+  p.then(r => { if(r && !r.error) attCacheSet(params, r); }).catch(()=>attendCache.delete(key));
   return p;
 }
 (function(){
   const _fetch = window.fetch.bind(window);
-  window.fetch = (u, o) => { if(String(u) === ATTEND_URL) attendCache.clear(); return _fetch(u, o); };
+  window.fetch = (u, o) => { if(String(u) === ATTEND_URL){ attendCache.clear(); attCacheClear(); } return _fetch(u, o); };
 })();
 function attendPrefetch(){
   const today = mtYmd(new Date());
@@ -2718,20 +2723,26 @@ async function mtLoad(){
     if(!(await showConfirm('저장하지 않은 출결이 있어요. 저장하지 않고 다른 날짜로 이동할까요?'))){ document.getElementById('mtDate').value = mtLoadedDate; mtRenderWeeks(); return; }
   }
   mtDirty = false; mtLoadedDate = date;
-  document.getElementById('mtInfo').textContent = '불러오는 중...';
   document.getElementById('mtStatus').textContent = '';
   mtState = {};
-  try{
-    const res = await attendJsonp({ action:'meetingList', date });
-    if(res && res.error) throw new Error(res.error);
-    (res.records || []).forEach(r => { mtState[r.name] = r.status; });
+  const params = { action:'meetingList', date };
+  const apply = (res, fresh) => {
+    if(mtLoadedDate !== date) return;          // 그 사이 다른 날짜로 이동했으면 무시
+    if(!mtDirty){ mtState = {}; (res.records || []).forEach(r => { mtState[r.name] = r.status; }); mtCancelled = !!res.cancelled; }
     mtMeetings = res.meetings || {};
-    mtCancelled = !!res.cancelled;
     mtRenderWeeks(); mtRenderList(); mtUpdateInfo();
     if(mtCancelled) document.getElementById('mtInfo').textContent = '휴회';
     mtRenderSummary(res.summary, res.meetingCount);
-    if((res.records||[]).length) document.getElementById('mtStatus').textContent = '이 날짜에 저장된 기록을 불러왔어요.';
+    document.getElementById('mtStatus').textContent = !fresh ? '최신 기록 확인 중…' : ((res.records||[]).length ? '이 날짜에 저장된 기록을 불러왔어요.' : '');
+  };
+  const cached = attCacheGet(params);
+  if(cached) apply(cached, false); else document.getElementById('mtInfo').textContent = '불러오는 중...';
+  try{
+    const res = await attendJsonp(params);
+    if(res && res.error) throw new Error(res.error);
+    apply(res, true);
   }catch(e){
+    if(cached){ document.getElementById('mtStatus').textContent = '최신 기록을 불러오지 못해 저장된 기록을 보여주고 있어요.'; return; }
     mtCancelled = false; mtRenderWeeks(); mtRenderList();
     document.getElementById('mtInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류');
   }
@@ -2875,18 +2886,25 @@ async function pcLoad(){
     if(!(await showConfirm('저장하지 않은 제출 현황이 있어요. 저장하지 않고 다른 주로 이동할까요?'))){ pcWeek = pcLoadedWeek; pcRenderWeeks(); return; }
   }
   pcDirty = false; pcLoadedWeek = pcWeek;
-  document.getElementById('pcInfo').textContent = '불러오는 중...';
   document.getElementById('pcStatus').textContent = '';
   pcState = {}; pcExtra = new Set();
-  try{
-    const res = await attendJsonp({ action:'personalList', week: pcWeek });
-    if(res && res.error) throw new Error(res.error);
-    (res.records || []).forEach(r => { pcState[r.name] = { plan:r.plan, content:r.content }; if(!PC_DEFAULT.includes(r.name)) pcExtra.add(r.name); });
+  const week = pcWeek, params = { action:'personalList', week };
+  const apply = (res, fresh) => {
+    if(pcLoadedWeek !== week) return;
+    if(!pcDirty){ pcState = {}; pcExtra = new Set(); (res.records || []).forEach(r => { pcState[r.name] = { plan:r.plan, content:r.content }; if(!PC_DEFAULT.includes(r.name)) pcExtra.add(r.name); }); }
     pcWeeksDone = res.weeks || {};
     pcRenderWeeks(); pcRenderList(); pcUpdateInfo();
     pcRenderSummary(res.summary, res.weekCount);
-    if((res.records||[]).length) document.getElementById('pcStatus').textContent = '이 주에 저장된 기록을 불러왔어요.';
+    document.getElementById('pcStatus').textContent = !fresh ? '최신 기록 확인 중…' : ((res.records||[]).length ? '이 주에 저장된 기록을 불러왔어요.' : '');
+  };
+  const cached = attCacheGet(params);
+  if(cached) apply(cached, false); else document.getElementById('pcInfo').textContent = '불러오는 중...';
+  try{
+    const res = await attendJsonp(params);
+    if(res && res.error) throw new Error(res.error);
+    apply(res, true);
   }catch(e){
+    if(cached){ document.getElementById('pcStatus').textContent = '최신 기록을 불러오지 못해 저장된 기록을 보여주고 있어요.'; return; }
     pcRenderWeeks(); pcRenderList();
     document.getElementById('pcInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류');
   }

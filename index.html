@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>JJ 스튜디오</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2048%2048%22%3E%3Crect%20x%3D%224%22%20y%3D%2217%22%20width%3D%2240%22%20height%3D%2227%22%20rx%3D%226%22%20fill%3D%22%233D5FE0%22%2F%3E%3Cg%20transform%3D%22rotate%28-12%206%2015%29%22%3E%3Crect%20x%3D%224%22%20y%3D%228%22%20width%3D%2240%22%20height%3D%229%22%20rx%3D%223%22%20fill%3D%22%23FFC629%22%2F%3E%3Cpath%20d%3D%22M12%208%20L16%208%20L12%2017%20L8%2017%20Z%20M22%208%20L26%208%20L22%2017%20L18%2017%20Z%20M32%208%20L36%208%20L32%2017%20L28%2017%20Z%22%20fill%3D%22%2319181D%22%2F%3E%3C%2Fg%3E%3Ctext%20x%3D%2224%22%20y%3D%2238%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22bold%22%20font-size%3D%2216%22%20fill%3D%22%23fff%22%20letter-spacing%3D%22-1%22%3EJJ%3C%2Ftext%3E%3C%2Fsvg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -412,7 +413,7 @@
   #equipView.ro .mt-tabs, #equipView.ro #eqNew, #equipView.ro #eqForm, #equipView.ro [data-eq], #equipView.ro [data-bulk]{display:none !important;}
   .mt-tabs{overflow-x:auto; scrollbar-width:none;} .mt-tabs::-webkit-scrollbar{display:none;}
   .mt-tabs button{flex:none; padding:7px 10px; font-size:13px;}
-  @media (max-width:400px){ #btnHome{max-width:80px; white-space:normal; line-height:1.25;} .admin-topbar button{padding:6px 8px; font-size:11.5px;} .mt-tabs button{padding:7px 8px; font-size:12.5px;} }
+  @media (max-width:400px){ #btnHome{line-height:1.25;} .admin-topbar button{padding:6px 8px; font-size:11.5px;} .mt-tabs button{padding:7px 8px; font-size:12.5px;} }
 
   /* 토스트 · 미입력만 보기 · D-day · 내 기획서 필터 */
   .toast{position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px); background:var(--ink); color:#fff; font-size:13.5px; font-weight:700; padding:12px 18px; border-radius:24px; box-shadow:0 6px 20px rgba(0,0,0,.18); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:9999; max-width:calc(100vw - 32px); text-align:center;}
@@ -485,7 +486,7 @@
 <body>
 
 <div class="admin-topbar">
-  <button id="btnHome" style="background:none; border:none; color:#fff; font-size:13px; font-weight:700; padding:0; cursor:pointer; white-space:nowrap;">JJ 스튜디오</button>
+  <button id="btnHome" style="background:none; border:none; color:#fff; font-size:13px; font-weight:700; padding:0; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;"><svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true" style="flex:none;"><rect x="4" y="17" width="40" height="27" rx="6" fill="#3D5FE0"/><g transform="rotate(-12 6 15)"><rect x="4" y="8" width="40" height="9" rx="3" fill="#FFC629"/><path d="M12 8 L16 8 L12 17 L8 17 Z M22 8 L26 8 L22 17 L18 17 Z M32 8 L36 8 L32 17 L28 17 Z" fill="#19181D"/></g><text x="24" y="38" text-anchor="middle" font-family="Noto Sans KR, sans-serif" font-weight="900" font-size="16" fill="#fff" letter-spacing="-1">JJ</text></svg>JJ 스튜디오</button>
   <div style="display:flex; gap:8px;">
     <button id="btnEquipPublic">일정·장비</button>
     <button id="btnStatusToggle">기획서 현황</button>

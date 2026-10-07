@@ -113,6 +113,12 @@
   .field-sm input:focus, .field-sm textarea:focus{border-color:var(--purple-line);}
   .field-sm textarea{resize:vertical; min-height:56px; line-height:1.55;}
   .req-hint{font-size:11.5px; color:var(--ink-faint); margin:2px 0 0;}
+  .one-line{background:#F7F9FF; border:1.5px solid var(--purple-soft); border-radius:12px; padding:12px; margin-bottom:14px;}
+  .one-line input{background:#fff;}
+  .one-line.warn input{border-color:#f97316;}
+  .title-guide{border:1px dashed var(--line); border-radius:10px; padding:10px 12px; margin-bottom:12px; font-size:12px; color:var(--ink-soft); line-height:1.6;}
+  .title-guide p{margin:0;}
+  .title-guide .title-guide-head{font-weight:700; color:var(--ink); margin-bottom:2px;}
 
   .plan-row{border:1.5px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; position:relative;}
   .plan-row .plan-num{font-size:12px; font-weight:700; color:var(--purple); margin-bottom:6px;}
@@ -531,12 +537,28 @@
     <div class="step-panel" id="panel3">
       <p class="step-label">콘텐츠 기획서</p>
       <h2 class="heading">기본 정보를<br>입력해주세요</h2>
+      <div class="field-sm one-line">
+        <label style="font-size:13px; font-weight:700; color:var(--ink);">이 콘텐츠를 한 문장으로 말하면?</label>
+        <input type="text" id="f_summary" maxlength="30" placeholder="예: 인공지능학과에 가면 해외 탐방을 갈 수 있다" autocomplete="off">
+        <div style="display:flex; justify-content:space-between; gap:8px; margin-top:4px;">
+          <p class="req-hint" id="f_summaryHint" style="margin:0;">콘텐츠 하나엔 메시지 하나. 두 가지 이상이면 기획을 나눠주세요.</p>
+          <span class="req-hint" id="f_summaryCount" style="margin:0; white-space:nowrap;">0 / 30</span>
+        </div>
+        <p class="req-hint" style="margin-top:6px;">✅ 인공지능학과에 가면 해외 탐방을 갈 수 있다<br>❌ 인공지능학과 소개 + 커리큘럼 + 해외 탐방 + 취업</p>
+      </div>
+      <div class="title-guide">
+        <p class="title-guide-head">제목 작성 가이드</p>
+        <p>· <b>시리즈명</b>은 목록에서 골라주세요. 글자가 하나만 달라도 게시물과 자동으로 연결되지 않아요.</p>
+        <p>· <b>회차</b>는 ‘○○편’ 한 단어로 짧게 써주세요. 예: 양궁부편</p>
+        <p>· 아래 <b>🎬 줄</b>을 캡션 크레딧 첫 줄에 그대로 붙여주세요.</p>
+        <p>· 게시물 제목(썸네일·캡션 첫 줄)은 자유롭게 지어도 돼요. 연결은 🎬 줄로만 해요.</p>
+      </div>
       <div class="field-sm"><label id="f_seriesLabel">시리즈명</label><input type="text" id="f_series" list="seriesList" placeholder="예: 체험왕" autocomplete="off"><datalist id="seriesList"></datalist></div>
       <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-soft); margin:-2px 0 10px;"><input type="checkbox" id="f_oneoff"> 1회성 콘텐츠 (회차 없음)</label>
-      <div class="field-sm" id="f_episodeWrap"><label>회차</label><input type="text" id="f_episode" placeholder="예: 씨름부편"></div>
+      <p class="req-hint" id="f_seriesWarn" style="margin:-4px 0 10px; color:#c2410c; display:none;">목록에 없는 새 시리즈예요. 기존 시리즈라면 목록에서 골라주세요.</p>
+      <div class="field-sm" id="f_episodeWrap"><label>회차</label><input type="text" id="f_episode" placeholder="예: 양궁부편"></div>
       <input type="hidden" id="f_title">
       <p class="req-hint" id="f_titlePreview" style="margin:-4px 0 12px;"></p>
-      <div class="field-sm"><label>한줄요약</label><input type="text" id="f_summary"></div>
       <div class="field-sm"><label>참고 URL</label><input type="url" id="f_url" placeholder="https://..."></div>
       <div class="field-sm">
         <label>요청사항</label>
@@ -624,7 +646,7 @@
           <div><span style="color:var(--ink-soft);">참여 인원</span><br><b id="fd_participants">-</b></div>
         </div>
 
-        <p style="font-size:13px; color:var(--ink); margin:0 0 4px;" id="fd_summary"></p>
+        <p style="font-size:14px; font-weight:700; color:var(--ink); margin:0 0 4px;" id="fd_summary"></p>
         <p style="font-size:12px; color:var(--purple-dark); margin:0 0 18px; word-break:break-all;" id="fd_url"></p>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:12.5px; margin-bottom:14px; padding-top:14px; border-top:1px solid var(--line);">
@@ -1511,7 +1533,7 @@ function buildPlanLines(d){
     `작성자: ${d.name||d.lead}`, `콘텐츠 유형: ${catLabel}`, '',
     '[제작자 정보]', `팀장: ${d.lead}`, `팀원: ${d.member}`, `촬영: ${d.filming}`,
     `추가: ${d.extra}`, `편집: ${d.editing}`, `참여 인원: ${d.participants}`, '',
-    '[기본 정보]', `제목: ${d.title}`, `한줄요약: ${d.summary}`, `참고 URL: ${d.url}`, `요청사항: ${d.request}`, '',
+    '[기본 정보]', `제목: ${d.title}`, `한 문장: ${d.summary}`, `참고 URL: ${d.url}`, `요청사항: ${d.request}`, '',
     '[제작 일정 및 장비]', `촬영일: ${d.filmdate}`, `제출일: ${d.submitdate}`, `장비: ${d.equipment}`, '',
     '[기획 내용]', ...d.plan.map((r,i)=>`#${i+1}. ${r.content}${r.location? ' / 장소: '+r.location : ''}`)
   ];
@@ -1527,7 +1549,7 @@ function renderFinalDoc(){
   set('fd_title', data.title); set('fd_lead', data.lead); set('fd_member', data.member);
   set('fd_filming', data.filming); set('fd_editing', data.editing); set('fd_extra', data.extra);
   set('fd_participants', data.participants ? data.participants+'명' : '');
-  document.getElementById('fd_summary').textContent = data.summary || '';
+  document.getElementById('fd_summary').textContent = data.summary ? '💬 ' + data.summary : '';
   document.getElementById('fd_url').textContent = data.url || '';
   set('fd_filmdate', data.filmdate); set('fd_submitdate', data.submitdate);
   document.getElementById('fd_equipment').innerHTML = equipmentTagsHTML(data.equipment);
@@ -1608,7 +1630,8 @@ function syncTitleUi(){
   document.getElementById('f_episodeWrap').style.display = oneoff ? 'none' : '';
   document.getElementById('f_seriesLabel').textContent = oneoff ? '제목' : '시리즈명';
   document.getElementById('f_series').placeholder = oneoff ? '예: 전주대 벚꽃 명소' : '예: 체험왕';
-  document.getElementById('f_titlePreview').textContent = data.title ? '캡션 크레딧: 🎬 ' + data.title : '';
+  document.getElementById('f_titlePreview').textContent = data.title ? '캡션 크레딧 첫 줄 → 🎬 ' + data.title : '';
+  syncSeriesWarn(); syncOneLineUi();
 }
 function syncTitleFields(){
   const tp = titleParts(data.title);
@@ -1637,7 +1660,26 @@ function fillSeriesList(rows){
 document.getElementById('f_oneoff').addEventListener('change', composeTitle);
 
 const detailIds = ['lead','title','summary','url','request'];
+const ONE_LINE_MAX = 30;
+function oneLineMulti(v){ return /[+&]|,(?!\d)|그리고|\s및\s/.test(v); }
+function syncOneLineUi(){
+  const el = document.getElementById('f_summary'); if(!el) return;
+  const v = el.value || '';
+  document.getElementById('f_summaryCount').textContent = v.length + ' / ' + ONE_LINE_MAX;
+  const multi = oneLineMulti(v);
+  el.closest('.one-line').classList.toggle('warn', multi);
+  const hint = document.getElementById('f_summaryHint');
+  hint.textContent = multi ? '메시지가 두 개 이상인 것 같아요. 하나만 남겨볼까요?' : '콘텐츠 하나엔 메시지 하나. 두 가지 이상이면 기획을 나눠주세요.';
+  hint.style.color = multi ? '#c2410c' : '';
+}
+function syncSeriesWarn(){
+  const w = document.getElementById('f_seriesWarn'); if(!w) return;
+  const v = document.getElementById('f_series').value.trim();
+  const known = [...document.querySelectorAll('#seriesList option')].map(o=>o.value);
+  w.style.display = (!data.oneoff && v && !known.includes(v)) ? '' : 'none';
+}
 function bindDetailInputs(){
+  document.getElementById('f_summary').addEventListener('input', syncOneLineUi);
   detailIds.forEach(k=>{
     const el = document.getElementById('f_'+k);
     el.addEventListener('input', ()=>{
@@ -1818,7 +1860,7 @@ async function refreshOverview(){
   if(!listEl.innerHTML.trim()) listEl.innerHTML = '<div class="dl-empty">일정을 불러오는 중이에요…</div>';
   try{
     const rows = await sheetGetAll();
-    try{ fillSeriesList(rows); }catch(e){}
+    try{ fillSeriesList(rows); syncSeriesWarn(); }catch(e){}
     const items = [];
     (rows || []).forEach(r => {
       const st = r['상태'], title = r['제목'] || '(제목 없음)', lead = r['작성자(팀장)'] || '';
@@ -2025,7 +2067,7 @@ function renderStatusDetail(key, rec){
     </div>
     <p class="section-title">기본 정보</p>
     <div class="field-sm"><label>제목 <span style="color:var(--ink-faint);">(시리즈명 | 회차 · 1회성은 제목만)</span></label><input type="text" id="e_title" value="${(editingRecord.title||'').replace(/"/g,'&quot;')}"></div>
-    <div class="field-sm"><label>한줄요약</label><input type="text" id="e_summary" value="${(editingRecord.summary||'').replace(/"/g,'&quot;')}"></div>
+    <div class="field-sm"><label>한 문장 (30자 이내)</label><input type="text" id="e_summary" maxlength="30" value="${(editingRecord.summary||'').replace(/"/g,'&quot;')}"></div>
     <div class="field-sm"><label>참고 URL</label><input type="text" id="e_url" value="${(editingRecord.url||'').replace(/"/g,'&quot;')}"></div>
     <div class="field-sm"><label>요청사항</label><textarea id="e_request">${editingRecord.request||''}</textarea></div>
     <p class="section-title">장비</p>
@@ -2139,7 +2181,7 @@ function buildDocCardHTML(rec){
         <div><span style="color:var(--ink-soft);">출연</span><br><b>${esc(rec.extra)||'-'}</b></div>
         <div><span style="color:var(--ink-soft);">참여 인원</span><br><b>${rec.participants? rec.participants+'명':'-'}</b></div>
       </div>
-      <p style="font-size:13px; color:var(--ink); margin:0 0 4px;">${esc(rec.summary)}</p>
+      <p style="font-size:14px; font-weight:700; color:var(--ink); margin:0 0 4px;">${rec.summary ? '💬 ' + esc(rec.summary) : ''}</p>
       <p style="font-size:12px; color:var(--purple-dark); margin:0 0 18px; word-break:break-all;">${esc(rec.url)}</p>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:12.5px; margin-bottom:14px; padding-top:14px; border-top:1px solid var(--line);">
         <div><span style="color:var(--ink-soft);">촬영일</span><br><b>${rec.filmdate||'-'}</b></div>

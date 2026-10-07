@@ -869,7 +869,7 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
 function showConfirm(message){
@@ -1813,6 +1813,7 @@ function ovRenderDeadline(){
 async function refreshOverview(){
   const range = ovRenderDeadline();
   const listEl = document.getElementById('ov_list');
+  if(!listEl.innerHTML.trim()) listEl.innerHTML = '<div class="dl-empty">일정을 불러오는 중이에요…</div>';
   try{
     const rows = await sheetGetAll();
     try{ fillSeriesList(rows); }catch(e){}
@@ -2614,7 +2615,8 @@ function attendPrefetch(){
   pre.forEach(p => { if(!allowedTabs || allowedTabs.includes({meetingList:'meeting',personalList:'personal',eventList:'event',absentList:'absent',equipList:'equip'}[p.action])) attendJsonp(p).catch(()=>{}); });
 }
 // 앱을 열 때 시트의 기획서 상태도 촬영일 기준으로 맞춰둬요 (화면은 이미 자동 상태로 보여요)
-setTimeout(()=>{ try{ attendJsonpRaw({ action:'planAuto' }).then(r => { if(r && r.changed) planInvalidate(); }).catch(()=>{}); }catch(e){} }, 2000);
+// 바뀐 게 있어도 저장된 목록은 지우지 않고, 뒤에서 새 목록을 받아 화면만 갱신해요 (다음에 열 때도 바로 뜨게)
+setTimeout(()=>{ try{ attendJsonpRaw({ action:'planAuto' }).then(r => { if(r && r.changed){ planMemAt = 0; planRevalidate(JSON.stringify(planMem)); } }).catch(()=>{}); }catch(e){} }, 2000);
 function attendJsonpRaw(params){
   return new Promise((resolve, reject)=>{
     const cbName = 'mt_' + Date.now() + '_' + Math.floor(Math.random()*100000);

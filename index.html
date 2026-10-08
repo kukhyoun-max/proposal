@@ -705,7 +705,7 @@
     <button class="reset-link" id="btnAdminBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0; padding-bottom:0;">
-    <button class="qa-open" id="qaOpen">＋ 개별 촬영 간편 등록 <small>기획서 없이 제목·일정·참가자만</small></button>
+    <button class="qa-open" id="qaOpen">＋ 오리지널 콘텐츠 등록 <small>기획서 없이 제목·일정·참가자만 · 참여자 가점</small></button>
     <div class="qa-box" id="qaBox" style="display:none;">
       <div class="field-sm"><label>콘텐츠 제목</label><input type="text" id="qaTitle" list="seriesList" placeholder="예: 체험왕 | 양궁부편  또는  전주대 벚꽃 명소" autocomplete="off">
         <p class="req-hint">시리즈면 ‘시리즈명 | 회차’, 1회성이면 제목만. 캡션 크레딧 🎬 줄과 똑같이 써주세요.</p></div>
@@ -717,7 +717,11 @@
       </div>
       <div class="field-sm"><label>참가자 <span style="color:var(--ink-faint);">이름 옆 역할을 눌러주세요 (팀장 1명)</span></label>
         <div class="qa-roles" id="qaRoles"></div></div>
-      <div class="field-sm"><label>메모 <span style="color:var(--ink-faint);">(선택)</span></label><input type="text" id="qaNote" placeholder="예: 실장님 요청 인터뷰 촬영"></div>
+      <div class="qa-grid">
+        <div class="field-sm"><label>1인당 가점</label><input type="number" id="qaPoints" step="0.5" min="0" max="20" value="2"></div>
+        <div class="field-sm"><label>메모 <span style="color:var(--ink-faint);">(선택)</span></label><input type="text" id="qaNote" placeholder="예: 실장님 요청 인터뷰"></div>
+      </div>
+      <p class="req-hint" style="margin:-4px 0 10px;">참여자 전원에게 가점이 들어가요. 종합 점수표의 <b>행사 가점</b>에 ‘[오리지널] 제목’으로 합산돼요. 0이면 가점 없음.</p>
       <div class="sub-actions"><button class="btn-reject" id="qaCancel">닫기</button><button class="btn-approve" id="qaSave">등록하고 바로 승인</button></div>
       <p class="save-status" id="qaStatus"></p>
     </div>
@@ -1452,12 +1456,13 @@ const CATEGORIES = [
   {id:'interview', title:'인터뷰', desc:'학생, 교직원 등을 인터뷰하는 콘텐츠예요.'},
   {id:'event', title:'이벤트 스케치', desc:'행사 현장을 스케치 형식으로 담는 콘텐츠예요.'},
   {id:'info', title:'정보 / 꿀팁', desc:'입시, 캠퍼스 생활 정보를 전달하는 콘텐츠예요.'},
-  {id:'etc', title:'기타', desc:'위 항목에 해당하지 않는 콘텐츠예요.'}
+  {id:'etc', title:'기타', desc:'위 항목에 해당하지 않는 콘텐츠예요.'},
+  {id:'original', title:'오리지널 콘텐츠', desc:'관리자가 직접 등록하는 개별 촬영 콘텐츠예요.', hidden:true}
 ];
 
 function renderTypeCards(){
   const wrap = document.getElementById('typeCards');
-  wrap.innerHTML = CATEGORIES.map(c=>`
+  wrap.innerHTML = CATEGORIES.filter(c=>!c.hidden).map(c=>`
     <div class="card ${data.category===c.id?'selected':''}" data-id="${c.id}">
       <p class="card-title">${c.title}</p>
       <p class="card-desc">${c.desc}</p>
@@ -2406,7 +2411,7 @@ function renderAdminList(items){
   listEl.querySelectorAll('[data-complete-filming]').forEach(btn=>{ btn.addEventListener('click', ()=>setSubmissionStatus(btn.dataset.completeFilming, 'completed')); });
 }
 
-/* ── 개별 촬영 간편 등록: 기획서 없이 제목·일정·참가자만 넣고 바로 승인 ── */
+/* ── 오리지널 콘텐츠 등록: 기획서 없이 제목·일정·참가자만 넣고 바로 승인 + 참여자 가점 ── */
 const QA_ROLES = [['lead','팀장'],['filming','촬영'],['editing','편집'],['extra','출연']];
 let qaSel = {};
 function qaRender(){
@@ -2421,6 +2426,7 @@ function qaReset(){
   qaSel = {};
   ['qaFrom','qaTo'].forEach(id => { document.getElementById(id).innerHTML = '<option value="">종일/미정</option>' + FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join(''); });
   ['qaTitle','qaFilmDate','qaSubmitDate','qaFrom','qaTo','qaNote'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('qaPoints').value = 2;
   document.getElementById('qaStatus').textContent = '';
   qaRender();
 }
@@ -2452,15 +2458,17 @@ document.getElementById('qaSave').addEventListener('click', async () => {
   const missing = [!title && '콘텐츠 제목', !filmdate && '촬영일', !submitdate && '편집 마감', !lead && '팀장'].filter(Boolean);
   if(missing.length){ showAlert(missing.join(', ') + '을(를) 입력해주세요.'); return; }
   if(from && to && from >= to){ showAlert('촬영 종료 시간이 시작보다 늦어야 해요.'); return; }
+  const points = Number(document.getElementById('qaPoints').value || 0);
+  if(!(points >= 0 && points <= 20)){ showAlert('가점은 0 ~ 20 사이로 입력해 주세요.'); return; }
   const team = [...new Set([lead, ...qaNames('filming'), ...qaNames('editing'), ...qaNames('extra')])];
   const note = document.getElementById('qaNote').value.trim();
   const id = 'S' + Date.now() + Math.random().toString(36).slice(2,6);
   const record = {
     id, status:'pending',
     submittedAt: new Date().toISOString(), updatedAt:'', reviewedAt:'', filmingAt:'', completedAt:'',
-    lead, category:'etc', member: team.join(', '), filming, editing, extra, participants: String(team.length),
-    title, summary:'', url:'', request: '[개별 촬영 · 관리자 간편 등록]' + (note ? ' ' + note : ''),
-    filmdate, submitdate, equipment:'', planText:'(기획서 생략 · 관리자 간편 등록)', rejectReason:''
+    lead, category:'original', member: team.join(', '), filming, editing, extra, participants: String(team.length),
+    title, summary:'', url:'', request: '[오리지널 콘텐츠]' + (note ? ' ' + note : ''),
+    filmdate, submitdate, equipment:'', planText:'(오리지널 콘텐츠 · 기획서 생략)', rejectReason:''
   };
   btn.disabled = true; btn.textContent = '등록 중...'; st.textContent = '';
   try{
@@ -2468,6 +2476,11 @@ document.getElementById('qaSave').addEventListener('click', async () => {
     if(!res || res.ok === false) throw new Error('시트에 저장되지 않았어요.');
     if(from && to){ try{ await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({ action:'planTime', planId: id, from, to }) }); }catch(e){} }
+    if(points > 0){
+      st.textContent = '등록됨 · 가점 넣는 중...';
+      try{ await evPost({ action:'eventSave', date: filmdate, title: '[오리지널] ' + title, points, names: MEETING_ROSTER.filter(n => team.includes(n)), orig: null }); }
+      catch(e){ showAlert('기획서는 등록됐지만 가점 저장에 실패했어요. 행사 탭에서 직접 넣어주세요.'); }
+    }
     st.textContent = '등록됨 · 승인 처리 중...';
     await approveSubmission(id);
     document.getElementById('qaBox').style.display = 'none';

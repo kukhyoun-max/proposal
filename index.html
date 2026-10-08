@@ -190,6 +190,18 @@
   .status-pill.completed{background:#FFF6DC; color:var(--gold-dark);}
   .status-pill.uploaded{background:#EEE8FB; color:#5B3FB0;}
   .status-pill.dropped{background:#EEEEF1; color:#6B6B75;}
+  .qa-open{width:100%; border:1.5px dashed var(--purple-line); background:var(--purple-soft); color:var(--purple); border-radius:12px; padding:11px 12px; font-size:13.5px; font-weight:700; cursor:pointer; margin:0 0 14px; text-align:left; font-family:inherit;}
+  .qa-open small{display:block; font-size:11.5px; font-weight:400; color:var(--ink-soft); margin-top:2px;}
+  .qa-box{border:1.5px solid var(--purple-soft); border-radius:14px; padding:14px; margin:0 0 16px; background:#F7F9FF;}
+  .qa-box input{background:#fff;}
+  .qa-grid{display:grid; grid-template-columns:1fr 1fr; gap:0 10px;}
+  .qa-roles{border:1px solid var(--line); border-radius:10px; background:#fff; max-height:300px; overflow-y:auto;}
+  .qa-row{display:flex; align-items:center; justify-content:space-between; gap:6px; padding:6px 10px; border-bottom:1px solid #F0F1F5; font-size:13px;}
+  .qa-row:last-child{border-bottom:none;}
+  .qa-row.on b{color:var(--purple);}
+  .qa-row span{display:flex; gap:4px;}
+  .qa-row button{border:1px solid #DADCE5; background:#fff; border-radius:12px; padding:3px 8px; font-size:11.5px; color:var(--ink-soft); cursor:pointer; font-family:inherit;}
+  .qa-row button.on{background:var(--purple); border-color:var(--purple); color:#fff;}
   .drop-head{font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:22px 0 8px;}
   .sub-card.is-dropped{opacity:.6;}
   .up-link{display:inline-block; margin-top:6px; font-size:12px; color:#5B3FB0; font-weight:700; text-decoration:none;}
@@ -197,7 +209,7 @@
   .sub-card .sub-title{font-size:15px; font-weight:700; margin:2px 0 4px;}
   .sub-card .sub-meta{font-size:12px; color:var(--ink-soft); margin:0 0 10px;}
   .sub-card .sub-detail{font-size:12.5px; color:var(--ink); margin:10px 0; padding-top:10px; border-top:1px solid var(--line); white-space:pre-wrap; line-height:1.6;}
-  .sub-card .sub-actions{display:flex; gap:8px;}
+  .sub-card .sub-actions, .qa-box .sub-actions{display:flex; gap:8px;}
   .st-filter{display:flex; gap:6px; overflow-x:auto; margin:0 0 14px; padding-bottom:2px; scrollbar-width:none;}
   .st-filter::-webkit-scrollbar{display:none;}
   .st-filter button{flex:none; border:1px solid #DADCE5; background:#fff; border-radius:16px; padding:6px 11px; font-size:12px; color:var(--ink-soft); cursor:pointer;}
@@ -205,7 +217,7 @@
   .st-filter button.on{background:var(--ink); color:#fff; border-color:var(--ink);}
   .st-force{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line, #E5E5EA); font-size:11.5px; color:var(--ink-faint);}
   .st-force select{font-size:12px; padding:5px 8px; border-radius:8px; border:1px solid #D9D9E0; background:#fff; color:var(--ink);}
-  .sub-card .sub-actions button{flex:1; padding:9px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; border:none;}
+  .sub-card .sub-actions button, .qa-box .sub-actions button{flex:1; padding:9px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; border:none;}
   .btn-approve{background:var(--purple); color:#fff;}
   .btn-reject{background:#fff; color:#B23A3A; border:1.5px solid #F0C9C9 !important;}
   .toggle-detail{background:none; border:none; color:var(--purple); font-size:12px; font-weight:700; cursor:pointer; padding:0;}
@@ -691,6 +703,24 @@
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
     <div class="mt-tabs"><button class="on">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button></div>
     <button class="reset-link" id="btnAdminBack">← 돌아가기</button>
+  </div>
+  <div class="content" style="padding-top:0; padding-bottom:0;">
+    <button class="qa-open" id="qaOpen">＋ 개별 촬영 간편 등록 <small>기획서 없이 제목·일정·참가자만</small></button>
+    <div class="qa-box" id="qaBox" style="display:none;">
+      <div class="field-sm"><label>콘텐츠 제목</label><input type="text" id="qaTitle" list="seriesList" placeholder="예: 체험왕 | 양궁부편  또는  전주대 벚꽃 명소" autocomplete="off">
+        <p class="req-hint">시리즈면 ‘시리즈명 | 회차’, 1회성이면 제목만. 캡션 크레딧 🎬 줄과 똑같이 써주세요.</p></div>
+      <div class="qa-grid">
+        <div class="field-sm"><label>촬영일</label><input type="date" id="qaFilmDate"></div>
+        <div class="field-sm"><label>편집 마감(제출일)</label><input type="date" id="qaSubmitDate"></div>
+        <div class="field-sm"><label>촬영 시작</label><select id="qaFrom"></select></div>
+        <div class="field-sm"><label>촬영 종료</label><select id="qaTo"></select></div>
+      </div>
+      <div class="field-sm"><label>참가자 <span style="color:var(--ink-faint);">이름 옆 역할을 눌러주세요 (팀장 1명)</span></label>
+        <div class="qa-roles" id="qaRoles"></div></div>
+      <div class="field-sm"><label>메모 <span style="color:var(--ink-faint);">(선택)</span></label><input type="text" id="qaNote" placeholder="예: 실장님 요청 인터뷰 촬영"></div>
+      <div class="sub-actions"><button class="btn-reject" id="qaCancel">닫기</button><button class="btn-approve" id="qaSave">등록하고 바로 승인</button></div>
+      <p class="save-status" id="qaStatus"></p>
+    </div>
   </div>
   <div class="content" id="adminList" style="padding-top:0;">
     <p style="font-size:12.5px; color:var(--ink-faint);">불러오는 중...</p>
@@ -2375,6 +2405,77 @@ function renderAdminList(items){
   listEl.querySelectorAll('[data-start-editing]').forEach(btn=>{ btn.addEventListener('click', ()=>setSubmissionStatus(btn.dataset.startEditing, 'editing')); });
   listEl.querySelectorAll('[data-complete-filming]').forEach(btn=>{ btn.addEventListener('click', ()=>setSubmissionStatus(btn.dataset.completeFilming, 'completed')); });
 }
+
+/* ── 개별 촬영 간편 등록: 기획서 없이 제목·일정·참가자만 넣고 바로 승인 ── */
+const QA_ROLES = [['lead','팀장'],['filming','촬영'],['editing','편집'],['extra','출연']];
+let qaSel = {};
+function qaRender(){
+  document.getElementById('qaRoles').innerHTML = MEETING_ROSTER.map(n => {
+    const r = qaSel[n] || {};
+    const any = QA_ROLES.some(([k]) => r[k]);
+    return `<div class="qa-row${any ? ' on' : ''}"><b>${n}</b><span>${QA_ROLES.map(([k,l]) =>
+      `<button type="button" class="${r[k] ? 'on' : ''}" data-qn="${n}" data-qr="${k}">${l}</button>`).join('')}</span></div>`;
+  }).join('');
+}
+function qaReset(){
+  qaSel = {};
+  ['qaFrom','qaTo'].forEach(id => { document.getElementById(id).innerHTML = '<option value="">종일/미정</option>' + FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join(''); });
+  ['qaTitle','qaFilmDate','qaSubmitDate','qaFrom','qaTo','qaNote'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('qaStatus').textContent = '';
+  qaRender();
+}
+function qaNames(role){ return MEETING_ROSTER.filter(n => qaSel[n] && qaSel[n][role]); }
+document.getElementById('qaRoles').addEventListener('click', e => {
+  const b = e.target.closest('[data-qn]'); if(!b) return;
+  const n = b.dataset.qn, k = b.dataset.qr;
+  if(k === 'lead' && !(qaSel[n] && qaSel[n].lead)) Object.values(qaSel).forEach(r => { r.lead = false; });  // 팀장은 1명
+  qaSel[n] = qaSel[n] || {}; qaSel[n][k] = !qaSel[n][k];
+  qaRender();
+});
+document.getElementById('qaOpen').addEventListener('click', () => {
+  const box = document.getElementById('qaBox'), open = box.style.display !== 'none';
+  box.style.display = open ? 'none' : 'block';
+  if(!open){ qaReset(); sheetGetAll().then(rows => { try{ fillSeriesList(rows); }catch(e){} }).catch(()=>{}); }
+});
+document.getElementById('qaCancel').addEventListener('click', () => { document.getElementById('qaBox').style.display = 'none'; });
+document.getElementById('qaFilmDate').addEventListener('change', e => {
+  const sd = document.getElementById('qaSubmitDate');
+  if(!sd.value && e.target.value){ const d = new Date(e.target.value + 'T00:00:00'); d.setDate(d.getDate() + 4); sd.value = toLocalDateStr(d); }
+});
+document.getElementById('qaSave').addEventListener('click', async () => {
+  const btn = document.getElementById('qaSave'), st = document.getElementById('qaStatus');
+  const title = document.getElementById('qaTitle').value.trim().replace(/\s*\|\s*/, ' | ');
+  const filmdate = document.getElementById('qaFilmDate').value, submitdate = document.getElementById('qaSubmitDate').value;
+  const from = document.getElementById('qaFrom').value, to = document.getElementById('qaTo').value;
+  const lead = qaNames('lead')[0] || '';
+  const filming = qaNames('filming').join(', '), editing = qaNames('editing').join(', '), extra = qaNames('extra').join(', ');
+  const missing = [!title && '콘텐츠 제목', !filmdate && '촬영일', !submitdate && '편집 마감', !lead && '팀장'].filter(Boolean);
+  if(missing.length){ showAlert(missing.join(', ') + '을(를) 입력해주세요.'); return; }
+  if(from && to && from >= to){ showAlert('촬영 종료 시간이 시작보다 늦어야 해요.'); return; }
+  const team = [...new Set([lead, ...qaNames('filming'), ...qaNames('editing'), ...qaNames('extra')])];
+  const note = document.getElementById('qaNote').value.trim();
+  const id = 'S' + Date.now() + Math.random().toString(36).slice(2,6);
+  const record = {
+    id, status:'pending',
+    submittedAt: new Date().toISOString(), updatedAt:'', reviewedAt:'', filmingAt:'', completedAt:'',
+    lead, category:'etc', member: team.join(', '), filming, editing, extra, participants: String(team.length),
+    title, summary:'', url:'', request: '[개별 촬영 · 관리자 간편 등록]' + (note ? ' ' + note : ''),
+    filmdate, submitdate, equipment:'', planText:'(기획서 생략 · 관리자 간편 등록)', rejectReason:''
+  };
+  btn.disabled = true; btn.textContent = '등록 중...'; st.textContent = '';
+  try{
+    const res = await sheetCreate(record);
+    if(!res || res.ok === false) throw new Error('시트에 저장되지 않았어요.');
+    if(from && to){ try{ await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action:'planTime', planId: id, from, to }) }); }catch(e){} }
+    st.textContent = '등록됨 · 승인 처리 중...';
+    await approveSubmission(id);
+    document.getElementById('qaBox').style.display = 'none';
+  }catch(e){
+    st.textContent = '등록 실패: ' + (e && e.message ? e.message : '오류');
+  }
+  btn.disabled = false; btn.textContent = '등록하고 바로 승인';
+});
 
 function doneYmd(v){
   if(!v) return '';

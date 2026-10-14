@@ -576,6 +576,9 @@
   .sr-box h4{margin:0 0 4px;font-size:14px;font-weight:900}
   .sr-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}
   .sr-row .t{flex:1;min-width:0} .sr-row small{display:block;color:var(--ink-faint);font-size:12px}
+  .sr-more summary{list-style:none;cursor:pointer;padding:10px 0 2px;border-top:1px solid var(--line);color:var(--ink-faint);font-size:13px;font-weight:700;text-align:center}
+  .sr-more summary::-webkit-details-marker{display:none}
+  .sr-more[open] summary{display:none}
   .sr-row button{flex:none;border:0;border-radius:10px;padding:8px 12px;background:var(--purple);color:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 </style>
 </head>
@@ -1012,7 +1015,7 @@
 
 <div id="confirmModal">
   <div class="modal-box">
-    <p id="confirmModalText"></p>
+    <p id="confirmModalText" style="white-space:pre-line;"></p>
     <div class="modal-actions">
       <button class="modal-cancel" id="confirmModalCancel">취소</button>
       <button class="modal-ok" id="confirmModalOk">확인</button>
@@ -2463,6 +2466,27 @@ document.getElementById('btnAdminBack').addEventListener('click', ()=>{
   showView('form');
 });
 
+// 기획서 삭제: 시트에서 지우지 않고 '삭제된기획서' 탭으로 옮겨요(되돌릴 수 있게). 점수·업로드 집계에서도 빠져요.
+async function deletePlan(id, rec, btn){
+  const ok = await showConfirm('「' + (rec.title || '제목 없음') + '」 기획서를 삭제할까요?\n(' + (rec.name || '-') + ' 팀장 · ' + (STATUS_LABELS[rec.status] || rec.status) + ')\n\n점수·업로드 집계에서도 빠져요. 시트의 \'삭제된기획서\' 탭으로 옮겨져서 필요하면 되살릴 수 있어요.');
+  if(!ok) return;
+  btn.disabled = true; btn.textContent = '삭제 중…';
+  try{
+    await sheetPost({ action:'deletePlan', id, pin:'2600' });
+    const rows = await jsonp({ action:'list' });
+    if((rows||[]).some(r => String(r['ID']) === String(id))){
+      showAlert('삭제가 반영되지 않았어요. 기획서 Apps Script에 삭제 기능(deletePlan)이 아직 배포되지 않았을 수 있어요.');
+      btn.disabled = false; btn.textContent = '삭제'; return;
+    }
+    planMem = rows; planMemAt = Date.now();
+    showToast('기획서를 삭제했어요');
+    loadSubmissions();
+  }catch(e){
+    showAlert('삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');
+    btn.disabled = false; btn.textContent = '삭제';
+  }
+}
+
 async function loadSubmissions(){
   const listEl = document.getElementById('adminList');
   listEl.innerHTML = '<p style="font-size:12.5px;color:var(--ink-faint);">불러오는 중...</p>';
@@ -2510,7 +2534,7 @@ function renderAdminList(items){
       <div class="sub-card${rec.status==='dropped' ? ' is-dropped' : ''}" data-key="${key}">
         <div class="sub-card-top">
           <span class="status-pill ${rec.status}">${STATUS_LABELS[rec.status]||rec.status}</span>
-          <span style="display:flex; gap:12px;"><button class="toggle-detail" data-edit="${key}">✏️ 수정</button><button class="toggle-detail" data-toggle="${key}">자세히 보기</button></span>
+          <span style="display:flex; gap:12px;"><button class="toggle-detail" data-edit="${key}">✏️ 수정</button><button class="toggle-detail" data-toggle="${key}">자세히 보기</button><button class="toggle-detail" data-del="${key}" style="color:#DC2626;">삭제</button></span>
         </div>
         <p class="sub-title">${(rec.title||'(제목 없음)')}</p>
         <p class="sub-meta">${nb(rec.name)}${rec.name||'-'} · ${catLabel} · ${when}</p>
@@ -2530,6 +2554,9 @@ function renderAdminList(items){
     detailFromAdmin = true; showView('status'); renderStatusDetail(it.key, it.rec);
     const t = document.getElementById('toggleEditBtn'); if(t) t.click();
     window.scrollTo(0, 0);
+  }); });
+  listEl.querySelectorAll('[data-del]').forEach(btn=>{ btn.addEventListener('click', ()=>{
+    const it = items.find(x => x.key === btn.dataset.del); if(it) deletePlan(it.key, it.rec, btn);
   }); });
   listEl.querySelectorAll('[data-done]').forEach(inp=>{ inp.addEventListener('change', ()=>saveDoneDate(inp.dataset.done, inp.value, inp)); });
   listEl.querySelectorAll('[data-force]').forEach(sel=>{ sel.addEventListener('change', ()=>forceStatus(sel.dataset.force, sel.value, sel)); });
@@ -4149,12 +4176,25 @@ function hbApply(badges){
   async function loadPending(){
     const box = $('srPending'); if (!box) return;
     try {
-      const r = await api({ action:'seriesPending' });
-      const list = (r && r.pending) || [];
-      if (!list.length){ box.innerHTML = ''; return; }
-      const seen = {}; const uniq = list.filter(p => { if (seen[p.title]) return false; seen[p.title] = 1; return true; });
-      box.innerHTML = `<div class="sr-box"><h4>신규 콘텐츠 · 정규 편성</h4><p class="req-hint" style="margin:0 0 4px;">정규 편성하면 다음부터 기획서 콘텐츠 목록에 나와요</p>` +
-        uniq.map(p => `<div class="sr-row"><div class="t"><b>${esc(p.title)}</b><small>${esc(p.lead)} 팀장 · ${esc(STATUS_LABELS[p.status] || p.status)}</small></div><button type="button" data-id="${esc(p.planId)}" data-t="${esc(p.title)}">정규 편성</button></div>`).join('') + '</div>';
+      const [r, sl] = await Promise.all([api({ action:'seriesPending' }), api({ action:'seriesList' }).catch(() => null)]);
+      if (sl && sl.regular) window.JJH_SERIES = sl.regular.map(x => x.name);
+      // 이미 정규 편성된 시리즈의 편(예: "체험왕 - 순영관 체험", "1234! - 방학 중 인간관계편")은 숨김
+      const nz = s => String(s || '').toLowerCase().replace(/[\s\-–—_|:·.,!?()\[\]'"~]/g, '');
+      const seriesOf = t => String(t || '').split(/\s[-–—|]\s|\|/)[0].trim();
+      const reg = (window.JJH_SERIES || []).map(nz).filter(Boolean);
+      const isReg = t => { const a = nz(t), b = nz(seriesOf(t)); return reg.some(x => b === x || a.startsWith(x)); };
+      const seen = {};
+      const uniq = ((r && r.pending) || [])
+        .map(p => Object.assign({}, p, { title: seriesOf(p.title) || p.title }))
+        .filter(p => !isReg(p.title))
+        .filter(p => { const k = nz(p.title); if (seen[k]) return false; seen[k] = 1; return true; })
+        .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+      if (!uniq.length){ box.innerHTML = ''; return; }
+      const row = p => `<div class="sr-row"><div class="t"><b>${esc(p.title)}</b><small>${esc(p.lead)} 팀장 · ${esc(STATUS_LABELS[p.status] || p.status)}${p.date ? ' · ' + esc(p.date) : ''}</small></div><button type="button" data-id="${esc(p.planId)}" data-t="${esc(p.title)}">정규 편성</button></div>`;
+      const SHOW = 3, head = uniq.slice(0, SHOW), rest = uniq.slice(SHOW);
+      box.innerHTML = `<div class="sr-box"><h4>신규 콘텐츠 · 정규 편성 <span style="color:var(--ink-faint);font-weight:700;">${uniq.length}</span></h4><p class="req-hint" style="margin:0 0 4px;">이미 편성된 시리즈는 빠져 있어요 · 최신순</p>` +
+        head.map(row).join('') +
+        (rest.length ? `<details class="sr-more"><summary>지난 기획서 ${rest.length}개 더보기</summary>${rest.map(row).join('')}</details>` : '') + '</div>';
     } catch (e){ box.innerHTML = ''; }
   }
   document.addEventListener('click', async e => {

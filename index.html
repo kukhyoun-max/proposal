@@ -583,6 +583,15 @@
 </style>
 </head>
 <body>
+<div id="jjGate" style="position:fixed; inset:0; z-index:9999; background:#F4F5F8; display:flex; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:#fff; border-radius:22px; padding:32px 24px; max-width:360px; width:100%; text-align:center; box-shadow:0 2px 14px rgba(0,0,0,.06);">
+    <h1 style="font-size:22px; font-weight:900; margin:0 0 6px;">JJ 스튜디오</h1>
+    <p id="jjGateMsg" style="font-size:14px; color:#4E5968; margin:0 0 22px; line-height:1.6;">홍보대사 공유 드라이브에 등록된<br>구글 계정으로 로그인해 주세요.</p>
+    <a id="jjGateBtn" href="#" style="display:block; background:#3182F6; color:#fff; text-decoration:none; font-weight:700; padding:15px; border-radius:14px; font-size:16px;">구글 계정으로 로그인</a>
+    <p id="jjGateKakao" style="display:none; font-size:12.5px; color:#B23A3A; margin:14px 0 0; line-height:1.6;">카카오톡 안에서는 구글 로그인이 안 돼요.<br><a id="jjGateExt" href="#" style="color:#3182F6; font-weight:700;">기본 브라우저로 열기</a></p>
+    <p style="font-size:11.5px; color:#8B95A1; margin:16px 0 0; line-height:1.6;">처음 한 번은 구글이 '이메일 주소 보기' 허용을 물어봐요.<br>로그인은 30일 동안 유지돼요.</p>
+  </div>
+</div>
 
 <div class="admin-topbar">
   <button id="btnHome" style="background:none; border:none; color:#fff; font-size:13px; font-weight:700; padding:0; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;"><svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true" style="flex:none;"><rect x="4" y="17" width="40" height="27" rx="6" fill="#3D5FE0"/><g transform="rotate(-12 6 15)"><rect x="4" y="8" width="40" height="9" rx="3" fill="#FFC629"/><path d="M12 8 L16 8 L12 17 L8 17 Z M22 8 L26 8 L22 17 L18 17 Z M32 8 L36 8 L32 17 L28 17 Z" fill="#19181D"/></g><text x="24" y="38" text-anchor="middle" font-family="Noto Sans KR, sans-serif" font-weight="900" font-size="16" fill="#fff" letter-spacing="-1">JJ</text></svg>JJ 스튜디오</button>
@@ -1179,6 +1188,40 @@ function openTab(k){
   else if(k === 'score'){ showView('score'); scLoad(); }
   else { showView('meeting'); const input = document.getElementById('mtDate'); if(!input.value) input.value = mtMonday(mtYmd(new Date())); mtLoad(); }
 }
+// ───── 홍보대사 멤버 로그인 (구글 계정 · 공유 드라이브 멤버만) ─────
+const JJ_LOGIN_URL = 'https://script.google.com/macros/s/AKfycbzyrGQC_ZKjQHi_UQqFTdIyAVfC2J3LoGvLOH4MgNTFVdfcQgkw8qQR_o-8MFk54AZhHw/exec';
+const MEMBER_TK_KEY = 'jjMemberTk_v1';
+function memberTkExp(tk){ try{ const p = tk.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'); return Number(JSON.parse(decodeURIComponent(escape(atob(p)))).exp) || 0; }catch(e){ return 0; } }
+function memberTkEmail(tk){ try{ const p = tk.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'); return String(JSON.parse(decodeURIComponent(escape(atob(p)))).u || ''); }catch(e){ return ''; } }
+(function(){
+  const m = location.hash.match(/jjtk=([^&]+)/);
+  if(m){ try{ localStorage.setItem(MEMBER_TK_KEY, decodeURIComponent(m[1])); }catch(e){} history.replaceState(null, '', location.pathname + location.search); }
+})();
+function memberToken(){ let tk = ''; try{ tk = localStorage.getItem(MEMBER_TK_KEY) || ''; }catch(e){} return (tk && memberTkExp(tk) > Date.now() + 60000) ? tk : ''; }
+function memberGate(msg){
+  try{ localStorage.removeItem(MEMBER_TK_KEY); localStorage.removeItem('planRowsCache_v1'); sessionStorage.clear(); }catch(e){}
+  const g = document.getElementById('jjGate'); if(!g) return;
+  if(msg) document.getElementById('jjGateMsg').innerHTML = msg;
+  g.style.display = 'flex';
+}
+(function(){
+  const btn = document.getElementById('jjGateBtn'); if(btn) btn.href = JJ_LOGIN_URL;
+  if(/KAKAOTALK/i.test(navigator.userAgent)){
+    document.getElementById('jjGateKakao').style.display = 'block';
+    document.getElementById('jjGateExt').href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.origin + location.pathname);
+  }
+  if(memberToken()) document.getElementById('jjGate').style.display = 'none';
+})();
+function memberCheckReply(data){
+  if(data && !Array.isArray(data) && (data.error === 'login' || data.error === 'not_member')){
+    const who = memberTkEmail(memberToken() || '');
+    memberGate(data.error === 'not_member'
+      ? `<b>${(who||'이 계정').replace(/[<>&]/g,'')}</b>은(는)<br>홍보대사 공유 드라이브에 등록되지 않은 계정이에요.<br>등록된 계정으로 다시 로그인해 주세요.`
+      : '로그인이 만료됐어요.<br>다시 로그인해 주세요.');
+    return true;
+  }
+  return false;
+}
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZ-U1zoYVN6zALdZCdoaRiFjCnklHwT50rRADKYDx8jd4we48vmzBoN7JOczAS0pj_/exec';
 const STATUS_LABELS = {pending:'승인 대기', approved:'승인됨 · 촬영 예정', filming:'촬영 중', editing:'편집 중', completed:'제작 완료', uploaded:'업로드 완료', dropped:'제작 중단', rejected:'반려됨'};
 
@@ -1197,11 +1240,12 @@ function jsonp(params){
     let finished = false;
     window[cbName] = (data)=>{
       finished = true;
+      memberCheckReply(data);
       resolve(data);
       delete window[cbName];
       script.remove();
     };
-    const query = new URLSearchParams({...params, callback: cbName}).toString();
+    const query = new URLSearchParams({...params, mt: memberToken(), callback: cbName}).toString();
     script.src = APPS_SCRIPT_URL + '?' + query;
     script.onerror = ()=>{
       if(!finished){ reject(new Error('스크립트 로드 실패')); delete window[cbName]; script.remove(); }
@@ -2964,8 +3008,8 @@ function attendJsonp(params){
   // 기획서 제출·승인(APPS_SCRIPT_URL)도 장비 대여를 바꾸니 같이 비워요. 저장이 끝난 뒤에도 한 번 더 비워 그 사이에 받은 옛 목록이 남지 않게 해요.
   const bust = () => { attendCache.clear(); attCacheClear(); };
   window.fetch = (u, o) => { const s = String(u); if(s === ATTEND_URL || s === APPS_SCRIPT_URL){
-    if(o && o.method === 'POST' && typeof o.body === 'string'){ const tk = adminToken();
-      if(tk){ try{ const b = JSON.parse(o.body); if(b && typeof b === 'object' && !b.tk){ b.tk = tk; o = Object.assign({}, o, { body: JSON.stringify(b) }); } }catch(e){} } }
+    if(o && o.method === 'POST' && typeof o.body === 'string'){ const tk = adminToken(), mt = memberToken();
+      try{ const b = JSON.parse(o.body); if(b && typeof b === 'object'){ if(tk && !b.tk) b.tk = tk; if(mt && !b.mt) b.mt = mt; o = Object.assign({}, o, { body: JSON.stringify(b) }); } }catch(e){} }
     bust(); return _fetch(u, o).finally(bust); } return _fetch(u, o); };
 })();
 function attendPrefetch(){
@@ -2982,8 +3026,8 @@ function attendJsonpRaw(params){
     const cbName = 'mt_' + Date.now() + '_' + Math.floor(Math.random()*100000);
     const script = document.createElement('script');
     let finished = false;
-    window[cbName] = (data)=>{ finished = true; resolve(data); delete window[cbName]; script.remove(); };
-    script.src = ATTEND_URL + '?' + new URLSearchParams({...params, callback: cbName}).toString();
+    window[cbName] = (data)=>{ finished = true; memberCheckReply(data); resolve(data); delete window[cbName]; script.remove(); };
+    script.src = ATTEND_URL + '?' + new URLSearchParams({...params, mt: memberToken(), callback: cbName}).toString();
     script.onerror = ()=>{ if(!finished){ reject(new Error('스크립트 로드 실패')); delete window[cbName]; script.remove(); } };
     document.body.appendChild(script);
     setTimeout(()=>{ if(!finished){ reject(new Error('시간 초과')); delete window[cbName]; script.remove(); } }, 25000);

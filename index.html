@@ -694,7 +694,7 @@
     <div class="step-panel" id="panel2">
       <p class="step-label">콘텐츠 기획서</p>
       <h2 class="heading">어떤 콘텐츠를<br>기획하시나요?</h2>
-      <p class="hint-caption">예시 항목이에요. 실제 운영 카테고리에 맞게 계속 다듬을 수 있어요.</p>
+      <p class="hint-caption">만들 콘텐츠와 가장 가까운 유형을 골라주세요.</p>
       <div id="typeCards"></div>
     </div>
 
@@ -858,7 +858,7 @@
     <button class="reset-link" id="btnAdminBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0; padding-bottom:0;">
-    <button class="qa-open" id="qaOpen">＋ 오리지널 콘텐츠 등록 <small>기획서 없이 제목·일정·참가자만 · 참여자 가점</small></button>
+    <button class="qa-open" id="qaOpen">＋ 오리지널 콘텐츠 등록 <small>기획서 없이 제목·일정·참가자만 입력 · 참여자 가점</small></button>
     <div class="qa-box" id="qaBox" style="display:none;">
       <div class="field-sm"><label>콘텐츠 제목</label><input type="text" id="qaTitle" list="seriesList" placeholder="예: 체험왕 | 양궁부편  또는  전주대 벚꽃 명소" autocomplete="off">
         <p class="req-hint">시리즈면 ‘시리즈명 | 회차’, 1회성이면 제목만. 캡션 크레딧 🎬 줄과 똑같이 써주세요.</p></div>
@@ -892,7 +892,7 @@
     <button class="reset-link" id="btnMeetingBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
-    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 월요일마다 그 주 회의 칸이 자동으로 생겨요. 실제 회의한 날짜를 고르고 출결을 입력하세요.</p>
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 월요일마다 그 주 회의 칸이 자동으로 생겨요. 실제 회의한 날짜를 고르고 출결을 입력해 주세요.</p>
     <div class="mt-weeks" id="mtWeeks"></div>
     <div class="mt-date">
       <input type="date" id="mtDate">
@@ -1105,7 +1105,7 @@
   <svg id="jjhChart" viewBox="0 0 360 220" style="width:100%;height:auto;margin-top:8px;" role="img" aria-label="누적 조회수 그래프"></svg>
   <div class="jjh-sec">보상 단계</div>
   <div class="jjh-tiles" id="jjhTiles"></div>
-  <div class="jjh-sec">멀리 간 콘텐츠</div>
+  <div class="jjh-sec">조회수 높은 콘텐츠</div>
   <div id="jjhTop"></div>
   <p class="jjh-note">기간 내 새로 올라온 홍보대사 크레딧 콘텐츠(인스타 공식·홍비디오·유튜브)의 조회수 합계예요. 광고·기관 홍보물은 빠져요. 매일 밤 자동 갱신.</p>
 </div>
@@ -2084,7 +2084,7 @@ async function submitForReview(){
   };
   try{
     const result = await sheetCreate(record);
-    if(!result || result.ok === false) throw new Error('시트 응답이 실패로 왔어요.');
+    if(!result || result.ok === false) throw new Error('시트에 저장하지 못했어요.');
     try{ fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({ action:'planTime', planId: id, from: data.filmfrom || '', to: data.filmto || '' }) }); }catch(e){}
     statusEl.textContent = '제출 완료 · 구글 시트에 저장됐어요';
@@ -2351,7 +2351,7 @@ function renderStatusDetail(key, rec){
     <div class="status-info-box">
       <span class="status-pill ${editingRecord.status}">${STATUS_LABELS[editingRecord.status]||editingRecord.status}</span>
       <p>제출일시: ${fmtDateTime(editingRecord.submittedAt)}</p>
-      ${editingRecord.updatedAt? `<p>최종 수정: ${fmtDateTime(editingRecord.updatedAt)}${editingRecord.updatedBy ? ` <b style="color:${editingRecord.updatedBy==='관리자' ? '#1E4FA0' : '#95590B'}">(${editingRecord.updatedBy==='관리자' ? '관리자' : '팀 · 기획서 현황'})</b>` : ''}</p>`:''}
+      ${editingRecord.updatedAt? `<p>최종 수정: ${fmtDateTime(editingRecord.updatedAt)}${editingRecord.updatedBy ? ` <b style="color:${editingRecord.updatedBy==='관리자' ? '#1E4FA0' : '#95590B'}">(${editingRecord.updatedBy==='관리자' ? '관리자' : '팀'})</b>` : ''}</p>`:''}
       ${editingRecord.reviewedAt? `<p>검토일시: ${fmtDateTime(editingRecord.reviewedAt)}</p>`:''}
       ${editingRecord.filmingAt? `<p>촬영 시작: ${fmtDateTime(editingRecord.filmingAt)}</p>`:''}
       ${editingRecord.completedAt? `<p>제작 완료: ${fmtDateTime(editingRecord.completedAt)}</p>`:''}
@@ -2599,7 +2599,7 @@ async function saveEditedSubmission(){
 document.getElementById('btnAdminToggle').addEventListener('click', async ()=>{
   let sess = adminSession();
   if(!sess){
-    const pin = await showPrompt('관리자 PIN을 입력하세요');
+    const pin = await showPrompt('관리자 PIN을 입력해 주세요');
     if(!pin) return;
     let r;
     try{
@@ -2704,7 +2704,7 @@ function renderAdminList(items){
         ${actions}
         ${rec.uploadedAt ? `<a class="up-link" ${/^https?:/.test(rec.uploadUrl) ? `href="${rec.uploadUrl}" target="_blank" rel="noopener"` : ''}>📺 ${mtFmt(rec.uploadedAt)} 업로드${/^https?:/.test(rec.uploadUrl) ? ' · 게시물 보기' : ''}</a>` : ''}
         ${['completed','uploaded'].includes(rec.status) ? `<div class="st-force" style="border-top:none; margin-top:8px; padding-top:0;"><span>제작 완료일 <small>(지연 감점 기준)</small></span><input type="date" data-done="${key}" value="${doneYmd(rec.completedAt)}" style="font-size:12px; padding:5px 8px; border-radius:8px; border:1px solid #D9D9E0;"></div>` : ''}
-        ${['approved','filming','editing','completed','uploaded','dropped'].includes(rec.status) ? `<div class="st-force"><span>${rec.locked ? '🔒 관리자 지정' : ({completed:'✅ 제작 완료 (관리자 처리)', uploaded:'📺 게시물 매칭으로 자동', dropped:'⏸ 중간에 접음 · 불참·장비에서 제외'}[rec.status] || '⏱ 촬영일 기준 자동')}</span>
+        ${['approved','filming','editing','completed','uploaded','dropped'].includes(rec.status) ? `<div class="st-force"><span>${rec.locked ? '🔒 관리자 지정' : ({completed:'✅ 제작 완료 (관리자 처리)', uploaded:'📺 게시물이 올라와 자동 처리', dropped:'⏸ 제작 중단 · 불참·장비 집계에서 빠짐'}[rec.status] || '⏱ 촬영일 기준 자동')}</span>
           <select data-force="${key}"><option value="">상태 직접 변경</option>${rec.locked ? '<option value="auto">자동으로 되돌리기</option>' : ''}<option value="approved">승인됨 · 촬영 예정</option><option value="filming">촬영 중</option><option value="editing">편집 중</option><option value="completed">제작 완료</option><option value="uploaded">업로드 완료</option><option value="dropped">제작 중단</option></select></div>` : ''}
       </div>
     `;
@@ -2839,7 +2839,7 @@ async function saveDoneDate(key, ymd, inp){
 async function forceStatus(key, value, sel){
   if(!value) return;
   const label = value === 'auto' ? '촬영일 기준 자동' : STATUS_LABELS[value];
-  const ok = await showConfirm(value === 'auto' ? '이 기획서를 다시 촬영일 기준 자동 상태로 돌릴까요?' : value === 'dropped' ? '이 기획서를 제작 중단으로 바꿀까요? 불참 집계와 장비 대여에서 빠져요. (나중에 되돌릴 수 있어요)' : `'${label}'(으)로 고정할까요? 고정하면 날짜가 지나도 자동으로 바뀌지 않아요.`);
+  const ok = await showConfirm(value === 'auto' ? '이 기획서 상태를 다시 촬영일에 맞춰 자동으로 바뀌게 할까요?' : value === 'dropped' ? '이 기획서를 제작 중단으로 바꿀까요? 불참 집계와 장비 대여에서 빠져요. (나중에 되돌릴 수 있어요)' : `'${label}'(으)로 고정할까요? 고정하면 날짜가 지나도 자동으로 바뀌지 않아요.`);
   if(!ok){ sel.value = ''; return; }
   sel.disabled = true;
   try{
@@ -3317,7 +3317,7 @@ function pcRenderWeeks(){
     const pending = info && typeof info === 'object' ? info.pending : 0;
     const off = info && typeof info === 'object' && info.cancelled;
     const cls = off ? 'off' : (!n ? 'todo' : (pending ? 'part' : 'done'));
-    const label = off ? '휴회' : (!n ? '미입력' : (pending ? `콘텐츠 대기 ${pending}` : '입력 완료'));
+    const label = off ? '휴회' : (!n ? '미입력' : (pending ? `콘텐츠 미입력 ${pending}` : '입력 완료'));
     return `<button class="mt-week ${cls} ${w===pcWeek?'sel':''}" data-w="${w}"><b>${mtFmt(w)}</b><small>${label}</small></button>`;
   }).join('');
   el.querySelectorAll('.mt-week').forEach(b => b.addEventListener('click', ()=>{ pcWeek = b.dataset.w; pcLoad(); }));
@@ -3344,7 +3344,7 @@ function pcRenderList(){
     const pts = pcPts(s);
     const seg = key => `<div class="seg">${PC_OPTS.map(v => `<button data-n="${n}" data-k="${key}" data-v="${v}" class="${s[key]===v?'on':''}">${v}</button>`).join('')}</div>`;
     return `<div class="pc-row">
-      <div class="pc-name">${nb(n)}${n}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : '콘텐츠 전'))}</small></div>
+      <div class="pc-name">${nb(n)}${n}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : '콘텐츠 입력 전'))}</small></div>
       <div class="pc-lines">
         <div class="pc-line"><span class="pc-lab">기획서</span>${seg('plan')}</div>
         <div class="pc-line"><span class="pc-lab">콘텐츠</span>${seg('content')}</div>
@@ -3733,7 +3733,7 @@ function eqRenderCal(){
     const sameTime = g.items.every(it => eqTimeText(it) === eqTimeText(f));
     const title = f.planId ? (f.title || f.planId) : '직접 추가한 대여';
     return `<div class="eq-team ${bad ? 'bad' : ''} ${eqOpenGroups.has(g.key) ? 'open' : ''}" data-g="${abEsc(g.key)}">
-      <div class="eq-team-head"><div><b>${abEsc(title)}</b><span class="t">${sameTime ? eqTimeText(f) : '시간 여러 개'}</span>${bad ? `<span class="eq-bad">겹침 ${bad}</span>` : ''}
+      <div class="eq-team-head"><div><b>${abEsc(title)}</b><span class="t">${sameTime ? eqTimeText(f) : '시간 제각각'}</span>${bad ? `<span class="eq-bad">겹침 ${bad}</span>` : ''}
         <small>${abEsc(f.who || '-')} · 장비 ${g.items.length}개</small></div><span class="eq-chev">▾</span></div>
       <div class="eq-team-body">${g.items.map(it => eqRowHTML(it, false, true)).join('')}
         ${g.items.length > 1 ? `<button class="ab-btn go" data-bulk="${abEsc(g.key)}" style="width:100%; margin-top:10px;">팀 장비 ${g.items.length}개 기간 한 번에 수정</button>` : ''}</div>
@@ -4262,9 +4262,9 @@ function hbApply(badges){
     WEEKLY = w;
     const box = $('jjhBest');
     $('jjhBestDt').textContent = md(w.from) + '~' + md(w.to);
-    const nw = w.now || { lead:0, daysLeft:0 }, dl = nw.daysLeft > 0 ? '마감 D-' + nw.daysLeft : '오늘 밤 마감';
+    const nw = w.now || { lead:0, daysLeft:0 }, dl = nw.daysLeft > 0 ? '집계 마감 D-' + nw.daysLeft : '오늘 밤 집계 마감';
     const nowEl = $('jjhBestNow'); nowEl.style.display = '';
-    nowEl.innerHTML = nw.lead > 0 ? `이번 주 지금 1위 <b class="n1">${esc((nw.names || []).join(' · '))}</b> <b>+${nw.lead}점</b> · ${dl}` : `이번 주는 아직 1위가 없어요 · <b>먼저 올리면 1등!</b>`;
+    nowEl.innerHTML = nw.lead > 0 ? `이번 주 1위 <b class="n1">${esc((nw.names || []).join(' · '))}</b> <b>+${nw.lead}점</b> · ${dl}` : `이번 주는 아직 1위가 없어요 · <b>먼저 올리면 1등!</b>`;
     if (!w.ready || !w.top.length){
       box.classList.add('wait'); $('jjhCupN').textContent = ''; $('jjhBestGo').style.display = 'none';
       $('jjhBestName').textContent = w.ready ? '지난주는 1등이 없어요' : '첫 1등은 다음 주 월요일 공개'; return;

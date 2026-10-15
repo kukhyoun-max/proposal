@@ -1206,11 +1206,20 @@ function memberGate(msg){
 }
 (function(){
   const btn = document.getElementById('jjGateBtn'); if(btn) btn.href = JJ_LOGIN_URL;
-  if(/KAKAOTALK/i.test(navigator.userAgent)){
+  const ua = navigator.userAgent, has = !!memberToken();
+  if(/KAKAOTALK/i.test(ua)){
+    // 카톡 인앱 브라우저는 구글 로그인을 막아요 → 로그인 전이면 기본 브라우저로 바로 넘겨요
+    const ext = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.origin + location.pathname);
     document.getElementById('jjGateKakao').style.display = 'block';
-    document.getElementById('jjGateExt').href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.origin + location.pathname);
+    document.getElementById('jjGateExt').href = ext;
+    if(btn){ btn.href = ext; btn.textContent = '기본 브라우저에서 로그인하기'; }
+    if(!has) location.href = ext;
+  } else if(/Instagram|FBAN|FBAV|Line\/|NAVER|DaumApps|everytimeApp|; wv\)/i.test(ua)){
+    const k = document.getElementById('jjGateKakao');
+    k.innerHTML = '앱 안의 브라우저에서는 구글 로그인이 안 돼요.<br>오른쪽 위 메뉴(⋯)에서 <b>Safari / Chrome으로 열기</b>를 눌러주세요.';
+    k.style.display = 'block';
   }
-  if(memberToken()) document.getElementById('jjGate').style.display = 'none';
+  if(has) document.getElementById('jjGate').style.display = 'none';
 })();
 function memberCheckReply(data){
   if(data && !Array.isArray(data) && (data.error === 'login' || data.error === 'not_member')){

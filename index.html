@@ -509,6 +509,23 @@
   .jjh-goal svg{flex:none;width:112px;height:52px}
   .jjh-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin:12px 0 0}
   .jjh-best{display:flex;align-items:flex-start;gap:12px;cursor:pointer}
+  .jjh-mine{cursor:pointer}
+  .jjh-mine .k{font-size:13px;font-weight:700;color:var(--purple);display:flex;align-items:center;gap:6px}
+  .jjh-mine .k .go{margin-left:auto;color:var(--ink-faint);font-size:18px;line-height:1}
+  .jjh-mine .nums{display:flex;gap:18px;margin-top:6px}
+  .jjh-mine .nums b{display:block;font-size:22px;font-weight:900;letter-spacing:-.5px}
+  .jjh-mine .nums small{font-size:12px;color:var(--ink-faint)}
+  .jjh-mine .msg{font-size:14.5px;color:var(--ink-soft);margin-top:6px;line-height:1.5}
+  .jjh-mine.pick{cursor:default}
+  .jjh-mine .pk{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .jjh-mine .pk button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+  .jjh-mine .pk button.on{background:var(--purple);border-color:var(--purple);color:#fff}
+  .jjh-mine .row{display:flex;gap:8px;margin-top:10px;align-items:center}
+  .jjh-mine .ok{border:0;background:var(--purple);color:#fff;border-radius:10px;padding:9px 14px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+  .jjh-mine .ok:disabled{opacity:.4}
+  .jjh-mine .skip{border:0;background:none;color:var(--ink-faint);font:inherit;font-size:12.5px;text-decoration:underline;cursor:pointer;margin-left:auto}
+  a.jjh-post{color:inherit;text-decoration:none}
+  .jjh-post .dt{flex:none;font-size:12px;color:var(--ink-faint);width:38px}
   .jjh-best .cup{flex:none;width:46px;height:52px;margin-top:2px}
   .jjh-best .l{flex:1;min-width:0}
   .jjh-best .k{font-size:13px;font-weight:700;color:#C68A00;display:flex;align-items:center;gap:6px}
@@ -619,7 +636,11 @@
           <div class="l"><div class="k">🏃 JJ 공동목표 ›</div><div class="s" id="jjhGoalText">불러오는 중…</div></div>
           <svg id="jjhMini" viewBox="0 0 112 52" aria-hidden="true"></svg>
         </button>
-        <div class="jjh-card jjh-best wait" id="jjhBest" role="button" tabindex="0" aria-label="1등 근거 보기">
+        <div class="jjh-card jjh-mine" id="jjhMine" role="button" tabindex="0" aria-label="내 콘텐츠 기록 보기">
+          <div class="k">📒 내 기록 <span class="go" id="jjhMineGo" style="display:none">›</span></div>
+          <div id="jjhMineBody"><div class="msg">불러오는 중…</div></div>
+        </div>
+        <div class="jjh-card jjh-best wait" id="jjhBest" role="button" tabindex="0" aria-label="1등 근거 보기" style="display:none">
           <svg class="cup" viewBox="8 8 68 80" aria-hidden="true">
             <defs><linearGradient id="jjhGc" x1="0" x2="1"><stop offset="0" stop-color="#FFC93C"/><stop offset=".5" stop-color="#FFE38A"/><stop offset="1" stop-color="#F5A800"/></linearGradient>
             <linearGradient id="jjhGb" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#4E5968"/><stop offset="1" stop-color="#333D4B"/></linearGradient></defs>
@@ -1070,6 +1091,17 @@
   <div class="jjh-sec">멀리 간 콘텐츠</div>
   <div id="jjhTop"></div>
   <p class="jjh-note">기간 내 새로 올라온 홍보대사 크레딧 콘텐츠(인스타 공식·홍비디오·유튜브)의 조회수 합계예요. 광고·기관 홍보물은 빠져요. 매일 밤 자동 갱신.</p>
+</div>
+<div class="jjh-sheet" id="jjhSheetMine" role="dialog" aria-label="내 콘텐츠 기록">
+  <h4><span id="jjhMineName"></span>님이 함께한 콘텐츠</h4>
+  <div class="sub" id="jjhMineMeta"></div>
+  <div style="display:flex;gap:22px;margin-top:12px;">
+    <div><div style="font-size:30px;font-weight:900;letter-spacing:-1px;" id="jjhMineCnt"></div><div style="font-size:12.5px;color:var(--ink-faint);">콘텐츠</div></div>
+    <div><div style="font-size:30px;font-weight:900;letter-spacing:-1px;" id="jjhMineViews"></div><div style="font-size:12.5px;color:var(--ink-faint);">누적 조회수</div></div>
+  </div>
+  <div class="jjh-sec">콘텐츠 목록</div>
+  <div id="jjhMineList"></div>
+  <p class="jjh-note">내 이름이 크레딧에 들어간 공식 인스타·홍비디오·유튜브 콘텐츠예요. 조회수는 매일 밤 갱신돼요. 빠진 콘텐츠가 있으면 담당 선생님께 알려주세요.</p>
 </div>
 <div class="jjh-sheet" id="jjhSheetEv" role="dialog" aria-label="일정 메뉴">
   <h4 id="jjhEvTitle"></h4><div class="sub" id="jjhEvSub"></div>
@@ -4104,7 +4136,7 @@ function hbApply(badges){
   const post = async body => { const r = await fetch(ATTEND_URL, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: JSON.stringify(body) }); return r.json(); };
 
   /* 시트 열고 닫기 */
-  const SHEETS = ['jjhSheetWhy', 'jjhSheetGoal', 'jjhSheetEv'];
+  const SHEETS = ['jjhSheetWhy', 'jjhSheetGoal', 'jjhSheetEv', 'jjhSheetMine'];
   function openSheet(id){ SHEETS.forEach(x => $(x).classList.toggle('on', x === id)); $('jjhDim').classList.toggle('on', !!id); }
   $('jjhDim').addEventListener('click', () => openSheet(null));
 
@@ -4217,6 +4249,51 @@ function hbApply(badges){
   $('jjhBest').addEventListener('click', openWhy);
   $('jjhBest').addEventListener('keydown', e => { if (e.key === 'Enter') openWhy(); });
 
+  /* ── 내 기록: 로그인한 홍보대사 본인이 함께한 콘텐츠 수·조회수 (순위 없이) ── */
+  let MINE = null;
+  const MINE_SKIP = 'jjMineSkip_v1';
+  function showBest(){ $('jjhMine').style.display = 'none'; $('jjhBest').style.display = ''; }
+  function renderMine(d){
+    if (!d || d.error || d.admin){ showBest(); return; }
+    const body = $('jjhMineBody'), card = $('jjhMine');
+    if (d.need === 'name'){
+      MINE = null; card.classList.add('pick'); $('jjhMineGo').style.display = 'none';
+      let pick = '';
+      body.innerHTML = `<div class="msg">처음 한 번만 내 이름을 골라주세요.<br>내가 함께한 콘텐츠를 모아서 보여드려요.</div>
+        <div class="pk">${(d.names || []).map(n => `<button type="button" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>
+        <div class="row"><button class="ok" type="button" disabled>이 이름으로 연결</button><button class="skip" type="button">홍보대사가 아니에요</button></div>`;
+      const ok = body.querySelector('.ok');
+      body.querySelectorAll('.pk button').forEach(b => b.addEventListener('click', e => { e.stopPropagation();
+        body.querySelectorAll('.pk button').forEach(x => x.classList.toggle('on', x === b)); pick = b.dataset.n; ok.disabled = false; ok.textContent = pick + '(으)로 연결'; }));
+      ok.addEventListener('click', async e => { e.stopPropagation(); if (!pick) return;
+        if (!confirm(pick + ' 님이 맞나요?\n한 번 연결하면 바꿀 때 선생님께 말씀해야 해요.')) return;
+        ok.disabled = true; ok.textContent = '연결 중…';
+        try { const r = await post({ action:'claimName', name: pick }); if (r && r.error){ alert(r.error); ok.disabled = false; ok.textContent = pick + '(으)로 연결'; return; } renderMine(r); }
+        catch(err){ alert('연결하지 못했어요. 잠시 후 다시 해주세요.'); ok.disabled = false; ok.textContent = pick + '(으)로 연결'; } });
+      body.querySelector('.skip').addEventListener('click', e => { e.stopPropagation(); try{ localStorage.setItem(MINE_SKIP, '1'); }catch(_){} showBest(); });
+      return;
+    }
+    MINE = d; card.classList.remove('pick');
+    $('jjhMineGo').style.display = d.count ? '' : 'none';
+    body.innerHTML = d.count
+      ? `<div class="nums"><div><b>${d.count}개</b><small>함께한 콘텐츠</small></div><div><b>${kv(d.views)}회</b><small>누적 조회수</small></div></div>`
+      : `<div class="msg">${esc(d.name)}님의 첫 콘텐츠를 기다리고 있어요 ✨</div>`;
+  }
+  function openMine(){
+    const d = MINE; if (!d || !d.count) return;
+    $('jjhMineName').textContent = d.name;
+    $('jjhMineMeta').textContent = md(d.since) + '부터 · ' + d.updated + ' 기준';
+    $('jjhMineCnt').textContent = d.count + '개';
+    $('jjhMineViews').textContent = kv(d.views) + '회';
+    $('jjhMineList').innerHTML = d.posts.map(p => {
+      const inner = `<span class="dt">${p.date ? md(p.date) : ''}</span><span class="pf">${esc(p.platform)}</span><span class="t">${esc(p.title)}</span><span class="vw">${kv(p.views)}회</span>`;
+      return /^https?:\/\//.test(p.url) ? `<a class="jjh-post" href="${esc(p.url)}" target="_blank" rel="noopener">${inner}</a>` : `<div class="jjh-post">${inner}</div>`;
+    }).join('');
+    openSheet('jjhSheetMine');
+  }
+  $('jjhMine').addEventListener('click', openMine);
+  $('jjhMine').addEventListener('keydown', e => { if (e.key === 'Enter') openMine(); });
+
   /* ── 팀장 이름 칩: 지난주 1등 먼저, 나머지 가나다. 누르면 바로 다음 단계 ── */
   function renderNames(){
     const champs = WEEKLY && WEEKLY.ready ? WEEKLY.top.map(t => t.name).filter(n => AMBASSADOR_ROSTER.includes(n)) : [];
@@ -4282,6 +4359,8 @@ function hbApply(badges){
   setTimeout(() => {
     api({ action:'weeklyTop' }).then(w => { if (w && w.from){ renderBest(w); renderNames(); } }).catch(() => { $('jjhBestName').textContent = '불러오지 못했어요'; });
     api({ action:'goal' }).then(g => { if (g && g.series) renderGoal(g); }).catch(() => { $('jjhGoalText').textContent = '공동목표를 불러오지 못했어요'; });
+    let skip = false; try{ skip = localStorage.getItem(MINE_SKIP) === '1'; }catch(_){}
+    if (skip) showBest(); else api({ action:'mine' }).then(renderMine).catch(showBest);
     loadSchedule();
   }, 300);
 

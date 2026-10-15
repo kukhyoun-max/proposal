@@ -1144,13 +1144,18 @@ function showPrompt(message){
 }
 
 const STORAGE_KEY = 'content-plan:current';
-const ADMIN_PIN = '2600';
-// PIN별 접근 권한: null = 전체, 배열 = 볼 수 있는 탭만
-const PIN_ROLES = {
-  '2600': null,            // 전체 (기획서 관리·회의·개인콘텐츠·행사·불참·점수표)
-  '0000': ['meeting'],     // 회의 출결만
-  '1234': ['personal'],    // 개인콘텐츠만
-};
+// 관리자 인증: PIN은 페이지에 두지 않고 서버(자동매칭 Apps Script 'adminLogin')에서 확인해요.
+// 통과하면 서버가 서명한 출입증(토큰, 12시간)을 주고, 관리자 저장 요청마다 자동으로 같이 보내요.
+const ADMIN_TK_KEY = 'jjAdminToken_v1';
+function adminSession(){
+  try{
+    const o = JSON.parse(sessionStorage.getItem(ADMIN_TK_KEY) || 'null');
+    if(o && o.token && o.exp > Date.now() + 60000) return o;
+  }catch(e){}
+  return null;
+}
+function adminToken(){ const o = adminSession(); return o ? o.token : ''; }
+function adminLogout(){ try{ sessionStorage.removeItem(ADMIN_TK_KEY); }catch(e){} }
 const TAB_KEYS = { '기획서 관리':'admin', '회의':'meeting', '개인콘텐츠':'personal', '행사':'event', '불참':'absent', '장비':'equip', '일정·장비':'equip', '점수표':'score' };
 let allowedTabs = null;
 function applyTabAccess(){
@@ -2454,10 +2459,25 @@ async function saveEditedSubmission(){
 }
 
 document.getElementById('btnAdminToggle').addEventListener('click', async ()=>{
-  const pin = await showPrompt('관리자 PIN을 입력하세요');
-  if(pin === null) return;
-  if(!(pin in PIN_ROLES)){ await showAlert('PIN이 올바르지 않아요.'); return; }
-  allowedTabs = PIN_ROLES[pin];
+  let sess = adminSession();
+  if(!sess){
+    const pin = await showPrompt('관리자 PIN을 입력하세요');
+    if(!pin) return;
+    let r;
+    try{
+      const res = await fetch(ATTEND_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'adminLogin', pin }) });
+      r = await res.json();
+    }catch(e){ await showAlert('서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.'); return; }
+    if(!r || !r.ok){
+      await showAlert(r && r.error === 'locked' ? 'PIN을 여러 번 틀려서 10분간 잠겼어요.'
+        : r && r.error === 'no_pin' ? '서버에 관리자 PIN이 아직 설정되지 않았어요.'
+        : 'PIN이 올바르지 않아요.' + (r && r.left != null ? ' (남은 횟수 ' + r.left + '회)' : ''));
+      return;
+    }
+    sess = { token: r.token, tabs: r.tabs || null, exp: Number(r.exp) || (Date.now() + 11 * 3600e3) };
+    try{ sessionStorage.setItem(ADMIN_TK_KEY, JSON.stringify(sess)); }catch(e){}
+  }
+  allowedTabs = sess.tabs;
   applyTabAccess();
   openTab(allowedTabs ? allowedTabs[0] : 'admin');
   attendPrefetch();
@@ -2472,13 +2492,14 @@ async function deletePlan(id, rec, btn){
   if(!ok) return;
   btn.disabled = true; btn.textContent = '삭제 중…';
   try{
-    await sheetPost({ action:'deletePlan', id, pin:'2600' });
-    const rows = await jsonp({ action:'list' });
-    if((rows||[]).some(r => String(r['ID']) === String(id))){
-      showAlert('삭제가 반영되지 않았어요. 기획서 Apps Script에 삭제 기능(deletePlan)이 아직 배포되지 않았을 수 있어요.');
+    if(!adminToken()){ showAlert('관리자 로그인이 만료됐어요. 관리자 버튼을 눌러 다시 들어와 주세요.'); btn.disabled = false; btn.textContent = '삭제'; return; }
+    const res = await fetch(ATTEND_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'deletePlan', id }) });
+    const r = await res.json().catch(() => null);
+    if(!r || !r.ok){
+      showAlert(r && r.error === 'auth' ? '관리자 로그인이 만료됐어요. 다시 들어와 주세요.' : '삭제하지 못했어요' + (r && r.error ? ' (' + r.error + ')' : '') + '.');
       btn.disabled = false; btn.textContent = '삭제'; return;
     }
-    planMem = rows; planMemAt = Date.now();
+    planInvalidate();
     showToast('기획서를 삭제했어요');
     loadSubmissions();
   }catch(e){
@@ -2935,7 +2956,10 @@ function attendJsonp(params){
   const _fetch = window.fetch.bind(window);
   // 기획서 제출·승인(APPS_SCRIPT_URL)도 장비 대여를 바꾸니 같이 비워요. 저장이 끝난 뒤에도 한 번 더 비워 그 사이에 받은 옛 목록이 남지 않게 해요.
   const bust = () => { attendCache.clear(); attCacheClear(); };
-  window.fetch = (u, o) => { const s = String(u); if(s === ATTEND_URL || s === APPS_SCRIPT_URL){ bust(); return _fetch(u, o).finally(bust); } return _fetch(u, o); };
+  window.fetch = (u, o) => { const s = String(u); if(s === ATTEND_URL || s === APPS_SCRIPT_URL){
+    if(o && o.method === 'POST' && typeof o.body === 'string'){ const tk = adminToken();
+      if(tk){ try{ const b = JSON.parse(o.body); if(b && typeof b === 'object' && !b.tk){ b.tk = tk; o = Object.assign({}, o, { body: JSON.stringify(b) }); } }catch(e){} } }
+    bust(); return _fetch(u, o).finally(bust); } return _fetch(u, o); };
 })();
 function attendPrefetch(){
   const today = mtYmd(new Date());
@@ -4144,7 +4168,7 @@ function hbApply(badges){
   $('jjhEvDel').addEventListener('click', async () => {
     if (!target) return;
     const t = target; openSheet(null);
-    const pin = await showPrompt('관리자 비밀번호를 입력하면 「' + t.title + '」 일정을 구글 캘린더에서 삭제해요.');
+    const pin = adminToken() ? (await showConfirm('「' + t.title + '」 일정을 구글 캘린더에서 삭제할까요?') ? '-' : '') : await showPrompt('관리자 비밀번호를 입력하면 「' + t.title + '」 일정을 구글 캘린더에서 삭제해요.');
     if (!pin) return;
     showToast('삭제하는 중…');
     try {
@@ -4199,7 +4223,7 @@ function hbApply(badges){
   }
   document.addEventListener('click', async e => {
     const b = e.target.closest('#srPending button[data-id]'); if (!b) return;
-    const pin = await showPrompt('관리자 비밀번호를 입력하면 「' + b.dataset.t + '」을(를) 정규 편성해요.');
+    const pin = adminToken() ? (await showConfirm('「' + b.dataset.t + '」을(를) 정규 편성할까요?') ? '-' : '') : await showPrompt('관리자 비밀번호를 입력하면 「' + b.dataset.t + '」을(를) 정규 편성해요.');
     if (!pin) return;
     b.disabled = true; b.textContent = '등록 중…';
     try {

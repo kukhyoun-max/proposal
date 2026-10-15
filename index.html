@@ -2576,7 +2576,7 @@ async function saveEditedSubmission(){
   try{
     const result = await sheetUpdate(editingKey, fields);
     if(!result || result.ok === false) throw new Error('시트 응답 실패');
-    const by = detailFromAdmin ? 'admin' : 'team';
+    const by = adminToken() ? 'admin' : 'team';   // 관리자 로그인 상태면 어디서 고쳐도 '관리자' (서버도 출입증으로 다시 확인)
     await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({ action:'planEditor', planId: editingKey, by }) });
     editingRecord.updatedBy = by === 'admin' ? '관리자' : '팀';

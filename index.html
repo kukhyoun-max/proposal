@@ -1214,7 +1214,9 @@ function memberGate(msg){
 })();
 function memberCheckReply(data){
   if(data && !Array.isArray(data) && (data.error === 'login' || data.error === 'not_member')){
-    const who = memberTkEmail(memberToken() || '');
+    const g = document.getElementById('jjGate');
+    if(g && g.style.display !== 'none' && data.error === 'login'){ memberGate(); return true; }   // 이미 안내 중이면 문구 유지
+    const who = data.email || memberTkEmail(memberToken() || '');
     memberGate(data.error === 'not_member'
       ? `<b>${(who||'이 계정').replace(/[<>&]/g,'')}</b>은(는)<br>홍보대사 공유 드라이브에 등록되지 않은 계정이에요.<br>등록된 계정으로 다시 로그인해 주세요.`
       : '로그인이 만료됐어요.<br>다시 로그인해 주세요.');

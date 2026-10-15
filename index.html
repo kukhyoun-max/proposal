@@ -1189,7 +1189,7 @@ function openTab(k){
   else { showView('meeting'); const input = document.getElementById('mtDate'); if(!input.value) input.value = mtMonday(mtYmd(new Date())); mtLoad(); }
 }
 // ───── 홍보대사 멤버 로그인 (구글 계정 · 공유 드라이브 멤버만) ─────
-const JJ_LOGIN_URL = 'https://script.google.com/macros/s/AKfycbzyrGQC_ZKjQHi_UQqFTdIyAVfC2J3LoGvLOH4MgNTFVdfcQgkw8qQR_o-8MFk54AZhHw/exec';
+const JJ_LOGIN_URL = 'https://script.google.com/macros/s/AKfycbz1TlS32tnC64QR8LEI9fkASMEQQot5tENT-OSfE2npdqeRkpv2jS5lCcE3aywAMlAhCA/exec';
 const MEMBER_TK_KEY = 'jjMemberTk_v1';
 function memberTkExp(tk){ try{ const p = tk.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'); return Number(JSON.parse(decodeURIComponent(escape(atob(p)))).exp) || 0; }catch(e){ return 0; } }
 function memberTkEmail(tk){ try{ const p = tk.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'); return String(JSON.parse(decodeURIComponent(escape(atob(p)))).u || ''); }catch(e){ return ''; } }

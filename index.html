@@ -525,6 +525,10 @@
   .jjh-mine .ok:disabled{opacity:.4}
   .jjh-mine .skip{border:0;background:none;color:var(--ink-faint);font:inherit;font-size:12.5px;text-decoration:underline;cursor:pointer;margin-left:auto}
   a.jjh-post{color:inherit;text-decoration:none}
+  .jjh-mstat{display:flex;gap:26px;margin:4px 0 6px}
+  .jjh-mstat b{display:block;font-size:26px;font-weight:900;letter-spacing:-1px}
+  .jjh-mstat small{font-size:12px;color:var(--ink-faint)}
+  .jjh-mine .k .mo{color:var(--ink-faint);font-weight:500}
   .jjh-post .dt{flex:none;font-size:12px;color:var(--ink-faint);width:38px}
   .jjh-best .cup{flex:none;width:46px;height:52px;margin-top:2px}
   .jjh-best .l{flex:1;min-width:0}
@@ -637,7 +641,7 @@
           <svg id="jjhMini" viewBox="0 0 112 52" aria-hidden="true"></svg>
         </button>
         <div class="jjh-card jjh-mine" id="jjhMine" role="button" tabindex="0" aria-label="내 콘텐츠 기록 보기">
-          <div class="k">📒 내 기록 <span class="go" id="jjhMineGo" style="display:none">›</span></div>
+          <div class="k">📒 <span id="jjhMineMon">이번 달</span> 내 기록 <span class="go" id="jjhMineGo" style="display:none">›</span></div>
           <div id="jjhMineBody"><div class="msg">불러오는 중…</div></div>
         </div>
         <div class="jjh-card jjh-best wait" id="jjhBest" role="button" tabindex="0" aria-label="1등 근거 보기" style="display:none">
@@ -1093,13 +1097,14 @@
   <p class="jjh-note">기간 내 새로 올라온 홍보대사 크레딧 콘텐츠(인스타 공식·홍비디오·유튜브)의 조회수 합계예요. 광고·기관 홍보물은 빠져요. 매일 밤 자동 갱신.</p>
 </div>
 <div class="jjh-sheet" id="jjhSheetMine" role="dialog" aria-label="내 콘텐츠 기록">
-  <h4><span id="jjhMineName"></span>님이 함께한 콘텐츠</h4>
+  <h4><span id="jjhMineName"></span>님의 기록</h4>
   <div class="sub" id="jjhMineMeta"></div>
-  <div style="display:flex;gap:22px;margin-top:12px;">
-    <div><div style="font-size:30px;font-weight:900;letter-spacing:-1px;" id="jjhMineCnt"></div><div style="font-size:12.5px;color:var(--ink-faint);">콘텐츠</div></div>
-    <div><div style="font-size:30px;font-weight:900;letter-spacing:-1px;" id="jjhMineViews"></div><div style="font-size:12.5px;color:var(--ink-faint);">누적 조회수</div></div>
-  </div>
-  <div class="jjh-sec">콘텐츠 목록</div>
+  <div class="jjh-sec" id="jjhMineMonH"></div>
+  <div class="jjh-mstat"><div><b id="jjhMineMonCnt"></b><small>콘텐츠</small></div><div><b id="jjhMineMonViews"></b><small>조회수</small></div></div>
+  <div id="jjhMineMonList"></div>
+  <div class="jjh-sec" id="jjhMineAllH"></div>
+  <div class="jjh-mstat"><div><b id="jjhMineCnt"></b><small>콘텐츠</small></div><div><b id="jjhMineViews"></b><small>조회수</small></div></div>
+  <div class="jjh-sec">올라간 콘텐츠 전체</div>
   <div id="jjhMineList"></div>
   <p class="jjh-note">내 이름이 크레딧에 들어간 공식 인스타·홍비디오·유튜브 콘텐츠예요. 조회수는 매일 밤 갱신돼요. 빠진 콘텐츠가 있으면 담당 선생님께 알려주세요.</p>
 </div>
@@ -4274,21 +4279,35 @@ function hbApply(badges){
       return;
     }
     MINE = d; card.classList.remove('pick');
+    const mon = mineMonth(d);
+    $('jjhMineMon').textContent = mon.label;
     $('jjhMineGo').style.display = d.count ? '' : 'none';
-    body.innerHTML = d.count
-      ? `<div class="nums"><div><b>${d.count}개</b><small>함께한 콘텐츠</small></div><div><b>${kv(d.views)}회</b><small>누적 조회수</small></div></div>`
-      : `<div class="msg">${esc(d.name)}님의 첫 콘텐츠를 기다리고 있어요 ✨</div>`;
+    body.innerHTML = mon.posts.length
+      ? `<div class="nums"><div><b>${mon.posts.length}개</b><small>올린 콘텐츠</small></div><div><b>${kv(mon.views)}회</b><small>조회수</small></div></div>`
+      : `<div class="msg">${esc(d.name)}님의 ${mon.label} 첫 콘텐츠를 기다리고 있어요 ✨</div>`;
   }
+  function mineMonth(d){
+    const now = new Date(), ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    const posts = (d.posts || []).filter(p => String(p.date || '').slice(0, 7) === ym);
+    return { label: (now.getMonth() + 1) + '월', posts, views: posts.reduce((t, p) => t + (p.views || 0), 0) };
+  }
+  const minePosts = list => list.map(p => {
+    const inner = `<span class="dt">${p.date ? md(p.date) : ''}</span><span class="pf">${esc(p.platform)}</span><span class="t">${esc(p.title)}</span><span class="vw">${kv(p.views)}회</span>`;
+    return /^https?:\/\//.test(p.url) ? `<a class="jjh-post" href="${esc(p.url)}" target="_blank" rel="noopener">${inner}</a>` : `<div class="jjh-post">${inner}</div>`;
+  }).join('');
   function openMine(){
     const d = MINE; if (!d || !d.count) return;
+    const mon = mineMonth(d);
     $('jjhMineName').textContent = d.name;
-    $('jjhMineMeta').textContent = md(d.since) + '부터 · ' + d.updated + ' 기준';
+    $('jjhMineMeta').textContent = '조회수 ' + d.updated + ' 기준 · 매일 밤 갱신';
+    $('jjhMineMonH').textContent = '📅 ' + mon.label + ' 기록';
+    $('jjhMineMonCnt').textContent = mon.posts.length + '개';
+    $('jjhMineMonViews').textContent = kv(mon.views) + '회';
+    $('jjhMineMonList').innerHTML = mon.posts.length ? minePosts(mon.posts) : `<div class="jjh-empty">${mon.label}에는 아직 올라간 콘텐츠가 없어요</div>`;
+    $('jjhMineAllH').textContent = '🏁 누적 기록 (' + md(d.since) + '부터)';
     $('jjhMineCnt').textContent = d.count + '개';
     $('jjhMineViews').textContent = kv(d.views) + '회';
-    $('jjhMineList').innerHTML = d.posts.map(p => {
-      const inner = `<span class="dt">${p.date ? md(p.date) : ''}</span><span class="pf">${esc(p.platform)}</span><span class="t">${esc(p.title)}</span><span class="vw">${kv(p.views)}회</span>`;
-      return /^https?:\/\//.test(p.url) ? `<a class="jjh-post" href="${esc(p.url)}" target="_blank" rel="noopener">${inner}</a>` : `<div class="jjh-post">${inner}</div>`;
-    }).join('');
+    $('jjhMineList').innerHTML = minePosts(d.posts);
     openSheet('jjhSheetMine');
   }
   $('jjhMine').addEventListener('click', openMine);

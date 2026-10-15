@@ -2491,7 +2491,7 @@ document.getElementById('btnAdminBack').addEventListener('click', ()=>{
 
 // 기획서 삭제: 시트에서 지우지 않고 '삭제된기획서' 탭으로 옮겨요(되돌릴 수 있게). 점수·업로드 집계에서도 빠져요.
 async function deletePlan(id, rec, btn){
-  const ok = await showConfirm('「' + (rec.title || '제목 없음') + '」 기획서를 삭제할까요?\n(' + (rec.name || '-') + ' 팀장 · ' + (STATUS_LABELS[rec.status] || rec.status) + ')\n\n점수·업로드 집계에서도 빠져요. 시트의 \'삭제된기획서\' 탭으로 옮겨져서 필요하면 되살릴 수 있어요.');
+  const ok = await showConfirm('「' + (rec.title || '제목 없음') + '」 기획서를 삭제할까요?\n(' + (rec.name || '-') + ' 팀장 · ' + (STATUS_LABELS[rec.status] || rec.status) + ')\n\n점수·업로드 집계에서도 빠지고, 드라이브 팀콘 폴더도 휴지통으로 옮겨져요.\n(기획서는 시트의 \'삭제된기획서\' 탭, 폴더는 드라이브 휴지통에서 30일 안에 되살릴 수 있어요)');
   if(!ok) return;
   btn.disabled = true; btn.textContent = '삭제 중…';
   try{
@@ -2503,7 +2503,9 @@ async function deletePlan(id, rec, btn){
       btn.disabled = false; btn.textContent = '삭제'; return;
     }
     planInvalidate();
-    showToast('기획서를 삭제했어요');
+    // 드라이브 팀콘 폴더도 휴지통으로 (기획서 Apps Script가 처리, 관리자 출입증 자동 첨부)
+    try{ fetch(APPS_SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'sweepDeleted' }) }); }catch(e){}
+    showToast('기획서를 삭제했어요 · 드라이브 폴더도 휴지통으로 옮겨요');
     loadSubmissions();
   }catch(e){
     showAlert('삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');

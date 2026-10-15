@@ -2668,6 +2668,8 @@ document.getElementById('qaSave').addEventListener('click', async () => {
     }
     st.textContent = '등록됨 · 승인 처리 중...';
     await approveSubmission(id);
+    // 이미 올라간 게시물이 있으면 바로 '업로드 완료'로 잡히도록 자동매칭을 한 번 돌려요 (크레딧 이름 + 촬영일 기준)
+    try{ fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'rerun' }) }); }catch(e){}
     document.getElementById('qaBox').style.display = 'none';
   }catch(e){
     st.textContent = '등록 실패: ' + (e && e.message ? e.message : '오류');

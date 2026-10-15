@@ -871,7 +871,10 @@
   <div class="content" style="padding-top:0;">
     <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 수요일(기획서 마감 16시)마다 칸이 생겨요. 기획서를 먼저 입력해 저장하고, 다음 주 월요일 콘텐츠 마감(자정) 뒤에 같은 칸을 눌러 콘텐츠를 이어서 입력하면 돼요.</p>
     <div class="mt-weeks" id="pcWeeks"></div>
-    <p id="pcCycle" style="font-size:12.5px; font-weight:700; color:var(--ink); margin:0 0 6px;"></p>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 6px;">
+      <p id="pcCycle" style="font-size:12.5px; font-weight:700; color:var(--ink); margin:0;"></p>
+      <button class="mt-off" id="pcCancel">이번 회차 휴회</button>
+    </div>
     <div class="mt-tools">
       <span id="pcInfo">불러오는 중...</span>
       <div style="display:flex; gap:6px;">
@@ -3145,6 +3148,7 @@ const PC_OPTS = ['제출','지각','미제출'];
 let pcWeek = '';
 let pcState = {};   // name -> { plan, content }
 let pcWeeksDone = {};
+let pcCancelled = false;   // 이번 회차 휴회 (개인콘 쉬는 주)
 const PC_DEFAULT = ['***','***','***','***','***','***','***','***','***','***','***','***'];
 let pcExtra = new Set();
 let pcOnlyMissing = false, pcLoadedWeek = '';   // 이번 주에 추가로 넣은 인원
@@ -3173,8 +3177,9 @@ function pcRenderWeeks(){
     const info = pcWeeksDone[w];
     const n = info ? (typeof info === 'number' ? info : info.n) : 0;
     const pending = info && typeof info === 'object' ? info.pending : 0;
-    const cls = !n ? 'todo' : (pending ? 'part' : 'done');
-    const label = !n ? '미입력' : (pending ? `콘텐츠 대기 ${pending}` : '입력 완료');
+    const off = info && typeof info === 'object' && info.cancelled;
+    const cls = off ? 'off' : (!n ? 'todo' : (pending ? 'part' : 'done'));
+    const label = off ? '휴회' : (!n ? '미입력' : (pending ? `콘텐츠 대기 ${pending}` : '입력 완료'));
     return `<button class="mt-week ${cls} ${w===pcWeek?'sel':''}" data-w="${w}"><b>${mtFmt(w)}</b><small>${label}</small></button>`;
   }).join('');
   el.querySelectorAll('.mt-week').forEach(b => b.addEventListener('click', ()=>{ pcWeek = b.dataset.w; pcLoad(); }));
@@ -3183,6 +3188,15 @@ function pcRenderWeeks(){
 
 function pcRenderList(){
   const el = document.getElementById('pcList');
+  document.getElementById('pcCancel').textContent = pcCancelled ? '휴회 취소' : '이번 회차 휴회';
+  ['pcSave'].forEach(id => document.getElementById(id).style.display = pcCancelled ? 'none' : 'block');
+  ['pcAllPlan','pcAllContent'].forEach(id => document.getElementById(id).style.display = pcCancelled ? 'none' : 'inline-block');
+  if(pcCancelled){
+    el.innerHTML = '<div class="mt-cancelled">이 회차는 휴회로 처리됐어요.<br>개인콘텐츠 감점에 반영되지 않아요.</div>';
+    document.getElementById('pcAdd').innerHTML = '';
+    document.getElementById('pcInfo').textContent = '휴회';
+    return;
+  }
   const isMiss = n => !(pcState[n] && pcState[n].plan && pcState[n].content);
   const missN = pcNames().filter(isMiss).length;
   const list = pcOnlyMissing ? pcNames().filter(isMiss) : pcNames();
@@ -3211,6 +3225,7 @@ function pcRenderList(){
 }
 
 function pcUpdateInfo(){
+  if(pcCancelled){ document.getElementById('pcInfo').textContent = '휴회'; return; }
   const names = pcNames();
   const plan = names.filter(n => pcState[n] && pcState[n].plan).length;
   const content = names.filter(n => pcState[n] && pcState[n].content).length;
@@ -3235,12 +3250,13 @@ async function pcLoad(){
   }
   pcDirty = false; pcLoadedWeek = pcWeek;
   document.getElementById('pcStatus').textContent = '';
-  pcState = {}; pcExtra = new Set();
+  pcState = {}; pcExtra = new Set(); pcCancelled = false;
   const week = pcWeek, params = { action:'personalList', week };
   const apply = (res, fresh) => {
     if(pcLoadedWeek !== week) return;
     if(!pcDirty){ pcState = {}; pcExtra = new Set(); (res.records || []).forEach(r => { pcState[r.name] = { plan:r.plan, content:r.content }; if(!PC_DEFAULT.includes(r.name)) pcExtra.add(r.name); }); }
     pcWeeksDone = res.weeks || {};
+    pcCancelled = !!(res.cancelled || (pcWeeksDone[week] && pcWeeksDone[week].cancelled));
     pcRenderWeeks(); pcRenderList(); pcUpdateInfo();
     pcRenderSummary(res.summary, res.weekCount);
     document.getElementById('pcStatus').textContent = !fresh ? '최신 기록 확인 중…' : ((res.records||[]).length ? '이 주에 저장된 기록을 불러왔어요.' : '');
@@ -3284,6 +3300,24 @@ document.getElementById('pcRule').textContent = `감점: 기획서 지각 ${PC_P
 document.getElementById('pcAllPlan').addEventListener('click', ()=>pcFillAll('plan'));
 document.getElementById('pcAllContent').addEventListener('click', ()=>pcFillAll('content'));
 document.getElementById('pcSave').addEventListener('click', pcSave);
+document.getElementById('pcCancel').addEventListener('click', async ()=>{
+  if(!pcWeek) return;
+  const btn = document.getElementById('pcCancel');
+  if(!pcCancelled){
+    const has = Object.keys(pcState).some(n => pcState[n] && (pcState[n].plan || pcState[n].content));
+    if(!(await showConfirm(`${mtFmt(pcWeek)} 회차를 휴회로 처리할까요?` + (has ? '\n이 회차에 입력된 제출 기록은 지워져요.' : '') + '\n휴회 회차는 감점과 회차 수에서 빠져요.'))) return;
+  }
+  btn.disabled = true;
+  try{
+    await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(pcCancelled ? { action:'personalSave', week: pcWeek, records: [] } : { action:'personalSave', week: pcWeek, cancelled:true }) });
+    await new Promise(r => setTimeout(r, 1200));
+    pcDirty = false;
+    await pcLoad();
+    showToast(pcCancelled ? '이 회차를 휴회로 처리했어요' : '휴회를 취소했어요');
+  }catch(e){ showAlert('처리에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+  btn.disabled = false;
+});
 document.getElementById('btnPersonalBack').addEventListener('click', ()=>{ showView('form'); });
 document.querySelectorAll('.mt-tabs').forEach(bar => {
   if(bar.closest('#scoreView')) return;

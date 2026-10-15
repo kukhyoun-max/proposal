@@ -867,6 +867,7 @@
       <p class="save-status" id="qaStatus"></p>
     </div>
   </div>
+  <div class="content" id="mlPending" style="padding-top:0; padding-bottom:0;"></div>
   <div class="content" id="srPending" style="padding-top:0; padding-bottom:0;"></div>
   <div class="content" id="adminList" style="padding-top:0;">
     <p style="font-size:12.5px; color:var(--ink-faint);">불러오는 중...</p>
@@ -2577,6 +2578,7 @@ document.getElementById('btnAdminToggle').addEventListener('click', async ()=>{
   applyTabAccess();
   openTab(allowedTabs ? allowedTabs[0] : 'admin');
   attendPrefetch();
+  if(!allowedTabs && window.jjLoadLinks) window.jjLoadLinks();
 });
 document.getElementById('btnAdminBack').addEventListener('click', ()=>{
   showView('form');
@@ -4261,20 +4263,25 @@ function hbApply(badges){
   function renderMine(d){
     if (!d || d.error || d.admin){ showBest(); return; }
     const body = $('jjhMineBody'), card = $('jjhMine');
+    if (d.pending){
+      MINE = null; card.classList.add('pick'); $('jjhMineGo').style.display = 'none';
+      body.innerHTML = `<div class="msg"><b>${esc(d.pending)}</b>(으)로 연결 요청을 보냈어요.<br>선생님이 확인하면 내 기록이 열려요 🙂</div>`;
+      return;
+    }
     if (d.need === 'name'){
       MINE = null; card.classList.add('pick'); $('jjhMineGo').style.display = 'none';
       let pick = '';
-      body.innerHTML = `<div class="msg">처음 한 번만 내 이름을 골라주세요.<br>내가 함께한 콘텐츠를 모아서 보여드려요.</div>
+      body.innerHTML = `<div class="msg">처음 한 번만 내 이름을 골라주세요.<br>선생님이 확인하면 내 기록이 열려요.</div>
         <div class="pk">${(d.names || []).map(n => `<button type="button" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>
-        <div class="row"><button class="ok" type="button" disabled>이 이름으로 연결</button><button class="skip" type="button">홍보대사가 아니에요</button></div>`;
+        <div class="row"><button class="ok" type="button" disabled>이 이름으로 요청</button><button class="skip" type="button">홍보대사가 아니에요</button></div>`;
       const ok = body.querySelector('.ok');
       body.querySelectorAll('.pk button').forEach(b => b.addEventListener('click', e => { e.stopPropagation();
-        body.querySelectorAll('.pk button').forEach(x => x.classList.toggle('on', x === b)); pick = b.dataset.n; ok.disabled = false; ok.textContent = pick + '(으)로 연결'; }));
+        body.querySelectorAll('.pk button').forEach(x => x.classList.toggle('on', x === b)); pick = b.dataset.n; ok.disabled = false; ok.textContent = pick + '(으)로 요청'; }));
       ok.addEventListener('click', async e => { e.stopPropagation(); if (!pick) return;
-        if (!confirm(pick + ' 님이 맞나요?\n한 번 연결하면 바꿀 때 선생님께 말씀해야 해요.')) return;
-        ok.disabled = true; ok.textContent = '연결 중…';
-        try { const r = await post({ action:'claimName', name: pick }); if (r && r.error){ alert(r.error); ok.disabled = false; ok.textContent = pick + '(으)로 연결'; return; } renderMine(r); }
-        catch(err){ alert('연결하지 못했어요. 잠시 후 다시 해주세요.'); ok.disabled = false; ok.textContent = pick + '(으)로 연결'; } });
+        if (!confirm(pick + ' 님이 맞나요?\n선생님이 확인한 뒤 내 기록이 열려요.')) return;
+        ok.disabled = true; ok.textContent = '요청 중…';
+        try { const r = await post({ action:'claimName', name: pick }); if (r && r.error){ alert(r.error); ok.disabled = false; ok.textContent = pick + '(으)로 요청'; return; } renderMine(r); }
+        catch(err){ alert('연결하지 못했어요. 잠시 후 다시 해주세요.'); ok.disabled = false; ok.textContent = pick + '(으)로 요청'; } });
       body.querySelector('.skip').addEventListener('click', e => { e.stopPropagation(); try{ localStorage.setItem(MINE_SKIP, '1'); }catch(_){} showBest(); });
       return;
     }
@@ -4425,6 +4432,25 @@ function hbApply(badges){
     } catch (err){ showAlert('등록하지 못했어요. 잠시 후 다시 시도해 주세요.'); b.disabled = false; b.textContent = '정규 편성'; }
   });
   $('btnAdminToggle').addEventListener('click', () => setTimeout(loadPending, 400));
+
+  /* ── 계정 연결 요청 (학생이 고른 이름 → 관리자 승인 후 내 기록 공개) ── */
+  function renderLinks(r){
+    const box = $('mlPending'); if (!box) return;
+    const pend = (r && r.pending) || [];
+    if (!pend.length){ box.innerHTML = ''; return; }
+    box.innerHTML = `<div class="sr-box"><h4>내 기록 연결 요청 <span style="color:var(--ink-faint);font-weight:700;">${pend.length}</span></h4><p class="req-hint" style="margin:0 0 4px;">구글 계정이 본인 것이 맞는지 확인하고 승인해 주세요 · 승인된 계정 ${((r && r.approved) || []).length}명</p>` +
+      pend.map(p => `<div class="sr-row"><div class="t"><b>${esc(p.name)}</b><small>${esc(p.email)}${p.at ? ' · ' + esc(p.at) : ''}</small></div><button type="button" class="ml-no" data-e="${esc(p.email)}" data-n="${esc(p.name)}" style="background:#F2F4F6;color:var(--ink-soft);margin-right:6px;">거절</button><button type="button" class="ml-ok" data-e="${esc(p.email)}" data-n="${esc(p.name)}">승인</button></div>`).join('') + '</div>';
+  }
+  async function loadLinks(){ if (!adminToken()) { $('mlPending').innerHTML = ''; return; } try { renderLinks(await post({ action:'linkList' })); } catch (e){ $('mlPending').innerHTML = ''; } }
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('#mlPending button[data-e]'); if (!b) return;
+    const ok = b.classList.contains('ml-ok');
+    if (!ok && !(await showConfirm(b.dataset.n + ' (' + b.dataset.e + ') 요청을 거절할까요?'))) return;
+    b.disabled = true;
+    try { const r = await post({ action:'linkDecide', email: b.dataset.e, ok }); if (r && r.ok){ showToast(ok ? b.dataset.n + ' 님 연결을 승인했어요' : '요청을 거절했어요'); renderLinks(r); } else { showAlert('처리하지 못했어요: ' + ((r && r.error) || '')); b.disabled = false; } }
+    catch (err){ showAlert('처리하지 못했어요. 잠시 후 다시 해주세요.'); b.disabled = false; }
+  });
+  window.jjLoadLinks = loadLinks;
 })();
 </script>
 

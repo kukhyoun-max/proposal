@@ -1210,8 +1210,9 @@ function memberGate(msg){
   if(/KAKAOTALK/i.test(ua)){
     // 카톡 인앱 브라우저는 구글 로그인을 막아요 → 로그인 전이면 기본 브라우저로 바로 넘겨요
     const ext = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.origin + location.pathname);
-    document.getElementById('jjGateKakao').style.display = 'block';
-    document.getElementById('jjGateExt').href = ext;
+    const kk = document.getElementById('jjGateKakao');
+    kk.textContent = '카카오톡 안에서는 구글 로그인이 안 돼요.';
+    kk.style.display = 'block';
     if(btn){ btn.href = ext; btn.textContent = '기본 브라우저에서 로그인하기'; }
     if(!has) location.href = ext;
   } else if(/Instagram|FBAN|FBAV|Line\/|NAVER|DaumApps|everytimeApp|; wv\)/i.test(ua)){

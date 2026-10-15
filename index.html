@@ -543,9 +543,18 @@
   .jjh-plan-h .lb{font-weight:700;color:var(--purple);font-size:13.5px}
   .jjh-names{display:flex;gap:8px;overflow-x:auto;margin:10px -20px 4px;padding:0 20px 4px;scrollbar-width:none}
   .jjh-names::-webkit-scrollbar{display:none}
-  .jjh-names button{flex:none;padding:10px 15px;border-radius:12px;border:0;background:#F2F4F6;font:inherit;font-size:15px;font-weight:700;color:#333D4B;cursor:pointer}
-  .jjh-names button.champ{background:#FFF4DB;color:#8A5A00}
-  .jjh-names button.on{background:var(--purple);color:#fff}
+  .jjh-names button{flex:none;padding:10px 15px;border-radius:12px;border:1.5px solid #D1D6DB;background:#fff;font:inherit;font-size:15px;font-weight:700;color:#333D4B;cursor:pointer}
+  .jjh-names button.champ{background:#FFF4DB;border-color:#F5C451;color:#8A5A00}
+  .jjh-names button.on{background:var(--purple);border-color:var(--purple);color:#fff}
+  .jjh-plan{margin-top:22px;padding:16px 16px 14px}
+  .jjh-plan .jjh-plan-h{margin:2px 0 4px}
+  .jjh-plan h2.heading{font-size:21px;margin:0 0 2px}
+  .jjh-plan .jjh-names{margin:10px -16px 0;padding:0 16px 4px}
+  .topbar.in-card{padding:0 0 12px}
+  .topbar.in-card #btnReset{display:none}
+  #panel1 .overview-wrap{margin-top:14px}
+  #panel1 #ov_list{display:none}
+  .jjh-row.go{cursor:pointer}
   .jjh-sc h3{font-size:16px;font-weight:900;margin:0 0 10px}
   .jjh-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
   .jjh-chips button{border:0;border-radius:99px;padding:6px 12px;background:#F2F4F6;font:inherit;font-size:13px;font-weight:700;color:#4E5968;cursor:pointer}
@@ -661,22 +670,25 @@
           </div>
         </div>
       </div>
-      <div class="jjh-plan-h"><span class="lb">📝 기획서 쓰기</span></div>
-      <h2 class="heading" style="margin-bottom:4px;">팀장 이름을 골라주세요</h2>
-      <div class="jjh-names" id="jjhNames"></div>
-      <div class="input-box name-picker" id="nameBox" style="display:none;">
-        <label>담당자(팀장) 이름을 입력해 주세요</label>
-        <input type="text" id="in_name" placeholder="예: 김지훈" autocomplete="off">
-        <div class="suggest-list" id="suggest_name"></div>
+      <div class="jjh-card jjh-plan" id="jjhPlanCard">
+        <div id="jjhPlanProg"></div>
+        <div class="jjh-plan-h"><span class="lb">📝 기획서 쓰기</span></div>
+        <h2 class="heading">팀장 이름을 골라주세요</h2>
+        <div class="jjh-names" id="jjhNames"></div>
+        <div class="input-box name-picker" id="nameBox" style="display:none;">
+          <label>담당자(팀장) 이름을 입력해 주세요</label>
+          <input type="text" id="in_name" placeholder="예: 김지훈" autocomplete="off">
+          <div class="suggest-list" id="suggest_name"></div>
+        </div>
       </div>
-
-      <div class="jjh-card jjh-sc" id="jjhSchedule"><h3>주요 일정</h3><div class="jjh-chips" id="jjhScChips"></div><div id="jjhScList"><div class="jjh-empty">불러오는 중…</div></div></div>
 
       <div class="overview-wrap">
         <p class="overview-title">이번 주 마감</p>
         <div class="dl-grid" id="ov_deadline"></div>
         <div class="dl-list" id="ov_list"></div>
       </div>
+
+      <div class="jjh-card jjh-sc" id="jjhSchedule"><h3>주요 일정</h3><div class="jjh-chips" id="jjhScChips"></div><div id="jjhScList"><div class="jjh-empty">불러오는 중…</div></div></div>
     </div>
 
     <div class="step-panel" id="panel2">
@@ -1769,6 +1781,10 @@ function updateProgress(){
 
   document.querySelectorAll('.step-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel'+step).classList.add('active');
+  // 1단계(홈)에서는 단계 표시를 기획서 카드 안에, 2단계부터는 맨 위에
+  const progSlot = document.getElementById('jjhPlanProg'), fv = document.getElementById('formView');
+  if(step===1 && progSlot){ if(topbar.parentElement !== progSlot) progSlot.appendChild(topbar); topbar.classList.add('in-card'); }
+  else if(topbar.parentElement !== fv){ fv.insertBefore(topbar, fv.firstChild); topbar.classList.remove('in-card'); }
   if(step===8){
     topbar.style.display='none';
     bottomBar.style.display='none';
@@ -2187,6 +2203,31 @@ document.getElementById('btnStatusBack').addEventListener('click', ()=>{
 
 let editingKey = null;
 let editingRecord = null;
+
+// 일정 제목으로 기획서 찾아서 상세 열기 (홈 '주요 일정'에서 사용)
+async function jjOpenPlanByTitle(title){
+  const nz = s => String(s || '').toLowerCase().replace(/\([^)]*\)/g, '').replace(/[\s\-–—_|:·.,!?()\[\]'"~…]/g, '');
+  const t = nz(title); if(!t) return;
+  showToast('기획서를 찾는 중…');
+  let rows;
+  try{ rows = await sheetGetAll(); }catch(e){ showAlert('기획서를 불러오지 못했어요.'); return; }
+  let best = null, score = 0;
+  (rows || []).forEach(r => {
+    const pt = nz(r['제목']); if(pt.length < 3) return;
+    let sc = 0;
+    if(t.includes(pt)) sc = pt.length * 2;
+    else if(pt.includes(t)) sc = t.length * 2;
+    else {
+      const tp = titleParts(String(r['제목'] || '')), a = nz(tp.series), b = nz(tp.episode);
+      if(a.length >= 2 && b.length >= 2 && t.includes(a) && t.includes(b)) sc = a.length + b.length;
+    }
+    if(sc > score || (sc === score && sc && String(r['제출일시'] || '') > String((best || {})['제출일시'] || ''))){ score = sc; best = r; }
+  });
+  if(!best){ showAlert('이 일정과 연결된 기획서를 찾지 못했어요.\n(기획서 없이 잡힌 일정일 수 있어요)'); return; }
+  detailFromAdmin = false;
+  showView('status');
+  renderStatusDetail(best['ID'], mapRowToRecord(best));
+}
 
 async function loadStatusList(){
   const el = document.getElementById('statusContent');
@@ -4350,12 +4391,13 @@ function hbApply(badges){
       if (e.start !== last){ last = e.start; const d = new Date(e.start + 'T00:00:00'); html += `<div class="jjh-day">${md(e.start)} (${'일월화수목금토'[d.getDay()]})</div>`; }
       const c = CAL[e.calKey] || CAL.make;
       const when = e.time ? e.time : (e.end && e.end !== e.start ? md(e.start) + '~' + md(e.end) : '종일');
-      html += `<div class="jjh-row"><span class="ico" style="background:${c.bg}">${c.e}</span><div class="t"><span class="tag" style="background:${c.bg};color:${c.c}">${c.n}</span>${esc(e.title)}<small>${e.dup ? '<span class="dup">중복</span>' : ''}${esc(when)}</small></div><button type="button" class="more" data-i="${EVENTS.indexOf(e)}" aria-label="일정 메뉴">⋯</button></div>`;
+      html += `<div class="jjh-row go" data-i="${EVENTS.indexOf(e)}"><span class="ico" style="background:${c.bg}">${c.e}</span><div class="t"><span class="tag" style="background:${c.bg};color:${c.c}">${c.n}</span>${esc(e.title)}<small>${e.dup ? '<span class="dup">중복</span>' : ''}${esc(when)}</small></div><button type="button" class="more" data-i="${EVENTS.indexOf(e)}" aria-label="일정 메뉴">⋯</button></div>`;
     });
     $('jjhScList').innerHTML = html;
   }
   $('jjhScList').addEventListener('click', e => {
-    const b = e.target.closest('.more'); if (!b) return;
+    const b = e.target.closest('.more');
+    if (!b){ const row = e.target.closest('.jjh-row[data-i]'); const ev = row && EVENTS[+row.dataset.i]; if (ev) jjOpenPlanByTitle(ev.title); return; }
     target = EVENTS[+b.dataset.i]; if (!target) return;
     $('jjhEvTitle').textContent = target.title;
     $('jjhEvSub').textContent = (CAL[target.calKey] || CAL.make).n + ' · ' + md(target.start) + (target.end && target.end !== target.start ? '~' + md(target.end) : '') + (target.dup ? ' · 중복 일정' : '');

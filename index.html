@@ -307,6 +307,9 @@
   .mt-btns button.on[data-st="지각"]{background:#FFF1DB; border-color:#F2C47C; color:#9A5B00; font-weight:700;}
   .mt-btns button.on[data-st="불참"]{background:#FDEBD3; border-color:#EFB27A; color:#95590B; font-weight:700;}
   .mt-btns button.on[data-st="무단불참"]{background:#FCEAEA; border-color:#F0C9C9; color:#B23A3A; font-weight:700;}
+  .mt-btns button.on[data-st="제출"]{background:#E6F5E9; border-color:#9ED3AE; color:#1B7A38; font-weight:700;}
+  .mt-btns button.on[data-st="지연제출"]{background:#FFF1DB; border-color:#F2C47C; color:#9A5B00; font-weight:700;}
+  .mt-btns button.on[data-st="미제출"]{background:#FCEAEA; border-color:#F0C9C9; color:#B23A3A; font-weight:700;}
   .mt-tools{display:flex; justify-content:space-between; align-items:center; margin:4px 0 6px;}
   .mt-tools span{font-size:12px; color:var(--ink-faint);}
   .mt-save{width:100%; margin-top:16px; padding:14px; border:none; border-radius:12px; background:var(--purple); color:#fff; font-size:15px; font-weight:700; cursor:pointer;}
@@ -984,7 +987,35 @@
     <button class="reset-link" id="btnEventBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
-    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;">지원해서 참여한 행사를 등록하면 참여자에게 가점이 들어가요. 가점은 행사마다 정할 수 있고, 종합 점수표의 <b>행사 가점</b>에 반영돼요.</p>
+    <div class="sc-seg" id="evSeg"><button data-k="행사" class="on">행사</button><button data-k="요청사항">요청사항</button><button data-k="이벤트">이벤트</button></div>
+    <div id="tkSection" style="display:none;">
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;" id="tkHint"></p>
+    <div class="mt-tools">
+      <span id="tkInfo">불러오는 중...</span>
+      <button class="mt-quick" id="tkNew" style="color:var(--purple); border-color:var(--purple); font-weight:700;">+ 새 요청사항</button>
+    </div>
+    <div class="ev-form" id="tkForm" style="display:none;">
+      <b id="tkFormTitle" style="font-size:14px;">새 요청사항</b>
+      <label>마감일</label><input type="date" id="tkDate">
+      <label>제목</label><input type="text" id="tkTitle" placeholder="예) 공부하는 사진 올리기">
+      <div class="mt-tools" style="margin-top:12px;">
+        <span id="tkCount"></span>
+        <button class="mt-quick" id="tkAllDone">전원 제출</button>
+      </div>
+      <div id="tkList"></div>
+      <button class="mt-save" id="tkSave">저장</button>
+      <div style="display:flex; justify-content:space-between; margin-top:10px;">
+        <button class="ab-btn" id="tkCancel">닫기</button>
+        <button class="ab-btn" id="tkDelete" style="color:#B23A3A; border-color:#F0C9C9;">삭제</button>
+      </div>
+    </div>
+    <div id="tkCards"></div>
+    <h3 style="font-size:14px; font-weight:900; margin:26px 0 0;" id="tkSumTitle">누적 감점</h3>
+    <div id="tkSummary"></div>
+    </div>
+
+    <div id="evSection">
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;">참여한 행사를 등록하고 참여자만 고르면 가점이 들어가요. 가점은 행사마다 정할 수 있고, 종합 점수표의 <b>행사 가점</b>에 반영돼요.</p>
     <div class="mt-tools">
       <span id="evInfo">불러오는 중...</span>
       <button class="mt-quick" id="evNew" style="color:var(--purple); border-color:var(--purple); font-weight:700;">+ 새 행사</button>
@@ -994,7 +1025,7 @@
       <label>날짜</label><input type="date" id="evDate">
       <label>행사명</label><input type="text" id="evTitle" placeholder="예) 입시박람회 부스 운영">
       <label>1인당 가점</label><input type="number" id="evPoints" step="0.5" min="0.5" max="20" value="2">
-      <label>참여자 <span id="evCount"></span></label>
+      <label style="display:flex; align-items:center; justify-content:space-between;">참여자 <span id="evCount" style="margin-right:auto; margin-left:4px;"></span><button type="button" class="mt-quick" id="evAll">전체 선택</button></label>
       <div class="ev-chips" id="evChips"></div>
       <button class="mt-save" id="evSave">저장</button>
       <div style="display:flex; justify-content:space-between; margin-top:10px;">
@@ -1005,6 +1036,7 @@
     <div id="evList"></div>
     <h3 style="font-size:14px; font-weight:900; margin:26px 0 0;">누적 행사 가점</h3>
     <div id="evSummary"></div>
+    </div>
   </div>
 </div>
 
@@ -3174,8 +3206,8 @@ function attendJsonp(params){
 function attendPrefetch(){
   const today = mtYmd(new Date());
   const pre = [{ action:'meetingList', date: document.getElementById('mtDate').value || mtMonday(today) },
-    { action:'personalList', week: pcWeek || pcCycleStart(today) }, { action:'eventList' }, { action:'absentList' }, { action:'equipList' }];
-  pre.forEach(p => { if(!allowedTabs || allowedTabs.includes({meetingList:'meeting',personalList:'personal',eventList:'event',absentList:'absent',equipList:'equip'}[p.action])) attendJsonp(p).catch(()=>{}); });
+    { action:'personalList', week: pcWeek || pcCycleStart(today) }, { action:'eventList' }, { action:'taskList' }, { action:'absentList' }, { action:'equipList' }];
+  pre.forEach(p => { if(!allowedTabs || allowedTabs.includes({meetingList:'meeting',personalList:'personal',eventList:'event',taskList:'event',absentList:'absent',equipList:'equip'}[p.action])) attendJsonp(p).catch(()=>{}); });
 }
 // 앱을 열 때 시트의 기획서 상태도 촬영일 기준으로 맞춰둬요 (화면은 이미 자동 상태로 보여요)
 // 바뀐 게 있어도 저장된 목록은 지우지 않고, 뒤에서 새 목록을 받아 화면만 갱신해요 (다음에 열 때도 바로 뜨게)
@@ -3598,6 +3630,7 @@ document.getElementById('btnAbsentBack').addEventListener('click', ()=>{ showVie
 /* ───────── 행사 참여 가점 ───────── */
 let evEvents = [], evSummaryData = {}, evEditing = null, evSel = new Set();
 async function evLoad(){
+  tkLoad();
   document.getElementById('evInfo').textContent = '불러오는 중...';
   try{
     const res = await attendJsonp({ action:'eventList' });
@@ -3625,6 +3658,7 @@ function evChips(){
     const n = b.dataset.n; evSel.has(n) ? evSel.delete(n) : evSel.add(n); evChips();
   }));
   document.getElementById('evCount').textContent = `(${evSel.size}명)`;
+  document.getElementById('evAll').textContent = evSel.size === MEETING_ROSTER.length ? '전체 해제' : '전체 선택';
 }
 function evOpen(ev){
   evEditing = ev || null;
@@ -3673,9 +3707,116 @@ async function evRemove(){
   }catch(e){ showAlert('삭제에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
 }
 document.getElementById('evNew').addEventListener('click', ()=>evOpen(null));
+document.getElementById('evAll').addEventListener('click', ()=>{ evSel = evSel.size === MEETING_ROSTER.length ? new Set() : new Set(MEETING_ROSTER); evChips(); });
 document.getElementById('evSave').addEventListener('click', evSave);
 document.getElementById('evDelete').addEventListener('click', evRemove);
 document.getElementById('evCancel').addEventListener('click', ()=>{ document.getElementById('evForm').style.display = 'none'; });
+
+/* ───────── 행사 탭 분류: 행사(참여자만 선택) · 요청사항/이벤트(제출·지연제출·미제출 → 감점) ───────── */
+const TK_STATUSES = ['제출','지연제출','미제출'];
+const TK_POINTS = { '제출':0, '지연제출':-1, '미제출':-2.5 };   // 서버 Attendance.gs TK_POINTS와 같게
+let tkTasks = [], tkEditing = null, tkState = {}, tkKind = '요청사항', evKind = '행사';
+function evSetKind(k){
+  evKind = k;
+  document.querySelectorAll('#evSeg button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  document.getElementById('evSection').style.display = k === '행사' ? '' : 'none';
+  document.getElementById('tkSection').style.display = k === '행사' ? 'none' : '';
+  if(k !== '행사'){
+    if(tkKind !== k) document.getElementById('tkForm').style.display = 'none';
+    tkKind = k;
+    document.getElementById('tkNew').textContent = '+ 새 ' + k;
+    document.getElementById('tkHint').innerHTML = `${k}을 등록하고 마감 뒤 사람마다 제출 여부를 골라요. <b>지연제출 −1점 · 미제출 −2.5점</b>이 종합 점수표 감점에 들어가요.`.replace('이벤트을', '이벤트를');
+    document.getElementById('tkSumTitle').textContent = `누적 ${k} 감점`;
+    tkRender();
+  }
+}
+document.querySelectorAll('#evSeg button').forEach(b => b.addEventListener('click', () => evSetKind(b.dataset.k)));
+async function tkLoad(){
+  document.getElementById('tkInfo').textContent = '불러오는 중...';
+  try{
+    const res = await attendJsonp({ action:'taskList' });
+    if(res && res.error) throw new Error(res.error);
+    tkTasks = res.tasks || [];
+    tkRender();
+  }catch(e){ document.getElementById('tkInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류'); }
+}
+function tkRender(){
+  const mine = tkTasks.filter(t => (t.kind || '요청사항') === tkKind);
+  document.getElementById('tkInfo').textContent = `${tkKind} ${mine.length}건`;
+  const el = document.getElementById('tkCards');
+  el.innerHTML = mine.length ? mine.map(t => {
+    const c = st => t.records.filter(r => r.status === st).length;
+    const left = MEETING_ROSTER.length - t.records.filter(r => MEETING_ROSTER.includes(r.name)).length;
+    return `<div class="ev-card" data-i="${tkTasks.indexOf(t)}">
+      <b>${abEsc(t.title)}</b>
+      <div class="ev-meta">마감 ${esc(mtFmt(t.date))} · 제출 ${c('제출')} · 지연 ${c('지연제출')} · 미제출 ${c('미제출')}${left > 0 ? ` · <span style="color:#B23A3A;">미입력 ${left}</span>` : ''}</div>
+    </div>`; }).join('') : `<p style="font-size:12.5px;color:var(--ink-faint);">등록된 ${tkKind}이 없어요. <b>+ 새 ${tkKind}</b>으로 추가하세요.</p>`.replace('이벤트이', '이벤트가').replace('이벤트</b>으로', '이벤트</b>로');
+  el.querySelectorAll('.ev-card').forEach(c => c.addEventListener('click', ()=>tkOpen(tkTasks[Number(c.dataset.i)])));
+  const sum = {};   // 이 분류만 누적 (전체 감점은 점수표에서)
+  mine.forEach(t => t.records.forEach(r => { const s = sum[r.name] || (sum[r.name] = { 지연제출:0, 미제출:0, 점수:0 }); if(r.status in s) s[r.status]++; s['점수'] += TK_POINTS[r.status] || 0; }));
+  const names = Object.keys(sum).filter(n => sum[n]['점수'] < 0).sort((a,b) => sum[a]['점수'] - sum[b]['점수'] || a.localeCompare(b,'ko'));
+  document.getElementById('tkSummary').innerHTML = names.length ? `<table class="mt-sum"><tr><th>이름</th><th>지연</th><th>미제출</th><th>감점</th></tr>${
+    names.map(n => { const s = sum[n]; return `<tr><td>${abEsc(n)}</td><td>${esc(s['지연제출'])}</td><td>${esc(s['미제출'])}</td><td class="neg">${esc(Math.round(s['점수']*100)/100)}</td></tr>`; }).join('')}</table>`
+    : '<p style="font-size:12.5px;color:var(--ink-faint);">아직 감점이 없어요.</p>';
+}
+function tkRenderList(){
+  document.getElementById('tkList').innerHTML = MEETING_ROSTER.map(n => `
+    <div class="mt-row">
+      <span class="mt-name">${nb(n)}${n}</span>
+      <div class="mt-btns">${TK_STATUSES.map(st => `<button data-name="${n}" data-st="${st}" class="${tkState[n]===st?'on':''}">${st}</button>`).join('')}</div>
+    </div>`).join('');
+  document.querySelectorAll('#tkList .mt-btns button').forEach(b => b.addEventListener('click', ()=>{
+    tkState[b.dataset.name] = (tkState[b.dataset.name] === b.dataset.st) ? '' : b.dataset.st;
+    tkRenderList();
+  }));
+  document.getElementById('tkCount').textContent = `${MEETING_ROSTER.filter(n => tkState[n]).length} / ${MEETING_ROSTER.length}명 입력`;
+}
+function tkOpen(t){
+  tkEditing = t || null;
+  tkState = {}; (t ? t.records : []).forEach(r => { tkState[r.name] = r.status; });
+  document.getElementById('tkFormTitle').textContent = (t ? (t.kind || tkKind) + ' 제출 체크' : '새 ' + tkKind);
+  document.getElementById('tkDate').value = t ? t.date : mtYmd(new Date());
+  document.getElementById('tkTitle').value = t ? t.title : '';
+  document.getElementById('tkDelete').style.display = t ? '' : 'none';
+  tkRenderList();
+  const f = document.getElementById('tkForm');
+  f.style.display = '';
+  f.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+async function tkSave(){
+  const date = document.getElementById('tkDate').value;
+  const title = document.getElementById('tkTitle').value.trim();
+  if(!date){ showAlert('마감일을 선택해 주세요.'); return; }
+  if(!title){ showAlert('제목을 입력해 주세요.'); return; }
+  const same = tkTasks.find(t => t.date === date && t.title === title);
+  if(same && same !== tkEditing){ showAlert('같은 마감일에 같은 제목이 이미 있어요. 목록에서 눌러 체크해 주세요.'); return; }
+  const btn = document.getElementById('tkSave');
+  btn.disabled = true; btn.textContent = '저장 중...';
+  try{
+    await evPost({ action:'taskSave', kind: tkEditing ? (tkEditing.kind || tkKind) : tkKind, date, title, records: MEETING_ROSTER.filter(n => tkState[n]).map(n => ({ name:n, status:tkState[n] })),
+      orig: tkEditing ? { date: tkEditing.date, title: tkEditing.title } : null });
+    document.getElementById('tkForm').style.display = 'none';
+    await tkLoad();
+    const left = MEETING_ROSTER.filter(n => !tkState[n]);
+    showToast('✅ 저장했어요' + (left.length && left.length < MEETING_ROSTER.length ? ` (미입력 ${left.length}명)` : ''));
+  }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+  btn.disabled = false; btn.textContent = '저장';
+}
+async function tkRemove(){
+  if(!tkEditing) return;
+  const ok = await showConfirm(`'${tkEditing.title}'을(를) 삭제할까요? 이 항목의 감점도 함께 빠져요.`);
+  if(!ok) return;
+  try{
+    await evPost({ action:'taskDelete', date: tkEditing.date, title: tkEditing.title });
+    document.getElementById('tkForm').style.display = 'none';
+    await tkLoad();
+  }catch(e){ showAlert('삭제에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+}
+document.getElementById('tkNew').addEventListener('click', ()=>tkOpen(null));
+document.getElementById('tkSave').addEventListener('click', tkSave);
+document.getElementById('tkDelete').addEventListener('click', tkRemove);
+document.getElementById('tkCancel').addEventListener('click', ()=>{ document.getElementById('tkForm').style.display = 'none'; });
+document.getElementById('tkAllDone').addEventListener('click', ()=>{ MEETING_ROSTER.forEach(n => { if(!tkState[n]) tkState[n] = '제출'; }); tkRenderList(); });
 document.getElementById('btnEventBack').addEventListener('click', ()=>{ showView('form'); });
 
 /* ───────── 장비 대여 캘린더 ───────── */
@@ -3995,6 +4136,7 @@ function scRender(){
       ${item('회의 감점', r['회의 감점'], `지각 ${scN(r['회의 지각'])} · 불참 ${scN(r['회의 불참'])} · 무단 ${scN(r['회의 무단불참'])}`)}
       ${item('개인콘 감점', r['개인콘 감점'], `지각 ${scN(r['개인콘 지각'])} · 미제출 ${scN(r['개인콘 미제출'])}`)}
       ${item('제출지연 감점', r['제출지연 감점'], `${scN(r['팀콘 제출지연(일)'])}일`)}
+      ${item('요청·이벤트 감점', r['요청·이벤트 감점'], `지연 ${scN(r['요청·이벤트 지연'])} · 미제출 ${scN(r['요청·이벤트 미제출'])}`)}
       <div><span>팀콘 불참</span><b>${scN(r['팀콘 불참'])}회 <small style="font-weight:400;color:var(--ink-faint);">(면제 ${scN(r['불참 면제'])})</small></b></div>
     </div></td></tr>` : '';
     return `<tr class="sc-row" data-n="${abEsc(x.name)}">
@@ -4010,7 +4152,7 @@ function scRender(){
       <tr><th class="l"></th><th class="l">이름</th><th>가점</th><th>감점</th><th>순점수</th></tr>
       ${body}
     </table>
-    <p class="sc-legend" style="margin-top:8px;">가점 = 콘텐츠 가점 + 행사 가점 · 감점 = 회의·개인콘·제출지연 감점 합계</p>
+    <p class="sc-legend" style="margin-top:8px;">가점 = 콘텐츠 가점 + 행사 가점 · 감점 = 회의·개인콘·제출지연·요청·이벤트 감점 합계</p>
     ${scNote ? `<p class="sc-legend">${abEsc(scNote)}</p>` : ''}
     ${hidden ? `<button class="sc-toggle" id="scToggle">${scShowAll ? '현재 멤버만 보기' : `이전 멤버 ${hidden}명도 보기`}</button>` : ''}`
     : '<p style="font-size:12.5px;color:var(--ink-faint);">아직 점수 기록이 없어요.</p>';
@@ -4020,7 +4162,7 @@ function scRender(){
 
 /* ── 월별 현황: 날짜가 있는 원본 기록을 월별로 다시 합산 ──
    콘텐츠 가점 = 자동매칭(게시일, 크레딧별 1인당점수) · 행사 가점 = 행사참여(날짜)
-   회의 감점 = 회의출결(날짜) · 개인콘 감점 = 개인콘텐츠(회차) · 제출지연 감점 = 제출지연(영상 제출일 기준 달) */
+   회의 감점 = 회의출결(날짜) · 개인콘 감점 = 개인콘텐츠(회차) · 제출지연 감점 = 제출지연(영상 제출일 기준 달) · 요청·이벤트 감점 = 제출체크(마감일) */
 function scMonthKey(v){
   const s = String(v == null ? '' : v).trim();
   let m = s.match(/^Date\((\d{4}),\s*(\d{1,2})/);
@@ -4034,12 +4176,12 @@ async function scLoadMonth(){
   info.textContent = '불러오는 중...';
   try{
     if(!scMonthData){
-      const [am, ev, mt, pc, dl] = await Promise.all([
+      const [am, ev, mt, pc, dl, tk] = await Promise.all([
         scFetch('자동매칭', '게시일'), scFetch('행사참여', '날짜'), scFetch('회의출결', '날짜'),
-        scFetch('개인콘텐츠', '회차(기획서 수요일)'), scFetch('제출지연', '기획서ID')
+        scFetch('개인콘텐츠', '회차(기획서 수요일)'), scFetch('제출지연', '기획서ID'), scFetch('제출체크', '마감일').catch(() => [])   // 요청사항·이벤트를 처음 등록하기 전에는 탭이 없어요
       ]);
       const data = {};   // month -> name -> { content, contentN, event, eventN, meeting, mtLate, mtAbs, mtNo, personal, pcN, delay, delayDays }
-      const get = (mon, n) => { if(!mon || !n) return null; data[mon] = data[mon] || {}; return data[mon][n] = data[mon][n] || { content:0, contentN:0, event:0, eventN:0, meeting:0, mtLate:0, mtAbs:0, mtNo:0, personal:0, pcLate:0, pcMiss:0, delay:0, delayDays:0 }; };
+      const get = (mon, n) => { if(!mon || !n) return null; data[mon] = data[mon] || {}; return data[mon][n] = data[mon][n] || { content:0, contentN:0, event:0, eventN:0, meeting:0, mtLate:0, mtAbs:0, mtNo:0, personal:0, pcLate:0, pcMiss:0, delay:0, delayDays:0, task:0, tkLate:0, tkMiss:0 }; };
       am.forEach(r => {
         const mon = scMonthKey(r['게시일']), pts = Number(r['1인당점수']) || 0;
         String(r['크레딧(점수대상)'] || '').split(/[,\/、]+/).map(x => x.trim()).filter(Boolean).forEach(n => {
@@ -4058,6 +4200,12 @@ async function scLoadMonth(){
         [r['기획서'], r['콘텐츠']].forEach(v => { v = String(v || ''); if(/지각/.test(v)) o.pcLate++; else if(/미제출/.test(v)) o.pcMiss++; });
       });
       dl.forEach(r => { const o = get(scMonthKey(r['영상 제출일']), String(r['팀장']).trim()); if(o){ o.delay += Number(r['감점']) || 0; o.delayDays += Number(r['지연일']) || 0; } });
+      tk.forEach(r => {
+        const n = String(r['이름']).trim(); if(n === '(항목)') return;
+        const o = get(scMonthKey(r['마감일']), n); if(!o) return;
+        o.task += Number(r['점수']) || 0;
+        const st = String(r['결과']).trim(); if(st === '지연제출') o.tkLate++; else if(st === '미제출') o.tkMiss++;
+      });
       scMonthData = data;
       const months = Object.keys(data).sort();
       if(!scMonth || !data[scMonth]) scMonth = months[months.length - 1] || '';
@@ -4077,8 +4225,8 @@ function scRenderMonth(){
   const md = (scMonthData || {})[scMonth] || {};
   const names = new Set([...MEETING_ROSTER, ...Object.keys(md)]);
   const rows = [...names].map(n => {
-    const o = md[n] || { content:0, contentN:0, event:0, eventN:0, meeting:0, mtLate:0, mtAbs:0, mtNo:0, personal:0, pcLate:0, pcMiss:0, delay:0, delayDays:0 };
-    const plus = scN(o.content + o.event), minus = scN(o.meeting + o.personal + o.delay);
+    const o = md[n] || { content:0, contentN:0, event:0, eventN:0, meeting:0, mtLate:0, mtAbs:0, mtNo:0, personal:0, pcLate:0, pcMiss:0, delay:0, delayDays:0, task:0, tkLate:0, tkMiss:0 };
+    const plus = scN(o.content + o.event), minus = scN(o.meeting + o.personal + o.delay + o.task);
     return { n, o, plus, minus, net: scN(plus + minus), current: cur.has(n) };
   }).filter(x => x.current || x.plus || x.minus)
     .sort((a, b) => b.net - a.net || a.n.localeCompare(b.n, 'ko'));
@@ -4096,6 +4244,7 @@ function scRenderMonth(){
       ${item('회의 감점', o.meeting, `지각 ${o.mtLate} · 불참 ${o.mtAbs} · 무단 ${o.mtNo}`)}
       ${item('개인콘 감점', o.personal, `지각 ${o.pcLate} · 미제출 ${o.pcMiss}`)}
       ${item('제출지연 감점', o.delay, `${o.delayDays}일`)}
+      ${item('요청·이벤트 감점', o.task, `지연 ${o.tkLate} · 미제출 ${o.tkMiss}`)}
     </div></td></tr>` : '';
     return `<tr class="sc-row" data-n="${abEsc(x.n)}">
       <td class="l sc-rank">${rank}</td>
@@ -4110,7 +4259,7 @@ function scRenderMonth(){
       <tr><th class="l"></th><th class="l">이름</th><th>가점</th><th>감점</th><th>순점수</th></tr>
       ${body}
     </table>
-    <p class="sc-legend" style="margin-top:8px;">콘텐츠는 게시일, 회의·행사는 날짜, 개인콘은 회차, 제출지연은 영상 제출 예정일이 속한 달로 묶었어요. 게시물별 점수를 소수 둘째 자리에서 반올림해 더하기 때문에 전체 현황과 0.01~0.02점 차이가 날 수 있어요.</p>
+    <p class="sc-legend" style="margin-top:8px;">콘텐츠는 게시일, 회의·행사는 날짜, 개인콘은 회차, 제출지연은 영상 제출 예정일, 요청사항·이벤트는 마감일이 속한 달로 묶었어요. 게시물별 점수를 소수 둘째 자리에서 반올림해 더하기 때문에 전체 현황과 0.01~0.02점 차이가 날 수 있어요.</p>
     ${hidden ? `<button class="sc-toggle" id="scToggle">${scShowAll ? '현재 멤버만 보기' : `이전 멤버 ${hidden}명도 보기`}</button>` : ''}`
     : '<p style="font-size:12.5px;color:var(--ink-faint);">아직 월별 기록이 없어요.</p>';
   document.querySelectorAll('#scList .sc-row').forEach(tr => tr.addEventListener('click', () => { scOpen = scOpen === tr.dataset.n ? null : tr.dataset.n; scRenderMonth(); }));

@@ -998,11 +998,14 @@
       <b id="tkFormTitle" style="font-size:14px;">새 요청사항</b>
       <label>마감일</label><input type="date" id="tkDate">
       <label>제목</label><input type="text" id="tkTitle" placeholder="예) 공부하는 사진 올리기">
+      <label>대상</label><p id="tkTarget" style="font-size:13px; margin:2px 0 0;"></p>
+      <div id="tkCheck">
       <div class="mt-tools" style="margin-top:12px;">
         <span id="tkCount"></span>
         <button class="mt-quick" id="tkAllDone">전원 제출</button>
       </div>
       <div id="tkList"></div>
+      </div>
       <button class="mt-save" id="tkSave">저장</button>
       <div style="display:flex; justify-content:space-between; margin-top:10px;">
         <button class="ab-btn" id="tkCancel">닫기</button>
@@ -3749,7 +3752,7 @@ function tkRender(){
     const left = MEETING_ROSTER.length - t.records.filter(r => MEETING_ROSTER.includes(r.name)).length;
     return `<div class="ev-card" data-i="${tkTasks.indexOf(t)}">
       <b>${abEsc(t.title)}</b>
-      <div class="ev-meta">마감 ${esc(mtFmt(t.date))} · 제출 ${c('제출')} · 지연 ${c('지연제출')} · 미제출 ${c('미제출')}${left > 0 ? ` · <span style="color:#B23A3A;">미입력 ${left}</span>` : ''}</div>
+      <div class="ev-meta">마감 ${esc(mtFmt(t.date))} · 제출 ${c('제출')} · 지연 ${c('지연제출')} · 미제출 ${c('미제출')}${left > 0 ? (t.date >= mtYmd(new Date()) ? ` · 마감 전` : ` · <span style="color:#B23A3A;">미입력 ${left}</span>`) : ''}</div>
     </div>`; }).join('') : `<p style="font-size:12.5px;color:var(--ink-faint);">등록된 ${tkKind}이 없어요. <b>+ 새 ${tkKind}</b>으로 추가하세요.</p>`.replace('이벤트이', '이벤트가').replace('이벤트</b>으로', '이벤트</b>로');
   el.querySelectorAll('.ev-card').forEach(c => c.addEventListener('click', ()=>tkOpen(tkTasks[Number(c.dataset.i)])));
   const sum = {};   // 이 분류만 누적 (전체 감점은 점수표에서)
@@ -3778,6 +3781,10 @@ function tkOpen(t){
   document.getElementById('tkDate').value = t ? t.date : mtYmd(new Date());
   document.getElementById('tkTitle').value = t ? t.title : '';
   document.getElementById('tkDelete').style.display = t ? '' : 'none';
+  // 새로 등록할 때는 전원 참여로만 저장하고, 제출·지연 여부는 나중에 카드를 열어 입력해요
+  document.getElementById('tkTarget').innerHTML = `<b>홍보대사 전원 참여</b> (${MEETING_ROSTER.length}명)` + (t ? '' : '<br><small style="color:var(--ink-faint);">제출 여부는 마감 뒤 목록에서 이 카드를 눌러 입력해요.</small>');
+  document.getElementById('tkCheck').style.display = t ? '' : 'none';
+  document.getElementById('tkSave').textContent = t ? '저장' : '등록';
   tkRenderList();
   const f = document.getElementById('tkForm');
   f.style.display = '';

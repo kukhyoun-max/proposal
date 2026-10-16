@@ -158,6 +158,7 @@
     background:none; border:1px solid rgba(255,255,255,0.35); color:#fff; font-size:12.5px;
     padding:6px 10px; border-radius:20px; cursor:pointer;
   }
+  .admin-topbar button:disabled{opacity:.35; cursor:not-allowed;}
 
   .overview-wrap{margin-top:24px;}
   .overview-title{font-size:12.5px; color:var(--ink-soft); font-weight:700; margin:0 0 10px;}
@@ -1209,9 +1210,16 @@ function showPrompt(message){
 }
 
 const STORAGE_KEY = 'content-plan:current';
-// 관리자 인증: PIN은 페이지에 두지 않고 서버(자동매칭 Apps Script 'adminLogin')에서 확인해요.
+// 관리자 인증: 로그인한 구글 계정을 서버(자동매칭 Apps Script 'adminLogin')가 확인해요. PIN 로그인은 없어요.
 // 통과하면 서버가 서명한 출입증(토큰, 12시간)을 주고, 관리자 저장 요청마다 자동으로 같이 보내요.
 const ADMIN_TK_KEY = 'jjAdminToken_v1';
+// 관리자 창에 들어갈 수 있는 계정과 버튼 이름 (서버 Attendance.gs SEC_ACCOUNTS와 같게). 그 외 계정은 버튼이 꺼져 있어요
+// 권한 판단은 서버가 로그인 출입증으로 해요. 이 목록은 버튼 표시용이에요
+const JJ_ADMIN_ROLES = {
+  'kukhyoun@jj.ac.kr': { label:'관리자 검토', full:true },
+  'kjhwlgns6463@gmail.com': { label:'회의 관리' },
+  'gysdk4776@gmail.com': { label:'개인 콘텐츠' },
+};
 function adminSession(){
   try{
     const o = JSON.parse(sessionStorage.getItem(ADMIN_TK_KEY) || 'null');
@@ -1244,6 +1252,7 @@ function openTab(k){
 // ───── 홍보대사 멤버 로그인 (구글 계정 · 공유 드라이브 멤버만) ─────
 const JJ_LOGIN_URL = 'https://script.google.com/macros/s/AKfycbz1TlS32tnC64QR8LEI9fkASMEQQot5tENT-OSfE2npdqeRkpv2jS5lCcE3aywAMlAhCA/exec';
 const MEMBER_TK_KEY = 'jjMemberTk_v1';
+const HOME_LS = 'jjHome_v1:';   // 홈 화면 결과 캐시 (로그아웃하면 지움)
 function memberTkExp(tk){ try{ const p = tk.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'); return Number(JSON.parse(decodeURIComponent(escape(atob(p)))).exp) || 0; }catch(e){ return 0; } }
 function memberTkEmail(tk){ try{ const p = tk.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'); return String(JSON.parse(decodeURIComponent(escape(atob(p)))).u || ''); }catch(e){ return ''; } }
 (function(){
@@ -1251,8 +1260,18 @@ function memberTkEmail(tk){ try{ const p = tk.split('.')[0].replace(/-/g,'+').re
   if(m){ try{ localStorage.setItem(MEMBER_TK_KEY, decodeURIComponent(m[1])); }catch(e){} history.replaceState(null, '', location.pathname + location.search); }
 })();
 function memberToken(){ let tk = ''; try{ tk = localStorage.getItem(MEMBER_TK_KEY) || ''; }catch(e){} return (tk && memberTkExp(tk) > Date.now() + 60000) ? tk : ''; }
+function adminRole(){ return JJ_ADMIN_ROLES[memberTkEmail(memberToken()).toLowerCase()] || null; }
+// 관리자 버튼: 계정에 맞는 이름으로 바꾸고, 권한 없는 계정은 눌리지 않게 꺼요
+(function(){
+  const btn = document.getElementById('btnAdminToggle'); if(!btn) return;
+  const role = adminRole(), s = adminSession();
+  if(s && s.email !== memberTkEmail(memberToken()).toLowerCase()) adminLogout();   // 예전 PIN 출입증이나 다른 계정 출입증은 버려요
+  if(!role){ btn.disabled = true; btn.title = '관리자 계정만 쓸 수 있어요'; return; }
+  btn.firstChild.textContent = role.label + ' ';
+})();
 function memberGate(msg){
-  try{ localStorage.removeItem(MEMBER_TK_KEY); localStorage.removeItem('planRowsCache_v1'); sessionStorage.clear(); }catch(e){}
+  try{ localStorage.removeItem(MEMBER_TK_KEY); localStorage.removeItem('planRowsCache_v1'); sessionStorage.clear();
+    Object.keys(localStorage).forEach(k => { if(k.indexOf(HOME_LS) === 0) localStorage.removeItem(k); }); }catch(e){}
   const g = document.getElementById('jjGate'); if(!g) return;
   if(msg) document.getElementById('jjGateMsg').innerHTML = msg;
   g.style.display = 'flex';
@@ -2116,7 +2135,7 @@ async function refreshPendingBadge(){
     const rows = await sheetGetAll();
     const pending = rows.filter(r=>r['상태']==='pending').length;
     const badge = document.getElementById('pendingBadge');
-    if(pending > 0){ badge.style.display='inline-block'; badge.textContent = pending; }
+    if(pending > 0 && adminRole() && adminRole().full){ badge.style.display='inline-block'; badge.textContent = pending; }
     else{ badge.style.display='none'; }
   }catch(e){ console.error('refreshPendingBadge failed:', e); }
 }
@@ -2597,30 +2616,33 @@ async function saveEditedSubmission(){
   }
 }
 
-document.getElementById('btnAdminToggle').addEventListener('click', async ()=>{
+// 관리자 출입증 받기: 로그인한 계정으로만 받아요 (PIN 없음). 권한 없는 계정이면 null
+async function adminLoginByAccount(){
   let sess = adminSession();
-  if(!sess){
-    const pin = await showPrompt('관리자 PIN을 입력해 주세요');
-    if(!pin) return;
-    let r;
-    try{
-      const res = await fetch(ATTEND_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'adminLogin', pin }) });
-      r = await res.json();
-    }catch(e){ await showAlert('서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.'); return; }
-    if(!r || !r.ok){
-      await showAlert(r && r.error === 'locked' ? 'PIN을 여러 번 틀려서 10분간 잠겼어요.'
-        : r && r.error === 'no_pin' ? '서버에 관리자 PIN이 아직 설정되지 않았어요.'
-        : 'PIN이 올바르지 않아요.' + (r && r.left != null ? ' (남은 횟수 ' + r.left + '회)' : ''));
-      return;
-    }
-    sess = { token: r.token, tabs: r.tabs || null, exp: Number(r.exp) || (Date.now() + 11 * 3600e3) };
-    try{ sessionStorage.setItem(ADMIN_TK_KEY, JSON.stringify(sess)); }catch(e){}
-  }
+  if(sess) return sess;
+  if(!adminRole()) return null;
+  let r;
+  try{
+    const res = await fetch(ATTEND_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'adminLogin' }) });
+    r = await res.json();
+  }catch(e){ await showAlert('서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.'); return null; }
+  if(!r || !r.ok){ await showAlert('관리자 권한이 없는 계정이에요.'); return null; }
+  sess = { token: r.token, tabs: r.tabs || null, exp: Number(r.exp) || (Date.now() + 11 * 3600e3), email: memberTkEmail(memberToken()).toLowerCase() };
+  try{ sessionStorage.setItem(ADMIN_TK_KEY, JSON.stringify(sess)); }catch(e){}
+  return sess;
+}
+document.getElementById('btnAdminToggle').addEventListener('click', async ()=>{
+  const sess = await adminLoginByAccount();
+  if(!sess) return;
   allowedTabs = sess.tabs;
   applyTabAccess();
   openTab(allowedTabs ? allowedTabs[0] : 'admin');
-  attendPrefetch();
-  if(!allowedTabs && window.jjLoadLinks) window.jjLoadLinks();
+  // 첫 화면 목록을 먼저 받고, 다른 탭 미리 받기·편성 검토·연결 요청은 그다음에 불러요 (한꺼번에 9개를 보내면 목록이 늦게 와요)
+  (planInflight || Promise.resolve()).catch(()=>{}).then(()=>{
+    attendPrefetch();
+    if(window.jjLoadPending) window.jjLoadPending();
+    if(!allowedTabs && window.jjLoadLinks) window.jjLoadLinks();
+  });
 });
 document.getElementById('btnAdminBack').addEventListener('click', ()=>{
   showView('form');
@@ -3099,10 +3121,14 @@ function attendJsonp(params){
 (function(){
   const _fetch = window.fetch.bind(window);
   // 기획서 제출·승인(APPS_SCRIPT_URL)도 장비 대여를 바꾸니 같이 비워요. 저장이 끝난 뒤에도 한 번 더 비워 그 사이에 받은 옛 목록이 남지 않게 해요.
+  // 읽기만 하는 POST(관리자 로그인, 연결 요청 목록)는 비우지 않아요. 관리자 창을 열 때마다 미리 받은 탭 목록이 지워져 다시 받느라 느렸어요.
+  const READ_ONLY = ['adminLogin', 'linkList'];
   const bust = () => { attendCache.clear(); attCacheClear(); };
   window.fetch = (u, o) => { const s = String(u); if(s === ATTEND_URL || s === APPS_SCRIPT_URL){
+    let act = '';
     if(o && o.method === 'POST' && typeof o.body === 'string'){ const tk = adminToken(), mt = memberToken();
-      try{ const b = JSON.parse(o.body); if(b && typeof b === 'object'){ if(tk && !b.tk) b.tk = tk; if(mt && !b.mt) b.mt = mt; o = Object.assign({}, o, { body: JSON.stringify(b) }); } }catch(e){} }
+      try{ const b = JSON.parse(o.body); if(b && typeof b === 'object'){ act = b.action; if(tk && !b.tk) b.tk = tk; if(mt && !b.mt) b.mt = mt; o = Object.assign({}, o, { body: JSON.stringify(b) }); } }catch(e){} }
+    if(READ_ONLY.includes(act)) return _fetch(u, o);
     bust(); return _fetch(u, o).finally(bust); } return _fetch(u, o); };
 })();
 function attendPrefetch(){
@@ -4408,8 +4434,10 @@ function hbApply(badges){
   $('jjhEvDel').addEventListener('click', async () => {
     if (!target) return;
     const t = target; openSheet(null);
-    const pin = adminToken() ? (await showConfirm('「' + t.title + '」 일정을 구글 캘린더에서 삭제할까요?') ? '-' : '') : await showPrompt('관리자 비밀번호를 입력하면 「' + t.title + '」 일정을 구글 캘린더에서 삭제해요.');
-    if (!pin) return;
+    if (!adminRole() || !adminRole().full){ showAlert('일정 삭제는 관리자 계정만 할 수 있어요.'); return; }
+    if (!(await adminLoginByAccount())) return;
+    if (!(await showConfirm('「' + t.title + '」 일정을 구글 캘린더에서 삭제할까요?'))) return;
+    const pin = '-';
     showToast('삭제하는 중…');
     try {
       const r = await post({ action:'scheduleDelete', pin, calKey:t.calKey, eventId:t.eventId });
@@ -4420,23 +4448,35 @@ function hbApply(badges){
     } catch (err){ showAlert('삭제하지 못했어요. 잠시 후 다시 시도해 주세요.'); }
   });
   function loadSchedule(){
-    api({ action:'schedule', days:14 }).then(r => { EVENTS = (r && r.items) || []; renderSchedule(); })
-      .catch(() => { $('jjhScList').innerHTML = '<div class="jjh-empty">일정을 불러오지 못했어요</div>'; });
+    homeLoad({ action:'schedule', days:14 }, r => r && Array.isArray(r.items), r => { EVENTS = (r && r.items) || []; renderSchedule(); },
+      () => { $('jjhScList').innerHTML = '<div class="jjh-empty">일정을 불러오지 못했어요</div>'; });
+  }
+
+  /* ── 홈 캐시: 지난번 결과를 바로 그리고, 최신 결과가 오면 달라졌을 때만 다시 그려요 ('mine'은 계정별로 따로 저장) ── */
+  function homeLoad(p, ok, render, fail){
+    const key = HOME_LS + (p.action === 'mine' ? memberTkEmail(memberToken()) + ':' : '') + JSON.stringify(p);
+    let old = ''; try{ old = localStorage.getItem(key) || ''; }catch(e){}
+    if (old){ try{ render(JSON.parse(old)); }catch(e){ old = ''; } }
+    api(p).then(r => {
+      const s = JSON.stringify(r);
+      if (ok(r)){ try{ localStorage.setItem(key, s); }catch(e){} if (s !== old) render(r); }
+      else { try{ localStorage.removeItem(key); }catch(e){} if (old || fail) (fail || render)(r); }
+    }).catch(() => { if (!old && fail) fail(); });
   }
 
   /* ── 불러오기 (화면 먼저, 데이터는 뒤에서) ── */
   setTimeout(() => {
-    api({ action:'weeklyTop' }).then(w => { if (w && w.from){ renderBest(w); renderNames(); } }).catch(() => { $('jjhBestName').textContent = '불러오지 못했어요'; });
-    api({ action:'goal' }).then(g => { if (g && g.series) renderGoal(g); }).catch(() => { $('jjhGoalText').textContent = '공동목표를 불러오지 못했어요'; });
+    homeLoad({ action:'weeklyTop' }, w => w && w.from, w => { renderBest(w); renderNames(); }, () => { $('jjhBestName').textContent = '불러오지 못했어요'; });
+    homeLoad({ action:'goal' }, g => g && g.series, renderGoal, () => { $('jjhGoalText').textContent = '공동목표를 불러오지 못했어요'; });
     let skip = false; try{ skip = localStorage.getItem(MINE_SKIP) === '1'; }catch(_){}
-    if (skip) showBest(); else api({ action:'mine' }).then(renderMine).catch(showBest);
+    if (skip) showBest(); else homeLoad({ action:'mine' }, d => d && !d.error && !d.admin && !d.pending && !d.need, renderMine, d => d ? renderMine(d) : showBest());
     loadSchedule();
-  }, 300);
+  }, 0);
 
   /* ── 기획서 3단계: 시리즈(콘텐츠) 목록은 '팀콘시리즈' 정규 편성에서. 편 이름 없이 시리즈 단위 ── */
   window.JJH_SERIES = null;
-  api({ action:'seriesList' }).then(r => { if (r && r.regular){ window.JJH_SERIES = r.regular.map(x => x.name);
-    $('seriesList').innerHTML = window.JJH_SERIES.map(s => `<option value="${esc(s)}"></option>`).join(''); try { syncSeriesWarn(); } catch (e){} } }).catch(() => {});
+  homeLoad({ action:'seriesList' }, r => r && r.regular, r => { window.JJH_SERIES = r.regular.map(x => x.name);
+    $('seriesList').innerHTML = window.JJH_SERIES.map(s => `<option value="${esc(s)}"></option>`).join(''); try { syncSeriesWarn(); } catch (e){} });
 
   /* ── 관리자 검토: 신규 콘텐츠 → 정규 편성 ── */
   async function loadPending(){
@@ -4465,8 +4505,10 @@ function hbApply(badges){
   }
   document.addEventListener('click', async e => {
     const b = e.target.closest('#srPending button[data-id]'); if (!b) return;
-    const pin = adminToken() ? (await showConfirm('「' + b.dataset.t + '」을(를) 정규 편성할까요?') ? '-' : '') : await showPrompt('관리자 비밀번호를 입력하면 「' + b.dataset.t + '」을(를) 정규 편성해요.');
-    if (!pin) return;
+    if (!adminRole() || !adminRole().full){ showAlert('정규 편성은 관리자 계정만 할 수 있어요.'); return; }
+    if (!(await adminLoginByAccount())) return;
+    if (!(await showConfirm('「' + b.dataset.t + '」을(를) 정규 편성할까요?'))) return;
+    const pin = '-';
     b.disabled = true; b.textContent = '등록 중…';
     try {
       const r = await post({ action:'seriesRegular', pin, planId:b.dataset.id, name:b.dataset.t });
@@ -4474,7 +4516,7 @@ function hbApply(badges){
       else { showAlert(r.error === 'wrong_pin' ? '비밀번호가 맞지 않아요. (남은 횟수 ' + r.left + '회)' : r.error === 'locked' ? '비밀번호를 여러 번 틀려서 10분간 잠겼어요.' : '등록하지 못했어요: ' + r.error); b.disabled = false; b.textContent = '정규 편성'; }
     } catch (err){ showAlert('등록하지 못했어요. 잠시 후 다시 시도해 주세요.'); b.disabled = false; b.textContent = '정규 편성'; }
   });
-  $('btnAdminToggle').addEventListener('click', () => setTimeout(loadPending, 400));
+  window.jjLoadPending = loadPending;   // 관리자 창을 열 때 기획서 목록 다음에 불러요
 
   /* ── 계정 연결 요청 (학생이 고른 이름 → 관리자 승인 후 내 기록 공개) ── */
   function renderLinks(r){

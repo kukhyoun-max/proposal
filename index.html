@@ -4647,9 +4647,9 @@ function hbApply(badges){
   renderNames();
 
   /* ── 주요 일정 (구글 캘린더 4개) ── */
-  const CAL = { make:{ n:'제작', e:'🎬', c:'#3182F6', bg:'#EAF2FF' }, duty:{ n:'의전', e:'🤝', c:'#11A35A', bg:'#E8F7EE' }, sns:{ n:'업로드', e:'📤', c:'#F08C00', bg:'#FFF4DB' }, hong:{ n:'업로드', e:'📤', c:'#F08C00', bg:'#FFF4DB' } };
+  const CAL = { make:{ n:'제작', e:'🎬', c:'#3182F6', bg:'#EAF2FF' }, duty:{ n:'의전/행사', e:'🤝', c:'#11A35A', bg:'#E8F7EE' }, sns:{ n:'업로드', e:'📤', c:'#F08C00', bg:'#FFF4DB' }, hong:{ n:'업로드', e:'📤', c:'#F08C00', bg:'#FFF4DB' } };
   let EVENTS = [], scFilter = 'all', target = null;
-  $('jjhScChips').innerHTML = [['all', '전체'], ['make', '🎬 제작'], ['duty', '🤝 의전'], ['up', '📤 업로드']].map(([k, t]) => `<button type="button" data-k="${k}" class="${k === 'all' ? 'on' : ''}">${t}</button>`).join('');
+  $('jjhScChips').innerHTML = [['all', '전체'], ['make', '🎬 제작'], ['duty', '🤝 의전/행사'], ['up', '📤 업로드']].map(([k, t]) => `<button type="button" data-k="${k}" class="${k === 'all' ? 'on' : ''}">${t}</button>`).join('');
   $('jjhScChips').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; scFilter = b.dataset.k;
     [...$('jjhScChips').children].forEach(x => x.classList.toggle('on', x === b)); renderSchedule(); });
   function renderSchedule(){

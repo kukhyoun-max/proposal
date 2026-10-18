@@ -4639,7 +4639,7 @@ function hbApply(badges){
   function renderBest(w){
     WEEKLY = w;
     const box = $('jjhBest');
-    $('jjhBestDt').textContent = md(w.from) + '~' + md(w.to);
+    $('jjhBestDt').textContent = md(w.from) + '~' + md(w.to) + (w.provisional ? ' · 집계 중' : '');   // 화요일 밤 계산 때 확정
     const nw = w.now || { lead:0, daysLeft:0 }, dl = nw.daysLeft > 0 ? '집계 마감 D-' + nw.daysLeft : '오늘 밤 집계 마감';
     const nowEl = $('jjhBestNow'); nowEl.style.display = '';
     nowEl.innerHTML = nw.lead > 0 ? `이번 주 1위 <b class="n1">${esc((nw.names || []).join(' · '))}</b> <b>+${esc(nw.lead)}점</b> · ${esc(dl)}` : `이번 주는 아직 1위가 없어요 · <b>먼저 올리면 1등!</b>`;
@@ -4659,7 +4659,7 @@ function hbApply(badges){
     $('jjhWhyPeriod').textContent = md(w.from) + ' ~ ' + md(w.to) + ' 주간 활동 점수';
     $('jjhWhyBig').textContent = f1(x.gain);
     const items = [
-      { c:'#3182F6', t:'📈 콘텐츠 조회수', v:y.content, d:`새 콘텐츠 ${x.postCount || 0}개 +${Math.round(((y.content || 0) - (y.contentOld || 0)) * 10) / 10} · 예전 콘텐츠 +${Math.round((y.contentOld || 0) * 10) / 10}` },
+      { c:'#3182F6', t:'📈 콘텐츠 조회수', v:y.content, d:`그 주에 올린 콘텐츠 ${x.postCount || 0}개` },
       { c:'#11A35A', t:'📤 업로드', v:y.upload, d:`팀콘 업로드 ${y.nUpload || 0}건 × 1점` },
       { c:'#F08C00', t:'🤝 행사·의전 참여', v:y.event, d:`${y.nEvent || 0}회 참여` },
     ].filter(i => i.v);
@@ -4669,7 +4669,7 @@ function hbApply(badges){
       + (y.minus ? `<div class="jjh-r"><span class="dot" style="background:#B0B8C1"></span><div class="l"><b>감점·보정</b><small>규정 반영${x.chief ? ' · 기장 가점 50% 보정' : ''}</small></div><span class="v" style="color:var(--ink-soft)">${f1(y.minus)}</span></div>` : '')
       + `<div class="jjh-r tot"><div class="l"><b>합계</b></div><span class="v">${f1(x.gain)}</span></div>`;
     $('jjhWhyPosts').innerHTML = (x.posts || []).map(p => `<div class="jjh-post"><span class="pf">${esc(p.platform)}</span><span class="t">${esc(p.title)}</span><span class="vw">${kv(p.views)}회</span></div>`).join('') || '<div class="jjh-empty">지난주 올린 콘텐츠는 없어요</div>';
-    $('jjhWhyNote').textContent = '점수 기준 — 조회수 등급 가점(크레딧 인원으로 나눔) · 팀콘 업로드 +1 · 행사 참여 가점 · 매일 밤 자동 계산' + (x.chief ? ' · 기장은 가점 50% 반영' : '');
+    $('jjhWhyNote').textContent = '점수 기준 — 그 주(월~일)에 한 활동만: 그 주에 올린 콘텐츠의 조회수 등급 가점(크레딧 인원으로 나눔) · 팀콘 업로드 +1 · 행사 참여 가점 − 그 주 감점. 예전 콘텐츠 조회수 상승분은 종합점수에만 · 화요일 밤 확정' + (w.provisional ? ' (지금은 집계 중)' : '') + (x.chief ? ' · 기장은 가점 50% 반영' : '');
     openSheet('jjhSheetWhy');
   }
   $('jjhBest').addEventListener('click', openWhy);

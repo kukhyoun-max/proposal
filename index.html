@@ -310,6 +310,7 @@
   .mt-btns button{font-size:12px; padding:7px 8px; border-radius:8px; border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer; font-family:'Noto Sans KR',sans-serif;}
   .mt-btns button.on[data-st="출석"]{background:#E6F5E9; border-color:#9ED3AE; color:#1B7A38; font-weight:700;}
   .mt-btns button.on[data-st="지각"]{background:#FFF1DB; border-color:#F2C47C; color:#9A5B00; font-weight:700;}
+  .mt-btns button.on[data-st="사유불참"]{background:#E8F0FE; border-color:#A8C3F0; color:#1E4FA0; font-weight:700;}
   .mt-btns button.on[data-st="불참"]{background:#FDEBD3; border-color:#EFB27A; color:#95590B; font-weight:700;}
   .mt-btns button.on[data-st="무단불참"]{background:#FCEAEA; border-color:#F0C9C9; color:#B23A3A; font-weight:700;}
   .mt-btns button.on[data-st="제출"]{background:#E6F5E9; border-color:#9ED3AE; color:#1B7A38; font-weight:700;}
@@ -3236,7 +3237,7 @@ const MEETING_ROSTER = [
   '***','***','***','***','***','***','***','***',
   '***','***'
 ].sort((a,b)=>a.localeCompare(b,'ko'));
-const MT_STATUSES = ['출석','지각','불참','무단불참'];
+const MT_STATUSES = ['출석','지각','사유불참','불참','무단불참'];   // 사유불참 = 하루 전까지 알린 불참, 0점 (활동 가이드 5번)
 const MEETING_START = '2026-08-31';   // 이 주부터 매주 월요일마다 회의 칸 자동 생성
 let mtState = {};
 let mtMeetings = {};
@@ -3369,8 +3370,8 @@ function mtRenderSummary(summary, count){
   const names = Object.keys(summary || {}).sort((a,b)=> (summary[a]['점수']-summary[b]['점수']) || a.localeCompare(b,'ko'));
   if(!names.length){ document.getElementById('mtSummary').innerHTML = '<p style="font-size:12.5px;color:var(--ink-faint);">아직 기록이 없어요.</p>'; return; }
   document.getElementById('mtSummary').innerHTML = `<table class="mt-sum">
-    <tr><th>이름</th><th>출석</th><th>지각</th><th>불참</th><th>무단</th><th>점수</th></tr>
-    ${names.map(n => { const s = summary[n]; return `<tr><td>${esc(n)}</td><td>${esc(s['출석'])}</td><td>${esc(s['지각'])}</td><td>${esc(s['불참'])}</td><td>${esc(s['무단불참'])}</td><td class="${s['점수']<0?'neg':''}">${esc(s['점수'])}</td></tr>`; }).join('')}
+    <tr><th>이름</th><th>출석</th><th>지각</th><th>사유</th><th>불참</th><th>무단</th><th>점수</th></tr>
+    ${names.map(n => { const s = summary[n]; return `<tr><td>${esc(n)}</td><td>${esc(s['출석'])}</td><td>${esc(s['지각'])}</td><td>${esc(s['사유불참'] || 0)}</td><td>${esc(s['불참'])}</td><td>${esc(s['무단불참'])}</td><td class="${s['점수']<0?'neg':''}">${esc(s['점수'])}</td></tr>`; }).join('')}
   </table>`;
 }
 
@@ -4462,7 +4463,7 @@ function scRenderBase(){
   document.getElementById('scInfo').textContent = rows.length
     ? `${rows.length}명 · 미달 ${cnt('미달')} · 보류 ${cnt('판단 보류')} · 충족 ${cnt('충족')}${cnt('진행 중') ? ` · 진행 중 ${cnt('진행 중')}` : ''}` : '';
   const verdict = v => { v = String(v || ''); const cls = v === '미달' ? 'bad' : v === '충족' ? 'ok' : v === '진행 중' ? 'hold' : 'warn'; return v ? `<span class="sc-pill ${cls}" style="margin-left:0;">${abEsc(v)}</span>` : ''; };
-  const act = v => { v = String(v || '').trim(); return v ? ` <span class="sc-pill ${/제적/.test(v) ? 'bad' : 'warn'}">${abEsc(v)}</span>` : ''; };
+  const act = v => { v = String(v || '').trim(); return v ? ` <span class="sc-pill ${/제적/.test(v) ? 'bad' : v === '참고' ? 'hold' : 'warn'}">${abEsc(v)}</span>` : ''; };
   const body = rows.map(r => {
     const name = String(r['이름']).trim(), open = scOpen === name;
     const detail = open ? `<tr class="sc-detail"><td colspan="5"><div class="sc-grid">
@@ -4486,7 +4487,7 @@ function scRenderBase(){
       ${body}
     </table>
     <p class="sc-legend" style="margin-top:8px;">기준(8주 기간마다): 모델팀 팀콘 2건 + 개인콘 80% + 의전 · 콘텐츠팀(촬영·편집 담당) 촬영·편집 2건 · 콘텐츠팀 팀콘 2건 + 개인콘 80% · 기장 팀콘 2건 + 요청 처리·팀 관리. 한 번 미달이면 면담, 두 번 연속이면 제적 심사예요.</p>
-    <p class="sc-legend">기록이 없어 판단할 수 없는 항목(개인콘 회차 4번 미만, 관리자 칸이 빈 경우 등)은 '보류'로 두고 미달로 치지 않아요. 신규는 첫 달을, 불참 처리된 팀콘은 세지 않아요.${first['계산일시'] ? ` · 계산 ${abEsc(scYmd(first['계산일시']))}` : ''}</p>`
+    <p class="sc-legend">2026-10-26 전 기간은 '참고'로만 보여 주고 면담·제적에 쓰지 않아요. 기록이 없어 판단할 수 없는 항목(개인콘 회차 4번 미만, 관리자 칸이 빈 경우 등)은 '보류'로 두고 미달로 치지 않아요. 신규는 첫 달을, 불참 처리된 팀콘은 세지 않아요.${first['계산일시'] ? ` · 계산 ${abEsc(scYmd(first['계산일시']))}` : ''}</p>`
     : '<p style="font-size:12.5px;color:var(--ink-faint);">아직 활동 기준선 기록이 없어요.</p>';
   document.querySelectorAll('#scList .sc-row').forEach(tr => tr.addEventListener('click', () => { scOpen = scOpen === tr.dataset.n ? null : tr.dataset.n; scRenderBase(); }));
 }

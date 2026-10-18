@@ -496,7 +496,7 @@
   .sc-plus{color:#1B7A38;} .sc-minus{color:#B23A3A;}
   .sc-net{font-weight:900; font-size:14px;}
   .sc-pill{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:999px; margin-left:4px; vertical-align:1px;}
-  .sc-pill.warn{background:#FFF1D6; color:#9A5B00;} .sc-pill.bad{background:#FDE4E4; color:#B23A3A;}
+  .sc-pill.warn{background:#FFF1D6; color:#9A5B00;} .sc-pill.bad{background:#FDE4E4; color:#B23A3A;} .sc-pill.ok{background:#E3F4EA; color:#1F7A45;} .sc-pill.hold{background:#EEF0F3; color:#5B6470;}
   .sc-detail td{background:#FAFAFC; padding:10px 12px 12px; text-align:left;}
   .sc-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; font-size:12px;}
   .sc-grid div{display:flex; justify-content:space-between; gap:6px; border-bottom:1px dashed var(--line); padding-bottom:4px;}
@@ -985,7 +985,7 @@
     <button class="reset-link" id="btnScoreBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
-    <div class="sc-seg" id="scSeg"><button data-m="all" class="on">전체 현황</button><button data-m="month">월별 현황</button></div>
+    <div class="sc-seg" id="scSeg"><button data-m="all" class="on">전체 현황</button><button data-m="month">월별 현황</button><button data-m="base">활동 기준선</button></div>
     <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;" id="scDesc">홍보대사별 가점·감점·순점수 전체 현황이에요. 이름을 누르면 항목별 내역이 보여요.</p>
     <div class="sc-months" id="scMonths" style="display:none;"></div>
     <div class="sc-head">
@@ -4218,7 +4218,7 @@ document.getElementById('abRerun').addEventListener('click', async ()=>{
    백엔드가 계산해 두는 '종합점수' 탭을 그대로 읽어 보여줘요. 열 순서가 바뀌어도 머리글 이름으로 찾아요. */
 const SC_SHEET_ID = '1qmojS8eLOChWyt1fxIQOJ9UGBpgw4kWS6vzMHzVLlW8';
 let scRows = [], scNote = '', scShowAll = false, scOpen = null;
-let scMode = 'all', scMonthData = null, scMonth = '';
+let scMode = 'all', scMonthData = null, scMonth = '', scBaseData = null, scPeriod = '';
 
 // 시트 권한이 담당자 계정뿐이라 휴대폰 등에서는 시트를 직접 못 읽어요 → 서버(scoreTab, 관리자 출입증)로 먼저 받고, 안 되면 직접 읽기
 async function scFetch(sheet = '종합점수', keyCol = '이름'){
@@ -4256,6 +4256,7 @@ const scSigned = n => n > 0 ? '+' + n : String(n);
 
 async function scLoad(){
   if(scMode === 'month') return scLoadMonth();
+  if(scMode === 'base') return scLoadBase();
   const info = document.getElementById('scInfo');
   info.textContent = '불러오는 중...';
   try{
@@ -4424,11 +4425,79 @@ function scRenderMonth(){
   document.querySelectorAll('#scList .sc-row').forEach(tr => tr.addEventListener('click', () => { scOpen = scOpen === tr.dataset.n ? null : tr.dataset.n; scRenderMonth(); }));
   const t = document.getElementById('scToggle'); if(t) t.addEventListener('click', () => { scShowAll = !scShowAll; scRenderMonth(); });
 }
+/* ── 활동 기준선: 서버가 계산해 두는 '활동기준선' 탭(Baseline.gs)을 기간별로 보여줘요 ── */
+async function scLoadBase(){
+  const info = document.getElementById('scInfo');
+  info.textContent = '불러오는 중...';
+  try{
+    if(!scBaseData){
+      scBaseData = await scFetch('활동기준선', '이름');
+      const periods = [...new Set(scBaseData.map(r => String(r['기간'])))];
+      if(!scPeriod || !periods.includes(scPeriod)) scPeriod = periods[0] || '';   // 서버가 최근 기간부터 적어 둬요
+    }
+    scRenderBase();
+  }catch(e){
+    info.textContent = '';
+    document.getElementById('scMonths').innerHTML = '';
+    document.getElementById('scList').innerHTML = `<p style="font-size:12.5px;color:var(--ink-faint);">활동 기준선을 불러오지 못했어요. 「지금 다시 계산」을 한 번 눌러 주세요. (${abEsc(e && e.message || '오류')})</p>`;
+  }
+}
+
+// 시트가 날짜로 바꾼 칸은 gviz가 'Date(2026,7,31)'로 줘요 → 2026-08-31
+function scYmd(v){
+  const m = String(v == null ? '' : v).match(/^Date\((\d{4}),\s*(\d{1,2}),\s*(\d{1,2})(?:,\s*(\d{1,2}),\s*(\d{1,2}))?/);
+  if(!m) return String(v == null ? '' : v);
+  const p = x => String(x).padStart(2, '0');
+  return `${m[1]}-${p(Number(m[2]) + 1)}-${p(m[3])}${m[4] != null ? ` ${p(m[4])}:${p(m[5])}` : ''}`;
+}
+
+function scRenderBase(){
+  const periods = [...new Set(scBaseData.map(r => String(r['기간'])))];
+  const mEl = document.getElementById('scMonths');
+  mEl.innerHTML = periods.map(p => `<button data-per="${abEsc(p)}" class="${p === scPeriod ? 'on' : ''}">${abEsc(p.replace(/^\d{4} /, ''))}</button>`).join('');
+  mEl.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { scPeriod = b.dataset.per; scOpen = null; scRenderBase(); }));
+  const rows = scBaseData.filter(r => String(r['기간']) === scPeriod);
+  const cnt = v => rows.filter(r => String(r['판정']) === v).length;
+  const first = rows[0] || {};
+  document.getElementById('scInfo').textContent = rows.length
+    ? `${rows.length}명 · 미달 ${cnt('미달')} · 보류 ${cnt('판단 보류')} · 충족 ${cnt('충족')}${cnt('진행 중') ? ` · 진행 중 ${cnt('진행 중')}` : ''}` : '';
+  const verdict = v => { v = String(v || ''); const cls = v === '미달' ? 'bad' : v === '충족' ? 'ok' : v === '진행 중' ? 'hold' : 'warn'; return v ? `<span class="sc-pill ${cls}" style="margin-left:0;">${abEsc(v)}</span>` : ''; };
+  const act = v => { v = String(v || '').trim(); return v ? ` <span class="sc-pill ${/제적/.test(v) ? 'bad' : 'warn'}">${abEsc(v)}</span>` : ''; };
+  const body = rows.map(r => {
+    const name = String(r['이름']).trim(), open = scOpen === name;
+    const detail = open ? `<tr class="sc-detail"><td colspan="5"><div class="sc-grid">
+      <div><span>집계 기간</span><b>${abEsc(scYmd(r['집계 시작']))} ~ ${abEsc(scYmd(r['집계 끝']))}</b></div>
+      <div><span>의전·기장 (관리자)</span><b>${abEsc(r['의전·기장(관리자)'] || '—')}</b></div>
+      <div><span>미달 항목</span><b class="${r['미달 항목'] ? 'neg' : ''}">${abEsc(r['미달 항목'] || '없음')}</b></div>
+      <div><span>보류 항목</span><b>${abEsc(r['보류 항목'] || '없음')}</b></div>
+      ${r['연속 미달'] ? `<div><span>연속 미달</span><b class="neg">${abEsc(r['연속 미달'])}회</b></div>` : ''}
+    </div></td></tr>` : '';
+    return `<tr class="sc-row" data-n="${abEsc(name)}">
+      <td class="l sc-name">${nb(name)}${abEsc(name)} <small style="font-weight:400;color:var(--ink-faint);">${abEsc(r['역할'])}</small>${act(r['조치'])}</td>
+      <td>${abEsc(r['팀콘 참여'])}</td>
+      <td>${abEsc(r['촬영·편집'])}</td>
+      <td>${abEsc(r['개인콘(제출/회차)'] || '—')}</td>
+      <td>${verdict(r['판정'])}</td>
+    </tr>${detail}`;
+  }).join('');
+  document.getElementById('scList').innerHTML = rows.length ? `
+    <table class="sc-table">
+      <tr><th class="l">이름</th><th>팀콘</th><th>촬영·편집</th><th>개인콘</th><th>판정</th></tr>
+      ${body}
+    </table>
+    <p class="sc-legend" style="margin-top:8px;">기준(8주 기간마다): 모델팀 팀콘 2건 + 개인콘 80% + 의전 · 콘텐츠팀(촬영·편집 담당) 촬영·편집 2건 · 콘텐츠팀 팀콘 2건 + 개인콘 80% · 기장 팀콘 2건 + 요청 처리·팀 관리. 한 번 미달이면 면담, 두 번 연속이면 제적 심사예요.</p>
+    <p class="sc-legend">기록이 없어 판단할 수 없는 항목(개인콘 회차 4번 미만, 관리자 칸이 빈 경우 등)은 '보류'로 두고 미달로 치지 않아요. 신규는 첫 달을, 불참 처리된 팀콘은 세지 않아요.${first['계산일시'] ? ` · 계산 ${abEsc(scYmd(first['계산일시']))}` : ''}</p>`
+    : '<p style="font-size:12.5px;color:var(--ink-faint);">아직 활동 기준선 기록이 없어요.</p>';
+  document.querySelectorAll('#scList .sc-row').forEach(tr => tr.addEventListener('click', () => { scOpen = scOpen === tr.dataset.n ? null : tr.dataset.n; scRenderBase(); }));
+}
+
 document.querySelectorAll('#scSeg button').forEach(b => b.addEventListener('click', () => {
   scMode = b.dataset.m; scOpen = null;
   document.querySelectorAll('#scSeg button').forEach(x => x.classList.toggle('on', x === b));
-  document.getElementById('scMonths').style.display = scMode === 'month' ? 'flex' : 'none';
-  document.getElementById('scDesc').textContent = scMode === 'month'
+  document.getElementById('scMonths').style.display = (scMode === 'month' || scMode === 'base') ? 'flex' : 'none';
+  document.getElementById('scDesc').textContent = scMode === 'base'
+    ? '역할별 활동 기준선(활동 가이드 5번)을 기간마다 넘었는지 보여 줘요. 점수에는 들어가지 않아요. 의전·기장 항목은 시트 「기준선수동」 탭에 충족 또는 미달을 적어 주세요.'
+    : scMode === 'month'
     ? '달마다 받은 가점·감점이에요. 달을 고르고, 이름을 누르면 항목별 내역이 보여요.'
     : '홍보대사별 가점·감점·순점수 전체 현황이에요. 이름을 누르면 항목별 내역이 보여요.';
   scLoad();
@@ -4440,7 +4509,7 @@ document.getElementById('scRerun').addEventListener('click', async ()=>{
   b.disabled = true; b.textContent = '계산 중... (약 30초)';
   try{
     await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'rerun' }) });
-    scMonthData = null;
+    scMonthData = null; scBaseData = null;
     await scLoad();
   }catch(e){ showAlert('다시 계산에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
   b.disabled = false; b.textContent = '지금 다시 계산';

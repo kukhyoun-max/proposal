@@ -4219,7 +4219,19 @@ const SC_SHEET_ID = '1qmojS8eLOChWyt1fxIQOJ9UGBpgw4kWS6vzMHzVLlW8';
 let scRows = [], scNote = '', scShowAll = false, scOpen = null;
 let scMode = 'all', scMonthData = null, scMonth = '';
 
-function scFetch(sheet = '종합점수', keyCol = '이름'){
+// 시트 권한이 담당자 계정뿐이라 휴대폰 등에서는 시트를 직접 못 읽어요 → 서버(scoreTab, 관리자 출입증)로 먼저 받고, 안 되면 직접 읽기
+async function scFetch(sheet = '종합점수', keyCol = '이름'){
+  try{
+    const res = await attendJsonpRaw({ action:'scoreTab', sheet, tk: adminToken() });
+    if(res && Array.isArray(res.cols) && Array.isArray(res.rows)){
+      return res.rows.map(r => { const o = {}; res.cols.forEach((k, i) => { o[k] = r[i] != null ? r[i] : ''; }); return o; })
+        .filter(o => String(o[keyCol] || '').trim());
+    }
+    if(res && res.error === 'no_tab') throw new Error('시트를 읽지 못했어요');
+  }catch(e){ if(e && e.message === '시트를 읽지 못했어요') throw e; }
+  return scFetchSheet(sheet, keyCol);
+}
+function scFetchSheet(sheet, keyCol){
   return new Promise((resolve, reject) => {
     const cb = '__sc' + Math.random().toString(36).slice(2);
     const s = document.createElement('script');

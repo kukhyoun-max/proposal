@@ -98,7 +98,12 @@
   .card.selected .card-title{color:var(--purple-dark);}
   .card .card-desc{font-size:13px; color:var(--ink-soft); margin:0; line-height:1.5;}
   .hint-caption{font-size:12px; color:var(--ink-faint); margin:-4px 0 18px;}
-
+  .pick-label{font-size:13px; font-weight:700; color:var(--ink); margin:22px 0 8px;}
+  .pick-label span{font-size:11.5px; font-weight:400; color:var(--ink-faint); margin-left:4px;}
+  .pick-chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .pick{border:1.5px solid var(--line); background:transparent; color:var(--ink); border-radius:20px; padding:7px 12px; font:600 13px 'Noto Sans KR',sans-serif; cursor:pointer;}
+  .pick small{font-size:11px; font-weight:400; color:var(--ink-faint); margin-left:4px;}
+  .pick.on{border-color:var(--purple); background:var(--purple-soft); color:var(--purple-dark);}
   .section-title{
     font-size:14px; font-weight:700; color:var(--purple-dark); margin:26px 0 10px; padding-bottom:6px;
     border-bottom:1.5px solid var(--purple-soft);
@@ -377,7 +382,7 @@
   .eq-week .eq-cell .more{align-self:flex-end;}
   .eq-bar{z-index:1; pointer-events:none; height:16px; line-height:16px; margin:0 2px; padding:0 4px; border-radius:4px; font-size:9.5px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;}
   .eq-bar.cl{margin-left:-2px; border-top-left-radius:0; border-bottom-left-radius:0;} .eq-bar.cr{margin-right:-2px; border-top-right-radius:0; border-bottom-right-radius:0;}
-  .eq-bar.approved{background:#1E4FA0;} .eq-bar.prod{background:#D9822B;} .eq-bar.completed{background:#2E8B57;} .eq-bar.uploaded{background:#6A4BC4;} .eq-bar.late{background:#C8372D;} .eq-bar.duty{background:#D6336C;}
+  .eq-bar.approved{background:#1E4FA0;} .eq-bar.prod{background:#D9822B;} .eq-bar.completed{background:#2E8B57;} .eq-bar.uploaded{background:#6A4BC4;} .eq-bar.late{background:#C8372D;} .eq-bar.duty{background:#D6336C;} .eq-bar.acad{background:#495057;}
   .eq-evrow .eq-bar{flex:none; height:auto; font-size:11px; line-height:1.5; padding:1px 6px; border-radius:5px; margin:0;}
   .eq-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 0; border-bottom:1px solid var(--line);}
   .eq-row b{font-size:13.5px;} .eq-row .t{font-size:12px; color:var(--ink); font-weight:700; margin-left:6px;}
@@ -705,7 +710,12 @@
     <div class="step-panel" id="panel2">
       <p class="step-label">콘텐츠 기획서</p>
       <h2 class="heading">어떤 콘텐츠를<br>기획하시나요?</h2>
-      <p class="hint-caption">만들 콘텐츠와 가장 가까운 유형을 골라주세요.</p>
+      <p class="hint-caption">세 가지를 하나씩 골라주세요.</p>
+      <p class="pick-label">콘텐츠 유형 <span>기본은 유튜브 롱폼이에요</span></p>
+      <div class="pick-chips" id="fmtChips"></div>
+      <p class="pick-label">콘텐츠 태깅 <span>성과 분석에 쓰는 분류예요. 가장 가까운 하나</span></p>
+      <div class="pick-chips" id="tagChips"></div>
+      <p class="pick-label">기획 방식</p>
       <div id="typeCards"></div>
     </div>
 
@@ -784,6 +794,7 @@
       </div>
       <p class="req-hint" style="margin:-4px 0 12px;">촬영 시간 동안 선택한 장비가 대여로 잡혀요.</p>
       <div class="field-sm"><label>제출일</label><select id="f_submitdate"><option value="">촬영일을 먼저 선택해주세요</option></select></div>
+      <p class="req-hint" id="acadHint" style="display:none; margin:-4px 0 0; color:#495057;"></p>
     </div>
 
     <div class="step-panel" id="panel6">
@@ -1092,7 +1103,7 @@
     <div id="eqCalWrap">
       <div class="eq-month"><button id="eqPrev">◀</button><b id="eqMonthLabel"></b><button id="eqNext">▶</button></div>
       <div class="eq-grid" id="eqGrid"></div>
-      <p class="eq-legend">막대 = 촬영일→영상 제출일 · <span class="eq-key" style="background:#D6336C;margin-left:0"></span>행사·요청사항·이벤트 · <span class="eq-key" style="background:#1E4FA0;margin-left:0"></span>촬영 예정<span class="eq-key" style="background:#D9822B"></span>제작 중<span class="eq-key" style="background:#C8372D"></span>제출 지남<span class="eq-key" style="background:#2E8B57"></span>제작 완료<span class="eq-key" style="background:#6A4BC4"></span>업로드 · ○팀 = 장비 빌린 팀 수 · 빨간 칸 = 장비 겹침</p>
+      <p class="eq-legend">막대 = 촬영일→영상 제출일 · <span class="eq-key" style="background:#D6336C;margin-left:0"></span>행사·요청사항·이벤트 · <span class="eq-key" style="background:#1E4FA0;margin-left:0"></span>촬영 예정<span class="eq-key" style="background:#D9822B"></span>제작 중<span class="eq-key" style="background:#C8372D"></span>제출 지남<span class="eq-key" style="background:#2E8B57"></span>제작 완료<span class="eq-key" style="background:#6A4BC4"></span>업로드<span class="eq-key" style="background:#495057"></span>학사 · ○팀 = 장비 빌린 팀 수 · 빨간 칸 = 장비 겹침</p>
       <h3 id="eqDayTitle" style="font-size:14px; font-weight:900; margin:18px 0 0;"></h3>
       <div id="eqDayList"></div>
     </div>
@@ -1481,7 +1492,7 @@ function mapRowToRecord(row){
     submittedAt: row['제출일시'] || '', updatedAt: row['최종수정일시'] || '',
     reviewedAt: row['검토일시'] || '', updatedBy: String(row['최종수정자'] || ''), filmingAt: row['촬영시작일시'] || '',
     completedAt: row['완료일시'] || '', uploadedAt: normalizeDateStr(row['업로드일']), uploadUrl: String(row['업로드URL'] || ''), lead: row['작성자(팀장)'] || '', name: row['작성자(팀장)'] || '',
-    category: row['콘텐츠유형'] || '', member: row['팀원'] || '', filming: row['촬영'] || '',
+    category: row['콘텐츠유형'] || '', format: String(row['형식'] || ''), tag: String(row['분류'] || ''), member: row['팀원'] || '', filming: row['촬영'] || '',
     editing: row['편집'] || '', extra: row['추가'] || '', participants: row['참여인원'] || '',
     title: row['제목'] || '', summary: row['한줄요약'] || '', url: row['참고URL'] || '',
     request: row['요청사항'] || '', filmdate: normalizeDateStr(row['촬영일']), submitdate: normalizeDateStr(row['제출일(영상)']),
@@ -1491,7 +1502,7 @@ function mapRowToRecord(row){
 
 let step = 1;
 let data = {
-  name:'', category:'',
+  name:'', category:'', format:'', tag:'',
   lead:'', member:'', filming:'', extra:'', editing:'', participants:'',
   title:'', summary:'', url:'', request:'',
   filmdate:'', submitdate:'', equipment:'',
@@ -1783,7 +1794,34 @@ const CATEGORIES = [
   {id:'original', title:'오리지널 콘텐츠', desc:'관리자가 직접 등록하는 개별 촬영 콘텐츠예요.', hidden:true}
 ];
 
+// 콘텐츠 유형·태깅(2026-10-19~): 기획서는 팀콘·유튜브 롱폼이 기본. 태깅은 우리 성과 데이터 분류(sns.json g, 스냅샷 「태그」 탭)와 같은 이름
+// 기획서 시트 「형식」·「분류」 열 (자동매칭 서버 planTag로 저장)
+const FORMATS = [
+  {id:'유튜브 롱폼', desc:'기본'}, {id:'롱폼+쇼츠', desc:'짧은 버전도'}, {id:'쇼츠·릴스', desc:'세로 1분 안팎만'}
+];
+const FORMAT_DEFAULT = '유튜브 롱폼';
+const TAGS = ['학생 이야기','학과·전공','캠퍼스·계절','행사·축제','예능·챌린지','정보·꿀팁','학사·생활 안내','시설·공간',
+  '이벤트·참여','시즌 인사','성과·뉴스','입시·모집','체육부 소식','동문 소식','브랜드 영상','홍보대사 모집','기타'];
+function renderPickChips(){
+  if(!data.format) data.format = FORMAT_DEFAULT;
+  const one = (id, list, key) => {
+    const wrap = document.getElementById(id); if(!wrap) return;
+    wrap.innerHTML = list.map(o => `<button type="button" class="pick${data[key]===o.id?' on':''}" data-v="${esc(o.id)}">${esc(o.id)}${o.desc?`<small>${esc(o.desc)}</small>`:''}</button>`).join('');
+    wrap.querySelectorAll('.pick').forEach(b => b.addEventListener('click', ()=>{
+      data[key] = b.dataset.v; renderPickChips(); updateCta(); scheduleAutosave();
+    }));
+  };
+  one('fmtChips', FORMATS, 'format');
+  one('tagChips', TAGS.map(t => ({id:t})), 'tag');
+}
+function planTagSave(planId, format, tag){
+  try{ fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'planTag', planId, format: format || '', tag: tag || '' }) }); }catch(e){}
+}
+const tagLine = rec => [rec.format, rec.tag].filter(Boolean).join(' · ');
+
 function renderTypeCards(){
+  renderPickChips();
   const wrap = document.getElementById('typeCards');
   wrap.innerHTML = CATEGORIES.filter(c=>!c.hidden).map(c=>`
     <div class="card ${data.category===c.id?'selected':''}" data-id="${c.id}">
@@ -1870,7 +1908,7 @@ function updateProgress(){
 
 function stepValid(n){
   if(n===1) return data.name.trim().length>0;
-  if(n===2) return !!data.category;
+  if(n===2) return !!data.category && !!data.format && !!data.tag;
   if(n===3){
     const tp = titleParts(data.title);
     return tp.series.length>0 && (data.oneoff || tp.episode.length>0) && data.summary.trim().length>0 && data.url.trim().length>0 && data.request.trim().length>0;
@@ -1884,7 +1922,7 @@ function stepValid(n){
 
 function updateCta(){
   const btn = document.getElementById('ctaBtn');
-  const labels = {1:'이름 입력 완료', 2:'콘텐츠 유형 선택하기', 3:'다음', 4:'다음', 5:'다음', 6:'다음', 7:'완성하기'};
+  const labels = {1:'이름 입력 완료', 2:'다음', 3:'다음', 4:'다음', 5:'다음', 6:'다음', 7:'완성하기'};
   btn.textContent = labels[step] || '다음';
   btn.classList.toggle('active', stepValid(step));
 }
@@ -1892,7 +1930,7 @@ function updateCta(){
 function buildPlanLines(d){
   const catLabel = (CATEGORIES.find(c=>c.id===d.category)||{}).title || '';
   return [
-    `작성자: ${d.name||d.lead}`, `콘텐츠 유형: ${catLabel}`, '',
+    `작성자: ${d.name||d.lead}`, `콘텐츠 유형: ${d.format||''}`, `콘텐츠 태깅: ${d.tag||''}`, `기획 방식: ${catLabel}`, '',
     '[제작자 정보]', `팀장: ${d.lead}`, `팀원: ${d.member}`, `촬영: ${d.filming}`,
     `추가: ${d.extra}`, `편집: ${d.editing}`, `참여 인원: ${d.participants}`, '',
     '[기본 정보]', `제목: ${d.title}`, `한 문장: ${d.summary}`, `참고 URL: ${d.url}`, `요청사항: ${d.request}`, '',
@@ -1907,7 +1945,7 @@ function buildFullPlanText(d){
 function renderFinalDoc(){
   const catLabel = (CATEGORIES.find(c=>c.id===data.category)||{}).title || '';
   const set = (id,val)=>{ document.getElementById(id).textContent = (val && String(val).trim()) ? val : '-'; };
-  document.getElementById('fd_category').textContent = catLabel ? `콘텐츠 기획서 · ${catLabel}` : '콘텐츠 기획서';
+  document.getElementById('fd_category').textContent = ['콘텐츠 기획서', tagLine(data) || catLabel].filter(Boolean).join(' · ');
   set('fd_title', data.title); set('fd_lead', data.lead); set('fd_member', data.member);
   set('fd_filming', data.filming); set('fd_editing', data.editing); set('fd_extra', data.extra);
   set('fd_participants', data.participants ? data.participants+'명' : '');
@@ -2155,6 +2193,7 @@ async function submitForReview(){
   try{
     const result = await sheetCreate(record);
     if(!result || result.ok === false) throw new Error('시트에 저장하지 못했어요.');
+    planTagSave(id, data.format, data.tag);
     try{ fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({ action:'planTime', planId: id, from: data.filmfrom || '', to: data.filmto || '' }) }); }catch(e){}
     statusEl.textContent = '제출 완료 · 구글 시트에 저장됐어요';
@@ -2394,7 +2433,7 @@ function renderStatusListView(items){
           <span style="font-size:11px; color:var(--ink-faint);">${esc(fmtDateTime(rec.submittedAt))}</span>
         </div>
         <p class="sub-title">${esc(rec.title||'(제목 없음)')}</p>
-        <p class="sub-meta">${nb(rec.name)}${esc(rec.name||'-')} · ${catLabel}</p>
+        <p class="sub-meta">${nb(rec.name)}${esc(rec.name||'-')} · ${esc(rec.tag || catLabel)}</p>
       </div>
     `;
   }).join('');
@@ -2433,6 +2472,7 @@ function fmtDateTime(iso){
 function renderStatusDetail(key, rec){
   editingKey = key;
   editingRecord = JSON.parse(JSON.stringify(rec));
+  eTagOrig = { format: editingRecord.format || '', tag: editingRecord.tag || '' };
   if(!editingRecord.plan || editingRecord.plan.length===0) editingRecord.plan=[{content:'',location:''}];
   document.getElementById('statusHeader').textContent = '기획서 상세';
   const el = document.getElementById('statusContent');
@@ -2482,7 +2522,9 @@ function renderStatusDetail(key, rec){
     <button class="save-edit-btn" id="saveEditBtn" style="margin-top:4px;">수정 저장</button>
     <button id="toggleMoreEdit" style="width:100%; margin:12px 0 0; padding:12px; border-radius:12px; border:1px dashed var(--line); background:none; color:var(--ink-soft); font-size:13.5px; cursor:pointer;">다른 항목도 수정하기 ▾</button>
     <div id="editMoreWrap" style="display:none;">
-    <p class="section-title">콘텐츠 유형</p>
+    <p class="section-title">콘텐츠 유형 · 태깅</p>
+    <div class="grid2"><div class="field-sm"><select id="e_format"><option value="">유형 선택</option>${FORMATS.map(o=>`<option ${o.id===editingRecord.format?'selected':''}>${esc(o.id)}</option>`).join('')}</select></div><div class="field-sm"><select id="e_tag"><option value="">태깅 선택</option>${TAGS.map(t=>`<option ${t===editingRecord.tag?'selected':''}>${esc(t)}</option>`).join('')}</select></div></div>
+    <p class="section-title">기획 방식</p>
     <div class="field-sm"><select id="e_category">${catOptions}</select></div>
     <p class="section-title">제작자 정보</p>
     <div class="grid2">
@@ -2523,6 +2565,7 @@ function renderStatusDetail(key, rec){
     document.getElementById('e_'+k).addEventListener('input', e=>{ editingRecord[k]=e.target.value; recomputeEditTeam(); });
   });
   document.getElementById('e_category').addEventListener('change', e=>{ editingRecord.category=e.target.value; });
+  ['format','tag'].forEach(k=>document.getElementById('e_'+k).addEventListener('change', e=>{ editingRecord[k]=e.target.value; }));
   ['title','summary','url','request','filmdate','submitdate','equipment'].forEach(k=>{
     document.getElementById('e_'+k).addEventListener('input', e=>{ editingRecord[k]=e.target.value; });
   });
@@ -2598,7 +2641,7 @@ function buildDocCardHTML(rec){
     </div>`).join('') : '<p style="font-size:12.5px;color:var(--ink-faint);">입력된 장면이 없어요.</p>';
   return `
     <div style="border:1.5px solid var(--line); border-radius:16px; padding:22px; background:#fff;">
-      <p style="font-size:11px; color:var(--purple); font-weight:700; letter-spacing:1px; margin:0 0 4px;">${catLabel? `콘텐츠 기획서 · ${catLabel}` : '콘텐츠 기획서'}</p>
+      <p style="font-size:11px; color:var(--purple); font-weight:700; letter-spacing:1px; margin:0 0 4px;">${esc(["콘텐츠 기획서", tagLine(rec) || catLabel].filter(Boolean).join(" · "))}</p>
       <h3 style="font-size:20px; font-weight:900; margin:0 0 16px;">${esc(rec.title)||'-'}</h3>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:12.5px; margin-bottom:18px;">
         <div><span style="color:var(--ink-soft);">팀장</span><br><b>${esc(rec.lead)||'-'}</b></div>
@@ -2656,6 +2699,7 @@ function renderEditPlanRows(){
 
 // 상세 수정: 저장된 촬영 시간 불러오기 (장비 목록에 기획서별 시간이 같이 와요)
 let eTimeOrig = { from:'', to:'' };
+let eTagOrig = { format:'', tag:'' };
 async function eFillTimes(key){
   eTimeOrig = { from:'', to:'' };
   try{
@@ -2693,6 +2737,10 @@ async function saveEditedSubmission(){
     if(tf !== eTimeOrig.from || tt !== eTimeOrig.to){
       await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
         body: JSON.stringify({ action:'planTime', planId: editingKey, from: tf, to: tt }) });
+    }
+    if((editingRecord.format||'') !== eTagOrig.format || (editingRecord.tag||'') !== eTagOrig.tag){
+      planTagSave(editingKey, editingRecord.format, editingRecord.tag);
+      eTagOrig = { format: editingRecord.format||'', tag: editingRecord.tag||'' };
     }
     editingRecord.updatedAt = updatedAt;
     editDirty = false;
@@ -2811,7 +2859,7 @@ function renderAdminList(items){
           <span style="display:flex; gap:12px;"><button class="toggle-detail" data-edit="${esc(key)}">✏️ 수정</button><button class="toggle-detail" data-toggle="${esc(key)}">자세히 보기</button><button class="toggle-detail" data-del="${esc(key)}" style="color:#DC2626;">삭제</button></span>
         </div>
         <p class="sub-title">${esc(rec.title||'(제목 없음)')}</p>
-        <p class="sub-meta">${nb(rec.name)}${esc(rec.name||'-')} · ${catLabel} · ${esc(when)}</p>
+        <p class="sub-meta">${nb(rec.name)}${esc(rec.name||'-')} · ${esc(rec.tag || catLabel)} · ${esc(when)}</p>
         <div class="sub-detail" id="detail-${esc(key)}" style="display:none; white-space:normal; padding:0; border:none; margin:10px 0 0;">${buildDocCardHTML(rec)}</div>
         ${actions}
         ${rec.uploadedAt ? `<a class="up-link" ${/^https?:/.test(rec.uploadUrl) ? `href="${esc(safeUrl(rec.uploadUrl))}" target="_blank" rel="noopener"` : ''}>📺 ${mtFmt(rec.uploadedAt)} 업로드${/^https?:/.test(rec.uploadUrl) ? ' · 게시물 보기' : ''}</a>` : ''}
@@ -3040,7 +3088,7 @@ document.getElementById('btnReset').addEventListener('click', async ()=>{
   const ok = await showConfirm('처음으로 이동하면 지금까지 입력한 내용이 사라져요. 그래도 이동할까요?');
   if(!ok) return;
   data = {
-    name:'', category:'',
+    name:'', category:'', format:'', tag:'',
     lead:'', member:'', filming:'', extra:'', editing:'', participants:'',
     title:'', summary:'', url:'', request:'',
     filmdate:'', submitdate:'', equipment:'',
@@ -3160,15 +3208,18 @@ function applyDateLimits(){
     refreshSubmitOptions();
     updateCta();
     scheduleAutosave();
+    acadHint();
   });
 
   submitEl.addEventListener('change', ()=>{
     data.submitdate = submitEl.value;
     updateCta();
     scheduleAutosave();
+    acadHint();
   });
 
   refreshSubmitOptions();
+  setTimeout(acadHint, 0);
 }
 
 bindDetailInputs();
@@ -3915,12 +3966,13 @@ async function eqLoad(){
   try{
     attendCache.delete(JSON.stringify({ action:'equipList' }));   // 일정·장비 화면은 열 때마다 최신 대여 목록으로
     const ok = r => (r && !r.error) ? r : {};
-    const [res, rows, evr, tkr] = await Promise.all([attendJsonp({ action:'equipList' }), sheetGetAll().catch(()=>[]),
-      attendJsonp({ action:'eventList' }).then(ok).catch(()=>({})), attendJsonp({ action:'taskList' }).then(ok).catch(()=>({}))]);
+    const [res, rows, evr, tkr, acr] = await Promise.all([attendJsonp({ action:'equipList' }), sheetGetAll().catch(()=>[]),
+      attendJsonp({ action:'eventList' }).then(ok).catch(()=>({})), attendJsonp({ action:'taskList' }).then(ok).catch(()=>({})), acadLoad()]);
     if(res && res.error) throw new Error(res.error);
     eqItems = res.items || [];
     eqBuildEvents(rows || []);
     eqAddDuty(evr.events || [], tkr.tasks || []);
+    eqAddAcad(acr);
     document.getElementById('eqInfo').textContent = '';
   }catch(e){ document.getElementById('eqInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류'); }
   if(!eqMonth) eqMonth = mtYmd(new Date()).slice(0, 7);
@@ -3949,8 +4001,33 @@ function eqAddDuty(events, tasks){
     eqSpans.push({ duty: t.kind || '요청사항', title: t.title + ' 마감', start: t.date, end: t.date, info: `대상 ${n}` }); });
   eqSpans.sort((a, b) => a.start < b.start ? -1 : a.start > b.start ? 1 : (a.end < b.end ? 1 : -1));
 }
-// 막대 색: 촬영 예정 파랑 · 제작 중 주황 · 제작 완료 초록 · 업로드 완료 보라 · 제출일 지남(미완료) 빨강
+// 학사 일정(제작 캘린더 「[학사]」, 읽기 전용): 회색 막대. 한 주에 줄이 넘치면 학사부터 +n으로 접힘
+function eqAddAcad(items){
+  (items || []).forEach(a => { if(a.start) eqSpans.push({ acad: true, title: a.title, start: a.start, end: a.end || a.start, info: '학사 일정 · 구글 캘린더에서 관리' }); });
+  eqSpans.sort((a, b) => a.start < b.start ? -1 : a.start > b.start ? 1 : (a.end < b.end ? 1 : -1));
+}
+// 학사 일정 목록 (서버 GET academic, 1시간 캐시). 실패하면 빈 목록 — 학사 일정이 없어도 화면은 그대로
+let ACAD = null;
+function acadLoad(){
+  if(ACAD) return Promise.resolve(ACAD);
+  return attendJsonp({ action:'academic' }).then(r => (ACAD = (r && !r.error && Array.isArray(r.items)) ? r.items : null) || []).catch(() => []);
+}
+// 기획서 촬영일~제출일이 기말·중간시험·수강신청과 겹치면 안내만 (막지 않음)
+const ACAD_HINT = /시험|수강신청/;
+function acadHint(){
+  const el = document.getElementById('acadHint'); if(!el) return;
+  const s = data.filmdate, e = data.submitdate || data.filmdate;
+  if(!s){ el.style.display = 'none'; return; }
+  acadLoad().then(list => {
+    if(data.filmdate !== s) return;
+    const hit = list.filter(a => ACAD_HINT.test(a.title) && a.start <= e && (a.end || a.start) >= s);
+    el.style.display = hit.length ? '' : 'none';
+    el.textContent = hit.length ? '학사 일정과 겹쳐요: ' + hit.map(a => a.title + ' ' + mtFmt(a.start) + (a.end && a.end !== a.start ? '~' + mtFmt(a.end) : '')).join(', ') + '. 시험기간 콘텐츠라면 그대로 진행해도 돼요.' : '';
+  });
+}
+// 막대 색: 촬영 예정 파랑 · 제작 중 주황 · 제작 완료 초록 · 업로드 완료 보라 · 제출일 지남(미완료) 빨강 · 학사 회색
 function eqSpanClass(sp){
+  if(sp.acad) return 'acad';
   if(sp.duty) return 'duty';
   if(sp.status === 'completed' || sp.status === 'uploaded') return sp.status;
   if(sp.due && sp.due < mtYmd(new Date())) return 'late';
@@ -3979,7 +4056,7 @@ function eqRenderCal(){
     const segs = eqSpans.filter(sp => sp.start <= b && sp.end >= a).map(sp => {
       const s0 = sp.start < a ? a : sp.start, s1 = sp.end > b ? b : sp.end;
       return { sp, c0: wk.indexOf(s0), c1: wk.indexOf(s1), cl: sp.start < a, cr: sp.end > b };
-    }).sort((p, q) => p.c0 - q.c0 || (q.c1 - q.c0) - (p.c1 - p.c0));
+    }).sort((p, q) => (p.sp.acad ? 1 : 0) - (q.sp.acad ? 1 : 0) || p.c0 - q.c0 || (q.c1 - q.c0) - (p.c1 - p.c0));   // 학사는 줄을 맨 나중에 받음 → 넘치면 먼저 +n
     const lanes = [];
     segs.forEach(g => { let l = lanes.findIndex(end => end < g.c0); if(l < 0){ l = lanes.length; lanes.push(-1); } lanes[l] = g.c1; g.lane = l; });
     const shown = Math.min(lanes.length, MAXL), more = Array(7).fill(0);
@@ -4000,11 +4077,11 @@ function eqRenderCal(){
   const list = eqItems.filter(it => it.start <= eqDay && eqDay <= it.end).sort((a, b) => (a.from || '') < (b.from || '') ? -1 : 1);
   const groups = [];
   list.forEach(it => { const k = eqGroupKey(it); let g = groups.find(x => x.key === k); if(!g) groups.push(g = { key: k, items: [] }); g.items.push(it); });
-  const dayEvs = eqSpans.filter(sp => sp.start <= eqDay && eqDay <= sp.end).map(sp => ({ sp, label: sp.duty || (eqDay === sp.film ? '촬영' : eqDay === sp.due ? '영상 제출' : '제작 기간') }))
+  const dayEvs = eqSpans.filter(sp => sp.start <= eqDay && eqDay <= sp.end).map(sp => ({ sp, label: sp.acad ? '학사' : sp.duty || (eqDay === sp.film ? '촬영' : eqDay === sp.due ? '영상 제출' : '제작 기간') }))
     .concat(eqSpans.filter(sp => sp.up === eqDay).map(sp => ({ sp, label: '업로드', cls: 'uploaded' })));
   document.getElementById('eqDayTitle').textContent = mtFmt(eqDay) + (dayEvs.length ? ` · 일정 ${dayEvs.length}` : '') + ` · ${groups.length}팀 · 장비 ${list.length}개`;
   const el = document.getElementById('eqDayList');
-  const evHtml = dayEvs.length ? `<div class="eq-evlist">${dayEvs.map(({ sp, label, cls }) => `<div class="eq-evrow"><span class="eq-bar ${cls || eqSpanClass(sp)}">${label}</span><div><b>${abEsc(sp.title)}</b><small>${sp.duty ? esc(sp.info) : `${nbList(abEsc(sp.lead || '-'))} · ${esc(STATUS_LABELS[sp.status] || sp.status)} · ${sp.film ? mtFmt(sp.film) : '-'} 촬영 → ${sp.due ? mtFmt(sp.due) : '-'} 제출${label === '촬영' ? esc(eqFilmTime(sp.id)) : ''}`}</small></div></div>`).join('')}</div>` : '';
+  const evHtml = dayEvs.length ? `<div class="eq-evlist">${dayEvs.map(({ sp, label, cls }) => `<div class="eq-evrow"><span class="eq-bar ${cls || eqSpanClass(sp)}">${label}</span><div><b>${abEsc(sp.title)}</b><small>${sp.duty || sp.acad ? esc(sp.info) : `${nbList(abEsc(sp.lead || '-'))} · ${esc(STATUS_LABELS[sp.status] || sp.status)} · ${sp.film ? mtFmt(sp.film) : '-'} 촬영 → ${sp.due ? mtFmt(sp.due) : '-'} 제출${label === '촬영' ? esc(eqFilmTime(sp.id)) : ''}`}</small></div></div>`).join('')}</div>` : '';
   el.innerHTML = evHtml + (groups.length ? groups.map(g => {
     const f = g.items[0], bad = g.items.filter(it => eqBad.has(it.id)).length;
     const sameTime = g.items.every(it => eqTimeText(it) === eqTimeText(f));
@@ -4668,9 +4745,10 @@ function hbApply(badges){
 
   /* ── 주요 일정 (구글 캘린더 4개) ── */
   // 종류별 색: 진한 색(c)은 태그·왼쪽 띠·필터 버튼, 연한 색(bg)은 아이콘 바탕. 의전/행사 분홍은 일정·장비 달력 막대와 같은 색
-  const CAL = { make:{ n:'제작', e:'🎬', c:'#1E6FE8', bg:'#DCE9FF' }, duty:{ n:'의전/행사', e:'🤝', c:'#D6336C', bg:'#FCE4EC' }, sns:{ n:'업로드', e:'📤', c:'#E8590C', bg:'#FFE5D1' }, hong:{ n:'업로드', e:'📤', c:'#E8590C', bg:'#FFE5D1' } };
+  // 학사(제작 캘린더의 「[학사]」 일정, 2026-10-18~)는 회색: 읽기 전용이라 ⋯ 메뉴·기획서 열기 없음
+  const CAL = { make:{ n:'제작', e:'🎬', c:'#1E6FE8', bg:'#DCE9FF' }, duty:{ n:'의전/행사', e:'🤝', c:'#D6336C', bg:'#FCE4EC' }, sns:{ n:'업로드', e:'📤', c:'#E8590C', bg:'#FFE5D1' }, hong:{ n:'업로드', e:'📤', c:'#E8590C', bg:'#FFE5D1' }, acad:{ n:'학사', e:'🎓', c:'#495057', bg:'#E9ECEF' } };
   let EVENTS = [], scFilter = 'all', target = null;
-  $('jjhScChips').innerHTML = [['all', '전체'], ['make', '제작'], ['duty', '의전/행사'], ['up', '업로드']].map(([k, t]) => `<button type="button" data-k="${k}" class="${k === 'all' ? 'on' : ''}"${k === 'all' ? '' : ` style="--cc:${CAL[k === 'up' ? 'sns' : k].c}"`}>${t}</button>`).join('');
+  $('jjhScChips').innerHTML = [['all', '전체'], ['make', '제작'], ['duty', '의전/행사'], ['up', '업로드'], ['acad', '학사']].map(([k, t]) => `<button type="button" data-k="${k}" class="${k === 'all' ? 'on' : ''}"${k === 'all' ? '' : ` style="--cc:${CAL[k === 'up' ? 'sns' : k].c}"`}>${t}</button>`).join('');
   $('jjhScChips').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; scFilter = b.dataset.k;
     [...$('jjhScChips').children].forEach(x => x.classList.toggle('on', x === b)); renderSchedule(); });
   function renderSchedule(){
@@ -4681,13 +4759,14 @@ function hbApply(badges){
       if (e.start !== last){ last = e.start; const d = new Date(e.start + 'T00:00:00'); html += `<div class="jjh-day">${md(e.start)} (${'일월화수목금토'[d.getDay()]})</div>`; }
       const c = CAL[e.calKey] || CAL.make;
       const when = e.time ? e.time : (e.end && e.end !== e.start ? md(e.start) + '~' + md(e.end) : '종일');
-      html += `<div class="jjh-row go" data-i="${EVENTS.indexOf(e)}" style="--cc:${c.c}"><span class="ico" style="background:${c.bg}">${c.e}</span><div class="t"><span class="tag" style="background:${c.c};color:#fff">${c.n}</span>${esc(e.title)}<small>${e.dup ? '<span class="dup">중복</span>' : ''}${esc(when)}</small></div><button type="button" class="more" data-i="${EVENTS.indexOf(e)}" aria-label="일정 메뉴">⋯</button></div>`;
+      const ro = e.calKey === 'acad';
+      html += `<div class="jjh-row${ro ? '' : ' go'}" data-i="${EVENTS.indexOf(e)}" style="--cc:${c.c}"><span class="ico" style="background:${c.bg}">${c.e}</span><div class="t"><span class="tag" style="background:${c.c};color:#fff">${c.n}</span>${esc(e.title)}<small>${e.dup ? '<span class="dup">중복</span>' : ''}${esc(when)}</small></div>${ro ? '' : `<button type="button" class="more" data-i="${EVENTS.indexOf(e)}" aria-label="일정 메뉴">⋯</button>`}</div>`;
     });
     $('jjhScList').innerHTML = html;
   }
   $('jjhScList').addEventListener('click', e => {
     const b = e.target.closest('.more');
-    if (!b){ const row = e.target.closest('.jjh-row[data-i]'); const ev = row && EVENTS[+row.dataset.i]; if (ev) jjOpenPlanByTitle(ev.title); return; }
+    if (!b){ const row = e.target.closest('.jjh-row[data-i]'); const ev = row && EVENTS[+row.dataset.i]; if (ev && ev.calKey !== 'acad') jjOpenPlanByTitle(ev.title); return; }
     target = EVENTS[+b.dataset.i]; if (!target) return;
     $('jjhEvTitle').textContent = target.title;
     $('jjhEvSub').textContent = (CAL[target.calKey] || CAL.make).n + ' · ' + md(target.start) + (target.end && target.end !== target.start ? '~' + md(target.end) : '') + (target.dup ? ' · 중복 일정' : '');

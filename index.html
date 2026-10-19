@@ -503,6 +503,12 @@
   .sc-grid div{display:flex; justify-content:space-between; gap:6px; border-bottom:1px dashed var(--line); padding-bottom:4px;}
   .sc-grid span{color:var(--ink-soft);}
   .sc-grid b.neg{color:#B23A3A;} .sc-grid b.pos{color:#1B7A38;}
+  .sc-why{margin-top:10px; padding-top:8px; border-top:1px solid var(--line);}
+  .sc-why-h{font-size:12px;} .sc-why-m{font-size:11.5px; color:var(--ink-faint); margin:6px 0 0;}
+  .sc-why-t{width:100%; border-collapse:collapse; font-size:12px; margin-top:4px;}
+  .sc-why-t td{padding:5px 0; border-bottom:1px dashed var(--line); vertical-align:top; text-align:right;} .sc-why-t td.l{text-align:left; padding-right:6px;}
+  .sc-why-t small{display:block; color:var(--ink-faint); font-size:11px;} .sc-why-d{width:38px; color:var(--ink-soft);}
+  .sc-why-k{display:inline-block; font-size:10.5px; padding:1px 5px; border-radius:4px; background:#EEF0F3; color:#5B6470; margin-right:2px;}
   .sc-seg{display:flex; gap:4px; background:#F2F2F6; padding:4px; border-radius:12px; margin:0 0 12px;}
   .sc-seg button{flex:1; border:none; background:none; padding:8px 0; border-radius:9px; font-size:13px; font-weight:700; color:var(--ink-soft); cursor:pointer;}
   .sc-seg button.on{background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.08);}
@@ -4233,6 +4239,7 @@ document.getElementById('abRerun').addEventListener('click', async ()=>{
    백엔드가 계산해 두는 '종합점수' 탭을 그대로 읽어 보여줘요. 열 순서가 바뀌어도 머리글 이름으로 찾아요. */
 const SC_SHEET_ID = '1qmojS8eLOChWyt1fxIQOJ9UGBpgw4kWS6vzMHzVLlW8';
 let scRows = [], scNote = '', scShowAll = false, scOpen = null;
+let scWhy = {};   // 이름 -> 감점 상세(scoreWhy) 또는 'loading' / { error }
 let scMode = 'all', scMonthData = null, scMonth = '', scBaseData = null, scPeriod = '';
 
 // 시트 권한이 담당자 계정뿐이라 휴대폰 등에서는 시트를 직접 못 읽어요 → 서버(scoreTab, 관리자 출입증)로 먼저 받고, 안 되면 직접 읽기
@@ -4312,8 +4319,9 @@ function scRender(){
       ${item('개인콘 감점', r['개인콘 감점'], `지각 ${scN(r['개인콘 지각'])} · 미제출 ${scN(r['개인콘 미제출'])}`)}
       ${item('제출지연 감점', r['제출지연 감점'], `${scN(r['팀콘 제출지연(일)'])}일`)}
       ${item('요청·이벤트 감점', r['요청·이벤트 감점'], `지연 ${scN(r['요청·이벤트 지연'])} · 미제출 ${scN(r['요청·이벤트 미제출'])}`)}
+      ${item('팀콘 미완주 감점', r['미완주 감점'], `${scN(r['팀콘 미완주'])}건`)}
       <div><span>팀콘 불참</span><b>${scN(r['팀콘 불참'])}회 <small style="font-weight:400;color:var(--ink-faint);">(면제 ${scN(r['불참 면제'])})</small></b></div>
-    </div></td></tr>` : '';
+    </div>${String(r['상태'] || '').trim() ? scWhyHtml(x.name, x.minus) : ''}</td></tr>` : '';
     return `<tr class="sc-row" data-n="${abEsc(x.name)}">
       <td class="l sc-rank">${rank}</td>
       <td class="l sc-name">${nb(x.name)}${abEsc(x.name)}${x.current ? '' : ' <small style="font-weight:400;color:var(--ink-faint);">이전</small>'}${pill(r['상태'])}</td>
@@ -4327,12 +4335,36 @@ function scRender(){
       <tr><th class="l"></th><th class="l">이름</th><th>가점</th><th>감점</th><th>순점수</th></tr>
       ${body}
     </table>
-    <p class="sc-legend" style="margin-top:8px;">가점 = 콘텐츠 가점 + 행사 가점 · 감점 = 회의·개인콘·제출지연·요청·이벤트 감점 합계</p>
+    <p class="sc-legend" style="margin-top:8px;">가점 = 콘텐츠 가점 + 행사 가점 · 감점 = 회의·개인콘·제출지연·요청·이벤트·팀콘 미완주 감점 합계 · 면담·제적 대상은 눌러서 감점 내역을 볼 수 있어요</p>
     ${scNote ? `<p class="sc-legend">${abEsc(scNote)}</p>` : ''}
     ${hidden ? `<button class="sc-toggle" id="scToggle">${scShowAll ? '현재 멤버만 보기' : `이전 멤버 ${hidden}명도 보기`}</button>` : ''}`
     : '<p style="font-size:12.5px;color:var(--ink-faint);">아직 점수 기록이 없어요.</p>';
-  document.querySelectorAll('#scList .sc-row').forEach(tr => tr.addEventListener('click', () => { scOpen = scOpen === tr.dataset.n ? null : tr.dataset.n; scRender(); }));
+  document.querySelectorAll('#scList .sc-row').forEach(tr => tr.addEventListener('click', () => { scOpen = scOpen === tr.dataset.n ? null : tr.dataset.n; scRender(); scWhyLoad(); }));
   const t = document.getElementById('scToggle'); if(t) t.addEventListener('click', () => { scShowAll = !scShowAll; scRender(); });
+}
+
+// 면담·제적 대상을 열면 감점 하나하나의 날짜·이유를 서버(scoreWhy, 관리자 출입증)에서 받아 보여줘요
+async function scWhyLoad(){
+  const n = scOpen; if(!n || scWhy[n]) return;
+  const x = scRows.find(r => String(r['이름']).trim() === n);
+  if(!x || !String(x['상태'] || '').trim()) return;
+  scWhy[n] = 'loading'; scRender();
+  try{
+    const res = await attendJsonpRaw({ action:'scoreWhy', name: n, tk: adminToken() });
+    scWhy[n] = res && Array.isArray(res.items) ? res : { error: res && res.error === 'auth' ? '관리자 확인이 필요해요' : '서버가 아직 감점 상세를 지원하지 않아요' };
+  }catch(e){ scWhy[n] = { error: e && e.message || '오류' }; }
+  if(scMode === 'all') scRender();
+}
+function scWhyHtml(name, minus){
+  const w = scWhy[name];
+  const head = '<div class="sc-why"><b class="sc-why-h">감점 내역</b>';
+  if(!w || w === 'loading') return head + '<p class="sc-why-m">불러오는 중...</p></div>';
+  if(w.error) return head + `<p class="sc-why-m">불러오지 못했어요. (${abEsc(w.error)})</p></div>`;
+  if(!w.items.length) return head + '<p class="sc-why-m">감점 기록이 없어요.</p></div>';
+  const md = d => /^\d{4}-\d{2}-\d{2}$/.test(d) ? `${Number(d.slice(5, 7))}/${Number(d.slice(8))}` : '';
+  const rows = w.items.map(it => `<tr><td class="l sc-why-d">${md(it.date)}</td><td class="l"><span class="sc-why-k">${abEsc(it.kind)}</span> ${abEsc(it.title)}<small>${abEsc(it.detail)}</small></td><td class="sc-minus">${scSigned(scN(it.points))}</td></tr>`).join('');
+  const diff = scN(w.total) !== scN(minus) ? ` · 점수표(${scSigned(scN(minus))})는 밤 계산 기준이라 그 뒤 바뀐 기록만큼 달라요` : '';
+  return head + `<table class="sc-why-t">${rows}</table><p class="sc-why-m">합계 ${scSigned(scN(w.total))} · ${abEsc(w.since)} 이후 기록${diff}</p></div>`;
 }
 
 /* ── 월별 현황: 날짜가 있는 원본 기록을 월별로 다시 합산 ──

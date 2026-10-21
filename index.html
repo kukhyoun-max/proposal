@@ -719,7 +719,7 @@
       <p class="step-label">콘텐츠 기획서</p>
       <h2 class="heading">어떤 콘텐츠를<br>기획하시나요?</h2>
       <p class="hint-caption">세 가지를 하나씩 골라주세요.</p>
-      <p class="pick-label">콘텐츠 유형 <span>기본은 유튜브 롱폼이에요</span></p>
+      <p class="pick-label">콘텐츠 유형 <span>기본은 롱폼+쇼츠예요</span></p>
       <div class="pick-chips" id="fmtChips"></div>
       <p class="pick-label">콘텐츠 태깅 <span>성과 분석에 쓰는 분류예요. 가장 가까운 하나</span></p>
       <div class="pick-chips" id="tagChips"></div>
@@ -1808,12 +1808,12 @@ const CATEGORIES = [
   {id:'original', title:'오리지널 콘텐츠', desc:'관리자가 직접 등록하는 개별 촬영 콘텐츠예요.', hidden:true}
 ];
 
-// 콘텐츠 유형·태깅(2026-10-19~): 기획서는 팀콘·유튜브 롱폼이 기본. 태깅은 우리 성과 데이터 분류(sns.json g, 스냅샷 「태그」 탭)와 같은 이름
+// 콘텐츠 유형·태깅(2026-10-19~): 기획서는 팀콘·롱폼+쇼츠가 기본(2026-10-21, 전엔 유튜브 롱폼). 태깅은 우리 성과 데이터 분류(sns.json g, 스냅샷 「태그」 탭)와 같은 이름
 // 기획서 시트 「형식」·「분류」 열 (자동매칭 서버 planTag로 저장)
 const FORMATS = [
-  {id:'유튜브 롱폼', desc:'기본'}, {id:'롱폼+쇼츠', desc:'짧은 버전도'}, {id:'쇼츠·릴스', desc:'세로 1분 안팎만'}
+  {id:'롱폼+쇼츠', desc:'기본'}, {id:'유튜브 롱폼', desc:'쇼츠 없이'}, {id:'쇼츠·릴스', desc:'세로 1분 안팎만'}
 ];
-const FORMAT_DEFAULT = '유튜브 롱폼';
+const FORMAT_DEFAULT = '롱폼+쇼츠';
 const TAGS = ['학생 이야기','학과·전공','캠퍼스·계절','행사·축제','예능·챌린지','정보·꿀팁','학사·생활 안내','시설·공간',
   '이벤트·참여','시즌 인사','성과·뉴스','입시·모집','체육부 소식','동문 소식','브랜드 영상','홍보대사 모집','기타'];
 function renderPickChips(){

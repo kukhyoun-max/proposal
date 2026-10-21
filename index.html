@@ -104,6 +104,7 @@
   .pick{border:1.5px solid var(--line); background:transparent; color:var(--ink); border-radius:20px; padding:7px 12px; font:600 13px 'Noto Sans KR',sans-serif; cursor:pointer;}
   .pick small{font-size:11px; font-weight:400; color:var(--ink-faint); margin-left:4px;}
   .pick.on{border-color:var(--purple); background:var(--purple-soft); color:var(--purple-dark);}
+  .pick-desc{font-size:12px; color:var(--ink-faint); margin:8px 2px 0; min-height:18px;}
   .section-title{
     font-size:14px; font-weight:700; color:var(--purple-dark); margin:26px 0 10px; padding-bottom:6px;
     border-bottom:1.5px solid var(--purple-soft);
@@ -722,8 +723,9 @@
       <div class="pick-chips" id="fmtChips"></div>
       <p class="pick-label">콘텐츠 태깅 <span>성과 분석에 쓰는 분류예요. 가장 가까운 하나</span></p>
       <div class="pick-chips" id="tagChips"></div>
-      <p class="pick-label">기획 방식</p>
-      <div id="typeCards"></div>
+      <p class="pick-label">기획 방식 <span>어떻게 찍는지 가장 가까운 하나</span></p>
+      <div class="pick-chips" id="typeCards"></div>
+      <p class="pick-desc" id="typeDesc"></p>
     </div>
 
     <div class="step-panel" id="panel3">
@@ -1835,13 +1837,12 @@ const tagLine = rec => [rec.format, rec.tag].filter(Boolean).join(' · ');
 function renderTypeCards(){
   renderPickChips();
   const wrap = document.getElementById('typeCards');
-  wrap.innerHTML = CATEGORIES.filter(c=>!c.hidden).map(c=>`
-    <div class="card ${data.category===c.id?'selected':''}" data-id="${c.id}">
-      <p class="card-title">${c.title}</p>
-      <p class="card-desc">${c.desc}</p>
-    </div>
-  `).join('');
-  wrap.querySelectorAll('.card').forEach(el=>{
+  // 기획 방식도 유형·태깅과 같은 칩으로(2026-10-21). 설명은 고른 칩 아래 한 줄
+  wrap.innerHTML = CATEGORIES.filter(c=>!c.hidden).map(c=>
+    `<button type="button" class="pick${data.category===c.id?' on':''}" data-id="${c.id}">${c.title}</button>`).join('');
+  const cur = CATEGORIES.find(c => c.id === data.category && !c.hidden);
+  document.getElementById('typeDesc').textContent = cur ? cur.desc : '';
+  wrap.querySelectorAll('.pick').forEach(el=>{
     el.addEventListener('click', ()=>{
       data.category = el.dataset.id;
       renderTypeCards();

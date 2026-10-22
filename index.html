@@ -634,6 +634,23 @@
   .sr-more summary::-webkit-details-marker{display:none}
   .sr-more[open] summary{display:none}
   .sr-row button{flex:none;border:0;border-radius:10px;padding:8px 12px;background:var(--purple);color:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  /* 기획서 단계: 못 넘어가는 이유 안내 · 접근성 (2026-10-22) */
+  .cta{cursor:pointer;}
+  .step-panel > .heading:first-child{margin-top:22px;}
+  #panel8 > .heading:first-child{margin-top:30px;}
+  .cta-why{min-height:0; margin:0 0 10px; font-size:13px; font-weight:700; color:#C2410C; text-align:center; display:none;}
+  .cta-why.on{display:block;}
+  .need-fix{outline:2px solid #F59E0B !important; outline-offset:3px; border-radius:12px;}
+  details.title-guide{border-style:solid; background:#FAFAFC;}
+  details.title-guide summary{cursor:pointer; font-weight:700; color:var(--ink-soft); list-style:none;}
+  details.title-guide summary::-webkit-details-marker{display:none;}
+  details.title-guide summary::after{content:" ▾"; color:var(--ink-faint);}
+  details.title-guide[open] summary{margin-bottom:6px; color:var(--ink);}
+  details.title-guide[open] summary::after{content:" ▴";}
+  #f_member[readonly], #f_participants[readonly]{border-color:transparent; background:transparent !important; padding-left:0; color:var(--ink) !important; font-weight:700;}
+  button:focus-visible, [role="button"]:focus-visible, summary:focus-visible, a:focus-visible{outline:2px solid var(--purple); outline-offset:2px;}
+  input:focus-visible, select:focus-visible, textarea:focus-visible{outline:2px solid var(--purple-line); outline-offset:1px;}
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important;}}
 </style>
 </head>
 <body>
@@ -716,7 +733,6 @@
     </div>
 
     <div class="step-panel" id="panel2">
-      <p class="step-label">콘텐츠 기획서</p>
       <h2 class="heading">어떤 콘텐츠를<br>기획하시나요?</h2>
       <p class="hint-caption">세 가지를 하나씩 골라주세요.</p>
       <p class="pick-label">콘텐츠 유형 <span>기본은 롱폼+쇼츠예요</span></p>
@@ -729,7 +745,6 @@
     </div>
 
     <div class="step-panel" id="panel3">
-      <p class="step-label">콘텐츠 기획서</p>
       <h2 class="heading">기본 정보를<br>입력해주세요</h2>
       <div class="field-sm one-line">
         <label style="font-size:13px; font-weight:700; color:var(--ink);">이 콘텐츠를 한 문장으로 말하면?</label>
@@ -740,15 +755,15 @@
         </div>
         <p class="req-hint" style="margin-top:6px;">✅ 인공지능학과에 가면 해외 탐방을 갈 수 있다<br>❌ 인공지능학과 소개 + 커리큘럼 + 해외 탐방 + 취업</p>
       </div>
-      <div class="title-guide">
-        <p class="title-guide-head">제목 작성 가이드</p>
+      <div class="field-sm"><label id="f_seriesLabel">시리즈명</label><input type="text" id="f_series" list="seriesList" placeholder="예: 체험왕" autocomplete="off"><datalist id="seriesList"></datalist></div>
+      <details class="title-guide">
+        <summary>시리즈·제목은 이렇게 써요</summary>
         <p>· <b>콘텐츠(시리즈)</b>는 목록에서 골라주세요. 글자가 하나만 달라도 게시물과 자동으로 연결되지 않아요.</p>
         <p>· 편 이름은 따로 쓰지 않아요. 업로드되면 시리즈 단위로 자동 카운트돼요.</p>
         <p>· 개인콘은 기획서 대신 기장에게 카톡으로 보내주세요.</p>
         <p>· 아래 <b>🎬 줄</b>을 캡션 크레딧 첫 줄에 그대로 붙여주세요.</p>
         <p>· 게시물 제목(썸네일·캡션 첫 줄)은 자유롭게 지어도 돼요. 연결은 🎬 줄로만 해요.</p>
-      </div>
-      <div class="field-sm"><label id="f_seriesLabel">시리즈명</label><input type="text" id="f_series" list="seriesList" placeholder="예: 체험왕" autocomplete="off"><datalist id="seriesList"></datalist></div>
+      </details>
       <label style="display:none;"><input type="checkbox" id="f_oneoff" checked> 1회성</label>
       <p class="req-hint" id="f_seriesWarn" style="margin:-4px 0 10px; color:#c2410c; display:none;">목록에 없는 새 콘텐츠예요. 제출하면 관리자 검토 후 정규 편성돼요. 기존 콘텐츠라면 목록에서 골라주세요.</p>
       <div class="field-sm" id="f_episodeWrap" style="display:none !important;"><label>회차</label><input type="text" id="f_episode" placeholder="예: 양궁부편"></div>
@@ -763,7 +778,6 @@
     </div>
 
     <div class="step-panel" id="panel4">
-      <p class="step-label">콘텐츠 기획서</p>
       <h2 class="heading">팀원 정보를<br>입력해주세요</h2>
       <div class="field-sm"><label>팀장</label><input type="text" id="f_lead"></div>
 
@@ -793,7 +807,6 @@
     </div>
 
     <div class="step-panel" id="panel5">
-      <p class="step-label">콘텐츠 기획서</p>
       <h2 class="heading">촬영·제출 기간을<br>선택해주세요</h2>
       <p class="hint-caption">촬영일은 오늘로부터 7일 이내, 제출일은 촬영일로부터 4일 이내로 선택할 수 있어요.</p>
       <div class="field-sm"><label>촬영일</label><select id="f_filmdate"></select></div>
@@ -807,7 +820,6 @@
     </div>
 
     <div class="step-panel" id="panel6">
-      <p class="step-label">콘텐츠 기획서</p>
       <h2 class="heading">필요한 장비를<br>선택해주세요</h2>
       <p class="hint-caption" id="equipHint">촬영일 기준으로 이미 예약된 장비는 자동으로 선택이 막혀요.</p>
       <div id="equipSelectedWrap" style="display:none; margin-bottom:16px;">
@@ -818,7 +830,6 @@
     </div>
 
     <div class="step-panel" id="panel7">
-      <p class="step-label">콘텐츠 기획서</p>
       <h2 class="heading">시나리오를<br>작성해주세요</h2>
       <p class="hint-caption">최종 영상 순서대로 장면을 적어주세요.</p>
       <div id="planRows"></div>
@@ -826,8 +837,8 @@
     </div>
 
     <div class="step-panel" id="panel8">
-      <p class="step-label">기획서 완성</p>
-      <h2 class="heading">기획서가<br>완성됐어요</h2>
+      <h2 class="heading">제출 전에<br>한 번 확인해 주세요</h2>
+      <p class="hint-caption">틀린 곳이 있으면 맨 아래 「내용 고치기」로 돌아가요.</p>
 
       <div id="finalDoc" style="border:1.5px solid var(--line); border-radius:16px; padding:22px; background:#fff;">
         <p style="font-size:11px; color:var(--purple); font-weight:700; letter-spacing:1px; margin:0 0 4px;" id="fd_category">콘텐츠 기획서</p>
@@ -872,12 +883,13 @@
         <button id="btnCopyText" style="flex:1; padding:12px; border-radius:12px; border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); font-weight:700; font-size:13px; cursor:pointer;">텍스트 복사</button>
       </div>
 
-      <button id="btnBackEdit" style="width:100%; margin-top:10px; padding:12px; border:none; background:none; color:var(--ink-soft); font-size:13px; cursor:pointer;">← 내용 수정하기</button>
+      <button id="btnBackEdit" style="width:100%; margin-top:10px; padding:12px; border:none; background:none; color:var(--ink-soft); font-size:13px; cursor:pointer;">← 내용 고치기</button>
     </div>
 
   </div>
 
   <div class="bottom-bar" id="bottomBar">
+    <p class="cta-why" id="ctaWhy" role="status" aria-live="polite"></p>
     <button class="cta" id="ctaBtn">이름 입력 완료</button>
     <p class="save-status" id="saveStatus"></p>
   </div>
@@ -1935,9 +1947,11 @@ function stepValid(n){
 
 function updateCta(){
   const btn = document.getElementById('ctaBtn');
-  const labels = {1:'이름 입력 완료', 2:'다음', 3:'다음', 4:'다음', 5:'다음', 6:'다음', 7:'완성하기'};
+  const labels = {1:'이름 입력 완료', 2:'다음', 3:'다음', 4:'다음', 5:'다음', 6:'다음', 7:'미리 보기'};
   btn.textContent = labels[step] || '다음';
   btn.classList.toggle('active', stepValid(step));
+  const why = document.getElementById('ctaWhy');
+  if(stepValid(step) || why.dataset.step !== String(step)) showCtaWhy(''); // 채웠거나 단계가 바뀌면 안내 지움
 }
 
 function buildPlanLines(d){
@@ -2131,8 +2145,66 @@ document.getElementById('addPlan').addEventListener('click', ()=>{
   renderPlanRows(); scheduleAutosave();
 });
 
+// 「다음」이 안 될 때 무엇이 빠졌는지 알려 준다: [안내 문구, 표시할 칸 id]
+function stepMissing(n){
+  const v = s => String(s||'').trim().length > 0;
+  if(n===1 && !v(data.name)) return ['팀장 이름을 골라 주세요', 'jjhNames'];
+  if(n===2){
+    if(!data.format) return ['콘텐츠 유형을 골라 주세요', 'fmtChips'];
+    if(!data.tag) return ['콘텐츠 태깅을 골라 주세요', 'tagChips'];
+    if(!data.category) return ['기획 방식을 골라 주세요', 'typeCards'];
+  }
+  if(n===3){
+    const tp = titleParts(data.title);
+    if(!v(data.summary)) return ['콘텐츠를 한 문장으로 써 주세요', 'f_summary'];
+    if(!tp.series.length) return ['시리즈명을 골라 주세요', 'f_series'];
+    if(!data.oneoff && !tp.episode.length) return ['회차를 써 주세요', 'f_episode'];
+    if(!v(data.url)) return ['참고 URL을 넣어 주세요. 없으면 「없음」이라고 써요', 'f_url'];
+    if(!v(data.request)) return ['요청사항을 써 주세요. 없으면 「없음」이라고 써요', 'f_request'];
+  }
+  if(n===4){
+    if(!v(data.lead)) return ['팀장 이름을 써 주세요', 'f_lead'];
+    if(!v(data.filming)) return ['촬영할 사람을 한 명 이상 넣어 주세요', 'search_filming'];
+    if(!v(data.editing)) return ['편집할 사람을 한 명 이상 넣어 주세요', 'search_editing'];
+    if(!v(data.extra)) return ['출연할 사람을 한 명 이상 넣어 주세요', 'search_extra'];
+  }
+  if(n===5){
+    if(!v(data.filmdate)) return ['촬영일을 골라 주세요', 'f_filmdate'];
+    if(!data.filmfrom) return ['촬영 시작 시간을 골라 주세요', 'f_filmfrom'];
+    if(!data.filmto) return ['촬영 종료 시간을 골라 주세요', 'f_filmto'];
+    if(!(data.filmfrom < data.filmto)) return ['촬영 종료가 시작보다 늦어야 해요', 'f_filmto'];
+    if(!v(data.submitdate)) return ['제출일을 골라 주세요', 'f_submitdate'];
+  }
+  if(n===6 && !v(data.equipment)) return ['장비를 하나 이상 골라 주세요', 'equipmentPicker'];
+  if(n===7 && !stepValid(7)) return ['첫 장면을 써 주세요', 'planRows'];
+  return null;
+}
+function showCtaWhy(msg){
+  const el = document.getElementById('ctaWhy');
+  el.textContent = msg || '';
+  el.classList.toggle('on', !!msg);
+  el.dataset.step = msg ? String(step) : '';
+}
+function flagMissing(){
+  const m = stepMissing(step);
+  if(!m) return false;
+  showCtaWhy(m[0]);
+  const box = document.getElementById(m[1]);
+  if(box){
+    box.scrollIntoView({block:'center', behavior:'smooth'});
+    const target = (box.matches('input,select,textarea') ? box : box.querySelector('textarea,input,select')) ;
+    if(target) setTimeout(()=>target.focus({preventScroll:true}), 250);
+    box.classList.add('need-fix');
+    setTimeout(()=>box.classList.remove('need-fix'), 2200);
+  }
+  return true;
+}
+document.getElementById('formView').addEventListener('input', ()=>{ if(stepValid(step)) showCtaWhy(''); });
+document.getElementById('formView').addEventListener('click', ()=>{ setTimeout(()=>{ if(stepValid(step)) showCtaWhy(''); }, 0); });
+
 document.getElementById('ctaBtn').addEventListener('click', ()=>{
-  if(!stepValid(step)) return;
+  if(!stepValid(step)){ flagMissing(); return; }
+  showCtaWhy('');
   if(step===1){
     document.getElementById('f_lead').value = data.lead || data.name;
     data.lead = data.lead || data.name;

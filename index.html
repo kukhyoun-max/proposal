@@ -105,6 +105,37 @@
   .pick small{font-size:11px; font-weight:400; color:var(--ink-faint); margin-left:4px;}
   .pick.on{border-color:var(--purple); background:var(--purple-soft); color:var(--purple-dark);}
   .pick-desc{font-size:12px; color:var(--ink-faint); margin:8px 2px 0; min-height:18px;}
+  /* 경험 영역·타대학 확인·검색어 (2026-10-23) */
+  .meta-part[hidden]{display:none !important;}
+  #metaUniq{margin-bottom:18px;}
+  .area-desc{margin:8px 2px 0; min-height:18px;}
+  .area-desc p{font-size:12px; color:var(--ink-soft); margin:0 0 3px; line-height:1.5;}
+  .area-desc p b{color:var(--purple-dark); font-weight:700; margin-right:4px;}
+  .area-desc p.faint{color:var(--ink-faint);}
+  .meta-warn{font-size:12px; font-weight:700; color:#C2410C; margin:8px 2px 0; line-height:1.5;}
+  .meta-note{margin-top:8px;}
+  .meta-note input{width:100%; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; font-size:14px; font-family:'Noto Sans KR',sans-serif; color:var(--ink); background:transparent; outline:none;}
+  .meta-note input:focus{border-color:var(--purple-line);}
+  .meta-note p{font-size:12px; color:var(--ink-faint); margin:4px 2px 0; line-height:1.5;}
+  .meta-box{border:1.5px solid var(--line); border-radius:14px; padding:2px 14px 14px; margin:18px 0 14px;}
+  .meta-box > .pick-label:first-child{margin-top:14px;}
+  .meta-check{display:flex; gap:8px; align-items:flex-start; margin-top:12px; font-size:13px; font-weight:600; color:var(--ink); cursor:pointer; line-height:1.5;}
+  .meta-check input{width:18px; height:18px; margin:1px 0 0; accent-color:var(--purple); flex:none;}
+  .meta-miss{background:#FFF7E6; border:1px solid #F5C26B; color:#8A4B00; border-radius:10px; padding:9px 12px; font-size:12.5px; line-height:1.5; margin:8px 0 0;}
+  .cov-box{border:1.5px solid var(--line); border-radius:14px; padding:12px 14px; margin:0 0 14px; background:#fff;}
+  .cov-box summary{cursor:pointer; font-size:13.5px; font-weight:700; color:var(--ink); list-style:none;}
+  .cov-box summary::-webkit-details-marker{display:none;}
+  .cov-box summary small{display:block; font-size:12px; font-weight:400; color:var(--ink-soft); margin-top:2px;}
+  .cov-table{width:100%; border-collapse:collapse; font-size:12.5px; margin-top:10px;}
+  .cov-table th{font-size:11.5px; font-weight:700; color:var(--ink-soft); text-align:left; padding:6px 4px; border-bottom:1.5px solid var(--line);}
+  .cov-table td{padding:6px 4px; border-bottom:1px solid var(--line);}
+  .cov-table td.n{text-align:right; font-variant-numeric:tabular-nums; width:40px;}
+  .cov-table th.n{text-align:right;}
+  .cov-chip{display:inline-block; font-size:11px; font-weight:700; border-radius:6px; padding:1px 7px;}
+  .cov-chip.done{background:var(--purple-soft); color:var(--purple-dark);}
+  .cov-chip.one{background:#FFF4D6; color:#8A5A00;}
+  .cov-chip.none{background:#F3F2F6; color:var(--ink-soft);}
+  .cov-foot{font-size:11.5px; color:var(--ink-faint); margin:8px 0 0; line-height:1.5;}
   .section-title{
     font-size:14px; font-weight:700; color:var(--purple-dark); margin:26px 0 10px; padding-bottom:6px;
     border-bottom:1.5px solid var(--purple-soft);
@@ -734,11 +765,13 @@
 
     <div class="step-panel" id="panel2">
       <h2 class="heading">어떤 콘텐츠를<br>기획하시나요?</h2>
-      <p class="hint-caption">세 가지를 하나씩 골라주세요.</p>
+      <p class="hint-caption">하나씩 골라 주세요. 경험 영역만 두 개까지 돼요.</p>
       <p class="pick-label">콘텐츠 유형 <span>기본은 롱폼+쇼츠예요</span></p>
       <div class="pick-chips" id="fmtChips"></div>
+      <div id="metaCorner"></div>
       <p class="pick-label">콘텐츠 태깅 <span>성과 분석에 쓰는 분류예요. 가장 가까운 하나</span></p>
       <div class="pick-chips" id="tagChips"></div>
+      <div id="metaArea"></div>
       <p class="pick-label">기획 방식 <span>어떻게 찍는지 가장 가까운 하나</span></p>
       <div class="pick-chips" id="typeCards"></div>
       <p class="pick-desc" id="typeDesc"></p>
@@ -755,6 +788,7 @@
         </div>
         <p class="req-hint" style="margin-top:6px;">✅ 인공지능학과에 가면 해외 탐방을 갈 수 있다<br>❌ 인공지능학과 소개 + 커리큘럼 + 해외 탐방 + 취업</p>
       </div>
+      <div id="metaUniq"></div>
       <div class="field-sm"><label id="f_seriesLabel">시리즈명</label><input type="text" id="f_series" list="seriesList" placeholder="예: 체험왕" autocomplete="off"><datalist id="seriesList"></datalist></div>
       <details class="title-guide">
         <summary>시리즈·제목은 이렇게 써요</summary>
@@ -769,6 +803,7 @@
       <div class="field-sm" id="f_episodeWrap" style="display:none !important;"><label>회차</label><input type="text" id="f_episode" placeholder="예: 양궁부편"></div>
       <input type="hidden" id="f_title">
       <p class="req-hint" id="f_titlePreview" style="margin:-4px 0 12px;"></p>
+      <div id="metaLong"></div>
       <div class="field-sm"><label>참고 URL</label><input type="url" id="f_url" placeholder="https://..."></div>
       <div class="field-sm">
         <label>요청사항</label>
@@ -855,6 +890,7 @@
 
         <p style="font-size:14px; font-weight:700; color:var(--ink); margin:0 0 4px;" id="fd_summary"></p>
         <p style="font-size:12px; color:var(--purple-dark); margin:0 0 18px; word-break:break-all;" id="fd_url"></p>
+        <div id="fd_meta"></div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:12.5px; margin-bottom:14px; padding-top:14px; border-top:1px solid var(--line);">
           <div><span style="color:var(--ink-soft);">촬영일</span><br><b id="fd_filmdate">-</b></div>
@@ -924,6 +960,7 @@
   </div>
   <div class="content" id="mlPending" style="padding-top:0; padding-bottom:0;"></div>
   <div class="content" id="srPending" style="padding-top:0; padding-bottom:0;"></div>
+  <div class="content" id="areaCov" style="padding-top:0; padding-bottom:0;"></div>
   <div class="content" id="adminList" style="padding-top:0;">
     <p style="font-size:12.5px; color:var(--ink-faint);">불러오는 중...</p>
   </div>
@@ -1522,13 +1559,15 @@ function mapRowToRecord(row){
     editing: row['편집'] || '', extra: row['추가'] || '', participants: row['참여인원'] || '',
     title: row['제목'] || '', summary: row['한줄요약'] || '', url: row['참고URL'] || '',
     request: row['요청사항'] || '', filmdate: normalizeDateStr(row['촬영일']), submitdate: normalizeDateStr(row['제출일(영상)']),
-    equipment: row['장비'] || '', plan: parsePlanText(row['기획내용'] || ''), rejectReason: row['반려사유'] || ''
+    equipment: row['장비'] || '', plan: parsePlanText(row['기획내용'] || ''), rejectReason: row['반려사유'] || '',
+    ...metaFromRow(row)   // 경험영역·코너·타대학확인·제목검색어·썸네일2안 (2026-10-23, 비어 있으면 빈 값)
   };
 }
 
 let step = 1;
 let data = {
   name:'', category:'', format:'', tag:'',
+  areas:[], corner:'', uniq:'', uniqNote:'', keywords:[], kwFree:'', thumb2:false,
   lead:'', member:'', filming:'', extra:'', editing:'', participants:'',
   title:'', summary:'', url:'', request:'',
   filmdate:'', submitdate:'', equipment:'',
@@ -1834,7 +1873,7 @@ function renderPickChips(){
     const wrap = document.getElementById(id); if(!wrap) return;
     wrap.innerHTML = list.map(o => `<button type="button" class="pick${data[key]===o.id?' on':''}" data-v="${esc(o.id)}">${esc(o.id)}${o.desc?`<small>${esc(o.desc)}</small>`:''}</button>`).join('');
     wrap.querySelectorAll('.pick').forEach(b => b.addEventListener('click', ()=>{
-      data[key] = b.dataset.v; renderPickChips(); updateCta(); scheduleAutosave();
+      data[key] = b.dataset.v; renderPickChips(); if(key === 'format') renderFormMeta(); updateCta(); scheduleAutosave();
     }));
   };
   one('fmtChips', FORMATS, 'format');
@@ -1845,6 +1884,241 @@ function planTagSave(planId, format, tag){
     body: JSON.stringify({ action:'planTag', planId, format: format || '', tag: tag || '' }) }); }catch(e){}
 }
 const tagLine = rec => [rec.format, rec.tag].filter(Boolean).join(' · ');
+
+/* ── 경험 영역·인스타 코너·타대학 확인·제목 검색어·썸네일 2안 (2026-10-23, 데이터 분석 결과 담당자 승인) ──
+   기획서 시트 맨 뒤 「경험영역」·「코너」·「타대학확인」·「제목검색어」·「썸네일2안」 열 (자동매칭 서버 planMeta로 저장)
+   · 경험 영역: 캡션 낱말 자동 분류가 40%를 놓쳐서 기획할 때 사람이 고른다. 사전은 _도구/scripts/성과분석/경험영역.tsv와 같게
+   · 타대학 확인: 00_현재 전략.md 6절 기획 체크리스트 「다른 대학도 하는가」
+   · 제목 검색어: 캡션 지침 6절 2번(검색어 든 롱폼 1.71배 대 0.94배), 목록은 6절 16번 */
+const AREAS = [
+  {code:'E01', name:'수업·강의·실습', desc:'강의실·실습실 장면, 과제·실기·발표, 교수와의 수업'},
+  {code:'E02', name:'학과·전공 소개', desc:'학과 소개·전공 체험·과잠·학과 행사'},
+  {code:'E03', name:'동아리·학생자치', desc:'동아리 공연·활동, 학생회·총학, 선거'},
+  {code:'E04', name:'기숙사·생활관', desc:'입사·퇴사, 생활관 생활, 스타타워·스타홈·스타빌'},
+  {code:'E05', name:'학식·밥·카페', desc:'학생식당, 천원의 아침밥, 캠퍼스 카페·맛집'},
+  {code:'E06', name:'시험기간', desc:'중간·기말 시험, 시험공부, 열람실'},
+  {code:'E07', name:'수강신청·전과·학사', desc:'수강신청, 학사 일정, 휴·복학, 전과·복수전공, 졸업'},
+  {code:'E08', name:'장학·등록', desc:'장학금, 등록금, 국가근로·근로장학'},
+  {code:'E09', name:'축제·공연', desc:'대동제, 공연, 축제 부스, JUMF 등 캠퍼스 행사'},
+  {code:'E10', name:'운동부·스포츠', desc:'운동부 경기·성과, 체육대회, 생활 체육'},
+  {code:'E11', name:'해외·교환학생·유학생', desc:'교환학생, 해외 탐방·연수, 외국인 유학생'},
+  {code:'E12', name:'취업·진로·현장실습', desc:'취업 특강·박람회, 현장실습, 자격증, 진로'},
+  {code:'E13', name:'창업', desc:'창업동아리·팝업, 창업 지원'},
+  {code:'E14', name:'봉사·국토대장정', desc:'봉사단, 사회봉사, 국토대장정'},
+  {code:'E15', name:'전주·지역', desc:'전주 시내·명소, 지역 행사, 통학'},
+  {code:'E16', name:'연애·친구·관계', desc:'소개팅, 친구·동기, 관계 밈'},
+  {code:'E17', name:'선배·재학생 조언', desc:'선배 인터뷰, 신입생에게 하는 조언, 합격 후기'},
+  {code:'E18', name:'캠퍼스 공간·계절', desc:'캠퍼스 풍경, 계절, 공간 소개, 학교 상징'}
+];
+const AREA_BY = Object.fromEntries(AREAS.map(a => [a.code, a]));
+const AREA_MAX = 2;
+// 인스타 코너: 아직 확정 전(결정 대기 D5). 이 목록만 고치면 작성·수정 화면이 함께 바뀌어요. 서버는 목록을 따로 두지 않아요
+const CORNERS = ['가이드','피플','클래스','스팟','뉴스','해당 없음'];
+// 제목 검색어: 캡션 지침 6절 16번 목록(2024 이후 실제 검색 많은 순)
+const SEARCH_WORDS = ['수강신청','사범대','기숙사','축제','브이로그','과잠','간호학과'];
+const KW_MAX = 2, NO_KEYWORD = '검색어 없음';
+const UNIQ_FIRST = '처음 시도', UNIQ_OTHERS = '다른 대학도 함';
+const isLongform = f => f === '롱폼+쇼츠' || f === '유튜브 롱폼';
+const hasInsta = f => !!f && f !== '유튜브 롱폼';   // 쇼츠는 릴스로도 올라가요
+
+function areaText(codes){ return (codes||[]).filter(c => AREA_BY[c]).map(c => c + ' ' + AREA_BY[c].name).join(', '); }
+function parseAreas(s){ const out = []; (String(s||'').match(/E\d{2}/g) || []).forEach(c => { if(AREA_BY[c] && !out.includes(c) && out.length < AREA_MAX) out.push(c); }); return out; }
+function uniqText(r){ return r.uniq === 'first' ? UNIQ_FIRST : r.uniq === 'others' ? UNIQ_OTHERS + ' | ' + String(r.uniqNote||'').trim() : ''; }
+function parseUniq(s){
+  s = String(s||'').trim();
+  if(s.startsWith(UNIQ_FIRST)) return { uniq:'first', uniqNote:'' };
+  if(s.startsWith(UNIQ_OTHERS)) return { uniq:'others', uniqNote: s.slice(UNIQ_OTHERS.length).replace(/^\s*\|\s*/, '').trim() };
+  return { uniq:'', uniqNote:'' };
+}
+function kwText(r){
+  if((r.keywords||[]).includes(NO_KEYWORD)) return NO_KEYWORD;
+  const all = [...(r.keywords||[]), ...String(r.kwFree||'').split(/[,，]/)].map(x => x.trim()).filter(Boolean);
+  return [...new Set(all)].join(', ');
+}
+function parseKeywords(s){
+  const t = String(s||'').split(/[,，]/).map(x => x.trim()).filter(Boolean);
+  if(t.includes(NO_KEYWORD)) return { keywords:[NO_KEYWORD], kwFree:'' };
+  return { keywords: t.filter(x => SEARCH_WORDS.includes(x)).slice(0, KW_MAX), kwFree: t.filter(x => !SEARCH_WORDS.includes(x)).join(', ') };
+}
+function metaFromRow(row){
+  return { areas: parseAreas(row['경험영역']), corner: String(row['코너'] || '').trim(),
+    ...parseUniq(row['타대학확인']), ...parseKeywords(row['제목검색어']), thumb2: String(row['썸네일2안'] || '').trim() === '예' };
+}
+function normMeta(r){   // 예전 임시 저장본·예전 기획서도 깨지지 않게 빈 값 채우기
+  if(!Array.isArray(r.areas)) r.areas = parseAreas(r.areas);
+  if(!Array.isArray(r.keywords)) r.keywords = [];
+  ['corner','uniq','uniqNote','kwFree'].forEach(k => { if(typeof r[k] !== 'string') r[k] = ''; });
+  r.thumb2 = !!r.thumb2;
+  return r;
+}
+// 서버로 보내는 값(시트에 쓰는 글자 그대로). 올릴 곳에 없는 항목은 비워요
+function metaPayload(r){
+  const L = isLongform(r.format), I = hasInsta(r.format);
+  return { areas: (r.areas||[]).slice(0, AREA_MAX), corner: I ? (r.corner||'') : '', uniq: uniqText(r),
+    keyword: L ? kwText(r) : '', thumb2: (L && r.thumb2) ? '예' : '' };   // 썸네일 2안: 체크하면 「예」, 아니면 빈 칸
+}
+function planMetaSave(planId, r){
+  try{ fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({ action:'planMeta', planId, ...metaPayload(r) }) }); }catch(e){}
+}
+// 비어 있는 필수 항목: [안내 문구, 칸 이름(area·uniq·long)] 또는 null
+function metaMissing(r, parts){
+  const want = p => !parts || parts.includes(p);
+  if(want('area') && !(r.areas||[]).length) return ['경험 영역을 하나 이상 골라 주세요', 'area'];
+  if(want('uniq')){
+    if(!r.uniq) return ['다른 대학도 하는 콘텐츠인지 골라 주세요', 'uniq'];
+    if(r.uniq === 'others' && !String(r.uniqNote||'').trim()) return ['우리만 다른 점을 한 줄로 써 주세요', 'uniq'];
+  }
+  if(want('long') && isLongform(r.format)){
+    if(!kwText(r)) return ['제목에 넣을 검색어를 골라 주세요. 없으면 「검색어 없음」을 눌러요', 'long'];
+    if(!r.thumb2) return ['썸네일 2개 비교에 체크해 주세요', 'long'];
+  }
+  return null;
+}
+function metaMissingNames(r){
+  const out = [];
+  if(!(r.areas||[]).length) out.push('경험 영역');
+  if(!r.uniq || (r.uniq === 'others' && !String(r.uniqNote||'').trim())) out.push('다른 대학도 하는가');
+  if(isLongform(r.format) && !kwText(r)) out.push('제목 검색어');
+  return out;
+}
+
+// 칸 그리기: 작성 화면(단계별로 나눠 둠)과 수정 화면이 같이 써요. ch = 값이 바뀌었을 때 부를 함수
+const META_PARTS = {
+  area(el, r, ch){
+    const draw = msg => {
+      const sel = r.areas || [];
+      el.innerHTML = `<p class="pick-label">경험 영역 <span>이 콘텐츠가 보여 주는 학교 경험, 두 개까지</span></p>
+        <div class="pick-chips">${AREAS.map(a => `<button type="button" class="pick${sel.includes(a.code)?' on':''}" aria-pressed="${sel.includes(a.code)}" data-v="${a.code}">${esc(a.name)}</button>`).join('')}</div>
+        <div class="area-desc">${sel.length ? sel.map(c => `<p><b>${esc(AREA_BY[c].name)}</b>${esc(AREA_BY[c].desc)}</p>`).join('') : '<p class="faint">고르면 어떤 장면이 들어가는 영역인지 여기 나와요.</p>'}</div>
+        ${msg ? `<p class="meta-warn" role="status">${esc(msg)}</p>` : ''}`;
+      el.querySelectorAll('.pick').forEach(b => b.addEventListener('click', () => {
+        const c = b.dataset.v; let s = [...(r.areas||[])], m = '';
+        if(s.includes(c)) s = s.filter(x => x !== c);
+        else if(s.length >= AREA_MAX) m = '두 개까지 고를 수 있어요. 하나를 빼고 다시 골라 주세요.';
+        else s.push(c);
+        r.areas = s; draw(m); ch();
+      }));
+    };
+    draw('');
+  },
+  corner(el, r, ch){
+    el.hidden = !hasInsta(r.format);
+    if(el.hidden){ el.innerHTML = ''; return; }
+    el.innerHTML = `<p class="pick-label">인스타 코너 <span>선택 · 매거진 피드에서 들어갈 꼭지</span></p>
+      <div class="pick-chips">${CORNERS.map(c => `<button type="button" class="pick${r.corner===c?' on':''}" aria-pressed="${r.corner===c}" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div>`;
+    el.querySelectorAll('.pick').forEach(b => b.addEventListener('click', () => {
+      r.corner = r.corner === b.dataset.v ? '' : b.dataset.v;   // 한 번 더 누르면 빼기
+      META_PARTS.corner(el, r, ch); ch();
+    }));
+  },
+  uniq(el, r, ch){
+    el.innerHTML = `<p class="pick-label">다른 대학도 하는 콘텐츠인가요?</p>
+      <div class="pick-chips" data-uniq>${[['first', UNIQ_FIRST], ['others', UNIQ_OTHERS]].map(([v, t]) => `<button type="button" class="pick${r.uniq===v?' on':''}" aria-pressed="${r.uniq===v}" data-v="${v}">${t}</button>`).join('')}</div>
+      <div class="meta-note" ${r.uniq === 'others' ? '' : 'hidden'}>
+        <input type="text" maxlength="60" placeholder="우리만 다른 점 한 줄" value="${esc(r.uniqNote||'')}" aria-label="우리만 다른 점 한 줄">
+        <p>다른 대학 이름을 넣어도 말이 되면, 전주대에만 있는 장소·사람·사건을 하나 넣어 주세요.</p>
+      </div>`;
+    el.querySelectorAll('[data-uniq] .pick').forEach(b => b.addEventListener('click', () => {
+      r.uniq = b.dataset.v; META_PARTS.uniq(el, r, ch); ch();
+      if(r.uniq === 'others'){ const i = el.querySelector('.meta-note input'); if(i && !i.value) i.focus(); }
+    }));
+    el.querySelector('.meta-note input').addEventListener('input', e => { r.uniqNote = e.target.value; ch(); });
+  },
+  long(el, r, ch){
+    el.hidden = !isLongform(r.format);
+    if(el.hidden){ el.innerHTML = ''; return; }
+    el.innerHTML = `<div class="meta-box">
+      <p class="pick-label">유튜브 제목에 넣을 검색어 <span>학교명 말고 하나나 둘</span></p>
+      <div class="pick-chips" data-kw></div>
+      <div class="meta-note"><input type="text" maxlength="30" placeholder="목록에 없으면 직접 써요 (예: 학식)" value="${esc(r.kwFree||'')}" aria-label="검색어 직접 쓰기"></div>
+      <p class="meta-warn" data-kwwarn hidden>검색어가 든 롱폼은 평소의 1.71배, 없는 롱폼은 0.94배였어요. 넣을 수 있으면 넣어 주세요.</p>
+      <label class="meta-check"><input type="checkbox" data-thumb ${r.thumb2 ? 'checked' : ''}><span>유튜브 「테스트 및 비교」로 썸네일 2개를 비교해요</span></label>
+    </div>`;
+    const chips = el.querySelector('[data-kw]'), warn = el.querySelector('[data-kwwarn]'), free = el.querySelector('.meta-note input');
+    const drawChips = () => {
+      const sel = r.keywords || [];
+      chips.innerHTML = [...SEARCH_WORDS, NO_KEYWORD].map(w => `<button type="button" class="pick${sel.includes(w)?' on':''}" aria-pressed="${sel.includes(w)}" data-v="${esc(w)}">${esc(w)}</button>`).join('');
+      warn.hidden = !sel.includes(NO_KEYWORD);
+      chips.querySelectorAll('.pick').forEach(b => b.addEventListener('click', () => {
+        const w = b.dataset.v; let s = [...(r.keywords||[])];
+        if(w === NO_KEYWORD){ s = s.includes(w) ? [] : [w]; if(s.length){ r.kwFree = ''; free.value = ''; } }
+        else {
+          s = s.filter(x => x !== NO_KEYWORD);
+          if(s.includes(w)) s = s.filter(x => x !== w); else { s.push(w); if(s.length > KW_MAX) s.shift(); }
+        }
+        r.keywords = s; drawChips(); ch();
+      }));
+    };
+    drawChips();
+    free.addEventListener('input', e => {
+      r.kwFree = e.target.value;
+      if(r.kwFree.trim() && (r.keywords||[]).includes(NO_KEYWORD)){ r.keywords = []; drawChips(); }
+      ch();
+    });
+    el.querySelector('[data-thumb]').addEventListener('change', e => { r.thumb2 = e.target.checked; ch(); });
+  }
+};
+function mountMeta(root, r, parts, ch){
+  if(!root) return;
+  normMeta(r);
+  root.innerHTML = parts.map(p => `<div class="meta-part" data-part="${p}"></div>`).join('');
+  parts.forEach(p => META_PARTS[p](root.querySelector(`[data-part="${p}"]`), r, ch));
+}
+const META_IDS = { area:'metaArea', corner:'metaCorner', uniq:'metaUniq', long:'metaLong' };
+function renderFormMeta(){
+  const ch = () => { updateCta(); scheduleAutosave(); };
+  Object.entries(META_IDS).forEach(([p, id]) => mountMeta(document.getElementById(id), data, [p], ch));
+}
+// 기획서 카드·미리 보기에 보이는 줄
+function metaSummaryHTML(r){
+  const rows = [];
+  if((r.areas||[]).length) rows.push(['경험 영역', areaText(r.areas)]);
+  if(hasInsta(r.format) && r.corner) rows.push(['인스타 코너', r.corner]);
+  if(r.uniq) rows.push(['다른 대학', r.uniq === 'first' ? UNIQ_FIRST : UNIQ_OTHERS + ' · 우리만: ' + (r.uniqNote||'-')]);
+  if(isLongform(r.format) && kwText(r)) rows.push(['제목 검색어', kwText(r)]);
+  if(isLongform(r.format)) rows.push(['썸네일 2안', r.thumb2 ? '준비해요' : '-']);
+  if(!rows.length) return '';
+  return `<div style="font-size:12.5px; margin:0 0 16px; display:grid; gap:4px;">${rows.map(([k, v]) =>
+    `<div style="display:flex; gap:8px;"><span style="color:var(--ink-soft); min-width:72px; flex:none;">${k}</span><b style="font-weight:600;">${esc(v)}</b></div>`).join('')}</div>`;
+}
+function metaPlanLines(r){
+  return [`경험 영역: ${areaText(r.areas)}`, ...(hasInsta(r.format) ? [`인스타 코너: ${r.corner||''}`] : []), `다른 대학: ${uniqText(r)}`,
+    ...(isLongform(r.format) ? [`제목 검색어: ${kwText(r)}`, `썸네일 2안: ${r.thumb2 ? '예' : '아니오'}`] : [])];
+}
+
+// 관리자: 이번 분기 승인·진행 기획서의 경험 영역 건수(2건 이상이면 「다룸」). KPI 「분기 커버리지 14개 영역 이상」(00_현재 전략.md 5절)
+const COV_STATUS = ['approved','filming','editing','completed','uploaded'];
+const COV_GOAL = 14;
+function quarterRange(d){
+  d = d || new Date();
+  const q = Math.floor(d.getMonth() / 3), y = d.getFullYear();
+  return { from: toLocalDateStr(new Date(y, q*3, 1)), to: toLocalDateStr(new Date(y, q*3 + 3, 1)), label: `${y}년 ${q+1}분기(${q*3+1}~${q*3+3}월)` };
+}
+function areaCoverage(recs, d){
+  const r = quarterRange(d);
+  const inQ = (recs||[]).filter(x => COV_STATUS.includes(x.status)).filter(x => {
+    const day = x.filmdate || String(x.submittedAt||'').slice(0, 10);
+    return day >= r.from && day < r.to;
+  });
+  const cnt = {}; let blank = 0;
+  inQ.forEach(x => { const a = x.areas || []; if(!a.length) blank++; a.forEach(c => { cnt[c] = (cnt[c]||0) + 1; }); });
+  return { range: r, total: inQ.length, blank, cnt, covered: AREAS.filter(a => (cnt[a.code]||0) >= 2).length };
+}
+function renderAreaCoverage(recs){
+  const el = document.getElementById('areaCov'); if(!el) return;
+  const c = areaCoverage(recs);
+  const open = el.querySelector('details') && el.querySelector('details').open;
+  el.innerHTML = `<details class="cov-box"${open ? ' open' : ''}>
+    <summary>경험 영역 커버리지 · 다룸 ${c.covered} / 18 <span style="color:var(--ink-faint); font-weight:400;">(목표 ${COV_GOAL})</span> ▾
+      <small>${c.range.label} 승인·진행 기획서 ${c.total}건 기준 · 2건 이상이면 다룸</small></summary>
+    <table class="cov-table"><thead><tr><th>영역</th><th class="n">건수</th><th>상태</th></tr></thead><tbody>
+    ${AREAS.map(a => { const n = c.cnt[a.code] || 0; const st = n >= 2 ? ['done','다룸'] : n === 1 ? ['one','1건 더'] : ['none','비어 있음'];
+      return `<tr><td>${esc(a.code)} ${esc(a.name)}</td><td class="n">${n}</td><td><span class="cov-chip ${st[0]}">${st[1]}</span></td></tr>`; }).join('')}
+    </tbody></table>
+    <p class="cov-foot">촬영일(없으면 제출일)이 이번 분기인 기획서를 세요. 승인 전·반려·제작 중단은 빼요.${c.blank ? ` 경험 영역이 비어 있는 기획서 ${c.blank}건은 세지 못했어요. 수정 화면에서 채우면 들어가요.` : ''}</p>
+  </details>`;
+}
 
 function renderTypeCards(){
   renderPickChips();
@@ -1933,10 +2207,10 @@ function updateProgress(){
 
 function stepValid(n){
   if(n===1) return data.name.trim().length>0;
-  if(n===2) return !!data.category && !!data.format && !!data.tag;
+  if(n===2) return !!data.category && !!data.format && !!data.tag && !metaMissing(data, ['area']);
   if(n===3){
     const tp = titleParts(data.title);
-    return tp.series.length>0 && (data.oneoff || tp.episode.length>0) && data.summary.trim().length>0 && data.url.trim().length>0 && data.request.trim().length>0;
+    return !metaMissing(data, ['uniq','long']) && tp.series.length>0 && (data.oneoff || tp.episode.length>0) && data.summary.trim().length>0 && data.url.trim().length>0 && data.request.trim().length>0;
   }
   if(n===4) return data.lead.trim().length>0 && data.filming.trim().length>0 && data.editing.trim().length>0 && data.extra.trim().length>0;
   if(n===5) return data.filmdate.trim().length>0 && data.submitdate.trim().length>0 && !!data.filmfrom && !!data.filmto && data.filmfrom < data.filmto;
@@ -1957,7 +2231,7 @@ function updateCta(){
 function buildPlanLines(d){
   const catLabel = (CATEGORIES.find(c=>c.id===d.category)||{}).title || '';
   return [
-    `작성자: ${d.name||d.lead}`, `콘텐츠 유형: ${d.format||''}`, `콘텐츠 태깅: ${d.tag||''}`, `기획 방식: ${catLabel}`, '',
+    `작성자: ${d.name||d.lead}`, `콘텐츠 유형: ${d.format||''}`, `콘텐츠 태깅: ${d.tag||''}`, `기획 방식: ${catLabel}`, ...metaPlanLines(d), '',
     '[제작자 정보]', `팀장: ${d.lead}`, `팀원: ${d.member}`, `촬영: ${d.filming}`,
     `추가: ${d.extra}`, `편집: ${d.editing}`, `참여 인원: ${d.participants}`, '',
     '[기본 정보]', `제목: ${d.title}`, `한 문장: ${d.summary}`, `참고 URL: ${d.url}`, `요청사항: ${d.request}`, '',
@@ -1978,6 +2252,7 @@ function renderFinalDoc(){
   set('fd_participants', data.participants ? data.participants+'명' : '');
   document.getElementById('fd_summary').textContent = data.summary ? '💬 ' + data.summary : '';
   document.getElementById('fd_url').textContent = data.url || '';
+  document.getElementById('fd_meta').innerHTML = metaSummaryHTML(data);
   set('fd_filmdate', data.filmdate); set('fd_submitdate', data.submitdate);
   document.getElementById('fd_equipment').innerHTML = equipmentTagsHTML(data.equipment);
   const reqWrap = document.getElementById('fd_request_wrap');
@@ -2152,13 +2427,16 @@ function stepMissing(n){
   if(n===2){
     if(!data.format) return ['콘텐츠 유형을 골라 주세요', 'fmtChips'];
     if(!data.tag) return ['콘텐츠 태깅을 골라 주세요', 'tagChips'];
+    const ma = metaMissing(data, ['area']); if(ma) return [ma[0], META_IDS[ma[1]]];
     if(!data.category) return ['기획 방식을 골라 주세요', 'typeCards'];
   }
   if(n===3){
     const tp = titleParts(data.title);
     if(!v(data.summary)) return ['콘텐츠를 한 문장으로 써 주세요', 'f_summary'];
+    const mu = metaMissing(data, ['uniq']); if(mu) return [mu[0], META_IDS[mu[1]]];
     if(!tp.series.length) return ['시리즈명을 골라 주세요', 'f_series'];
     if(!data.oneoff && !tp.episode.length) return ['회차를 써 주세요', 'f_episode'];
+    const ml = metaMissing(data, ['long']); if(ml) return [ml[0], META_IDS[ml[1]]];
     if(!v(data.url)) return ['참고 URL을 넣어 주세요. 없으면 「없음」이라고 써요', 'f_url'];
     if(!v(data.request)) return ['요청사항을 써 주세요. 없으면 「없음」이라고 써요', 'f_request'];
   }
@@ -2279,6 +2557,7 @@ async function submitForReview(){
     const result = await sheetCreate(record);
     if(!result || result.ok === false) throw new Error('시트에 저장하지 못했어요.');
     planTagSave(id, data.format, data.tag);
+    planMetaSave(id, data);
     try{ fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({ action:'planTime', planId: id, from: data.filmfrom || '', to: data.filmto || '' }) }); }catch(e){}
     statusEl.textContent = '제출 완료 · 구글 시트에 저장됐어요';
@@ -2558,6 +2837,9 @@ function renderStatusDetail(key, rec){
   editingKey = key;
   editingRecord = JSON.parse(JSON.stringify(rec));
   eTagOrig = { format: editingRecord.format || '', tag: editingRecord.tag || '' };
+  normMeta(editingRecord);
+  eMetaOrig = JSON.stringify(metaPayload(editingRecord));
+  const metaMiss = ['rejected','dropped'].includes(editingRecord.status) ? [] : metaMissingNames(editingRecord);
   if(!editingRecord.plan || editingRecord.plan.length===0) editingRecord.plan=[{content:'',location:''}];
   document.getElementById('statusHeader').textContent = '기획서 상세';
   const el = document.getElementById('statusContent');
@@ -2592,6 +2874,7 @@ function renderStatusDetail(key, rec){
       ${editingRecord.completedAt? `<p>제작 완료: ${fmtDateTime(editingRecord.completedAt)}</p>`:''}
       ${editingRecord.uploadedAt? `<p>업로드: ${mtFmt(editingRecord.uploadedAt)}${/^https?:/.test(editingRecord.uploadUrl) ? ` · <a class="up-link" style="margin:0" href="${esc(safeUrl(editingRecord.uploadUrl))}" target="_blank" rel="noopener">게시물 보기</a>` : ''}</p>`:''}
       ${editingRecord.status==='rejected' && editingRecord.rejectReason? `<p>반려 사유: ${esc(editingRecord.rejectReason)}</p>`:''}
+      ${metaMiss.length ? `<p class="meta-miss" id="e_metaMiss">새로 생긴 필수 항목이 비어 있어요: <b>${esc(metaMiss.join(' · '))}</b>. 아래 「수정하기」에서 채워 주세요.</p>` : ''}
     </div>
     ${toggleEditHtml}
     <div id="editFormWrap" style="display:none; margin-bottom:24px;">
@@ -2604,7 +2887,9 @@ function renderStatusDetail(key, rec){
       <div class="field-sm"><label>촬영 시작</label><select id="e_filmfrom"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
       <div class="field-sm"><label>촬영 종료</label><select id="e_filmto"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
     </div>
-    <button class="save-edit-btn" id="saveEditBtn" style="margin-top:4px;">수정 저장</button>
+    <p class="section-title">경험 영역 · 기획 확인</p>
+    <div id="e_meta"></div>
+    <button class="save-edit-btn" id="saveEditBtn" style="margin-top:14px;">수정 저장</button>
     <button id="toggleMoreEdit" style="width:100%; margin:12px 0 0; padding:12px; border-radius:12px; border:1px dashed var(--line); background:none; color:var(--ink-soft); font-size:13.5px; cursor:pointer;">다른 항목도 수정하기 ▾</button>
     <div id="editMoreWrap" style="display:none;">
     <p class="section-title">콘텐츠 유형 · 태깅</p>
@@ -2650,7 +2935,8 @@ function renderStatusDetail(key, rec){
     document.getElementById('e_'+k).addEventListener('input', e=>{ editingRecord[k]=e.target.value; recomputeEditTeam(); });
   });
   document.getElementById('e_category').addEventListener('change', e=>{ editingRecord.category=e.target.value; });
-  ['format','tag'].forEach(k=>document.getElementById('e_'+k).addEventListener('change', e=>{ editingRecord[k]=e.target.value; }));
+  ['format','tag'].forEach(k=>document.getElementById('e_'+k).addEventListener('change', e=>{ editingRecord[k]=e.target.value; if(k==='format') mountEditMeta(); }));
+  mountEditMeta();
   ['title','summary','url','request','filmdate','submitdate','equipment'].forEach(k=>{
     document.getElementById('e_'+k).addEventListener('input', e=>{ editingRecord[k]=e.target.value; });
   });
@@ -2738,6 +3024,7 @@ function buildDocCardHTML(rec){
       </div>
       <p style="font-size:14px; font-weight:700; color:var(--ink); margin:0 0 4px;">${rec.summary ? '💬 ' + esc(rec.summary) : ''}</p>
       <p style="font-size:12px; color:var(--purple-dark); margin:0 0 18px; word-break:break-all;">${esc(rec.url)}</p>
+      ${metaSummaryHTML(rec)}
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:12.5px; margin-bottom:14px; padding-top:14px; border-top:1px solid var(--line);">
         <div><span style="color:var(--ink-soft);">촬영일</span><br><b>${esc(rec.filmdate||'-')}</b></div>
         <div><span style="color:var(--ink-soft);">제출일</span><br><b>${esc(rec.submitdate||'-')}</b></div>
@@ -2785,6 +3072,10 @@ function renderEditPlanRows(){
 // 상세 수정: 저장된 촬영 시간 불러오기 (장비 목록에 기획서별 시간이 같이 와요)
 let eTimeOrig = { from:'', to:'' };
 let eTagOrig = { format:'', tag:'' };
+let eMetaOrig = '';
+function mountEditMeta(){
+  mountMeta(document.getElementById('e_meta'), editingRecord, ['area','corner','uniq','long'], ()=>{ editDirty = true; });
+}
 async function eFillTimes(key){
   eTimeOrig = { from:'', to:'' };
   try{
@@ -2799,6 +3090,7 @@ async function saveEditedSubmission(){
   const btn = document.getElementById('saveEditBtn');
   const tf = (document.getElementById('e_filmfrom') || {}).value || '', tt = (document.getElementById('e_filmto') || {}).value || '';
   if((tf || tt) && !(tf && tt && tf < tt)){ showAlert('촬영 종료 시간은 시작 시간보다 늦어야 해요. (둘 다 비우면 종일)'); return; }
+  if(editingRecord.uniq === 'others' && !String(editingRecord.uniqNote||'').trim()){ showAlert('「다른 대학도 함」을 골랐다면 우리만 다른 점을 한 줄 써 주세요.'); return; }
   btn.disabled = true; btn.textContent = '저장 중...';
   const updatedAt = new Date().toISOString();
   const fields = {
@@ -2827,10 +3119,15 @@ async function saveEditedSubmission(){
       planTagSave(editingKey, editingRecord.format, editingRecord.tag);
       eTagOrig = { format: editingRecord.format||'', tag: editingRecord.tag||'' };
     }
+    if(JSON.stringify(metaPayload(editingRecord)) !== eMetaOrig){
+      planMetaSave(editingKey, editingRecord);
+      eMetaOrig = JSON.stringify(metaPayload(editingRecord));
+    }
+    const stillMiss = metaMissingNames(editingRecord);
     editingRecord.updatedAt = updatedAt;
     editDirty = false;
     renderStatusDetail(editingKey, editingRecord);
-    showToast('✅ 수정 내용을 저장했어요');
+    showToast(stillMiss.length && !['rejected','dropped'].includes(editingRecord.status) ? '✅ 저장했어요. 아직 비어 있어요: ' + stillMiss.join(' · ') : '✅ 수정 내용을 저장했어요');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }catch(e){
     showAlert('수정 저장에 실패했어요: ' + (e && e.message ? e.message : '알 수 없는 오류'));
@@ -2905,6 +3202,7 @@ async function loadSubmissions(){
     }
     const items = rows.map(row=>{ const rec = mapRowToRecord(row); return { key: rec.id, rec }; });
     items.sort((a,b)=> (b.rec.submittedAt||'').localeCompare(a.rec.submittedAt||''));
+    try{ renderAreaCoverage(items.map(i=>i.rec)); }catch(e){ console.error('coverage failed:', e); }
     renderAdminList(items);
   }catch(e){
     console.error('loadSubmissions failed:', e);
@@ -3174,6 +3472,7 @@ document.getElementById('btnReset').addEventListener('click', async ()=>{
   if(!ok) return;
   data = {
     name:'', category:'', format:'', tag:'',
+    areas:[], corner:'', uniq:'', uniqNote:'', keywords:[], kwFree:'', thumb2:false,
     lead:'', member:'', filming:'', extra:'', editing:'', participants:'',
     title:'', summary:'', url:'', request:'',
     filmdate:'', submitdate:'', equipment:'',
@@ -3192,7 +3491,8 @@ function syncFormFromData(){
   document.getElementById('in_name').value = data.name;
   detailIds.forEach(k=>{ document.getElementById('f_'+k).value = data[k]||''; });
   syncTitleFields(); syncFilmTimes();
-  computeTeam(); renderTypeCards(); renderPlanRows(); applyDateLimits();
+  normMeta(data);
+  computeTeam(); renderTypeCards(); renderFormMeta(); renderPlanRows(); applyDateLimits();
   ['filming','editing','extra'].forEach(refreshNamePickerChips);
   updateProgress();
 }

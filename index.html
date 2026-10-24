@@ -2049,7 +2049,7 @@ const META_PARTS = {
       if(kindGroupOf(r.kind) !== kindGroupOf(fx)){ r.kind = fx; ch(); }
       const g = kindGroupOf(r.kind), k = KIND_BY[r.kind];
       el.innerHTML = `<p class="pick-label">유형 <span>이 시리즈는 정해져 있어요</span></p>
-        <div class="pick-chips"><button type="button" class="pick kind-big on" aria-pressed="true" disabled>${esc(g.name)}</button></div>
+        <div class="pick-chips"><button type="button" class="pick kind-big on" aria-pressed="true" disabled>${esc(k.big ? g.name : k.name)}</button></div>
         <div class="area-desc"><p><b>${esc(g.name)}</b>${esc(g.ex)}${k.big ? '' : ` · <b class="kind-sub">${esc(k.name)}</b>`}</p></div>`;
       return;
     }

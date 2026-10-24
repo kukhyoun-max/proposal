@@ -114,6 +114,14 @@
   .area-desc p.faint{color:var(--ink-faint);}
   .kind-group{margin:0 0 10px;}
   .kind-group-name{font-size:11.5px; font-weight:700; color:var(--ink-soft); margin:0 2px 6px;}
+  .kind-qs{display:flex; flex-direction:column; gap:6px; margin:0 0 10px;}
+  .kind-q{display:flex; gap:10px; align-items:flex-start; text-align:left; width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:12px; background:#fff; color:var(--ink); font:inherit; cursor:pointer;}
+  .kind-q.on{border-color:var(--purple); background:var(--purple-soft);}
+  .kind-q:focus-visible{outline:2px solid var(--purple); outline-offset:2px;}
+  .kind-q-n{flex:none; width:20px; height:20px; border-radius:50%; background:var(--line); font-size:11.5px; font-weight:700; display:grid; place-items:center;}
+  .kind-q.on .kind-q-n{background:var(--purple); color:#fff;}
+  .kind-q-t{font-size:13.5px; line-height:1.4;}
+  .kind-q-t small{display:block; margin-top:2px; font-size:11.5px; color:var(--ink-soft);}
   .meta-warn{font-size:12px; font-weight:700; color:#C2410C; margin:8px 2px 0; line-height:1.5;}
   .meta-note{margin-top:8px;}
   .meta-note input{width:100%; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; font-size:14px; font-family:'Noto Sans KR',sans-serif; color:var(--ink); background:transparent; outline:none;}
@@ -1912,22 +1920,28 @@ const AREAS = [
   {code:'E20', name:'학교 행사', desc:'입학식·학위수여식·OT·신입생 환영·특강·기념식'}     // 2026-10-24 추가(E09 축제와 나눔)
 ];
 const AREA_BY = Object.fromEntries(AREAS.map(a => [a.code, a]));
-// 유형표: 큰 유형 7개 아래 세부 유형. 코드·이름은 서버 Attendance.gs PT_TYPES와 같게
+// 유형표(2026-10-24 담당자 확정): 큰 유형 7개를 질문 순서대로 묻고 처음 「예」에서 멈춰요. 큰 유형만 고르면 G1~G7, 세부까지 고르면 T01~T29
+// 코드·이름은 서버 Attendance.gs PT_TYPES, 보드 Code.gs TYPE_TABLE과 같게
 const KIND_GROUPS = [
-  {name:'따라가기', items:[['T01','브이로그'],['T02','하루 따라가기'],['T03','직접 체험'],['T04','먹방·맛 리뷰'],['T05','룸투어·왓츠인마이백']]},
-  {name:'사람', items:[['T06','1인 인터뷰'],['T07','즉석 질문'],['T08','토크·대담']]},
-  {name:'소개·정보', items:[['T09','학과 소개'],['T10','수업 소개'],['T11','공간 투어'],['T12','정보·꿀팁'],['T13','순위·추천']]},
-  {name:'예능', items:[['T14','상황극·패러디'],['T15','POV·1인칭'],['T16','유형·공감 밈'],['T17','게임·퀴즈'],['T18','챌린지·댄스']]},
-  {name:'현장', items:[['T19','행사 스케치'],['T20','무대·하이라이트'],['T21','다큐']]},
-  {name:'비주얼', items:[['T22','풍경·계절'],['T23','룩북·화보'],['T24','뮤직비디오'],['T25','브랜드 필름']]},
-  {name:'알림 카드', items:[['T26','안내'],['T27','소식'],['T28','이벤트'],['T29','인사 카드']]}
+  {code:'G1', name:'공지·소식', q:'글·그래픽 카드로 알리는 게시물인가요?', ex:'일정·모집 안내, 수상 소식, 이벤트, 명절 인사', items:[['T26','안내'],['T27','소식'],['T28','이벤트'],['T29','인사 카드']]},
+  {code:'G2', name:'예능·밈', q:'설정·대본으로 연기하거나 놀이를 하나요?', ex:'상황극·패러디, POV, 공감 밈, 게임, 챌린지', items:[['T14','상황극·패러디'],['T15','POV·1인칭'],['T16','유형·공감 밈'],['T17','게임·퀴즈'],['T18','챌린지·댄스']]},
+  {code:'G3', name:'인터뷰·토크', q:'카메라 앞에서 질문에 답하거나 대화하는 게 중심인가요?', ex:'1인 인터뷰, 길거리 질문, 대담, 인터뷰 카드뉴스', items:[['T06','1인 인터뷰'],['T07','즉석 질문'],['T08','토크·대담']]},
+  {code:'G4', name:'브이로그·체험', q:'한 사람(팀)을 따라가거나 직접 해 보나요?', ex:'브이로그, 하루 따라가기, 체험, 먹방, 룸투어', items:[['T01','브이로그'],['T02','하루 따라가기'],['T03','직접 체험'],['T04','먹방·맛 리뷰'],['T05','룸투어·왓츠인마이백']]},
+  {code:'G5', name:'행사 스케치', q:'정해진 행사·경기·공연 현장을 기록하나요?', ex:'행사 스케치, 무대·경기 하이라이트, 다큐', items:[['T19','행사 스케치'],['T20','무대·하이라이트'],['T21','다큐']]},
+  {code:'G6', name:'꿀팁·소개', q:'장소·학과·방법·순위를 설명해 주나요?', ex:'학과·수업·공간 소개, 꿀팁 정리, TOP N', items:[['T09','학과 소개'],['T10','수업 소개'],['T11','공간 투어'],['T12','정보·꿀팁'],['T13','순위·추천']]},
+  {code:'G7', name:'풍경·화보', q:'말·설명 없이 화면과 음악이 중심인가요?', ex:'캠퍼스 풍경·계절, 룩북, 뮤직비디오, 브랜드 필름', items:[['T22','풍경·계절'],['T23','룩북·화보'],['T24','뮤직비디오'],['T25','브랜드 필름']]}
 ];
-const KIND_BY = Object.fromEntries(KIND_GROUPS.flatMap(g => g.items.map(([code, name]) => [code, {code, name, group:g.name}])));
+const KIND_BY = Object.fromEntries(KIND_GROUPS.flatMap(g => [[g.code, {code:g.code, name:g.name, group:g.name, big:true}]]
+  .concat(g.items.map(([code, name]) => [code, {code, name, group:g.name}]))));
+const kindGroupOf = c => KIND_BY[c] ? KIND_GROUPS.find(g => g.name === KIND_BY[c].group) : null;
 const kindText = c => KIND_BY[c] ? c + ' ' + KIND_BY[c].name : '';
+// 10-24 오전까지 쓴 큰 유형 이름 → 새 코드
+const OLD_BIG_KIND = { '따라가기':'G4', '사람':'G3', '소개·정보':'G6', '예능':'G2', '현장':'G5', '비주얼':'G7', '알림 카드':'G1' };
 // 시트 값 읽기: 앞 코드로 찾고, 코드 없이 이름만 있으면 이름으로 찾아요
 function parseKind(s){
   s = String(s||'').trim();
-  const m = s.match(/^T\d{2}/);
+  if(OLD_BIG_KIND[s]) return OLD_BIG_KIND[s];
+  const m = s.match(/^(T\d{2}|G[1-7])/);
   if(m && KIND_BY[m[0]]) return m[0];
   const hit = Object.values(KIND_BY).find(k => k.name === s);
   return hit ? hit.code : '';
@@ -2026,15 +2040,21 @@ const META_PARTS = {
     };
     draw('');
   },
-  kind(el, r, ch){   // 유형: 하나만, 한 번 더 누르면 빼기
+  kind(el, r, ch){   // 유형: 위 질문부터 읽고 처음 「예」인 것 하나. 세부는 고르고 싶을 때만
     const draw = () => {
-      const k = KIND_BY[r.kind];
-      el.innerHTML = `<p class="pick-label">유형 <span>어떻게 찍고 엮었는지 가장 가까운 하나</span></p>
-        ${KIND_GROUPS.map(g => `<div class="kind-group"><p class="kind-group-name">${esc(g.name)}</p>
-          <div class="pick-chips">${g.items.map(([c, n]) => `<button type="button" class="pick${r.kind===c?' on':''}" aria-pressed="${r.kind===c}" data-v="${c}">${esc(n)}</button>`).join('')}</div></div>`).join('')}
-        <div class="area-desc">${k ? `<p><b>${esc(k.group)}</b>${esc(k.name)}</p>` : '<p class="faint">하나를 골라 주세요. 다시 누르면 빠져요.</p>'}</div>`;
+      const k = KIND_BY[r.kind], cur = kindGroupOf(r.kind);
+      el.innerHTML = `<p class="pick-label">유형 <span>위 질문부터 읽고, 처음 「예」인 것 하나</span></p>
+        <div class="kind-qs">${KIND_GROUPS.map((g, i) => `<button type="button" class="kind-q${cur===g?' on':''}" aria-pressed="${cur===g}" data-g="${g.code}">
+          <span class="kind-q-n">${i + 1}</span><span class="kind-q-t">${esc(g.q)}<small>→ <b>${esc(g.name)}</b> · ${esc(g.ex)}</small></span></button>`).join('')}</div>
+        ${cur ? `<div class="kind-group"><p class="kind-group-name">${esc(cur.name)} 안에서 더 가까운 것 <span class="faint">(선택, 몰라도 돼요)</span></p>
+          <div class="pick-chips">${cur.items.map(([c, n]) => `<button type="button" class="pick${r.kind===c?' on':''}" aria-pressed="${r.kind===c}" data-v="${c}">${esc(n)}</button>`).join('')}</div></div>` : ''}
+        <div class="area-desc">${k ? `<p><b>${esc(k.group)}</b>${k.big ? '' : esc(k.name)}</p>` : '<p class="faint">하나를 골라 주세요. 다시 누르면 빠져요.</p>'}</div>`;
+      el.querySelectorAll('.kind-q').forEach(b => b.addEventListener('click', () => {
+        r.kind = cur && cur.code === b.dataset.g ? '' : b.dataset.g;   // 같은 질문을 다시 누르면 빼기
+        draw(); ch();
+      }));
       el.querySelectorAll('.pick').forEach(b => b.addEventListener('click', () => {
-        r.kind = r.kind === b.dataset.v ? '' : b.dataset.v;
+        r.kind = r.kind === b.dataset.v ? cur.code : b.dataset.v;   // 세부를 다시 누르면 큰 유형만 남김
         draw(); ch();
       }));
     };
@@ -2159,7 +2179,7 @@ function renderAreaCoverage(recs){
 }
 
 // 「기획 방식」 칸은 2026-10-24 화면에서 뺌(유형 T01~T29와 겹침). 시트 「콘텐츠유형」 열은 고른 유형의 큰 묶음으로 자동 채움, 관리자 오리지널(original)은 그대로
-const KIND_TO_CAT = { '따라가기':'vlog', '사람':'interview', '소개·정보':'info', '현장':'event', '알림 카드':'info' };
+const KIND_TO_CAT = { '브이로그·체험':'vlog', '인터뷰·토크':'interview', '꿀팁·소개':'info', '행사 스케치':'event', '공지·소식':'info' };
 function catFromKind(r){
   if(!r || r.category === 'original') return;
   const k = String(r.kind||'');

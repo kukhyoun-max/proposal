@@ -738,6 +738,70 @@
   .pick.on small{color:var(--ink-soft);}
   details.title-guide summary{padding:13px 0; margin:-12px 0;}
   details.title-guide[open] summary{margin-bottom:-6px;}
+  /* ── 기획서 입력 화면 디자인 정리 (2026-10-24, ui-ux-pro-max 기준: 라벨 한 가지 모양·구역 나누기·고른 상태는 색+체크·누름 영역 44px 이상) ── */
+  .step-panel .heading{font-size:26px; line-height:1.3; letter-spacing:-.5px; word-break:keep-all;}
+  .step-panel .hint-caption{font-size:14px; line-height:1.55; color:var(--ink-soft); margin:8px 0 6px;}
+  .progress-label{font-size:13px; color:var(--ink-soft);}
+  .progress-label b{color:var(--purple-dark); font-weight:700;}
+  .area-desc p, .pick-label span, .lab-note, .req-hint, .meta-note p{word-break:keep-all; overflow-wrap:break-word;}
+  /* 구역: 위에 얇은 줄, 같은 간격 */
+  .sec{display:block; padding:22px 0 6px; border-top:1px solid #ECEBF1; margin:0;}
+  .hint-caption + .sec{border-top:0; padding-top:14px;}
+  .sec > .pick-label:first-child, .sec > .meta-part > .pick-label:first-child{margin-top:0;}
+  /* 라벨: 모든 단계 같은 모양(굵은 15px) + 도움말은 아래 줄 */
+  .step-panel .pick-label, .step-panel .field-sm > label:not(.url-none){display:block; font-size:15px; font-weight:700; color:var(--ink); margin:0 0 10px; line-height:1.4;}
+  .step-panel .pick-label span, .step-panel .field-sm > label .lab-note, .step-panel .field-sm > label > span{display:block; font-size:13px !important; font-weight:400 !important; color:var(--ink-faint) !important; margin:3px 0 0;}
+  .step-panel .field-sm{margin-bottom:18px;}
+  .sec.field-sm, .sec > .field-sm:last-child{margin-bottom:0; padding-bottom:18px;}
+  /* 칩: 안 고름 = 흰 바탕·회색 테두리, 고름 = 보라 바탕·흰 글씨·체크 */
+  .pick{border:1.5px solid #D5D3DC; background:#fff; color:var(--ink); font-size:14px; transition:background-color .15s, border-color .15s, color .15s; touch-action:manipulation;}
+  .pick:active{transform:scale(.98);}
+  .pick.on{border-color:var(--purple); background:var(--purple); color:#fff;}
+  .pick.on::before{content:''; display:inline-block; width:14px; height:14px; margin:0 6px 0 0; vertical-align:-2px; background:currentColor;
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/contain no-repeat;
+    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/contain no-repeat;}
+  .pick.on small{color:rgba(255,255,255,.88);}
+  /* 유형·주제: 두 줄 격자(들쭉날쭉한 줄바꿈 대신 같은 폭) */
+  #metaKind .pick-chips, #metaArea .pick-chips, #metaUniq [data-uniq]{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  #metaKind .pick, #metaArea .pick{border-radius:12px; text-align:left; padding:11px 12px; min-height:48px; line-height:1.35; word-break:keep-all;}
+  #metaUniq [data-uniq] .pick{border-radius:12px; min-height:48px;}
+  /* 형식: 한 줄에 하나, 설명은 오른쪽 */
+  #fmtChips{display:grid; grid-template-columns:1fr; gap:8px;}
+  #fmtChips .pick{display:flex; align-items:center; border-radius:12px; text-align:left; min-height:48px; padding:11px 14px;}
+  #fmtChips .pick small{margin-left:auto; padding-left:8px;}
+  #fmtChips .pick.on::before{flex:none;}
+  /* 고른 것 설명 */
+  .area-desc{margin:10px 0 0; min-height:0;}
+  .area-desc p{font-size:13px; background:#F6F5F9; border-radius:10px; padding:9px 12px; margin:0 0 6px;}
+  .area-desc p.faint{background:none; padding:0 2px;}
+  .area-desc p b{display:block; margin:0 0 1px;}
+  /* 접힌 칸(세부 고르기·질문으로 찾기) */
+  .kind-more{margin:6px 0 0;}
+  .kind-more summary{display:flex; align-items:center; gap:6px; min-height:44px; padding:0; font-size:13.5px; color:var(--purple-dark); list-style:none;}
+  .kind-more summary::-webkit-details-marker{display:none;}
+  .kind-more summary::after{content:'›'; font-size:18px; line-height:1; transition:transform .15s;}
+  .kind-more[open] summary::after{transform:rotate(90deg);}
+  /* 시리즈로 정해진 유형 */
+  .kind-lock{display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:12px; background:#F3F2F7; border:1.5px solid #E2E0E8;}
+  .kind-lock svg{flex:none; width:20px; height:20px; fill:none; stroke:var(--ink-soft); stroke-width:2; stroke-linecap:round;}
+  .kind-lock b{display:block; font-size:15px; color:var(--ink);}
+  .kind-lock span{display:block; font-size:13px; color:var(--ink-soft); margin-top:2px; word-break:keep-all;}
+  /* 2단계: 한 문장 칸은 다른 칸과 같은 모양 */
+  .one-line{background:none; border:0; border-radius:0; padding:0; margin-bottom:0;}
+  .ex-list{list-style:none; margin:10px 0 0; padding:0; display:grid; gap:6px;}
+  .ex-list li{font-size:13px; line-height:1.5; color:var(--ink-soft); background:#F6F5F9; border-radius:10px; padding:8px 12px; word-break:keep-all;}
+  .ex-list li b{display:inline-block; font-size:12px; font-weight:700; border-radius:6px; padding:1px 7px; margin-right:8px;}
+  .ex-list li.ok b{background:#E3F4E8; color:#14632C;}
+  .ex-list li.no b{background:#FDECE4; color:#9A3412;}
+  details.title-guide{border:0; background:none; padding:0; margin:-6px 0 6px;}
+  details.title-guide summary{display:flex; align-items:center; gap:6px; min-height:44px; padding:0; margin:0; font-size:13.5px; color:var(--purple-dark);}
+  details.title-guide summary::after{content:'›' !important; font-size:18px; line-height:1; transition:transform .15s;}
+  details.title-guide[open] summary{margin:0; color:var(--purple-dark);}
+  details.title-guide[open] summary::after{transform:rotate(90deg);}
+  details.title-guide[open]{background:#F6F5F9; border-radius:12px; padding:0 14px 12px;}
+  details.title-guide p{font-size:13px; margin:0 0 4px;}
+  #f_titlePreview{font-size:13px; color:var(--ink-soft); background:#F6F5F9; border-radius:10px; padding:8px 12px; margin:0 0 4px !important;}
+  #f_titlePreview:empty{display:none;}
   @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important;}}
 </style>
 </head>
@@ -822,7 +886,8 @@
 
     <div class="step-panel" id="panel2">
       <h2 class="heading">어떤 콘텐츠를<br>기획하시나요?</h2>
-      <p class="hint-caption">콘텐츠 이름을 고르고, 한 문장으로 적어 주세요. 「선택」이라고 적힌 칸 말고는 모두 채워야 다음으로 넘어가요.</p>
+      <p class="hint-caption">콘텐츠 이름을 고르고, 한 문장으로 적어 주세요.</p>
+      <section class="sec">
       <div class="field-sm series-field"><label id="f_seriesLabel" for="f_series">시리즈명</label><input type="text" id="f_series" placeholder="예: 체험왕" autocomplete="off"><datalist id="seriesList"></datalist><div class="series-pop" id="seriesPop" role="listbox"></div></div>
       <details class="title-guide">
         <summary>시리즈·제목은 이렇게 써요</summary>
@@ -837,32 +902,37 @@
       <div class="field-sm" id="f_episodeWrap" style="display:none !important;"><label for="f_episode">회차</label><input type="text" id="f_episode" placeholder="예: 양궁부편"></div>
       <input type="hidden" id="f_title">
       <p class="req-hint" id="f_titlePreview" style="margin:-4px 0 12px;"></p>
+      </section>
+      <section class="sec">
       <div class="field-sm one-line">
-        <label for="f_summary" style="font-size:13px; font-weight:700; color:var(--ink);">이 콘텐츠를 한 문장으로 말하면?</label>
+        <label for="f_summary">한 문장으로 말하면?</label>
         <input type="text" id="f_summary" maxlength="30" placeholder="예: 인공지능학과에 가면 해외 탐방을 갈 수 있다" autocomplete="off">
         <div style="display:flex; justify-content:space-between; gap:8px; margin-top:4px;">
           <p class="req-hint" id="f_summaryHint" style="margin:0;">콘텐츠 하나엔 메시지 하나. 두 가지 이상이면 기획을 나눠주세요.</p>
           <span class="req-hint" id="f_summaryCount" style="margin:0; white-space:nowrap;">0 / 30</span>
         </div>
-        <p class="req-hint" style="margin-top:6px;">✅ 인공지능학과에 가면 해외 탐방을 갈 수 있다<br>❌ 인공지능학과 소개 + 커리큘럼 + 해외 탐방 + 취업</p>
+        <ul class="ex-list"><li class="ok"><b>좋아요</b>인공지능학과에 가면 해외 탐방을 갈 수 있다</li><li class="no"><b>나눠요</b>인공지능학과 소개 + 커리큘럼 + 해외 탐방 + 취업</li></ul>
       </div>
+      </section>
     </div>
 
     <div class="step-panel" id="panel3">
       <h2 class="heading">어떻게<br>찍을까요?</h2>
-      <p class="hint-caption">기존 시리즈는 유형이 정해져 있어요. 주제만 골라 주세요. 「선택」 말고는 모두 채워 주세요.</p>
-      <div id="metaKind"></div>
-      <div id="metaArea"></div>
+      <p class="hint-caption">유형과 주제를 고르고, 참고할 영상을 알려 주세요.</p>
+      <div id="metaKind" class="sec"></div>
+      <div id="metaArea" class="sec"></div>
+      <section class="sec">
       <p class="pick-label">형식 <span>기본은 롱폼+쇼츠예요</span></p>
       <div class="pick-chips" id="fmtChips"></div>
-      <div id="metaUniq"></div>
-      <div class="field-sm">
+      </section>
+      <div id="metaUniq" class="sec"></div>
+      <div class="field-sm sec">
         <label for="f_url">참고 URL <span class="lab-note">인스타·유튜브 링크</span></label>
         <input type="url" id="f_url" placeholder="https://..." inputmode="url" autocomplete="off" aria-describedby="f_urlErr">
         <p class="field-err" id="f_urlErr" role="status" aria-live="polite" hidden></p>
         <label class="url-none"><input type="checkbox" id="f_urlNone"> 참고 영상 없음</label>
       </div>
-      <div class="field-sm">
+      <div class="field-sm sec">
         <label for="f_request">요청사항 <span class="lab-note">없으면 「없음」</span></label>
         <textarea id="f_request" placeholder="예: 강의실 대여, 소품, 출연자 섭외" aria-describedby="f_requestHint"></textarea>
         <p class="req-hint" id="f_requestHint">장소 대여·소품·출연자 섭외 등 필요한 것을 써요. 없으면 「없음」이라고 써요. 장소 대여는 담당자에게 미리 연락해 주세요.</p>
@@ -894,8 +964,8 @@
         <div class="suggest-list" id="suggest_extra"></div>
       </div>
 
-      <div class="field-sm"><label for="f_member">팀원 <span style="color:var(--ink-faint);font-weight:400;">(자동)</span></label><input type="text" id="f_member" readonly style="background:var(--purple-soft);color:var(--ink-soft);"></div>
-      <div class="field-sm"><label for="f_participants">참여 인원 <span style="color:var(--ink-faint);font-weight:400;">(자동)</span></label><input type="text" id="f_participants" readonly style="background:var(--purple-soft);color:var(--ink-soft);"></div>
+      <div class="field-sm"><label for="f_member">팀원 <span style="color:var(--ink-faint);font-weight:400;">촬영·편집·출연에 넣으면 자동으로 채워져요</span></label><input type="text" id="f_member" readonly style="background:var(--purple-soft);color:var(--ink-soft);"></div>
+      <div class="field-sm"><label for="f_participants">참여 인원 <span style="color:var(--ink-faint);font-weight:400;">자동으로 세요</span></label><input type="text" id="f_participants" readonly style="background:var(--purple-soft);color:var(--ink-soft);"></div>
     </div>
 
     <div class="step-panel" id="panel5">
@@ -2092,9 +2162,9 @@ const META_PARTS = {
     if(fx){
       if(kindGroupOf(r.kind) !== kindGroupOf(fx)){ r.kind = fx; ch(); }
       const g = kindGroupOf(r.kind), k = KIND_BY[r.kind];
-      el.innerHTML = `<p class="pick-label">유형 <span>이 시리즈는 정해져 있어요</span></p>
-        <div class="pick-chips"><button type="button" class="pick kind-big on" aria-pressed="true" disabled>${esc(k.big ? g.name : k.name)}</button></div>
-        <div class="area-desc"><p><b>${esc(g.name)}</b>${esc(g.ex)}${k.big ? '' : ` · <b class="kind-sub">${esc(k.name)}</b>`}</p></div>`;
+      el.innerHTML = `<p class="pick-label">유형 <span>${esc(eunNeun(titleParts(r.title||'').series))} 유형이 정해져 있어요. 주제만 골라 주세요</span></p>
+        <div class="kind-lock" role="group" aria-label="정해진 유형"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          <div><b>${esc(k.big ? g.name : k.name)}</b><span>${esc(k.big ? g.ex : g.name + ' 묶음')}</span></div></div>`;
       return;
     }
     let helpOpen = false, subOpen = false;
@@ -2275,6 +2345,7 @@ function renderPlanRows(){
 }
 
 const TOTAL_STEPS = 7;
+const STEP_NAMES = { 1:'팀장', 2:'콘텐츠', 3:'촬영 방식', 4:'제작진', 5:'일정', 6:'장비', 7:'장면 구성' };
 
 let maxStepReached = 1;
 
@@ -2283,7 +2354,7 @@ function updateProgress(){
   const bottomBar = document.getElementById('bottomBar');
   const shownStep = Math.min(step, TOTAL_STEPS);
   if(step <= TOTAL_STEPS){ maxStepReached = Math.max(maxStepReached, step); }
-  document.getElementById('progressLabel').textContent = shownStep + ' / ' + TOTAL_STEPS;
+  document.getElementById('progressLabel').innerHTML = '<b>' + shownStep + ' / ' + TOTAL_STEPS + '</b>' + (STEP_NAMES[shownStep] ? ' · ' + STEP_NAMES[shownStep] : '');
 
   const track = document.getElementById('progressTrack');
   track.innerHTML = '';
@@ -2495,6 +2566,7 @@ const SERIES_PICK = ['체험왕', '패션왕', 'OO하면 끝나는 인터뷰', '
 // 시리즈마다 정해진 유형(2026-10-24, 지난 기획서 내용 기준). 여기 있는 시리즈를 고르면 유형 칸이 고정돼요
 const SERIES_KIND = { '체험왕':'T03', '패션왕':'T07', 'OO하면 끝나는 인터뷰':'T08', '오늘의 전주대 질문':'T07', '아바타 소개팅':'G2' };
 function seriesKind(s){ s = String(s||'').trim(); return KIND_BY[SERIES_KIND[s]] ? SERIES_KIND[s] : ''; }
+function eunNeun(s){ const c = String(s||'').trim().slice(-1).charCodeAt(0); return s + (c >= 0xAC00 && c <= 0xD7A3 ? ((c - 0xAC00) % 28 ? '은' : '는') : '은(는)'); }
 (function(){
   const inp = document.getElementById('f_series'), pop = document.getElementById('seriesPop');
   const draw = () => {

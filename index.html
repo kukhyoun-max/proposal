@@ -2447,7 +2447,7 @@ function syncOneLineUi(){
 // 콘텐츠(시리즈) 칸: 누르면 목록이 뜸(2026-10-24 담당자 지정 5개). 목록에 없으면 그대로 새 이름을 씀
 const SERIES_PICK = ['체험왕', '패션왕', 'OO하면 끝나는 인터뷰', '오늘의 전주대 질문', '아바타 소개팅'];
 // 시리즈마다 정해진 유형(2026-10-24, 지난 기획서 내용 기준). 여기 있는 시리즈를 고르면 유형 칸이 고정돼요
-const SERIES_KIND = { '체험왕':'T03', '패션왕':'T07', 'OO하면 끝나는 인터뷰':'T07', '오늘의 전주대 질문':'T07', '아바타 소개팅':'G2' };
+const SERIES_KIND = { '체험왕':'T03', '패션왕':'T07', 'OO하면 끝나는 인터뷰':'T08', '오늘의 전주대 질문':'T07', '아바타 소개팅':'G2' };
 function seriesKind(s){ s = String(s||'').trim(); return KIND_BY[SERIES_KIND[s]] ? SERIES_KIND[s] : ''; }
 (function(){
   const inp = document.getElementById('f_series'), pop = document.getElementById('seriesPop');

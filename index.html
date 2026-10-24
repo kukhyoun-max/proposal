@@ -773,9 +773,6 @@
       <div class="pick-chips" id="fmtChips"></div>
       <div id="metaArea"></div>
       <div id="metaKind"></div>
-      <p class="pick-label">기획 방식 <span>어떻게 찍는지 가장 가까운 하나</span></p>
-      <div class="pick-chips" id="typeCards"></div>
-      <p class="pick-desc" id="typeDesc"></p>
     </div>
 
     <div class="step-panel" id="panel3">
@@ -2108,7 +2105,7 @@ function mountMeta(root, r, parts, ch){
 }
 const META_IDS = { area:'metaArea', kind:'metaKind', uniq:'metaUniq', long:'metaLong' };
 function renderFormMeta(){
-  const ch = () => { updateCta(); scheduleAutosave(); };
+  const ch = () => { catFromKind(data); updateCta(); scheduleAutosave(); };
   Object.entries(META_IDS).forEach(([p, id]) => mountMeta(document.getElementById(id), data, [p], ch));
 }
 // 기획서 카드·미리 보기에 보이는 줄
@@ -2151,7 +2148,7 @@ function renderAreaCoverage(recs){
   const c = areaCoverage(recs);
   const open = el.querySelector('details') && el.querySelector('details').open;
   el.innerHTML = `<details class="cov-box"${open ? ' open' : ''}>
-    <summary>경험 영역 커버리지 · 다룸 ${c.covered} / 18 <span style="color:var(--ink-faint); font-weight:400;">(목표 ${COV_GOAL})</span> ▾
+    <summary>경험 영역 커버리지 · 다룸 ${c.covered} / ${AREAS.length} <span style="color:var(--ink-faint); font-weight:400;">(목표 ${COV_GOAL})</span> ▾
       <small>${c.range.label} 승인·진행 기획서 ${c.total}건 기준 · 2건 이상이면 다룸</small></summary>
     <table class="cov-table"><thead><tr><th>영역</th><th class="n">건수</th><th>상태</th></tr></thead><tbody>
     ${AREAS.map(a => { const n = c.cnt[a.code] || 0; const st = n >= 2 ? ['done','다룸'] : n === 1 ? ['one','1건 더'] : ['none','비어 있음'];
@@ -2161,23 +2158,16 @@ function renderAreaCoverage(recs){
   </details>`;
 }
 
-function renderTypeCards(){
-  renderPickChips();
-  const wrap = document.getElementById('typeCards');
-  // 기획 방식도 유형·태깅과 같은 칩으로(2026-10-21). 설명은 고른 칩 아래 한 줄
-  wrap.innerHTML = CATEGORIES.filter(c=>!c.hidden).map(c=>
-    `<button type="button" class="pick${data.category===c.id?' on':''}" data-id="${c.id}">${c.title}</button>`).join('');
-  const cur = CATEGORIES.find(c => c.id === data.category && !c.hidden);
-  document.getElementById('typeDesc').textContent = cur ? cur.desc : '';
-  wrap.querySelectorAll('.pick').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      data.category = el.dataset.id;
-      renderTypeCards();
-      updateCta();
-      scheduleAutosave();
-    });
-  });
+// 「기획 방식」 칸은 2026-10-24 화면에서 뺌(유형 T01~T29와 겹침). 시트 「콘텐츠유형」 열은 고른 유형의 큰 묶음으로 자동 채움, 관리자 오리지널(original)은 그대로
+const KIND_TO_CAT = { '따라가기':'vlog', '사람':'interview', '소개·정보':'info', '현장':'event', '알림 카드':'info' };
+function catFromKind(r){
+  if(!r || r.category === 'original') return;
+  const k = String(r.kind||'');
+  if(k === 'T18'){ r.category = 'challenge'; return; }
+  const g = KIND_BY[k] && KIND_BY[k].group;
+  if(g) r.category = KIND_TO_CAT[g] || 'etc';
 }
+function renderTypeCards(){ renderPickChips(); catFromKind(data); }
 
 function renderPlanRows(){
   const wrap = document.getElementById('planRows');
@@ -2248,7 +2238,7 @@ function updateProgress(){
 
 function stepValid(n){
   if(n===1) return data.name.trim().length>0;
-  if(n===2) return !!data.category && !!data.format && !metaMissing(data, ['area','kind']);
+  if(n===2) return !!data.format && !metaMissing(data, ['area','kind']);
   if(n===3){
     const tp = titleParts(data.title);
     return !metaMissing(data, ['uniq','long']) && tp.series.length>0 && (data.oneoff || tp.episode.length>0) && data.summary.trim().length>0 && data.url.trim().length>0 && data.request.trim().length>0;
@@ -2468,7 +2458,6 @@ function stepMissing(n){
   if(n===2){
     if(!data.format) return ['형식을 골라 주세요', 'fmtChips'];
     const ma = metaMissing(data, ['area','kind']); if(ma) return [ma[0], META_IDS[ma[1]]];
-    if(!data.category) return ['기획 방식을 골라 주세요', 'typeCards'];
   }
   if(n===3){
     const tp = titleParts(data.title);
@@ -2587,7 +2576,7 @@ async function submitForReview(){
   const record = {
     id, status:'pending',
     submittedAt: new Date().toISOString(), updatedAt:'', reviewedAt:'', filmingAt:'', completedAt:'',
-    lead: data.lead, category: data.category, member: data.member, filming: data.filming,
+    lead: data.lead, category: (catFromKind(data), data.category), member: data.member, filming: data.filming,
     editing: data.editing, extra: data.extra, participants: data.participants,
     title: data.title, summary: data.summary, url: data.url, request: data.request,
     filmdate: data.filmdate, submitdate: data.submitdate, equipment: data.equipment,
@@ -2883,7 +2872,6 @@ function renderStatusDetail(key, rec){
   if(!editingRecord.plan || editingRecord.plan.length===0) editingRecord.plan=[{content:'',location:''}];
   document.getElementById('statusHeader').textContent = '기획서 상세';
   const el = document.getElementById('statusContent');
-  const catOptions = CATEGORIES.map(c=>`<option value="${c.id}" ${c.id===editingRecord.category?'selected':''}>${c.title}</option>`).join('');
 
   const isAccepted = ['approved','filming','editing','completed','uploaded'].includes(editingRecord.status);
   const imageSection = isAccepted ? `
@@ -2934,8 +2922,6 @@ function renderStatusDetail(key, rec){
     <div id="editMoreWrap" style="display:none;">
     <p class="section-title">형식</p>
     <div class="field-sm"><select id="e_format"><option value="">형식 선택</option>${FORMATS.map(o=>`<option ${o.id===editingRecord.format?'selected':''}>${esc(o.id)}</option>`).join('')}</select></div>
-    <p class="section-title">기획 방식</p>
-    <div class="field-sm"><select id="e_category">${catOptions}</select></div>
     <p class="section-title">제작자 정보</p>
     <div class="grid2">
       <div class="field-sm"><label>팀장</label><input type="text" id="e_lead" value="${esc(editingRecord.lead||'')}"></div>
@@ -2974,7 +2960,6 @@ function renderStatusDetail(key, rec){
   ['lead','filming','extra','editing'].forEach(k=>{
     document.getElementById('e_'+k).addEventListener('input', e=>{ editingRecord[k]=e.target.value; recomputeEditTeam(); });
   });
-  document.getElementById('e_category').addEventListener('change', e=>{ editingRecord.category=e.target.value; });
   ['format'].forEach(k=>document.getElementById('e_'+k).addEventListener('change', e=>{ editingRecord[k]=e.target.value; if(k==='format') mountEditMeta(); }));
   mountEditMeta();
   ['title','summary','url','request','filmdate','submitdate','equipment'].forEach(k=>{

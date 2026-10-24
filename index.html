@@ -770,7 +770,6 @@
       <p class="hint-caption">하나씩 골라 주세요. 경험 영역만 두 개까지 돼요.</p>
       <p class="pick-label">형식 <span>기본은 롱폼+쇼츠예요</span></p>
       <div class="pick-chips" id="fmtChips"></div>
-      <div id="metaCorner"></div>
       <div id="metaArea"></div>
       <div id="metaKind"></div>
       <p class="pick-label">기획 방식 <span>어떻게 찍는지 가장 가까운 하나</span></p>
@@ -1976,8 +1975,8 @@ function normMeta(r){   // 예전 임시 저장본·예전 기획서도 깨지�
 }
 // 서버로 보내는 값(시트에 쓰는 글자 그대로). 올릴 곳에 없는 항목은 비워요
 function metaPayload(r){
-  const L = isLongform(r.format), I = hasInsta(r.format);
-  return { areas: (r.areas||[]).slice(0, AREA_MAX), type: kindText(r.kind), corner: I ? (r.corner||'') : '', uniq: uniqText(r),
+  const L = isLongform(r.format);   // 인스타 코너는 2026-10-24 뺌(담당자) — 보내지 않아 시트 「코너」 열 기존 값은 그대로
+  return { areas: (r.areas||[]).slice(0, AREA_MAX), type: kindText(r.kind), uniq: uniqText(r),
     keyword: L ? kwText(r) : '', thumb2: (L && r.thumb2) ? '예' : '' };   // 썸네일 2안: 체크하면 「예」, 아니면 빈 칸
 }
 function planMetaSave(planId, r){
@@ -2104,7 +2103,7 @@ function mountMeta(root, r, parts, ch){
   root.innerHTML = parts.map(p => `<div class="meta-part" data-part="${p}"></div>`).join('');
   parts.forEach(p => META_PARTS[p](root.querySelector(`[data-part="${p}"]`), r, ch));
 }
-const META_IDS = { area:'metaArea', kind:'metaKind', corner:'metaCorner', uniq:'metaUniq', long:'metaLong' };
+const META_IDS = { area:'metaArea', kind:'metaKind', uniq:'metaUniq', long:'metaLong' };
 function renderFormMeta(){
   const ch = () => { updateCta(); scheduleAutosave(); };
   Object.entries(META_IDS).forEach(([p, id]) => mountMeta(document.getElementById(id), data, [p], ch));
@@ -2114,7 +2113,6 @@ function metaSummaryHTML(r){
   const rows = [];
   if((r.areas||[]).length) rows.push(['경험 영역', areaText(r.areas)]);
   if(KIND_BY[r.kind]) rows.push(['유형', kindText(r.kind)]);
-  if(hasInsta(r.format) && r.corner) rows.push(['인스타 코너', r.corner]);
   if(r.uniq) rows.push(['다른 대학', r.uniq === 'first' ? UNIQ_FIRST : UNIQ_OTHERS + ' · 우리만: ' + (r.uniqNote||'-')]);
   if(isLongform(r.format) && kwText(r)) rows.push(['제목 검색어', kwText(r)]);
   if(isLongform(r.format)) rows.push(['썸네일 2안', r.thumb2 ? '준비해요' : '-']);
@@ -2123,7 +2121,7 @@ function metaSummaryHTML(r){
     `<div style="display:flex; gap:8px;"><span style="color:var(--ink-soft); min-width:72px; flex:none;">${k}</span><b style="font-weight:600;">${esc(v)}</b></div>`).join('')}</div>`;
 }
 function metaPlanLines(r){
-  return [`경험 영역: ${areaText(r.areas)}`, `유형: ${kindText(r.kind)}`, ...(hasInsta(r.format) ? [`인스타 코너: ${r.corner||''}`] : []), `다른 대학: ${uniqText(r)}`,
+  return [`경험 영역: ${areaText(r.areas)}`, `유형: ${kindText(r.kind)}`, `다른 대학: ${uniqText(r)}`,
     ...(isLongform(r.format) ? [`제목 검색어: ${kwText(r)}`, `썸네일 2안: ${r.thumb2 ? '예' : '아니오'}`] : [])];
 }
 
@@ -3113,7 +3111,7 @@ let eTimeOrig = { from:'', to:'' };
 let eTagOrig = { format:'', tag:'' };
 let eMetaOrig = '';
 function mountEditMeta(){
-  mountMeta(document.getElementById('e_meta'), editingRecord, ['area','kind','corner','uniq','long'], ()=>{ editDirty = true; });
+  mountMeta(document.getElementById('e_meta'), editingRecord, ['area','kind','uniq','long'], ()=>{ editDirty = true; });
 }
 async function eFillTimes(key){
   eTimeOrig = { from:'', to:'' };

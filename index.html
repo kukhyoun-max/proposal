@@ -112,16 +112,17 @@
   .area-desc p{font-size:12px; color:var(--ink-soft); margin:0 0 3px; line-height:1.5;}
   .area-desc p b{color:var(--purple-dark); font-weight:700; margin-right:4px;}
   .area-desc p.faint{color:var(--ink-faint);}
-  .kind-group{margin:0 0 10px;}
-  .kind-group-name{font-size:11.5px; font-weight:700; color:var(--ink-soft); margin:0 2px 6px;}
-  .kind-qs{display:flex; flex-direction:column; gap:6px; margin:0 0 10px;}
-  .kind-q{display:flex; gap:10px; align-items:flex-start; text-align:left; width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:12px; background:#fff; color:var(--ink); font:inherit; cursor:pointer;}
-  .kind-q.on{border-color:var(--purple); background:var(--purple-soft);}
+  .kind-more{margin:8px 2px 0;}
+  .kind-more summary{font-size:12px; font-weight:600; color:var(--ink-soft); cursor:pointer; padding:4px 0;}
+  .kind-more .pick-chips{margin-top:6px;}
+  .kind-help-tip{font-size:11.5px; margin:4px 0 2px;}
+  .kind-help{margin:4px 0 0; padding-left:20px; font-size:12.5px; color:var(--ink-soft);}
+  .kind-help li{margin:0 0 2px;}
+  .kind-q{display:block; border:0; background:none; padding:4px 0; text-align:left; font:inherit; color:var(--ink); cursor:pointer;}
+  .kind-q b{color:var(--purple-dark);}
+  .kind-q.on{text-decoration:underline; text-underline-offset:3px;}
   .kind-q:focus-visible{outline:2px solid var(--purple); outline-offset:2px;}
-  .kind-q-n{flex:none; width:20px; height:20px; border-radius:50%; background:var(--line); font-size:11.5px; font-weight:700; display:grid; place-items:center;}
-  .kind-q.on .kind-q-n{background:var(--purple); color:#fff;}
-  .kind-q-t{font-size:13.5px; line-height:1.4;}
-  .kind-q-t small{display:block; margin-top:2px; font-size:11.5px; color:var(--ink-soft);}
+  .area-desc p b.kind-sub{margin:0;}
   .meta-warn{font-size:12px; font-weight:700; color:#C2410C; margin:8px 2px 0; line-height:1.5;}
   .meta-note{margin-top:8px;}
   .meta-note input{width:100%; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; font-size:14px; font-family:'Noto Sans KR',sans-serif; color:var(--ink); background:transparent; outline:none;}
@@ -1925,7 +1926,7 @@ const AREA_BY = Object.fromEntries(AREAS.map(a => [a.code, a]));
 const KIND_GROUPS = [
   {code:'G1', name:'공지·소식', q:'글·그래픽 카드로 알리는 게시물인가요?', ex:'일정·모집 안내, 수상 소식, 이벤트, 명절 인사', items:[['T26','안내'],['T27','소식'],['T28','이벤트'],['T29','인사 카드']]},
   {code:'G2', name:'예능·밈', q:'설정·대본으로 연기하거나 놀이를 하나요?', ex:'상황극·패러디, POV, 공감 밈, 게임, 챌린지', items:[['T14','상황극·패러디'],['T15','POV·1인칭'],['T16','유형·공감 밈'],['T17','게임·퀴즈'],['T18','챌린지·댄스']]},
-  {code:'G3', name:'인터뷰·토크', q:'카메라 앞에서 질문에 답하거나 대화하는 게 중심인가요?', ex:'1인 인터뷰, 길거리 질문, 대담, 인터뷰 카드뉴스', items:[['T06','1인 인터뷰'],['T07','즉석 질문'],['T08','토크·대담']]},
+  {code:'G3', name:'인터뷰·토크', q:'카메라 앞에서 답하거나 대화하나요?', ex:'1인 인터뷰, 길거리 질문, 대담, 인터뷰 카드뉴스', items:[['T06','1인 인터뷰'],['T07','즉석 질문'],['T08','토크·대담']]},
   {code:'G4', name:'브이로그·체험', q:'한 사람(팀)을 따라가거나 직접 해 보나요?', ex:'브이로그, 하루 따라가기, 체험, 먹방, 룸투어', items:[['T01','브이로그'],['T02','하루 따라가기'],['T03','직접 체험'],['T04','먹방·맛 리뷰'],['T05','룸투어·왓츠인마이백']]},
   {code:'G5', name:'행사 스케치', q:'정해진 행사·경기·공연 현장을 기록하나요?', ex:'행사 스케치, 무대·경기 하이라이트, 다큐', items:[['T19','행사 스케치'],['T20','무대·하이라이트'],['T21','다큐']]},
   {code:'G6', name:'꿀팁·소개', q:'장소·학과·방법·순위를 설명해 주나요?', ex:'학과·수업·공간 소개, 꿀팁 정리, TOP N', items:[['T09','학과 소개'],['T10','수업 소개'],['T11','공간 투어'],['T12','정보·꿀팁'],['T13','순위·추천']]},
@@ -2040,20 +2041,25 @@ const META_PARTS = {
     };
     draw('');
   },
-  kind(el, r, ch){   // 유형: 위 질문부터 읽고 처음 「예」인 것 하나. 세부는 고르고 싶을 때만
+  kind(el, r, ch){   // 유형: 이름 칩 7개 중 하나(2026-10-24 담당자 「너무 디테일」 → 질문은 헷갈릴 때만 펼침). 세부는 고르고 싶을 때만
+    let helpOpen = false, subOpen = false;
     const draw = () => {
       const k = KIND_BY[r.kind], cur = kindGroupOf(r.kind);
-      el.innerHTML = `<p class="pick-label">유형 <span>위 질문부터 읽고, 처음 「예」인 것 하나</span></p>
-        <div class="kind-qs">${KIND_GROUPS.map((g, i) => `<button type="button" class="kind-q${cur===g?' on':''}" aria-pressed="${cur===g}" data-g="${g.code}">
-          <span class="kind-q-n">${i + 1}</span><span class="kind-q-t">${esc(g.q)}<small>→ <b>${esc(g.name)}</b> · ${esc(g.ex)}</small></span></button>`).join('')}</div>
-        ${cur ? `<div class="kind-group"><p class="kind-group-name">${esc(cur.name)} 안에서 더 가까운 것 <span class="faint">(선택, 몰라도 돼요)</span></p>
-          <div class="pick-chips">${cur.items.map(([c, n]) => `<button type="button" class="pick${r.kind===c?' on':''}" aria-pressed="${r.kind===c}" data-v="${c}">${esc(n)}</button>`).join('')}</div></div>` : ''}
-        <div class="area-desc">${k ? `<p><b>${esc(k.group)}</b>${k.big ? '' : esc(k.name)}</p>` : '<p class="faint">하나를 골라 주세요. 다시 누르면 빠져요.</p>'}</div>`;
-      el.querySelectorAll('.kind-q').forEach(b => b.addEventListener('click', () => {
-        r.kind = cur && cur.code === b.dataset.g ? '' : b.dataset.g;   // 같은 질문을 다시 누르면 빼기
+      el.innerHTML = `<p class="pick-label">유형 <span>어떻게 찍었는지 가장 가까운 하나</span></p>
+        <div class="pick-chips">${KIND_GROUPS.map(g => `<button type="button" class="pick kind-big${cur===g?' on':''}" aria-pressed="${cur===g}" data-g="${g.code}">${esc(g.name)}</button>`).join('')}</div>
+        <div class="area-desc">${cur ? `<p><b>${esc(cur.name)}</b>${esc(cur.ex)}${k.big ? '' : ` · <b class="kind-sub">${esc(k.name)}</b>`}</p>` : '<p class="faint">하나를 골라 주세요. 다시 누르면 빠져요.</p>'}</div>
+        ${cur ? `<details class="kind-more"${subOpen?' open':''} data-d="sub"><summary>세부까지 고르기 (선택)</summary>
+          <div class="pick-chips">${cur.items.map(([c, n]) => `<button type="button" class="pick${r.kind===c?' on':''}" aria-pressed="${r.kind===c}" data-v="${c}">${esc(n)}</button>`).join('')}</div></details>` : ''}
+        <details class="kind-more"${helpOpen?' open':''} data-d="help"><summary>헷갈리면 질문으로 찾기</summary>
+          <p class="faint kind-help-tip">위에서부터 읽고 처음 「예」인 것을 누르세요.</p>
+          <ol class="kind-help">${KIND_GROUPS.map(g => `<li><button type="button" class="kind-q${cur===g?' on':''}" data-g="${g.code}">${esc(g.q)} <b>→ ${esc(g.name)}</b></button></li>`).join('')}</ol></details>`;
+      el.querySelectorAll('details').forEach(d => d.addEventListener('toggle', () => { if(d.dataset.d === 'help') helpOpen = d.open; else subOpen = d.open; }));
+      el.querySelectorAll('[data-g]').forEach(b => b.addEventListener('click', () => {
+        r.kind = cur && cur.code === b.dataset.g && b.classList.contains('kind-big') ? '' : b.dataset.g;   // 같은 칩을 다시 누르면 빼기
+        if(b.classList.contains('kind-q')) helpOpen = false;
         draw(); ch();
       }));
-      el.querySelectorAll('.pick').forEach(b => b.addEventListener('click', () => {
+      el.querySelectorAll('[data-v]').forEach(b => b.addEventListener('click', () => {
         r.kind = r.kind === b.dataset.v ? cur.code : b.dataset.v;   // 세부를 다시 누르면 큰 유형만 남김
         draw(); ch();
       }));

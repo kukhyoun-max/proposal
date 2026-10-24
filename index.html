@@ -112,6 +112,8 @@
   .area-desc p{font-size:12px; color:var(--ink-soft); margin:0 0 3px; line-height:1.5;}
   .area-desc p b{color:var(--purple-dark); font-weight:700; margin-right:4px;}
   .area-desc p.faint{color:var(--ink-faint);}
+  .kind-group{margin:0 0 10px;}
+  .kind-group-name{font-size:11.5px; font-weight:700; color:var(--ink-soft); margin:0 2px 6px;}
   .meta-warn{font-size:12px; font-weight:700; color:#C2410C; margin:8px 2px 0; line-height:1.5;}
   .meta-note{margin-top:8px;}
   .meta-note input{width:100%; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; font-size:14px; font-family:'Noto Sans KR',sans-serif; color:var(--ink); background:transparent; outline:none;}
@@ -772,6 +774,7 @@
       <p class="pick-label">콘텐츠 태깅 <span>성과 분석에 쓰는 분류예요. 가장 가까운 하나</span></p>
       <div class="pick-chips" id="tagChips"></div>
       <div id="metaArea"></div>
+      <div id="metaKind"></div>
       <p class="pick-label">기획 방식 <span>어떻게 찍는지 가장 가까운 하나</span></p>
       <div class="pick-chips" id="typeCards"></div>
       <p class="pick-desc" id="typeDesc"></p>
@@ -1560,14 +1563,14 @@ function mapRowToRecord(row){
     title: row['제목'] || '', summary: row['한줄요약'] || '', url: row['참고URL'] || '',
     request: row['요청사항'] || '', filmdate: normalizeDateStr(row['촬영일']), submitdate: normalizeDateStr(row['제출일(영상)']),
     equipment: row['장비'] || '', plan: parsePlanText(row['기획내용'] || ''), rejectReason: row['반려사유'] || '',
-    ...metaFromRow(row)   // 경험영역·코너·타대학확인·제목검색어·썸네일2안 (2026-10-23, 비어 있으면 빈 값)
+    ...metaFromRow(row)   // 경험영역·유형·코너·타대학확인·제목검색어·썸네일2안 (2026-10-23·24, 비어 있으면 빈 값)
   };
 }
 
 let step = 1;
 let data = {
   name:'', category:'', format:'', tag:'',
-  areas:[], corner:'', uniq:'', uniqNote:'', keywords:[], kwFree:'', thumb2:false,
+  areas:[], kind:'', corner:'', uniq:'', uniqNote:'', keywords:[], kwFree:'', thumb2:false,
   lead:'', member:'', filming:'', extra:'', editing:'', participants:'',
   title:'', summary:'', url:'', request:'',
   filmdate:'', submitdate:'', equipment:'',
@@ -1886,10 +1889,11 @@ function planTagSave(planId, format, tag){
 const tagLine = rec => [rec.format, rec.tag].filter(Boolean).join(' · ');
 
 /* ── 경험 영역·인스타 코너·타대학 확인·제목 검색어·썸네일 2안 (2026-10-23, 데이터 분석 결과 담당자 승인) ──
-   기획서 시트 맨 뒤 「경험영역」·「코너」·「타대학확인」·「제목검색어」·「썸네일2안」 열 (자동매칭 서버 planMeta로 저장)
+   기획서 시트 맨 뒤 「경험영역」·「코너」·「타대학확인」·「제목검색어」·「썸네일2안」·「유형」 열 (자동매칭 서버 planMeta로 저장)
    · 경험 영역: 캡션 낱말 자동 분류가 40%를 놓쳐서 기획할 때 사람이 고른다. 사전은 _도구/scripts/성과분석/경험영역.tsv와 같게
    · 타대학 확인: 00_현재 전략.md 6절 기획 체크리스트 「다른 대학도 하는가」
-   · 제목 검색어: 캡션 지침 6절 2번(검색어 든 롱폼 1.71배 대 0.94배), 목록은 6절 16번 */
+   · 제목 검색어: 캡션 지침 6절 2번(검색어 든 롱폼 1.71배 대 0.94배), 목록은 6절 16번
+   · 유형(2026-10-24 담당자 결정): 분류 세 칸 = 주제(경험 영역) · 유형(어떻게 찍고 엮었나) · 형식(콘텐츠 유형). 시트 「유형」 열에 「T14 상황극·패러디」 꼴 */
 const AREAS = [
   {code:'E01', name:'수업·강의·실습', desc:'강의실·실습실 장면, 과제·실기·발표, 교수와의 수업'},
   {code:'E02', name:'학과·전공 소개', desc:'학과 소개·전공 체험·과잠·학과 행사'},
@@ -1911,6 +1915,26 @@ const AREAS = [
   {code:'E18', name:'캠퍼스 공간·계절', desc:'캠퍼스 풍경, 계절, 공간 소개, 학교 상징'}
 ];
 const AREA_BY = Object.fromEntries(AREAS.map(a => [a.code, a]));
+// 유형표: 큰 유형 7개 아래 세부 유형. 코드·이름은 서버 Attendance.gs PT_TYPES와 같게
+const KIND_GROUPS = [
+  {name:'따라가기', items:[['T01','브이로그'],['T02','하루 따라가기'],['T03','직접 체험'],['T04','먹방·맛 리뷰'],['T05','룸투어·왓츠인마이백']]},
+  {name:'사람', items:[['T06','1인 인터뷰'],['T07','즉석 질문'],['T08','토크·대담']]},
+  {name:'소개·정보', items:[['T09','학과 소개'],['T10','수업 소개'],['T11','공간 투어'],['T12','정보·꿀팁'],['T13','순위·추천']]},
+  {name:'예능', items:[['T14','상황극·패러디'],['T15','POV·1인칭'],['T16','유형·공감 밈'],['T17','게임·퀴즈'],['T18','챌린지·댄스']]},
+  {name:'현장', items:[['T19','행사 스케치'],['T20','무대·하이라이트'],['T21','다큐']]},
+  {name:'비주얼', items:[['T22','풍경·계절'],['T23','룩북·화보'],['T24','뮤직비디오'],['T25','브랜드 필름']]},
+  {name:'알림 카드', items:[['T26','안내'],['T27','소식'],['T28','이벤트'],['T29','인사 카드']]}
+];
+const KIND_BY = Object.fromEntries(KIND_GROUPS.flatMap(g => g.items.map(([code, name]) => [code, {code, name, group:g.name}])));
+const kindText = c => KIND_BY[c] ? c + ' ' + KIND_BY[c].name : '';
+// 시트 값 읽기: 앞 코드로 찾고, 코드 없이 이름만 있으면 이름으로 찾아요
+function parseKind(s){
+  s = String(s||'').trim();
+  const m = s.match(/^T\d{2}/);
+  if(m && KIND_BY[m[0]]) return m[0];
+  const hit = Object.values(KIND_BY).find(k => k.name === s);
+  return hit ? hit.code : '';
+}
 const AREA_MAX = 2;
 // 인스타 코너: 아직 확정 전(결정 대기 D5). 이 목록만 고치면 작성·수정 화면이 함께 바뀌어요. 서버는 목록을 따로 두지 않아요
 const CORNERS = ['가이드','피플','클래스','스팟','뉴스','해당 없음'];
@@ -1941,30 +1965,32 @@ function parseKeywords(s){
   return { keywords: t.filter(x => SEARCH_WORDS.includes(x)).slice(0, KW_MAX), kwFree: t.filter(x => !SEARCH_WORDS.includes(x)).join(', ') };
 }
 function metaFromRow(row){
-  return { areas: parseAreas(row['경험영역']), corner: String(row['코너'] || '').trim(),
+  return { areas: parseAreas(row['경험영역']), kind: parseKind(row['유형']), corner: String(row['코너'] || '').trim(),
     ...parseUniq(row['타대학확인']), ...parseKeywords(row['제목검색어']), thumb2: String(row['썸네일2안'] || '').trim() === '예' };
 }
 function normMeta(r){   // 예전 임시 저장본·예전 기획서도 깨지지 않게 빈 값 채우기
   if(!Array.isArray(r.areas)) r.areas = parseAreas(r.areas);
   if(!Array.isArray(r.keywords)) r.keywords = [];
   ['corner','uniq','uniqNote','kwFree'].forEach(k => { if(typeof r[k] !== 'string') r[k] = ''; });
+  r.kind = KIND_BY[r.kind] ? r.kind : parseKind(r.kind);
   r.thumb2 = !!r.thumb2;
   return r;
 }
 // 서버로 보내는 값(시트에 쓰는 글자 그대로). 올릴 곳에 없는 항목은 비워요
 function metaPayload(r){
   const L = isLongform(r.format), I = hasInsta(r.format);
-  return { areas: (r.areas||[]).slice(0, AREA_MAX), corner: I ? (r.corner||'') : '', uniq: uniqText(r),
+  return { areas: (r.areas||[]).slice(0, AREA_MAX), type: kindText(r.kind), corner: I ? (r.corner||'') : '', uniq: uniqText(r),
     keyword: L ? kwText(r) : '', thumb2: (L && r.thumb2) ? '예' : '' };   // 썸네일 2안: 체크하면 「예」, 아니면 빈 칸
 }
 function planMetaSave(planId, r){
   try{ fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
     body: JSON.stringify({ action:'planMeta', planId, ...metaPayload(r) }) }); }catch(e){}
 }
-// 비어 있는 필수 항목: [안내 문구, 칸 이름(area·uniq·long)] 또는 null
+// 비어 있는 필수 항목: [안내 문구, 칸 이름(area·kind·uniq·long)] 또는 null
 function metaMissing(r, parts){
   const want = p => !parts || parts.includes(p);
   if(want('area') && !(r.areas||[]).length) return ['경험 영역을 하나 이상 골라 주세요', 'area'];
+  if(want('kind') && !KIND_BY[r.kind]) return ['유형을 하나 골라 주세요', 'kind'];
   if(want('uniq')){
     if(!r.uniq) return ['다른 대학도 하는 콘텐츠인지 골라 주세요', 'uniq'];
     if(r.uniq === 'others' && !String(r.uniqNote||'').trim()) return ['우리만 다른 점을 한 줄로 써 주세요', 'uniq'];
@@ -1978,6 +2004,7 @@ function metaMissing(r, parts){
 function metaMissingNames(r){
   const out = [];
   if(!(r.areas||[]).length) out.push('경험 영역');
+  if(!KIND_BY[r.kind]) out.push('유형');
   if(!r.uniq || (r.uniq === 'others' && !String(r.uniqNote||'').trim())) out.push('다른 대학도 하는가');
   if(isLongform(r.format) && !kwText(r)) out.push('제목 검색어');
   return out;
@@ -2001,6 +2028,20 @@ const META_PARTS = {
       }));
     };
     draw('');
+  },
+  kind(el, r, ch){   // 유형: 하나만, 한 번 더 누르면 빼기
+    const draw = () => {
+      const k = KIND_BY[r.kind];
+      el.innerHTML = `<p class="pick-label">유형 <span>어떻게 찍고 엮었는지 가장 가까운 하나</span></p>
+        ${KIND_GROUPS.map(g => `<div class="kind-group"><p class="kind-group-name">${esc(g.name)}</p>
+          <div class="pick-chips">${g.items.map(([c, n]) => `<button type="button" class="pick${r.kind===c?' on':''}" aria-pressed="${r.kind===c}" data-v="${c}">${esc(n)}</button>`).join('')}</div></div>`).join('')}
+        <div class="area-desc">${k ? `<p><b>${esc(k.group)}</b>${esc(k.name)}</p>` : '<p class="faint">하나를 골라 주세요. 다시 누르면 빠져요.</p>'}</div>`;
+      el.querySelectorAll('.pick').forEach(b => b.addEventListener('click', () => {
+        r.kind = r.kind === b.dataset.v ? '' : b.dataset.v;
+        draw(); ch();
+      }));
+    };
+    draw();
   },
   corner(el, r, ch){
     el.hidden = !hasInsta(r.format);
@@ -2065,7 +2106,7 @@ function mountMeta(root, r, parts, ch){
   root.innerHTML = parts.map(p => `<div class="meta-part" data-part="${p}"></div>`).join('');
   parts.forEach(p => META_PARTS[p](root.querySelector(`[data-part="${p}"]`), r, ch));
 }
-const META_IDS = { area:'metaArea', corner:'metaCorner', uniq:'metaUniq', long:'metaLong' };
+const META_IDS = { area:'metaArea', kind:'metaKind', corner:'metaCorner', uniq:'metaUniq', long:'metaLong' };
 function renderFormMeta(){
   const ch = () => { updateCta(); scheduleAutosave(); };
   Object.entries(META_IDS).forEach(([p, id]) => mountMeta(document.getElementById(id), data, [p], ch));
@@ -2074,6 +2115,7 @@ function renderFormMeta(){
 function metaSummaryHTML(r){
   const rows = [];
   if((r.areas||[]).length) rows.push(['경험 영역', areaText(r.areas)]);
+  if(KIND_BY[r.kind]) rows.push(['유형', kindText(r.kind)]);
   if(hasInsta(r.format) && r.corner) rows.push(['인스타 코너', r.corner]);
   if(r.uniq) rows.push(['다른 대학', r.uniq === 'first' ? UNIQ_FIRST : UNIQ_OTHERS + ' · 우리만: ' + (r.uniqNote||'-')]);
   if(isLongform(r.format) && kwText(r)) rows.push(['제목 검색어', kwText(r)]);
@@ -2083,7 +2125,7 @@ function metaSummaryHTML(r){
     `<div style="display:flex; gap:8px;"><span style="color:var(--ink-soft); min-width:72px; flex:none;">${k}</span><b style="font-weight:600;">${esc(v)}</b></div>`).join('')}</div>`;
 }
 function metaPlanLines(r){
-  return [`경험 영역: ${areaText(r.areas)}`, ...(hasInsta(r.format) ? [`인스타 코너: ${r.corner||''}`] : []), `다른 대학: ${uniqText(r)}`,
+  return [`경험 영역: ${areaText(r.areas)}`, `유형: ${kindText(r.kind)}`, ...(hasInsta(r.format) ? [`인스타 코너: ${r.corner||''}`] : []), `다른 대학: ${uniqText(r)}`,
     ...(isLongform(r.format) ? [`제목 검색어: ${kwText(r)}`, `썸네일 2안: ${r.thumb2 ? '예' : '아니오'}`] : [])];
 }
 
@@ -2207,7 +2249,7 @@ function updateProgress(){
 
 function stepValid(n){
   if(n===1) return data.name.trim().length>0;
-  if(n===2) return !!data.category && !!data.format && !!data.tag && !metaMissing(data, ['area']);
+  if(n===2) return !!data.category && !!data.format && !!data.tag && !metaMissing(data, ['area','kind']);
   if(n===3){
     const tp = titleParts(data.title);
     return !metaMissing(data, ['uniq','long']) && tp.series.length>0 && (data.oneoff || tp.episode.length>0) && data.summary.trim().length>0 && data.url.trim().length>0 && data.request.trim().length>0;
@@ -2427,7 +2469,7 @@ function stepMissing(n){
   if(n===2){
     if(!data.format) return ['콘텐츠 유형을 골라 주세요', 'fmtChips'];
     if(!data.tag) return ['콘텐츠 태깅을 골라 주세요', 'tagChips'];
-    const ma = metaMissing(data, ['area']); if(ma) return [ma[0], META_IDS[ma[1]]];
+    const ma = metaMissing(data, ['area','kind']); if(ma) return [ma[0], META_IDS[ma[1]]];
     if(!data.category) return ['기획 방식을 골라 주세요', 'typeCards'];
   }
   if(n===3){
@@ -3074,7 +3116,7 @@ let eTimeOrig = { from:'', to:'' };
 let eTagOrig = { format:'', tag:'' };
 let eMetaOrig = '';
 function mountEditMeta(){
-  mountMeta(document.getElementById('e_meta'), editingRecord, ['area','corner','uniq','long'], ()=>{ editDirty = true; });
+  mountMeta(document.getElementById('e_meta'), editingRecord, ['area','kind','corner','uniq','long'], ()=>{ editDirty = true; });
 }
 async function eFillTimes(key){
   eTimeOrig = { from:'', to:'' };
@@ -3472,7 +3514,7 @@ document.getElementById('btnReset').addEventListener('click', async ()=>{
   if(!ok) return;
   data = {
     name:'', category:'', format:'', tag:'',
-    areas:[], corner:'', uniq:'', uniqNote:'', keywords:[], kwFree:'', thumb2:false,
+    areas:[], kind:'', corner:'', uniq:'', uniqNote:'', keywords:[], kwFree:'', thumb2:false,
     lead:'', member:'', filming:'', extra:'', editing:'', participants:'',
     title:'', summary:'', url:'', request:'',
     filmdate:'', submitdate:'', equipment:'',

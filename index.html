@@ -777,7 +777,7 @@
 
     <div class="step-panel" id="panel2">
       <h2 class="heading">어떤 콘텐츠를<br>기획하시나요?</h2>
-      <p class="hint-caption">하나씩 골라 주세요. 경험 영역만 두 개까지 돼요.</p>
+      <p class="hint-caption">하나씩 골라 주세요. 주제만 두 개까지 돼요.</p>
       <p class="pick-label">형식 <span>기본은 롱폼+쇼츠예요</span></p>
       <div class="pick-chips" id="fmtChips"></div>
       <div id="metaArea"></div>
@@ -2001,7 +2001,7 @@ function planMetaSave(planId, r){
 // 비어 있는 필수 항목: [안내 문구, 칸 이름(area·kind·uniq·long)] 또는 null
 function metaMissing(r, parts){
   const want = p => !parts || parts.includes(p);
-  if(want('area') && !(r.areas||[]).length) return ['경험 영역을 하나 이상 골라 주세요', 'area'];
+  if(want('area') && !(r.areas||[]).length) return ['주제를 하나 이상 골라 주세요', 'area'];
   if(want('kind') && !KIND_BY[r.kind]) return ['유형을 하나 골라 주세요', 'kind'];
   if(want('uniq')){
     if(!r.uniq) return ['다른 대학도 하는 콘텐츠인지 골라 주세요', 'uniq'];
@@ -2015,7 +2015,7 @@ function metaMissing(r, parts){
 }
 function metaMissingNames(r){
   const out = [];
-  if(!(r.areas||[]).length) out.push('경험 영역');
+  if(!(r.areas||[]).length) out.push('주제');
   if(!KIND_BY[r.kind]) out.push('유형');
   if(!r.uniq || (r.uniq === 'others' && !String(r.uniqNote||'').trim())) out.push('다른 대학도 하는가');
   if(isLongform(r.format) && !kwText(r)) out.push('제목 검색어');
@@ -2027,7 +2027,7 @@ const META_PARTS = {
   area(el, r, ch){
     const draw = msg => {
       const sel = r.areas || [];
-      el.innerHTML = `<p class="pick-label">경험 영역 <span>이 콘텐츠가 보여 주는 학교 경험, 두 개까지</span></p>
+      el.innerHTML = `<p class="pick-label">주제 <span>어떤 학교생활을 보여 주나요? 두 개까지</span></p>
         <div class="pick-chips">${AREAS.map(a => `<button type="button" class="pick${sel.includes(a.code)?' on':''}" aria-pressed="${sel.includes(a.code)}" data-v="${a.code}">${esc(a.name)}</button>`).join('')}</div>
         <div class="area-desc">${sel.length ? sel.map(c => `<p><b>${esc(AREA_BY[c].name)}</b>${esc(AREA_BY[c].desc)}</p>`).join('') : '<p class="faint">고르면 어떤 장면이 들어가는 영역인지 여기 나와요.</p>'}</div>
         ${msg ? `<p class="meta-warn" role="status">${esc(msg)}</p>` : ''}`;
@@ -2137,7 +2137,7 @@ function renderFormMeta(){
 // 기획서 카드·미리 보기에 보이는 줄
 function metaSummaryHTML(r){
   const rows = [];
-  if((r.areas||[]).length) rows.push(['경험 영역', areaText(r.areas)]);
+  if((r.areas||[]).length) rows.push(['주제', areaText(r.areas)]);
   if(KIND_BY[r.kind]) rows.push(['유형', kindText(r.kind)]);
   if(r.uniq) rows.push(['다른 대학', r.uniq === 'first' ? UNIQ_FIRST : UNIQ_OTHERS + ' · 우리만: ' + (r.uniqNote||'-')]);
   if(isLongform(r.format) && kwText(r)) rows.push(['제목 검색어', kwText(r)]);
@@ -2147,7 +2147,7 @@ function metaSummaryHTML(r){
     `<div style="display:flex; gap:8px;"><span style="color:var(--ink-soft); min-width:72px; flex:none;">${k}</span><b style="font-weight:600;">${esc(v)}</b></div>`).join('')}</div>`;
 }
 function metaPlanLines(r){
-  return [`경험 영역: ${areaText(r.areas)}`, `유형: ${kindText(r.kind)}`, `다른 대학: ${uniqText(r)}`,
+  return [`주제: ${areaText(r.areas)}`, `유형: ${kindText(r.kind)}`, `다른 대학: ${uniqText(r)}`,
     ...(isLongform(r.format) ? [`제목 검색어: ${kwText(r)}`, `썸네일 2안: ${r.thumb2 ? '예' : '아니오'}`] : [])];
 }
 
@@ -2941,7 +2941,7 @@ function renderStatusDetail(key, rec){
       <div class="field-sm"><label>촬영 시작</label><select id="e_filmfrom"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
       <div class="field-sm"><label>촬영 종료</label><select id="e_filmto"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
     </div>
-    <p class="section-title">경험 영역 · 기획 확인</p>
+    <p class="section-title">주제·유형 · 기획 확인</p>
     <div id="e_meta"></div>
     <button class="save-edit-btn" id="saveEditBtn" style="margin-top:14px;">수정 저장</button>
     <button id="toggleMoreEdit" style="width:100%; margin:12px 0 0; padding:12px; border-radius:12px; border:1px dashed var(--line); background:none; color:var(--ink-soft); font-size:13.5px; cursor:pointer;">다른 항목도 수정하기 ▾</button>

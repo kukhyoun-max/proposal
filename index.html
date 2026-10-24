@@ -783,25 +783,7 @@
 
     <div class="step-panel" id="panel2">
       <h2 class="heading">어떤 콘텐츠를<br>기획하시나요?</h2>
-      <p class="hint-caption">하나씩 골라 주세요. 주제만 두 개까지 돼요.</p>
-      <p class="pick-label">형식 <span>기본은 롱폼+쇼츠예요</span></p>
-      <div class="pick-chips" id="fmtChips"></div>
-      <div id="metaArea"></div>
-      <div id="metaKind"></div>
-    </div>
-
-    <div class="step-panel" id="panel3">
-      <h2 class="heading">기본 정보를<br>입력해주세요</h2>
-      <div class="field-sm one-line">
-        <label style="font-size:13px; font-weight:700; color:var(--ink);">이 콘텐츠를 한 문장으로 말하면?</label>
-        <input type="text" id="f_summary" maxlength="30" placeholder="예: 인공지능학과에 가면 해외 탐방을 갈 수 있다" autocomplete="off">
-        <div style="display:flex; justify-content:space-between; gap:8px; margin-top:4px;">
-          <p class="req-hint" id="f_summaryHint" style="margin:0;">콘텐츠 하나엔 메시지 하나. 두 가지 이상이면 기획을 나눠주세요.</p>
-          <span class="req-hint" id="f_summaryCount" style="margin:0; white-space:nowrap;">0 / 30</span>
-        </div>
-        <p class="req-hint" style="margin-top:6px;">✅ 인공지능학과에 가면 해외 탐방을 갈 수 있다<br>❌ 인공지능학과 소개 + 커리큘럼 + 해외 탐방 + 취업</p>
-      </div>
-      <div id="metaUniq"></div>
+      <p class="hint-caption">콘텐츠 이름을 고르고, 한 문장으로 적어 주세요.</p>
       <div class="field-sm series-field"><label id="f_seriesLabel">시리즈명</label><input type="text" id="f_series" placeholder="예: 체험왕" autocomplete="off"><datalist id="seriesList"></datalist><div class="series-pop" id="seriesPop" role="listbox"></div></div>
       <details class="title-guide">
         <summary>시리즈·제목은 이렇게 써요</summary>
@@ -816,6 +798,25 @@
       <div class="field-sm" id="f_episodeWrap" style="display:none !important;"><label>회차</label><input type="text" id="f_episode" placeholder="예: 양궁부편"></div>
       <input type="hidden" id="f_title">
       <p class="req-hint" id="f_titlePreview" style="margin:-4px 0 12px;"></p>
+      <div class="field-sm one-line">
+        <label style="font-size:13px; font-weight:700; color:var(--ink);">이 콘텐츠를 한 문장으로 말하면?</label>
+        <input type="text" id="f_summary" maxlength="30" placeholder="예: 인공지능학과에 가면 해외 탐방을 갈 수 있다" autocomplete="off">
+        <div style="display:flex; justify-content:space-between; gap:8px; margin-top:4px;">
+          <p class="req-hint" id="f_summaryHint" style="margin:0;">콘텐츠 하나엔 메시지 하나. 두 가지 이상이면 기획을 나눠주세요.</p>
+          <span class="req-hint" id="f_summaryCount" style="margin:0; white-space:nowrap;">0 / 30</span>
+        </div>
+        <p class="req-hint" style="margin-top:6px;">✅ 인공지능학과에 가면 해외 탐방을 갈 수 있다<br>❌ 인공지능학과 소개 + 커리큘럼 + 해외 탐방 + 취업</p>
+      </div>
+    </div>
+
+    <div class="step-panel" id="panel3">
+      <h2 class="heading">어떻게<br>찍을까요?</h2>
+      <p class="hint-caption">기존 시리즈는 유형이 정해져 있어요. 주제만 골라 주세요.</p>
+      <div id="metaKind"></div>
+      <div id="metaArea"></div>
+      <p class="pick-label">형식 <span>기본은 롱폼+쇼츠예요</span></p>
+      <div class="pick-chips" id="fmtChips"></div>
+      <div id="metaUniq"></div>
       <div class="field-sm"><label>참고 URL</label><input type="url" id="f_url" placeholder="https://..."></div>
       <div class="field-sm">
         <label>요청사항</label>
@@ -2043,6 +2044,15 @@ const META_PARTS = {
     draw('');
   },
   kind(el, r, ch){   // 유형: 이름 칩 7개 중 하나(2026-10-24 담당자 「너무 디테일」 → 질문은 헷갈릴 때만 펼침). 세부는 고르고 싶을 때만
+    const fx = r === data ? seriesKind(titleParts(r.title||'').series) : '';
+    if(fx){
+      if(kindGroupOf(r.kind) !== kindGroupOf(fx)){ r.kind = fx; ch(); }
+      const g = kindGroupOf(r.kind), k = KIND_BY[r.kind];
+      el.innerHTML = `<p class="pick-label">유형 <span>이 시리즈는 정해져 있어요</span></p>
+        <div class="pick-chips"><button type="button" class="pick kind-big on" aria-pressed="true" disabled>${esc(g.name)}</button></div>
+        <div class="area-desc"><p><b>${esc(g.name)}</b>${esc(g.ex)}${k.big ? '' : ` · <b class="kind-sub">${esc(k.name)}</b>`}</p></div>`;
+      return;
+    }
     let helpOpen = false, subOpen = false;
     const draw = () => {
       const k = KIND_BY[r.kind], cur = kindGroupOf(r.kind);
@@ -2259,17 +2269,18 @@ function updateProgress(){
     bottomBar.style.display = step===1 ? 'none' : 'block';
   }
   if(step===1){ refreshOverview(); }
+  if(step===3){ renderFormMeta(); }
   if(step===6){ renderEquipmentPicker(); }
   updateCta();
 }
 
 function stepValid(n){
   if(n===1) return data.name.trim().length>0;
-  if(n===2) return !!data.format && !metaMissing(data, ['area','kind']);
-  if(n===3){
+  if(n===2){
     const tp = titleParts(data.title);
-    return !metaMissing(data, ['uniq']) && tp.series.length>0 && (data.oneoff || tp.episode.length>0) && data.summary.trim().length>0 && data.url.trim().length>0 && data.request.trim().length>0;
+    return tp.series.length>0 && (data.oneoff || tp.episode.length>0) && data.summary.trim().length>0;
   }
+  if(n===3) return !!data.format && !metaMissing(data, ['kind','area','uniq']) && data.url.trim().length>0 && data.request.trim().length>0;
   if(n===4) return data.lead.trim().length>0 && data.filming.trim().length>0 && data.editing.trim().length>0 && data.extra.trim().length>0;
   if(n===5) return data.filmdate.trim().length>0 && data.submitdate.trim().length>0 && !!data.filmfrom && !!data.filmto && data.filmfrom < data.filmto;
   if(n===6) return data.equipment.trim().length>0;
@@ -2435,6 +2446,9 @@ function syncOneLineUi(){
 }
 // 콘텐츠(시리즈) 칸: 누르면 목록이 뜸(2026-10-24 담당자 지정 5개). 목록에 없으면 그대로 새 이름을 씀
 const SERIES_PICK = ['체험왕', '패션왕', 'OO하면 끝나는 인터뷰', '오늘의 전주대 질문', '아바타 소개팅'];
+// 시리즈마다 정해진 유형(2026-10-24, 지난 기획서 내용 기준). 여기 있는 시리즈를 고르면 유형 칸이 고정돼요
+const SERIES_KIND = { '체험왕':'T03', '패션왕':'T07', 'OO하면 끝나는 인터뷰':'T07', '오늘의 전주대 질문':'T07', '아바타 소개팅':'G2' };
+function seriesKind(s){ s = String(s||'').trim(); return KIND_BY[SERIES_KIND[s]] ? SERIES_KIND[s] : ''; }
 (function(){
   const inp = document.getElementById('f_series'), pop = document.getElementById('seriesPop');
   const draw = () => {
@@ -2503,15 +2517,15 @@ function stepMissing(n){
   const v = s => String(s||'').trim().length > 0;
   if(n===1 && !v(data.name)) return ['팀장 이름을 골라 주세요', 'jjhNames'];
   if(n===2){
-    if(!data.format) return ['형식을 골라 주세요', 'fmtChips'];
-    const ma = metaMissing(data, ['area','kind']); if(ma) return [ma[0], META_IDS[ma[1]]];
+    const tp = titleParts(data.title);
+    if(!tp.series.length) return ['콘텐츠 이름을 골라 주세요', 'f_series'];
+    if(!data.oneoff && !tp.episode.length) return ['회차를 써 주세요', 'f_episode'];
+    if(!v(data.summary)) return ['콘텐츠를 한 문장으로 써 주세요', 'f_summary'];
   }
   if(n===3){
-    const tp = titleParts(data.title);
-    if(!v(data.summary)) return ['콘텐츠를 한 문장으로 써 주세요', 'f_summary'];
+    const ma = metaMissing(data, ['kind','area']); if(ma) return [ma[0], META_IDS[ma[1]]];
+    if(!data.format) return ['형식을 골라 주세요', 'fmtChips'];
     const mu = metaMissing(data, ['uniq']); if(mu) return [mu[0], META_IDS[mu[1]]];
-    if(!tp.series.length) return ['시리즈명을 골라 주세요', 'f_series'];
-    if(!data.oneoff && !tp.episode.length) return ['회차를 써 주세요', 'f_episode'];
     if(!v(data.url)) return ['참고 URL을 넣어 주세요. 없으면 「없음」이라고 써요', 'f_url'];
     if(!v(data.request)) return ['요청사항을 써 주세요. 없으면 「없음」이라고 써요', 'f_request'];
   }

@@ -1895,13 +1895,13 @@ const tagLine = rec => [rec.format, rec.tag].filter(Boolean).join(' · ');
 const AREAS = [
   {code:'E01', name:'수업·강의·실습', desc:'강의실·실습실 장면, 과제·실기·발표, 교수와의 수업'},
   {code:'E02', name:'학과·전공 소개', desc:'학과 소개·전공 체험·과잠·학과 행사'},
-  {code:'E03', name:'동아리·학생자치', desc:'동아리 공연·활동, 학생회·총학, 선거'},
+  {code:'E03', name:'동아리·학생 활동', desc:'동아리 공연·활동, 학생회·총학, 선거, 홍보대사·서포터즈'},
   {code:'E04', name:'기숙사·생활관', desc:'입사·퇴사, 생활관 생활, 스타타워·스타홈·스타빌'},
   {code:'E05', name:'학식·밥·카페', desc:'학생식당, 천원의 아침밥, 캠퍼스 카페·맛집'},
   {code:'E06', name:'시험기간', desc:'중간·기말 시험, 시험공부, 열람실'},
   {code:'E07', name:'수강신청·전과·학사', desc:'수강신청, 학사 일정, 휴·복학, 전과·복수전공, 졸업'},
   {code:'E08', name:'장학·등록', desc:'장학금, 등록금, 국가근로·근로장학'},
-  {code:'E09', name:'축제·공연', desc:'대동제, 공연, 축제 부스, JUMF 등 캠퍼스 행사'},
+  {code:'E09', name:'축제·공연', desc:'대동제, 공연, 축제 부스, JUMF, 버스킹'},
   {code:'E10', name:'운동부·스포츠', desc:'운동부 경기·성과, 체육대회, 생활 체육'},
   {code:'E11', name:'해외·교환학생·유학생', desc:'교환학생, 해외 탐방·연수, 외국인 유학생'},
   {code:'E12', name:'취업·진로·현장실습', desc:'취업 특강·박람회, 현장실습, 자격증, 진로'},
@@ -1909,8 +1909,10 @@ const AREAS = [
   {code:'E14', name:'봉사·국토대장정', desc:'봉사단, 사회봉사, 국토대장정'},
   {code:'E15', name:'전주·지역', desc:'전주 시내·명소, 지역 행사, 통학'},
   {code:'E16', name:'연애·친구·관계', desc:'소개팅, 친구·동기, 관계 밈'},
-  {code:'E17', name:'선배·재학생 조언', desc:'선배 인터뷰, 신입생에게 하는 조언, 합격 후기'},
-  {code:'E18', name:'캠퍼스 공간·계절', desc:'캠퍼스 풍경, 계절, 공간 소개, 학교 상징'}
+  {code:'E17', name:'선배·동문 이야기', desc:'선배·동문 인터뷰, 신입생에게 하는 조언, 합격 후기'},
+  {code:'E18', name:'캠퍼스 공간·계절', desc:'캠퍼스 풍경, 계절, 공간 소개, 학교 상징'},
+  {code:'E19', name:'입시·입학', desc:'수시·정시·편입, 입시 설명회, 예비 신입생에게'},   // 2026-10-24 추가
+  {code:'E20', name:'학교 행사', desc:'입학식·학위수여식·OT·신입생 환영·특강·기념식'}     // 2026-10-24 추가(E09 축제와 나눔)
 ];
 const AREA_BY = Object.fromEntries(AREAS.map(a => [a.code, a]));
 // 유형표: 큰 유형 7개 아래 세부 유형. 코드·이름은 서버 Attendance.gs PT_TYPES와 같게
@@ -2126,9 +2128,9 @@ function metaPlanLines(r){
     ...(isLongform(r.format) ? [`제목 검색어: ${kwText(r)}`, `썸네일 2안: ${r.thumb2 ? '예' : '아니오'}`] : [])];
 }
 
-// 관리자: 이번 분기 승인·진행 기획서의 경험 영역 건수(2건 이상이면 「다룸」). KPI 「분기 커버리지 14개 영역 이상」(00_현재 전략.md 5절)
+// 관리자: 이번 분기 승인·진행 기획서의 경험 영역 건수(2건 이상이면 「다룸」). KPI 「분기 커버리지 16개 영역 이상(20개 중)」(00_현재 전략.md 5절)
 const COV_STATUS = ['approved','filming','editing','completed','uploaded'];
-const COV_GOAL = 14;
+const COV_GOAL = 16;   // 2026-10-24 영역 18 → 20, 목표 14 → 16
 function quarterRange(d){
   d = d || new Date();
   const q = Math.floor(d.getMonth() / 3), y = d.getFullYear();

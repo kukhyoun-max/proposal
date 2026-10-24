@@ -153,6 +153,12 @@
   }
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
   .field-sm{margin-bottom:10px;}
+  .series-field{position:relative;}
+  .series-pop{display:none; position:absolute; left:0; right:0; top:100%; margin-top:6px; z-index:50; background:#fff; border:1.5px solid var(--line); border-radius:14px; box-shadow:0 10px 28px rgba(0,0,0,.12); padding:6px; max-height:300px; overflow:auto;}
+  .series-pop.on{display:block;}
+  .series-pop button{display:block; width:100%; text-align:left; border:0; background:none; border-radius:10px; padding:12px; font:inherit; font-size:15px; font-weight:700; color:var(--ink); cursor:pointer;}
+  .series-pop button:active, .series-pop button.on{background:var(--purple-soft); color:var(--purple-dark);}
+  .series-pop p{margin:4px 12px 6px; font-size:12px; color:var(--ink-faint);}
   .field-sm label{display:block; font-size:12px; color:var(--ink-soft); margin-bottom:4px;}
   .field-sm input, .field-sm textarea, .field-sm select{
     width:100%; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; font-size:14px;
@@ -796,7 +802,7 @@
         <p class="req-hint" style="margin-top:6px;">✅ 인공지능학과에 가면 해외 탐방을 갈 수 있다<br>❌ 인공지능학과 소개 + 커리큘럼 + 해외 탐방 + 취업</p>
       </div>
       <div id="metaUniq"></div>
-      <div class="field-sm"><label id="f_seriesLabel">시리즈명</label><input type="text" id="f_series" list="seriesList" placeholder="예: 체험왕" autocomplete="off"><datalist id="seriesList"></datalist></div>
+      <div class="field-sm series-field"><label id="f_seriesLabel">시리즈명</label><input type="text" id="f_series" placeholder="예: 체험왕" autocomplete="off"><datalist id="seriesList"></datalist><div class="series-pop" id="seriesPop" role="listbox"></div></div>
       <details class="title-guide">
         <summary>시리즈·제목은 이렇게 써요</summary>
         <p>· <b>콘텐츠(시리즈)</b>는 목록에서 골라주세요. 글자가 하나만 달라도 게시물과 자동으로 연결되지 않아요.</p>
@@ -810,7 +816,6 @@
       <div class="field-sm" id="f_episodeWrap" style="display:none !important;"><label>회차</label><input type="text" id="f_episode" placeholder="예: 양궁부편"></div>
       <input type="hidden" id="f_title">
       <p class="req-hint" id="f_titlePreview" style="margin:-4px 0 12px;"></p>
-      <div id="metaLong"></div>
       <div class="field-sm"><label>참고 URL</label><input type="url" id="f_url" placeholder="https://..."></div>
       <div class="field-sm">
         <label>요청사항</label>
@@ -2007,10 +2012,7 @@ function metaMissing(r, parts){
     if(!r.uniq) return ['다른 대학도 하는 콘텐츠인지 골라 주세요', 'uniq'];
     if(r.uniq === 'others' && !String(r.uniqNote||'').trim()) return ['우리만 다른 점을 한 줄로 써 주세요', 'uniq'];
   }
-  if(want('long') && isLongform(r.format)){
-    if(!kwText(r)) return ['제목에 넣을 검색어를 골라 주세요. 없으면 「검색어 없음」을 눌러요', 'long'];
-    if(!r.thumb2) return ['썸네일 2개 비교에 체크해 주세요', 'long'];
-  }
+  // 유튜브 제목 검색어·썸네일 2안은 2026-10-24 기획서에서 뺌(담당자). 예전 값은 시트에 그대로
   return null;
 }
 function metaMissingNames(r){
@@ -2018,7 +2020,6 @@ function metaMissingNames(r){
   if(!(r.areas||[]).length) out.push('주제');
   if(!KIND_BY[r.kind]) out.push('유형');
   if(!r.uniq || (r.uniq === 'others' && !String(r.uniqNote||'').trim())) out.push('다른 대학도 하는가');
-  if(isLongform(r.format) && !kwText(r)) out.push('제목 검색어');
   return out;
 }
 
@@ -2129,7 +2130,7 @@ function mountMeta(root, r, parts, ch){
   root.innerHTML = parts.map(p => `<div class="meta-part" data-part="${p}"></div>`).join('');
   parts.forEach(p => META_PARTS[p](root.querySelector(`[data-part="${p}"]`), r, ch));
 }
-const META_IDS = { area:'metaArea', kind:'metaKind', uniq:'metaUniq', long:'metaLong' };
+const META_IDS = { area:'metaArea', kind:'metaKind', uniq:'metaUniq' };
 function renderFormMeta(){
   const ch = () => { catFromKind(data); updateCta(); scheduleAutosave(); };
   Object.entries(META_IDS).forEach(([p, id]) => mountMeta(document.getElementById(id), data, [p], ch));
@@ -2141,14 +2142,14 @@ function metaSummaryHTML(r){
   if(KIND_BY[r.kind]) rows.push(['유형', kindText(r.kind)]);
   if(r.uniq) rows.push(['다른 대학', r.uniq === 'first' ? UNIQ_FIRST : UNIQ_OTHERS + ' · 우리만: ' + (r.uniqNote||'-')]);
   if(isLongform(r.format) && kwText(r)) rows.push(['제목 검색어', kwText(r)]);
-  if(isLongform(r.format)) rows.push(['썸네일 2안', r.thumb2 ? '준비해요' : '-']);
+  if(isLongform(r.format) && r.thumb2) rows.push(['썸네일 2안', '준비해요']);
   if(!rows.length) return '';
   return `<div style="font-size:12.5px; margin:0 0 16px; display:grid; gap:4px;">${rows.map(([k, v]) =>
     `<div style="display:flex; gap:8px;"><span style="color:var(--ink-soft); min-width:72px; flex:none;">${k}</span><b style="font-weight:600;">${esc(v)}</b></div>`).join('')}</div>`;
 }
 function metaPlanLines(r){
   return [`주제: ${areaText(r.areas)}`, `유형: ${kindText(r.kind)}`, `다른 대학: ${uniqText(r)}`,
-    ...(isLongform(r.format) ? [`제목 검색어: ${kwText(r)}`, `썸네일 2안: ${r.thumb2 ? '예' : '아니오'}`] : [])];
+    ...(isLongform(r.format) && kwText(r) ? [`제목 검색어: ${kwText(r)}`, `썸네일 2안: ${r.thumb2 ? '예' : '아니오'}`] : [])];
 }
 
 // 관리자: 이번 분기 승인·진행 기획서의 경험 영역 건수(2건 이상이면 「다룸」). KPI 「분기 커버리지 16개 영역 이상(20개 중)」(00_현재 전략.md 5절)
@@ -2267,7 +2268,7 @@ function stepValid(n){
   if(n===2) return !!data.format && !metaMissing(data, ['area','kind']);
   if(n===3){
     const tp = titleParts(data.title);
-    return !metaMissing(data, ['uniq','long']) && tp.series.length>0 && (data.oneoff || tp.episode.length>0) && data.summary.trim().length>0 && data.url.trim().length>0 && data.request.trim().length>0;
+    return !metaMissing(data, ['uniq']) && tp.series.length>0 && (data.oneoff || tp.episode.length>0) && data.summary.trim().length>0 && data.url.trim().length>0 && data.request.trim().length>0;
   }
   if(n===4) return data.lead.trim().length>0 && data.filming.trim().length>0 && data.editing.trim().length>0 && data.extra.trim().length>0;
   if(n===5) return data.filmdate.trim().length>0 && data.submitdate.trim().length>0 && !!data.filmfrom && !!data.filmto && data.filmfrom < data.filmto;
@@ -2432,10 +2433,30 @@ function syncOneLineUi(){
   hint.textContent = multi ? '메시지가 두 개 이상인 것 같아요. 하나만 남겨볼까요?' : '콘텐츠 하나엔 메시지 하나. 두 가지 이상이면 기획을 나눠주세요.';
   hint.style.color = multi ? '#c2410c' : '';
 }
+// 콘텐츠(시리즈) 칸: 누르면 목록이 뜸(2026-10-24 담당자 지정 5개). 목록에 없으면 그대로 새 이름을 씀
+const SERIES_PICK = ['체험왕', '패션왕', 'OO하면 끝나는 인터뷰', '오늘의 전주대 질문', '아바타 소개팅'];
+(function(){
+  const inp = document.getElementById('f_series'), pop = document.getElementById('seriesPop');
+  const draw = () => {
+    const v = inp.value.trim();
+    pop.innerHTML = SERIES_PICK.map(s => `<button type="button" role="option" class="${s === v ? 'on' : ''}" data-s="${esc(s)}">${esc(s)}</button>`).join('') + '<p>목록에 없으면 새 이름을 그대로 쓰세요</p>';
+    pop.classList.add('on');
+  };
+  inp.addEventListener('focus', draw);
+  inp.addEventListener('click', draw);
+  inp.addEventListener('blur', () => setTimeout(() => pop.classList.remove('on'), 150));
+  pop.addEventListener('mousedown', e => e.preventDefault());
+  pop.addEventListener('click', e => {
+    const b = e.target.closest('button[data-s]'); if(!b) return;
+    inp.value = b.dataset.s;
+    inp.dispatchEvent(new Event('input', { bubbles:true }));
+    pop.classList.remove('on'); inp.blur();
+  });
+})();
 function syncSeriesWarn(){
   const w = document.getElementById('f_seriesWarn'); if(!w) return;
   const v = document.getElementById('f_series').value.trim();
-  const known = [...document.querySelectorAll('#seriesList option')].map(o=>o.value);
+  const known = SERIES_PICK.concat([...document.querySelectorAll('#seriesList option')].map(o=>o.value));
   w.style.display = (v && !known.includes(v)) ? '' : 'none';
 }
 function bindDetailInputs(){
@@ -2491,7 +2512,6 @@ function stepMissing(n){
     const mu = metaMissing(data, ['uniq']); if(mu) return [mu[0], META_IDS[mu[1]]];
     if(!tp.series.length) return ['시리즈명을 골라 주세요', 'f_series'];
     if(!data.oneoff && !tp.episode.length) return ['회차를 써 주세요', 'f_episode'];
-    const ml = metaMissing(data, ['long']); if(ml) return [ml[0], META_IDS[ml[1]]];
     if(!v(data.url)) return ['참고 URL을 넣어 주세요. 없으면 「없음」이라고 써요', 'f_url'];
     if(!v(data.request)) return ['요청사항을 써 주세요. 없으면 「없음」이라고 써요', 'f_request'];
   }
@@ -3125,7 +3145,7 @@ let eTimeOrig = { from:'', to:'' };
 let eTagOrig = { format:'', tag:'' };
 let eMetaOrig = '';
 function mountEditMeta(){
-  mountMeta(document.getElementById('e_meta'), editingRecord, ['area','kind','uniq','long'], ()=>{ editDirty = true; });
+  mountMeta(document.getElementById('e_meta'), editingRecord, ['area','kind','uniq'], ()=>{ editDirty = true; });
 }
 async function eFillTimes(key){
   eTimeOrig = { from:'', to:'' };

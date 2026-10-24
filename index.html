@@ -768,7 +768,7 @@
     <div class="step-panel" id="panel2">
       <h2 class="heading">어떤 콘텐츠를<br>기획하시나요?</h2>
       <p class="hint-caption">하나씩 골라 주세요. 경험 영역만 두 개까지 돼요.</p>
-      <p class="pick-label">콘텐츠 유형 <span>기본은 롱폼+쇼츠예요</span></p>
+      <p class="pick-label">형식 <span>기본은 롱폼+쇼츠예요</span></p>
       <div class="pick-chips" id="fmtChips"></div>
       <div id="metaCorner"></div>
       <p class="pick-label">콘텐츠 태깅 <span>성과 분석에 쓰는 분류예요. 가장 가까운 하나</span></p>
@@ -1862,7 +1862,7 @@ const CATEGORIES = [
   {id:'original', title:'오리지널 콘텐츠', desc:'관리자가 직접 등록하는 개별 촬영 콘텐츠예요.', hidden:true}
 ];
 
-// 콘텐츠 유형·태깅(2026-10-19~): 기획서는 팀콘·롱폼+쇼츠가 기본(2026-10-21, 전엔 유튜브 롱폼). 태깅은 우리 성과 데이터 분류(sns.json g, 스냅샷 「태그」 탭)와 같은 이름
+// 형식(옛 화면 이름 「콘텐츠 유형」, 2026-10-24 이름 바꿈)·태깅(2026-10-19~): 기획서는 팀콘·롱폼+쇼츠가 기본(2026-10-21, 전엔 유튜브 롱폼). 태깅은 우리 성과 데이터 분류(sns.json g, 스냅샷 「태그」 탭)와 같은 이름
 // 기획서 시트 「형식」·「분류」 열 (자동매칭 서버 planTag로 저장)
 const FORMATS = [
   {id:'롱폼+쇼츠', desc:'기본'}, {id:'유튜브 롱폼', desc:'쇼츠 없이'}, {id:'쇼츠·릴스', desc:'세로 1분 안팎만'}
@@ -2273,7 +2273,7 @@ function updateCta(){
 function buildPlanLines(d){
   const catLabel = (CATEGORIES.find(c=>c.id===d.category)||{}).title || '';
   return [
-    `작성자: ${d.name||d.lead}`, `콘텐츠 유형: ${d.format||''}`, `콘텐츠 태깅: ${d.tag||''}`, `기획 방식: ${catLabel}`, ...metaPlanLines(d), '',
+    `작성자: ${d.name||d.lead}`, `형식: ${d.format||''}`, `콘텐츠 태깅: ${d.tag||''}`, `기획 방식: ${catLabel}`, ...metaPlanLines(d), '',
     '[제작자 정보]', `팀장: ${d.lead}`, `팀원: ${d.member}`, `촬영: ${d.filming}`,
     `추가: ${d.extra}`, `편집: ${d.editing}`, `참여 인원: ${d.participants}`, '',
     '[기본 정보]', `제목: ${d.title}`, `한 문장: ${d.summary}`, `참고 URL: ${d.url}`, `요청사항: ${d.request}`, '',
@@ -2467,7 +2467,7 @@ function stepMissing(n){
   const v = s => String(s||'').trim().length > 0;
   if(n===1 && !v(data.name)) return ['팀장 이름을 골라 주세요', 'jjhNames'];
   if(n===2){
-    if(!data.format) return ['콘텐츠 유형을 골라 주세요', 'fmtChips'];
+    if(!data.format) return ['형식을 골라 주세요', 'fmtChips'];
     if(!data.tag) return ['콘텐츠 태깅을 골라 주세요', 'tagChips'];
     const ma = metaMissing(data, ['area','kind']); if(ma) return [ma[0], META_IDS[ma[1]]];
     if(!data.category) return ['기획 방식을 골라 주세요', 'typeCards'];
@@ -2934,7 +2934,7 @@ function renderStatusDetail(key, rec){
     <button class="save-edit-btn" id="saveEditBtn" style="margin-top:14px;">수정 저장</button>
     <button id="toggleMoreEdit" style="width:100%; margin:12px 0 0; padding:12px; border-radius:12px; border:1px dashed var(--line); background:none; color:var(--ink-soft); font-size:13.5px; cursor:pointer;">다른 항목도 수정하기 ▾</button>
     <div id="editMoreWrap" style="display:none;">
-    <p class="section-title">콘텐츠 유형 · 태깅</p>
+    <p class="section-title">형식 · 태깅</p>
     <div class="grid2"><div class="field-sm"><select id="e_format"><option value="">유형 선택</option>${FORMATS.map(o=>`<option ${o.id===editingRecord.format?'selected':''}>${esc(o.id)}</option>`).join('')}</select></div><div class="field-sm"><select id="e_tag"><option value="">태깅 선택</option>${TAGS.map(t=>`<option ${t===editingRecord.tag?'selected':''}>${esc(t)}</option>`).join('')}</select></div></div>
     <p class="section-title">기획 방식</p>
     <div class="field-sm"><select id="e_category">${catOptions}</select></div>

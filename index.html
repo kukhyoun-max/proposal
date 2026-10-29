@@ -1116,6 +1116,7 @@
       <p class="save-status" id="qaStatus"></p>
     </div>
   </div>
+  <div class="content" id="pfPending" style="padding-top:0; padding-bottom:0;"></div>
   <div class="content" id="mlPending" style="padding-top:0; padding-bottom:0;"></div>
   <div class="content" id="srPending" style="padding-top:0; padding-bottom:0;"></div>
   <div class="content" id="areaCov" style="padding-top:0; padding-bottom:0;"></div>
@@ -3488,6 +3489,7 @@ document.getElementById('btnAdminToggle').addEventListener('click', async ()=>{
     attendPrefetch();
     if(window.jjLoadPending) window.jjLoadPending();
     if(!allowedTabs && window.jjLoadLinks) window.jjLoadLinks();
+    if(!allowedTabs && window.jjLoadPf) window.jjLoadPf();
   });
 });
 document.getElementById('btnAdminBack').addEventListener('click', ()=>{
@@ -3639,7 +3641,7 @@ document.getElementById('qaOpen').addEventListener('click', () => {
   box.style.display = open ? 'none' : 'block';
   if(!open){ qaReset(); sheetGetAll().then(rows => { try{ fillSeriesList(rows); }catch(e){} }).catch(()=>{}); }
 });
-document.getElementById('qaCancel').addEventListener('click', () => { document.getElementById('qaBox').style.display = 'none'; });
+document.getElementById('qaCancel').addEventListener('click', () => { document.getElementById('qaBox').style.display = 'none'; window.qaPf = null; });
 document.getElementById('qaFilmDate').addEventListener('change', e => {
   const sd = document.getElementById('qaSubmitDate');
   if(!sd.value && e.target.value){ const d = new Date(e.target.value + 'T00:00:00'); d.setDate(d.getDate() + 4); sd.value = toLocalDateStr(d); }
@@ -3663,7 +3665,7 @@ document.getElementById('qaSave').addEventListener('click', async () => {
     id, status:'pending',
     submittedAt: new Date().toISOString(), updatedAt:'', reviewedAt:'', filmingAt:'', completedAt:'',
     lead, category:'original', member: team.join(', '), filming, editing, extra, participants: String(team.length),
-    title, summary:'', url:'', request: '[오리지널 콘텐츠]' + (note ? ' ' + note : ''),
+    title, summary:'', url:'', request: '[오리지널 콘텐츠]' + (note ? ' ' + note : '') + (window.qaPf ? ' [편성판 #' + window.qaPf + ']' : ''),   // 편성판에서 온 요청이면 카드 id를 남겨 목록에서 빼고 편성판과 잇는다(2026-10-29)
     filmdate, submitdate, equipment:'', planText:'(오리지널 콘텐츠 · 기획서 생략)', rejectReason:''
   };
   btn.disabled = true; btn.textContent = '등록 중...'; st.textContent = '';
@@ -3682,6 +3684,7 @@ document.getElementById('qaSave').addEventListener('click', async () => {
     // 이미 올라간 게시물이 있으면 바로 '업로드 완료'로 잡히도록 자동매칭을 한 번 돌려요 (크레딧 이름 + 촬영일 기준)
     try{ fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'rerun' }) }); }catch(e){}
     document.getElementById('qaBox').style.display = 'none';
+    if(window.qaPf){ window.qaPf = null; if(window.jjLoadPf) window.jjLoadPf(); }
   }catch(e){
     st.textContent = '등록 실패: ' + (e && e.message ? e.message : '오류');
   }
@@ -5786,6 +5789,38 @@ function hbApply(badges){
     catch (err){ showAlert('처리하지 못했어요. 잠시 후 다시 해주세요.'); b.disabled = false; }
   });
   window.jjLoadLinks = loadLinks;
+
+  /* ── 편성판에서 온 홍보대사 요청 → 오리지널 등록 (2026-10-29, 서버 Pf.gs) ──
+     SNS 편성판 「직접 넣기」에서 출처 「홍보대사」로 넣은 건. 「오리지널로 등록」은 기존 등록 창에 제목·메모를 채워 열 뿐이고,
+     팀장·촬영일을 골라 저장해야 기획서가 생겨요(빈 기획서가 생기지 않게). 저장하면 요청사항에 [편성판 #id]가 남아 목록에서 빠져요. */
+  async function loadPf(){
+    const box = $('pfPending'); if (!box) return;
+    if (!adminToken()){ box.innerHTML = ''; return; }
+    try {
+      const r = await api({ action:'pfRequests', tk: adminToken() });
+      const items = (r && r.ok && r.items) || [];
+      if (!items.length){ box.innerHTML = ''; return; }
+      box.innerHTML = `<div class="sr-box"><h4>편성판에서 온 요청 <span style="color:var(--ink-faint);font-weight:700;">${items.length}</span></h4><p class="req-hint" style="margin:0 0 4px;">SNS 편성판 「직접 넣기」에서 홍보대사로 넣은 건이에요 · 등록하면 편성판 카드가 「제작 중」으로 넘어가요</p>` +
+        items.map(p => `<div class="sr-row"><div class="t"><b>${p.urgent ? '<span style="color:#C2410C;">긴급 </span>' : ''}${esc(p.title)}</b><small>${esc(p.fmt)}${p.date ? ' · 올릴 날 ' + esc(p.date) : ''}${p.memo ? ' · ' + esc(p.memo) : ''}</small></div><button type="button" class="pf-no" data-id="${esc(p.id)}" data-t="${esc(p.title)}" style="background:#F2F4F6;color:var(--ink-soft);margin-right:6px;">넘기지 않음</button><button type="button" class="pf-ok" data-id="${esc(p.id)}" data-t="${esc(p.title)}" data-m="${esc(p.memo)}" data-d="${esc(p.date)}">오리지널로 등록</button></div>`).join('') + '</div>';
+    } catch (e){ box.innerHTML = ''; }
+  }
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('#pfPending button[data-id]'); if (!b) return;
+    if (b.classList.contains('pf-ok')){
+      if (document.getElementById('qaBox').style.display === 'none') document.getElementById('qaOpen').click();   // 열면서 등록 창을 비움
+      document.getElementById('qaTitle').value = b.dataset.t;
+      document.getElementById('qaNote').value = [b.dataset.d ? '올릴 날 ' + b.dataset.d : '', b.dataset.m].filter(Boolean).join(' · ').slice(0, 120);
+      window.qaPf = b.dataset.id;
+      document.getElementById('qaStatus').textContent = '편성판 요청 · 팀장·촬영일·편집 마감을 고르고 저장해 주세요';
+      document.getElementById('qaBox').scrollIntoView({ block:'start', behavior:'smooth' });
+      return;
+    }
+    if (!(await showConfirm('「' + b.dataset.t + '」을(를) 오리지널로 넘기지 않을까요? 편성판 카드는 그대로 남아요.'))) return;
+    b.disabled = true;
+    try { const r = await post({ action:'pfDismiss', id: b.dataset.id }); if (r && r.ok){ showToast('목록에서 뺐어요'); loadPf(); } else { showAlert('처리하지 못했어요: ' + ((r && r.error) || '')); b.disabled = false; } }
+    catch (err){ showAlert('처리하지 못했어요. 잠시 후 다시 해주세요.'); b.disabled = false; }
+  });
+  window.jjLoadPf = loadPf;
 })();
 </script>
 

@@ -191,15 +191,11 @@
   .lt-note{font-size:12px; line-height:1.5; color:var(--ink-soft); margin:10px 0 0; word-break:keep-all;}
   .sun-box{margin-top:14px; padding-top:14px; border-top:1px solid var(--line);}
   .sun-box h3{font-size:14px; font-weight:700; color:var(--ink); margin:0 0 8px;}
-  .sun-figs{display:grid; grid-template-columns:1fr; gap:10px;}
-  @media (min-width:700px){ .sun-figs{grid-template-columns:1.4fr 1fr;} }
-  .sun-figs figure{margin:0; padding:10px; border-radius:12px; background:var(--page-bg);}
-  .sun-figs svg{display:block; width:100%; height:auto;}
-  .sun-figs figure + figure svg{max-width:200px; margin:0 auto;}
-  .sun-figs figcaption{font-size:12px; color:var(--ink-soft); margin-top:6px; line-height:1.5; word-break:keep-all;}
-  .sun-facts{list-style:none; margin:10px 0 0; padding:0; font-size:13px; line-height:1.6; color:var(--ink); word-break:keep-all;}
-  .sun-facts li{padding-left:14px; position:relative;}
-  .sun-facts li::before{content:"·"; position:absolute; left:4px; color:var(--ink-soft);}
+  .sun-row{display:flex; align-items:center; gap:12px;}
+  .sun-fig{flex:0 0 112px;}
+  .sun-fig svg{display:block; width:112px; height:auto;}
+  .sun-facts{list-style:none; margin:0; padding:0; flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; font-size:14px; line-height:1.45; color:var(--ink); word-break:keep-all;}
+  .sun-facts small{font-size:12px; color:var(--ink-soft);}
   .lt-warn{font-size:13px; line-height:1.5; color:#8A4B00; background:#FFF6E0; border-radius:10px; padding:8px 10px; margin:10px 0 0; word-break:keep-all;}
   .one-line{background:#F7F9FF; border:1.5px solid var(--purple-soft); border-radius:12px; padding:12px; margin-bottom:14px;}
   .one-line input{background:#fff;}
@@ -1043,7 +1039,7 @@
       <p class="req-hint" id="acadHint" style="display:none; margin:-4px 0 0; color:#495057;"></p>
       <div class="lt-box">
         <p class="lt-title">☀️ 야외 촬영이면, 원하는 빛을 골라 보세요</p>
-        <p class="lt-sub">일기예보와 해 뜨고 지는 시간을 보고, 그 빛이 나오는 날짜·시간을 추천해 드려요.</p>
+        <p class="lt-sub">날씨를 보고 찍기 좋은 시간을 알려 드려요.</p>
         <div class="lt-chips" id="ltChips">
           <button type="button" data-lt="sun">맑은 햇빛<small>파란 하늘·긴 그림자</small></button>
           <button type="button" data-lt="dusk">노을<small>해 지기 직전</small></button>
@@ -4892,8 +4888,8 @@ function ltScore(theme, rows){
   else { s = 40 + Math.min(pr, 3) * 15 + pp * 0.3 - Math.max(0, pr - 5) * 10; }
   if(wind > 25) s -= (wind - 25) * 1.5;
   if(theme !== 'rain' && pr > 0.2) s -= 30;
-  const sky = pr > 0.2 ? '비' : cc < 30 ? '맑음' : cc < 70 ? '구름 조금' : '흐림';
-  return { s: Math.round(s), info: `${sky} · 구름 ${Math.round(cc)}% · 비 올 확률 ${Math.round(pp)}%` + (wind > 25 ? ` · 바람 강함` : '') };
+  const sky = pr > 0.2 || pp >= 60 ? '☔ 비' : cc < 30 ? '☀️ 맑음' : cc < 70 ? '⛅ 구름 조금' : '☁️ 흐림';
+  return { s: Math.round(s), sky: sky + (wind > 25 ? ' · 바람 강함' : '') };
 }
 function ltRender(){
   const out = document.getElementById('ltOut'); if(!out || !ltTheme) return;
@@ -4916,21 +4912,20 @@ function ltRender(){
       });
     });
     if(!best.length){ out.innerHTML = '<p class="lt-note">촬영할 수 있는 날짜의 예보가 아직 없어요.</p>'; return; }
-    const top = Math.max(...best.map(x => x.s));
+    // 점수 높은 순으로 3개만 (원하는 빛이 나올 만한 날만)
     const ok = theme === 'rain' ? 70 : 85;
-    const rows = best.map(x => {
-      const isBest = x.s === top && x.s >= ok, isPick = x.d === data.filmdate;
-      return `<li class="lt-row${isBest ? ' best' : ''}${isPick ? ' pick' : ''}">
-        <div class="lt-when"><b>${esc(formatDateLabel(x.d))} ${ltHm(x.a)}~${ltHm(x.b)}</b>${isBest ? ' ⭐ 추천' : ''}<span>${esc(x.info)}${x.s < ok - 25 ? ' · 원하는 빛이 나오기 어려워요' : ''}</span></div>
-        <button type="button" data-d="${x.d}" data-a="${ltHm(x.a)}" data-b="${ltHm(x.b)}">이 시간으로</button></li>`;
-    }).join('');
+    const good = best.filter(x => x.s >= ok - 25).sort((p, q) => q.s - p.s).slice(0, 3);
+    const rows = good.map((x, i) => `<li class="lt-row${i ? '' : ' best'}${x.d === data.filmdate ? ' pick' : ''}">
+        <div class="lt-when"><b>${i ? '' : '⭐ '}${esc(formatDateLabel(x.d))} ${ltHm(x.a)}~${ltHm(x.b)}</b><span>${esc(x.sky)}</span></div>
+        <button type="button" data-d="${x.d}" data-a="${ltHm(x.a)}" data-b="${ltHm(x.b)}">이 시간으로</button></li>`).join('');
     const sun = data.filmdate && wx.sun[data.filmdate];
     let warn = '';
     // 맑은 날 한낮(11~14시)은 그림자가 짧고 진해서 얼굴·풍경이 납작하게 나와요
-    if((theme === 'sun' || theme === 'soft') && data.filmfrom && ltMin(data.filmfrom) >= 660 && ltMin(data.filmfrom) < 840) warn = '지금 고른 시작 시간은 한낮이에요. 맑은 날 한낮은 그림자가 짧고 진해서 얼굴·풍경이 납작하게 나와요. 위 추천 시간을 써 보세요.';
-    if(theme === 'dusk' && sun && data.filmfrom && ltMin(data.filmfrom) < ltMin(sun[1]) - 90) warn = `노을은 해 지기 1시간 전쯤부터예요. 이날 해 지는 시간은 ${sun[1]}이에요.`;
-    out.innerHTML = `<ul class="lt-list">${rows}</ul>${warn ? `<p class="lt-warn">${esc(warn)}</p>` : ''}
-      <p class="lt-note">「${LT_NAME[theme]}」 기준이에요. 예보는 날이 멀수록 바뀌기 쉬우니 촬영 전날 한 번 더 확인해 주세요.${theme === 'sun' ? ' 해가 낮을 때(아침·늦은 오후) 그림자가 길고 색이 따뜻해요.' : theme === 'soft' ? ' 구름 낀 날은 그림자가 없어 인물 얼굴이 고르게 나와요.' : ''}</p>`;
+    if((theme === 'sun' || theme === 'soft') && data.filmfrom && ltMin(data.filmfrom) >= 660 && ltMin(data.filmfrom) < 840) warn = '한낮은 그림자가 진해서 납작하게 나와요. 추천 시간을 써 보세요.';
+    if(theme === 'dusk' && sun && data.filmfrom && ltMin(data.filmfrom) < ltMin(sun[1]) - 90) warn = `노을은 해 지기 1시간 전부터예요(이날 해 지는 시간 ${sun[1]}).`;
+    out.innerHTML = (rows ? `<ul class="lt-list">${rows}</ul>` : `<p class="lt-note">이번 주엔 「${LT_NAME[theme]}」이 나올 날이 없어요.</p>`)
+      + (warn ? `<p class="lt-warn">${esc(warn)}</p>` : '')
+      + '<p class="lt-note">촬영 전날 날씨를 한 번 더 확인해 주세요.</p>';
   }).catch(() => { if(theme === ltTheme) out.innerHTML = '<p class="lt-note">예보를 불러오지 못했어요. 잠시 뒤 다시 골라 주세요.</p>'; });
 }
 document.getElementById('ltChips').addEventListener('click', e => {
@@ -4974,28 +4969,12 @@ function sunRender(){
   const box = document.getElementById('ltSun'); if(!box) return;
   const d = data.filmdate; if(!d){ box.innerHTML = ''; return; }
   const from = data.filmfrom || '', to = data.filmto || '';
-  // 하루 고도 곡선 (05:00~20:00, 10분 간격)
-  const pts = []; for(let m = 300; m <= 1200; m += 10) pts.push([m, sunPos(d, ltHm(m)).alt]);
-  const W = 320, Hh = 150, top = 12, base = 112, maxA = Math.max(60, ...pts.map(p => p[1]));
-  const X = m => 20 + (m - 300) / 900 * (W - 30), Y = a => base - Math.max(-12, a) / maxA * (base - top);
-  const path = pts.map((p, i) => (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join(' ');
-  // 해 뜨고 지는 시각(고도 0°를 지나는 곳), 황금빛(0~10°) 구간
-  const cross = lv => pts.slice(1).map((p, i) => [pts[i], p]).filter(([a, b]) => (a[1] - lv) * (b[1] - lv) < 0).map(([a, b]) => a[0] + (lv - a[1]) / (b[1] - a[1]) * 10);
-  const [rise, set] = cross(-0.833), [g1, g2] = cross(10); // 해 뜨고 짐은 대기 굴절을 넣은 -0.833°
-  const band = (a, b, c) => a != null && b != null ? `<rect x="${X(a).toFixed(1)}" y="${top}" width="${(X(b) - X(a)).toFixed(1)}" height="${base - top}" fill="${c}"/>` : '';
-  const win = from && to ? band(ltMin(from), ltMin(to), 'rgba(61,95,224,.18)') : '';
-  const mid = from ? (to ? (ltMin(from) + ltMin(to)) / 2 : ltMin(from)) : null;
-  const sp = mid != null ? sunPos(d, ltHm(Math.round(mid))) : null;
-  const ticks = [6, 9, 12, 15, 18].map(h => `<text x="${X(h * 60)}" y="${base + 14}" font-size="10" text-anchor="middle" fill="#6B6873">${h}시</text>`).join('');
-  const curve = `<svg viewBox="0 0 ${W} ${Hh - 20}" role="img" aria-label="하루 동안 해 높이">
-    ${band(rise, g1, 'rgba(255,198,41,.35)')}${band(g2, set, 'rgba(255,198,41,.35)')}${win}
-    <line x1="20" x2="${W - 10}" y1="${Y(0)}" y2="${Y(0)}" stroke="#8C8996" stroke-dasharray="3 3"/>
-    <path d="${path}" fill="none" stroke="#B8860F" stroke-width="2"/>
-    ${sp ? `<circle cx="${X(mid)}" cy="${Y(sp.alt)}" r="6" fill="#FFC629" stroke="#B8860F" stroke-width="1.5"/>` : ''}
-    ${ticks}</svg>`;
+  if(!from){ box.innerHTML = ''; return; }
+  const mid = to ? (ltMin(from) + ltMin(to)) / 2 : ltMin(from);
+  const sp = sunPos(d, ltHm(Math.round(mid)));
   // 위에서 본 그림: 해 방향(바깥일수록 낮은 해)과 반대쪽 그림자
   let compass = '';
-  if(sp && sp.alt > 0){
+  if(sp.alt > 0){
     const C = 80, R = 62, rr = R * (1 - sp.alt / 90), a = sp.az * SUN_R;
     const sx = C + rr * Math.sin(a), sy = C - rr * Math.cos(a);
     const shLen = Math.min(R, 14 / Math.tan(Math.max(sp.alt, 3) * SUN_R));
@@ -5009,22 +4988,17 @@ function sunRender(){
       <line x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${C}" y2="${C}" stroke="#B8860F" stroke-dasharray="3 3"/>
       <circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="9" fill="#FFC629" stroke="#B8860F" stroke-width="1.5"/></svg>`;
   }
+  // 세 줄 요약: 해 · 그림자 · 카메라 방향 (자세한 각도는 줄 끝에 작게)
   const facts = [];
-  if(rise != null) facts.push(`이날 해 뜨는 시각 ${ltHm(Math.round(rise))}, 지는 시각 ${ltHm(Math.round(set))}. 노란 띠가 황금빛 시간(해 높이 10° 아래)이에요.`);
-  if(sp){
-    const at = from && to ? `${from}~${to} 가운데(${ltHm(Math.round(mid))})` : from;
-    if(sp.alt > 0){
-      const ratio = 1 / Math.tan(sp.alt * SUN_R);
-      facts.push(`${at}: 해는 <b>${sunDir(sp.az)}쪽 ${Math.round(sp.az)}°</b>, 높이 <b>${Math.round(sp.alt)}°</b>. ${sunLight(sp.alt)}.`);
-      facts.push(`그림자는 <b>${sunDir((sp.az + 180) % 360)}쪽</b>으로, 키의 약 <b>${ratio >= 10 ? '10배 넘게' : ratio.toFixed(1) + '배'}</b> 길이로 생겨요.`);
-      facts.push(`순광(얼굴이 밝게): 카메라를 ${sunDir(sp.az)}쪽에 두고 ${sunDir((sp.az + 180) % 360)}쪽을 보며 찍어요. 역광(머리카락 빛 테두리·실루엣): 반대로 ${sunDir(sp.az)}쪽 하늘을 향해 찍어요.`);
-    } else facts.push(`${at}: ${sunLight(sp.alt)}.`);
-  } else facts.push('촬영 시작·종료 시간을 고르면 그 시간의 해 방향과 그림자를 보여 드려요.');
-  box.innerHTML = `<div class="sun-box"><h3>🧭 ${esc(formatDateLabel(d))} 해 위치</h3>
-    <div class="sun-figs"><figure>${curve}<figcaption>하루 동안 해 높이. 파란 칸이 고른 촬영 시간, 노란 점이 그때 해 위치예요.</figcaption></figure>
-    ${compass ? `<figure>${compass}<figcaption>위에서 본 모습. 가운데 점이 사람, 검은 막대가 그림자예요. 해가 바깥쪽일수록 낮아요.</figcaption></figure>` : ''}</div>
-    <ul class="sun-facts">${facts.map(f => `<li>${f}</li>`).join('')}</ul>
-    <p class="lt-note">건물·나무 그림자와 실제 촬영 방향은 현장에서 확인해 주세요. 방향은 지도 앱 나침반으로 맞추면 정확해요.</p></div>`;
+  if(sp.alt > 0){
+    const ratio = 1 / Math.tan(sp.alt * SUN_R), back = sunDir((sp.az + 180) % 360);
+    const high = sp.alt < 25 ? '낮음' : sp.alt < 45 ? '중간' : '높음';
+    facts.push(`☀️ 해: <b>${sunDir(sp.az)}쪽, ${high}</b> <small>(${Math.round(sp.az)}°, 높이 ${Math.round(sp.alt)}°)</small>`);
+    facts.push(`👤 그림자: <b>${back}쪽으로 ${ratio >= 2 ? '길게' : ratio >= 1 ? '키만큼' : '짧게'}</b>`);
+    facts.push(`📷 밝게: <b>해 등지기</b> · 역광: <b>해 보기</b>`);
+  } else facts.push(`🌙 ${sunLight(sp.alt)}`);
+  box.innerHTML = `<div class="sun-box"><h3>🧭 ${esc(from)}${to ? '~' + esc(to) : ''} 해 위치</h3>
+    <div class="sun-row">${compass ? `<div class="sun-fig">${compass}</div>` : ''}<ul class="sun-facts">${facts.map(f => `<li>${f}</li>`).join('')}</ul></div></div>`;
 }
 ['f_filmdate', 'f_filmfrom', 'f_filmto'].forEach(id => document.getElementById(id).addEventListener('change', sunRender));
 // 막대 색: 촬영 예정 파랑 · 제작 중 주황 · 제작 완료 초록 · 업로드 완료 보라 · 제출일 지남(미완료) 빨강 · 학사 회색

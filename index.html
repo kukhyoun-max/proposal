@@ -1775,7 +1775,7 @@ let data = {
 const AMBASSADOR_ROSTER = [
   '***','***','***','***','***','***',
   '***','***','***','***','***','***','***','***',
-  '***','***','***'
+  '***','***' // *** 활동 중단 (2026-10-30)
 ].sort((a,b)=>a.localeCompare(b,'ko'));
 
 const namePickers = {};
@@ -4053,7 +4053,7 @@ loadAutosave();
 const ATTEND_URL = 'https://script.google.com/macros/s/AKfycby04XfWbKhTXlq9cFQ-QpMz76GwhS6MeNLsQw-g-Q6YULmYa3j_MKQuiPdZ1ahQDtM/exec';
 const MEETING_ROSTER = [
   '***','***','***','***','***','***','***',
-  '***','***','***','***','***','***','***','***',
+  '***','***','***','***','***','***','***',
   '***','***'
 ].sort((a,b)=>a.localeCompare(b,'ko'));
 const MT_STATUSES = ['출석','지각','사유불참','불참','무단불참'];   // 사유불참 = 하루 전까지 알린 불참, 0점 (활동 가이드 5번)
@@ -4275,7 +4275,7 @@ let pcWeek = '';
 let pcState = {};   // name -> { plan, content }
 let pcWeeksDone = {};
 let pcCancelled = false;   // 이번 회차 휴회 (개인콘 쉬는 주)
-const PC_DEFAULT = ['***','***','***','***','***','***','***','***','***','***','***','***'];
+const PC_DEFAULT = ['***','***','***','***','***','***','***','***','***','***','***'];
 let pcExtra = new Set();
 let pcOnlyMissing = false, pcLoadedWeek = '';   // 이번 주에 추가로 넣은 인원
 function pcNames(){ return MEETING_ROSTER.filter(n => PC_DEFAULT.includes(n) || pcExtra.has(n)); }

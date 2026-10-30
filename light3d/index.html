@@ -77,6 +77,10 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
       <button type="button" class="chip" data-turn="sun">해 보기</button>
       <button type="button" class="chip" data-turn="back">해 등지기</button>
     </div>
+    <div class="row" role="group" aria-label="보기">
+      <span class="lbl">보기</span>
+      <button type="button" class="chip" id="treeBtn" aria-pressed="false">나무 숨기기</button>
+    </div>
   </div>
   <div class="verdict" id="verdict"></div>
   <ul class="facts" id="facts"></ul>
@@ -291,9 +295,16 @@ fetch('trees.json').then(r => r.json()).then(d => {
   [solid, ghost].forEach(o => { o.setColorAt(0, col); o.castShadow = true; o.receiveShadow = o === solid; o.frustumCulled = false; scene.add(o); });
   ghost.renderOrder = 2;
   trees = { pts, solid, ghost, mats, cols, at: null };
+  if(treesHidden) [solid, ghost].forEach(o => { o.material.colorWrite = false; o.material.depthWrite = false; });
   treeNear(); update();
 });
-let trees = null;
+let trees = null, treesHidden = false;
+// 나무 숨기기: 잎은 안 그리고 그림자는 남겨요(그늘 판정도 그대로)
+document.getElementById('treeBtn').addEventListener('click', e => {
+  treesHidden = !treesHidden; const b = e.currentTarget;
+  b.setAttribute('aria-pressed', treesHidden); b.textContent = treesHidden ? '나무 보이기' : '나무 숨기기';
+  if(trees) [trees.solid, trees.ghost].forEach(o => { o.material.colorWrite = !treesHidden; o.material.depthWrite = !treesHidden && o === trees.solid; o.material.needsUpdate = true; });
+});
 function treeNear(){
   if(!trees) return; const { pts, solid, ghost, mats, cols } = trees, c = jj.position;
   if(trees.at && trees.at.distanceTo(c) < 1) return; trees.at = c.clone();

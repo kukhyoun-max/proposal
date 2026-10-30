@@ -61,7 +61,7 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
     <input type="date" id="d" aria-label="날짜">
     <div class="time"><output id="tOut">16:00</output><input type="range" id="t" min="360" max="1140" step="5" value="960" aria-label="시간"></div>
   </div>
-  <div class="stage"><canvas id="c"></canvas><div class="loading" id="loading">캠퍼스 불러오는 중…</div><span class="hint">땅을 누르면 인원이 그 자리로 · 끌어서 돌리기</span></div>
+  <div class="stage"><canvas id="c"></canvas><div class="loading" id="loading">캠퍼스 불러오는 중…</div><span class="hint">건물 이름·땅을 누르면 그 자리로 · 끌어서 돌리기</span></div>
   <div class="cast">
     <div class="row" role="group" aria-label="촬영 인원">
       <span class="lbl">인원</span>
@@ -216,6 +216,7 @@ function nameTag(text){
 
 // 건물: 그리기용은 한 덩어리로 합치고, 그늘 판정은 평면 다각형 + 높이로 직접 계산
 let B = [], grid = new Map();
+const tags = []; // 건물 이름표(누르면 그 건물 앞으로)
 const GS = 20, key = (x, z) => Math.floor(x / GS) + ',' + Math.floor(z / GS);
 function inPoly(x, z, p){ let c = false; for(let i = 0, j = p.length - 1; i < p.length; j = i++){ const [xi, zi] = p[i], [xj, zj] = p[j]; if((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; }
 function shadeAt(x, z, s){
@@ -252,7 +253,7 @@ fetch('buildings.json').then(r => r.json()).then(data => {
   [roofMesh, wallMesh].forEach(m => { m.castShadow = m.receiveShadow = true; scene.add(m); });
   labels.forEach(({ n, b }) => {
     const cx = b.p.reduce((a, q) => a + q[0], 0) / b.p.length, cz = b.p.reduce((a, q) => a + q[1], 0) / b.p.length;
-    const s = nameTag(n); s.position.set(cx, b.h + 3, cz); scene.add(s);
+    const s = nameTag(n); s.position.set(cx, b.h + 3, cz); s.userData.name = n; tags.push(s); scene.add(s);
   });
   buildPlaces(); document.getElementById('loading').remove();
   pickFromQuery(); goPlace(); update();
@@ -293,6 +294,13 @@ canvas.addEventListener('pointerup', e => {
   if(!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
   const r = canvas.getBoundingClientRect();
   ray.setFromCamera({ x: (e.clientX - r.left) / r.width * 2 - 1, y: -(e.clientY - r.top) / r.height * 2 + 1 }, cam);
+  // 건물 이름표를 누르면 그 건물 앞으로
+  ray.camera = cam;
+  const tag = ray.intersectObjects(tags)[0];
+  if(tag){
+    const o = [...placeEl.options].find(o => o.text === tag.object.userData.name + ' 앞');
+    if(o){ placeEl.value = o.value; goPlace(); return; }
+  }
   const hit = ray.intersectObject(ground)[0]; if(!hit) return;
   placeEl.value = 'pick'; moveJJ(hit.point.x, hit.point.z, true);
 });

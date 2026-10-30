@@ -68,6 +68,10 @@
     min-height:44px; padding:10px 8px;
   }
   .progress-wrap{flex:1; margin-right:16px;}
+  /* 관리자 테스트 모드 (2026-10-30) */
+  .test-chip{min-height:44px; padding:0 12px; margin-right:8px; border-radius:22px; border:1px dashed #B26A00; background:none; color:#8A5200; font-size:13px; font-weight:700; cursor:pointer;}
+  .test-chip[aria-pressed="true"]{border-style:solid; background:#FFF3D6; color:#7A4600;}
+  .test-banner{margin:0; padding:8px 16px; background:#FFF3D6; color:#7A4600; font-size:13px; font-weight:700; line-height:1.45;}
   .progress-track{display:flex; gap:4px; margin-bottom:6px;}
   .progress-seg{flex:1; height:5px; border-radius:4px; background:var(--line); border:none; padding:0; cursor:default;}
   .progress-seg.done{background:var(--purple); cursor:pointer;}
@@ -891,8 +895,10 @@
       <div class="progress-track" id="progressTrack"></div>
       <div class="progress-label" id="progressLabel">1 / 7</div>
     </div>
+    <button class="test-chip" id="btnTestMode" type="button" aria-pressed="false" hidden>테스트</button>
     <button class="reset-link" id="btnReset">처음으로</button>
   </div>
+  <p class="test-banner" id="testBanner" hidden>🧪 테스트 모드: 빈칸이어도 다음 단계로 넘어가요. 제출·임시 저장은 되지 않아요.</p>
 
   <div class="content">
 
@@ -2467,7 +2473,19 @@ function updateProgress(){
   updateCta();
 }
 
+// 관리자 테스트 모드 (2026-10-30): 전체 관리자만. 켜면 빈칸이어도 다음 단계로, 제출·임시 저장은 막음(운영 시트에 시험 기획서가 들어가지 않게)
+let testMode = false;
+function testModeSync(){
+  const b = document.getElementById('btnTestMode'), r = adminRole();
+  b.hidden = !(r && r.full); if(b.hidden) testMode = false;
+  b.setAttribute('aria-pressed', testMode); b.textContent = testMode ? '테스트 끄기' : '테스트';
+  document.getElementById('testBanner').hidden = !testMode;
+  updateCta();
+}
+document.getElementById('btnTestMode').addEventListener('click', () => { testMode = !testMode; testModeSync(); });
+testModeSync();
 function stepValid(n){
+  if(testMode) return true;
   if(n===1) return data.name.trim().length>0;
   if(n===2){
     const tp = titleParts(data.title);
@@ -2866,6 +2884,7 @@ document.getElementById('btnCopyText').addEventListener('click', async ()=>{
 });
 
 async function submitForReview(){
+  if(testMode){ showAlert('테스트 모드에서는 제출되지 않아요. 위쪽 「테스트 끄기」를 누르고 다시 제출해 주세요.'); return; }
   const btn = document.getElementById('btnSubmitReview');
   const statusEl = document.getElementById('submitStatus');
   // 제출 중·완료·실패를 눈에 띄게 (2026-10-24)
@@ -2988,6 +3007,7 @@ async function showView(viewId){
   // 탭이 넘칠 때 현재 탭이 보이도록 스크롤
   document.querySelectorAll('.mt-tabs button.on').forEach(t => { const bar = t.parentElement; if(bar.offsetParent) bar.scrollLeft = t.offsetLeft - bar.clientWidth / 2 + t.clientWidth / 2; });
   jjHistoryNav(viewId);
+  if(viewId === 'form') testModeSync();
   return true;
 }
 
@@ -3888,7 +3908,7 @@ function formDirty(){ return !draftOff && step >= 2 && draftHasContent(data); }
 function draftClear(){ clearTimeout(autosaveTimer); lsSet(DRAFT_KEY, ''); }
 function draftSaveNow(){
   clearTimeout(autosaveTimer);
-  if(draftOff || step < 2) return;   // 홈(1단계)에서는 남은 저장본을 건드리지 않아요
+  if(draftOff || step < 2 || testMode) return;   // 홈(1단계)에서는 남은 저장본을 건드리지 않아요 · 테스트 입력도 저장 안 함
   if(!draftHasContent(data)) return;   // 빈 화면으로 남은 저장본을 덮어쓰지 않아요(지우기는 「처음으로」·제출·「지우고 새로 쓰기」만)
   let ok = false;
   try{
@@ -3904,6 +3924,7 @@ function draftSaveNow(){
 }
 function scheduleAutosave(){
   clearTimeout(autosaveTimer);
+  if(testMode) return; // 테스트 입력은 임시 저장하지 않아요
   autosaveTimer = setTimeout(draftSaveNow, 500);
 }
 function draftRead(){
@@ -3945,7 +3966,7 @@ async function loadAutosave(){
 // 쓰던 중 나갈 때: 바로 저장 + 경고
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'hidden') draftSaveNow(); });
 window.addEventListener('pagehide', draftSaveNow);
-window.addEventListener('beforeunload', e => { if(formDirty()){ draftSaveNow(); e.preventDefault(); e.returnValue = ''; } });
+window.addEventListener('beforeunload', e => { if(formDirty() && !testMode){ draftSaveNow(); e.preventDefault(); e.returnValue = ''; } });
 
 function formatDateLabel(dateStr){
   const d = new Date(dateStr + 'T00:00:00');

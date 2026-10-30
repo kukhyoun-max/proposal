@@ -2937,6 +2937,8 @@ document.getElementById('btnCopyText').addEventListener('click', async ()=>{
 
 async function submitForReview(){
   if(testMode){ showAlert('테스트 모드에서는 제출되지 않아요. 위쪽 「테스트 끄기」를 누르고 다시 제출해 주세요.'); return; }
+  // 위 단계 막대로 앞 단계에 돌아가 고친 뒤 바로 건너오면 그 단계 확인(예: 바꾼 시간의 햇빛 확인)을 안 거쳐서, 내기 직전에 2~7단계를 다시 봄(2026-10-31)
+  for(let k = 2; k <= 7; k++) if(!stepValid(k)){ goStep(k); setTimeout(flagMissing, 350); return; }
   const btn = document.getElementById('btnSubmitReview');
   const statusEl = document.getElementById('submitStatus');
   // 제출 중·완료·실패를 눈에 띄게 (2026-10-24)

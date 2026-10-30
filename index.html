@@ -5434,7 +5434,7 @@ async function scLoadMonth(){
         o.personal += Number(r['점수']) || 0;
         [r['기획서'], r['콘텐츠']].forEach(v => { v = String(v || ''); if(/지각/.test(v)) o.pcLate++; else if(/미제출/.test(v)) o.pcMiss++; });
       });
-      dl.forEach(r => { const o = get(scMonthKey(r['영상 제출일']), String(r['팀장']).trim()); if(o){ o.delay += Number(r['감점']) || 0; o.delayDays += Number(r['지연일']) || 0; } });
+      dl.forEach(r => { const o = get(scMonthKey(r['영상 제출일']), r['팀장']); if(o){ o.delay += Number(r['감점']) || 0; o.delayDays += Number(r['지연일']) || 0; } });
       tk.forEach(r => {
         const n = String(r['이름']).trim(); if(n === '(항목)') return;
         const o = get(scMonthKey(r['마감일']), n); if(!o) return;
@@ -5965,14 +5965,17 @@ function hbApply(badges){
       const [r, sl] = await Promise.all([api({ action:'seriesPending' }), api({ action:'seriesList' }).catch(() => null)]);
       if (sl && sl.regular) window.JJH_SERIES = sl.regular.map(x => x.name);
       // 이미 정규 편성된 시리즈의 편(예: "체험왕 - 순영관 체험", "1234! - 방학 중 인간관계편")은 숨김
-      const nz = s => String(s || '').toLowerCase().replace(/[\s\-–—_|:·.,!?()\[\]'"~]/g, '');
+      // 앞의 빈칸 표시(OO·○○·00·__)는 떼고 비교: "__하면 끝나는 인터뷰" = "OO하면 끝나는 인터뷰"
+      const nz = s => String(s || '').toLowerCase().replace(/[\s\-–—_|:·.,!?()\[\]'"~]/g, '').replace(/^(oo|○○|◯◯|00)/, '');
+      // 정규 편성 후보가 아닌 것(2026-10-30 담당자): 정규 시리즈의 한 편이 다른 제목으로 들어온 것, 폐지된 콘텐츠
+      const SR_SKIP = ['더위 피하다가 시작된 토크' /* OO하면 끝나는 인터뷰의 한 편 */, '1234!' /* 폐지 */].map(nz);
       const seriesOf = t => String(t || '').split(/\s[-–—|]\s|\|/)[0].trim();
       const reg = (window.JJH_SERIES || []).map(nz).filter(Boolean);
       const isReg = t => { const a = nz(t), b = nz(seriesOf(t)); return reg.some(x => b === x || a.startsWith(x)); };
       const seen = {};
       const uniq = ((r && r.pending) || [])
         .map(p => Object.assign({}, p, { title: seriesOf(p.title) || p.title }))
-        .filter(p => !isReg(p.title))
+        .filter(p => !isReg(p.title) && !SR_SKIP.includes(nz(p.title)))
         .filter(p => { const k = nz(p.title); if (seen[k]) return false; seen[k] = 1; return true; })
         .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
       if (!uniq.length){ box.innerHTML = ''; return; }

@@ -1037,6 +1037,7 @@
         <div class="field-sm"><label for="f_filmto">촬영 종료</label><select id="f_filmto"></select></div>
       </div>
       <p class="req-hint" style="margin:-4px 0 12px;">촬영 시간 동안 선택한 장비가 대여로 잡혀요.</p>
+      <a class="sun-3d" id="f_3d" href="light3d/" target="_blank" rel="noopener" style="margin:0 0 16px;">🏫 3D 캠퍼스에서 이 시간 그늘 확인하기</a>
       <div class="field-sm"><label for="f_submitdate">제출일</label><select id="f_submitdate"><option value="">촬영일을 먼저 선택해주세요</option></select></div>
       <p class="req-hint" id="acadHint" style="display:none; margin:-4px 0 0; color:#495057;"></p>
       <div class="lt-box">
@@ -3257,6 +3258,7 @@ function renderStatusDetail(key, rec){
       <div class="field-sm"><label>촬영 시작</label><select id="e_filmfrom"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
       <div class="field-sm"><label>촬영 종료</label><select id="e_filmto"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
     </div>
+    <a class="sun-3d" id="e_3d" href="light3d/" target="_blank" rel="noopener" style="margin:0 0 16px;">🏫 3D 캠퍼스에서 이 시간 그늘 확인하기</a>
     <p class="section-title">주제·유형 · 기획 확인</p>
     <div id="e_meta"></div>
     <button class="save-edit-btn" id="saveEditBtn" style="margin-top:14px;">수정 저장</button>
@@ -4999,13 +5001,26 @@ function sunRender(){
     facts.push(`👤 그림자: <b>${back}쪽으로 ${ratio >= 2 ? '길게' : ratio >= 1 ? '키만큼' : '짧게'}</b>`);
     facts.push(`📷 밝게: <b>해 등지기</b> · 역광: <b>해 보기</b>`);
   } else facts.push(`🌙 ${sunLight(sp.alt)}`);
-  // 캠퍼스 빛 3D(2026-10-30): 고른 날짜·시간·첫 촬영 장소를 넘겨 실제 건물 그늘을 확인
-  const place = ((data.plan || []).map(p => (p && p.location) || '').find(Boolean) || '').slice(0, 40);
-  const q = new URLSearchParams({ d, t: from }); if(to) q.set('t2', to); if(place) q.set('p', place);
   box.innerHTML = `<div class="sun-box"><h3>🧭 ${esc(from)}${to ? '~' + esc(to) : ''} 해 위치</h3>
-    <div class="sun-row">${compass ? `<div class="sun-fig">${compass}</div>` : ''}<ul class="sun-facts">${facts.map(f => `<li>${f}</li>`).join('')}</ul></div>
-    <a class="sun-3d" href="light3d/?${q}" target="_blank" rel="noopener">🏫 3D 캠퍼스에서 그늘 확인하기</a></div>`;
+    <div class="sun-row">${compass ? `<div class="sun-fig">${compass}</div>` : ''}<ul class="sun-facts">${facts.map(f => `<li>${f}</li>`).join('')}</ul></div></div>`;
 }
+// 캠퍼스 빛 3D(2026-10-30): 촬영 시간 바로 아래 버튼. 고른 날짜·시간·첫 촬영 장소를 넘겨 실제 건물 그늘을 확인
+function light3dHref(d, from, to, plan){
+  const q = new URLSearchParams();
+  if(d) q.set('d', d); if(from) q.set('t', from); if(to) q.set('t2', to);
+  const place = ((plan || []).map(p => (p && p.location) || '').find(Boolean) || '').slice(0, 40);
+  if(place) q.set('p', place);
+  return 'light3d/' + (String(q) ? '?' + q : '');
+}
+function light3dSync(){
+  const a = document.getElementById('f_3d'); if(a) a.href = light3dHref(data.filmdate, data.filmfrom, data.filmto, data.plan);
+  const e = document.getElementById('e_3d');
+  if(e) e.href = light3dHref((document.getElementById('e_filmdate') || {}).value, (document.getElementById('e_filmfrom') || {}).value, (document.getElementById('e_filmto') || {}).value, editingRecord && editingRecord.plan);
+}
+['f_filmdate', 'f_filmfrom', 'f_filmto'].forEach(id => document.getElementById(id).addEventListener('change', light3dSync));
+// 상세 수정 칸은 나중에 그려져서 문서 전체에서 받아요. 누르는 순간에도 한 번 더 맞춰요
+document.addEventListener('change', e => { if(/^e_film(date|from|to)$/.test(e.target.id || '')) light3dSync(); });
+document.addEventListener('click', e => { if(e.target.closest && e.target.closest('#f_3d, #e_3d')) light3dSync(); }, true);
 ['f_filmdate', 'f_filmfrom', 'f_filmto'].forEach(id => document.getElementById(id).addEventListener('change', sunRender));
 // 막대 색: 촬영 예정 파랑 · 제작 중 주황 · 제작 완료 초록 · 업로드 완료 보라 · 제출일 지남(미완료) 빨강 · 학사 회색
 function eqSpanClass(sp){

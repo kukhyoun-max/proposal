@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>캠퍼스 빛 3D</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap">
+<style>
+/* 위: 장소·날짜·시간 / 가운데: 실제 캠퍼스 3D(제이제이가 서 있는 자리) / 아래: 그늘 여부 + 해·그림자 세 줄 */
+:root{
+  --bg:#F2F1F6; --surface:#FFFFFF; --ink:#19181D; --ink-soft:#5F5C68; --line:#E2DFE8;
+  --accent:#3D5FE0; --accent-soft:#EAF0FF; --sunny:#8A5A00; --sunny-bg:#FFF3D6; --shade:#3B4A6B; --shade-bg:#E6EBF5;
+  --font:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#141318; --surface:#1E1D24; --ink:#EEEDF2; --ink-soft:#A9A6B3; --line:#33313C; --accent:#8EA6FF; --accent-soft:#232A45;
+  --sunny:#F2C14E; --sunny-bg:#3A2F14; --shade:#B9C6E6; --shade-bg:#232A3A; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#141318; --surface:#1E1D24; --ink:#EEEDF2; --ink-soft:#A9A6B3; --line:#33313C; --accent:#8EA6FF; --accent-soft:#232A45;
+  --sunny:#F2C14E; --sunny-bg:#3A2F14; --shade:#B9C6E6; --shade-bg:#232A3A; color-scheme:dark }
+*{box-sizing:border-box}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font); font-size:15px; line-height:1.55;
+  padding:20px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px));}
+.wrap{max-width:820px; margin:0 auto; display:flex; flex-direction:column; gap:14px;}
+h1{font-size:22px; font-weight:900; margin:0; letter-spacing:-.02em;}
+.ctrl{display:flex; flex-wrap:wrap; gap:10px 14px; align-items:center;}
+select, input[type=date]{font:inherit; font-size:16px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); min-height:44px; max-width:100%;}
+.time{flex:1 1 260px; display:flex; align-items:center; gap:10px; min-width:0;}
+.time output{font-size:24px; font-weight:900; font-variant-numeric:tabular-nums; min-width:68px;}
+input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
+.stage{position:relative; border-radius:18px; overflow:hidden; border:1px solid var(--line); aspect-ratio:4/3; max-height:64vh; width:100%; background:#9cc4ec;}
+.stage canvas{display:block; width:100%; height:100%; touch-action:none;}
+.hint{position:absolute; right:10px; bottom:8px; font-size:12px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.7); pointer-events:none;}
+.loading{position:absolute; inset:0; display:grid; place-items:center; color:#fff; font-weight:700; text-shadow:0 1px 2px rgba(0,0,0,.5);}
+.verdict{border-radius:14px; padding:12px 14px; font-size:17px; font-weight:900;}
+.verdict.sun{background:var(--sunny-bg); color:var(--sunny);}
+.verdict.shade{background:var(--shade-bg); color:var(--shade);}
+.verdict small{display:block; font-size:13px; font-weight:400; color:var(--ink-soft); margin-top:2px;}
+.facts{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; font-size:16px;}
+.facts small{color:var(--ink-soft); font-size:13px;}
+.note{font-size:12px; color:var(--ink-soft); margin:0;}
+.from{margin:-6px 0 0; font-size:14px; color:var(--ink-soft);}
+.from b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>캠퍼스 빛 3D</h1>
+  <p class="from" id="from" hidden></p>
+  <div class="ctrl">
+    <select id="place" aria-label="장소"></select>
+    <input type="date" id="d" aria-label="날짜">
+    <div class="time"><output id="tOut">16:00</output><input type="range" id="t" min="360" max="1140" step="5" value="960" aria-label="시간"></div>
+  </div>
+  <div class="stage"><canvas id="c"></canvas><div class="loading" id="loading">캠퍼스 불러오는 중…</div><span class="hint">땅을 누르면 제이제이가 그 자리로 · 끌어서 돌리기</span></div>
+  <div class="verdict" id="verdict"></div>
+  <ul class="facts" id="facts"></ul>
+  <p class="note">건물·항공사진: 국토교통부 브이월드(건물 높이, 없으면 층수 × 3.5m). 해 위치는 전주대 위치로 계산했고 날씨·나무 그늘은 넣지 않았어요.</p>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
+<script>
+const R = Math.PI / 180, LAT = 35.8145, LON = 127.0905;
+function sunPos(ymd, min){
+  const hh = String(Math.floor(min / 60)).padStart(2, '0'), mm = String(min % 60).padStart(2, '0');
+  const n = new Date(`${ymd}T${hh}:${mm}:00+09:00`).getTime() / 864e5 + 2440587.5 - 2451545;
+  const L = (280.46 + 0.9856474 * n) % 360, g = ((357.528 + 0.9856003 * n) % 360) * R;
+  const lam = (L + 1.915 * Math.sin(g) + 0.02 * Math.sin(2 * g)) * R, eps = (23.439 - 4e-7 * n) * R;
+  const ra = Math.atan2(Math.cos(eps) * Math.sin(lam), Math.cos(lam)), dec = Math.asin(Math.sin(eps) * Math.sin(lam));
+  const H = (280.46061837 + 360.98564736629 * n + LON) * R - ra, lat = LAT * R;
+  const alt = Math.asin(Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(H));
+  const az = Math.atan2(-Math.sin(H), Math.tan(dec) * Math.cos(lat) - Math.sin(lat) * Math.cos(H));
+  return { alt: alt / R, az: (az / R + 360) % 360 };
+}
+const DIRS = ['북', '북동', '동', '남동', '남', '남서', '서', '북서'];
+const dir = a => DIRS[Math.round(a / 45) % 8];
+// 북 = -z, 동 = +x, 위 = +y (건물 자료와 같은 기준)
+const vec = (alt, az, r) => new THREE.Vector3(r * Math.cos(alt * R) * Math.sin(az * R), r * Math.sin(alt * R), -r * Math.cos(alt * R) * Math.cos(az * R));
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(45, 4 / 3, 0.5, 3000);
+const controls = new THREE.OrbitControls(cam, canvas);
+controls.maxPolarAngle = Math.PI / 2 - 0.03; controls.minDistance = 4; controls.maxDistance = 600; controls.enableDamping = true;
+
+// 땅: 바깥은 숲색, 캠퍼스 범위는 브이월드 항공사진(ground.jpg, 네 모서리는 ground.json)
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshLambertMaterial({ color: 0x5f7a4a }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+// 항공사진은 파일로 두지 않고 브이월드에서 그때그때 받아 붙여요(줌 18, 10×13칸). 키는 이 사이트 주소용 브라우저 키
+const VW_KEY = '275D2298-054C-43DC-9540-2D559FC2C3B2';
+const GR = { z: 18, x0: 223610, x1: 223619, y0: 103100, y1: 103112, ext: { x0: -803.05, x1: 436.63, z0: -864.66, z1: 746.92 } };
+(function aerial(){
+  const nx = GR.x1 - GR.x0 + 1, ny = GR.y1 - GR.y0 + 1, cv = document.createElement('canvas');
+  cv.width = nx * 256; cv.height = ny * 256; const cx = cv.getContext('2d');
+  const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  const e = GR.ext, w = e.x1 - e.x0, d = e.z1 - e.z0;
+  const photo = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshLambertMaterial({ map: tex }));
+  photo.rotation.x = -Math.PI / 2; photo.position.set(e.x0 + w / 2, 0.02, e.z0 + d / 2); photo.receiveShadow = true;
+  cx.fillStyle = '#5f7a4a'; cx.fillRect(0, 0, cv.width, cv.height); scene.add(photo);
+  let left = nx * ny, timer = null;
+  for(let y = GR.y0; y <= GR.y1; y++) for(let x = GR.x0; x <= GR.x1; x++){
+    const im = new Image(); im.crossOrigin = 'anonymous';
+    const done = () => { if(--left === 0) tex.needsUpdate = true; else if(!timer) timer = setTimeout(() => { tex.needsUpdate = true; timer = null; }, 200); };
+    im.onload = () => { cx.drawImage(im, (x - GR.x0) * 256, (y - GR.y0) * 256); done(); };
+    im.onerror = done;
+    im.src = `https://api.vworld.kr/req/wmts/1.0.0/${VW_KEY}/Satellite/${GR.z}/${y}/${x}.jpeg`;
+  }
+})();
+
+const SUN_R = 260;
+const sun = new THREE.Mesh(new THREE.SphereGeometry(8, 24, 16), new THREE.MeshBasicMaterial({ color: 0xffc629 })); scene.add(sun);
+const light = new THREE.DirectionalLight(0xffffff, 1); light.castShadow = true;
+light.shadow.mapSize.set(4096, 4096); light.shadow.bias = -0.0005;
+Object.assign(light.shadow.camera, { left: -160, right: 160, top: 160, bottom: -160, near: 1, far: 900 });
+scene.add(light); scene.add(light.target);
+const amb = new THREE.HemisphereLight(0xdfe9ff, 0x8a8f7a, 0.5); scene.add(amb);
+
+// 제이제이 (블렌더 원본 → glb, 키 1.7m로 맞춤)
+const jj = new THREE.Group(); scene.add(jj);
+const ring = new THREE.Mesh(new THREE.RingGeometry(1.4, 1.9, 40), new THREE.MeshBasicMaterial({ color: 0x3d5fe0, transparent: true, opacity: .75, side: THREE.DoubleSide }));
+ring.rotation.x = -Math.PI / 2; ring.position.y = 0.05; jj.add(ring);
+new THREE.GLTFLoader().load('jj_basic.glb', g => {
+  const m = g.scene, box = new THREE.Box3().setFromObject(m), s = 1.7 / (box.max.y - box.min.y);
+  m.scale.setScalar(s); m.position.y = -box.min.y * s;
+  m.traverse(o => { if(o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
+  jj.add(m);
+});
+
+// 건물 그리기 도우미: 돌출 모양에서 지붕/벽 부분만 떼어 색을 칠함(나중에 한 덩어리로 합침)
+function part(g, start, count, color, windows){
+  const out = new THREE.BufferGeometry();
+  ['position', 'normal', 'uv'].forEach(k => { const a = g.attributes[k]; out.setAttribute(k, new THREE.BufferAttribute(a.array.slice(start * a.itemSize, (start + count) * a.itemSize), a.itemSize)); });
+  if(windows === 0){ const uv = out.attributes.uv.array; for(let i = 0; i < uv.length; i++) uv[i] = 0.05; } // 학교 밖 건물: 창문 없이 벽 색만
+  const c = new Float32Array(count * 3); for(let i = 0; i < count; i++) c.set([color.r, color.g, color.b], i * 3);
+  out.setAttribute('color', new THREE.BufferAttribute(c, 3));
+  return out;
+}
+// 벽 무늬: 가로 3m × 한 층 3.5m 마다 창 하나(지붕 쪽 uv는 벽 색 칸을 씀)
+function windowTex(){
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64; const cx = cv.getContext('2d');
+  cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, 64, 64);
+  cx.fillStyle = '#5d6f82'; cx.fillRect(12, 16, 40, 30);
+  cx.fillStyle = '#8ea3b8'; cx.fillRect(12, 16, 40, 6);
+  const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1 / 3, 1 / 3.5); t.encoding = THREE.sRGBEncoding;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t;
+}
+// 건물 이름표: 화면에서 늘 같은 크기
+function nameTag(text){
+  const cv = document.createElement('canvas'), cx = cv.getContext('2d'), fs = 40;
+  cx.font = `700 ${fs}px "Noto Sans KR", sans-serif`; const w = Math.ceil(cx.measureText(text).width) + 28;
+  cv.width = w; cv.height = fs + 22; cx.font = `700 ${fs}px "Noto Sans KR", sans-serif`;
+  cx.fillStyle = 'rgba(25,24,29,.78)'; cx.beginPath(); cx.roundRect ? cx.roundRect(0, 0, w, cv.height, 14) : cx.rect(0, 0, w, cv.height); cx.fill();
+  cx.fillStyle = '#fff'; cx.textBaseline = 'middle'; cx.fillText(text, 14, cv.height / 2 + 2);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), sizeAttenuation: false }));
+  s.scale.set(0.04 * w / cv.height, 0.04, 1); s.center.set(0.5, 0); return s;
+}
+
+// 건물: 그리기용은 한 덩어리로 합치고, 그늘 판정은 평면 다각형 + 높이로 직접 계산
+let B = [], grid = new Map();
+const GS = 20, key = (x, z) => Math.floor(x / GS) + ',' + Math.floor(z / GS);
+function inPoly(x, z, p){ let c = false; for(let i = 0, j = p.length - 1; i < p.length; j = i++){ const [xi, zi] = p[i], [xj, zj] = p[j]; if((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; }
+function shadeAt(x, z, s){
+  if(s.alt <= 0) return { night: true };
+  const d = vec(s.alt, s.az, 1), y0 = 1.0; // 제이제이 가슴 높이
+  for(let t = 1; t < 700; t += 1){
+    const px = x + d.x * t, pz = z + d.z * t, py = y0 + d.y * t;
+    if(py > 70) break;
+    const list = grid.get(key(px, pz)); if(!list) continue;
+    for(const b of list) if(b.h > py && inPoly(px, pz, b.p)) return { by: (b.n && !/^전주(대학교|비전대학)$/.test(b.n) ? b.n : "옆 건물") + " (높이 " + Math.round(b.h) + "m)", dist: t };
+  }
+  return null;
+}
+fetch('buildings.json').then(r => r.json()).then(data => {
+  B = data.b;
+  const roofs = [], walls = [], labels = [];
+  for(const b of B){
+    const sh = new THREE.Shape(b.p.map(([x, z]) => new THREE.Vector2(x, -z)));
+    const g = new THREE.ExtrudeGeometry(sh, { depth: b.h, bevelEnabled: false });
+    g.rotateX(-Math.PI / 2);
+    // 지붕 = 항공사진에서 뽑은 색, 벽 = 학교 건물은 지붕 색을 밝게 + 창문 줄, 학교 밖은 옅은 회색
+    const rc = new THREE.Color(b.c || (b.k ? '#cfc8bb' : '#d6d3cc'));
+    const wc = b.k ? rc.clone().lerp(new THREE.Color('#f1ece2'), 0.55) : new THREE.Color('#dedbd5');
+    const [cap, side] = g.groups;
+    roofs.push(part(g, cap.start, cap.count, rc)); walls.push(part(g, side.start, side.count, wc, b.k));
+    if(b.k && b.n && !/^(전주|\d+동$|기숙사$|변전실|기자재)/.test(b.n) && !labels.some(l => l.n === b.n)) labels.push({ n: b.n, b });
+    let mnx = 1e9, mnz = 1e9, mxx = -1e9, mxz = -1e9; b.p.forEach(([x, z]) => { mnx = Math.min(mnx, x); mxx = Math.max(mxx, x); mnz = Math.min(mnz, z); mxz = Math.max(mxz, z); });
+    for(let gx = Math.floor(mnx / GS); gx <= Math.floor(mxx / GS); gx++) for(let gz = Math.floor(mnz / GS); gz <= Math.floor(mxz / GS); gz++){
+      const k = gx + ',' + gz; if(!grid.has(k)) grid.set(k, []); grid.get(k).push(b);
+    }
+  }
+  const roofMesh = new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(roofs), new THREE.MeshLambertMaterial({ vertexColors: true }));
+  const wallMesh = new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(walls), new THREE.MeshLambertMaterial({ vertexColors: true, map: windowTex() }));
+  [roofMesh, wallMesh].forEach(m => { m.castShadow = m.receiveShadow = true; scene.add(m); });
+  labels.forEach(({ n, b }) => {
+    const cx = b.p.reduce((a, q) => a + q[0], 0) / b.p.length, cz = b.p.reduce((a, q) => a + q[1], 0) / b.p.length;
+    const s = nameTag(n); s.position.set(cx, b.h + 3, cz); scene.add(s);
+  });
+  buildPlaces(); document.getElementById('loading').remove();
+  pickFromQuery(); goPlace(); update();
+});
+
+// 장소: 건물 남쪽 입구 앞 12m (건물 가운데 x, 건물 가장 남쪽 + 12m)
+const PLACES = ['스타타워', '진리관', '자유관', '공학1관', '예술관', '천잠관', '대학본관'];
+const placeEl = document.getElementById('place');
+function buildPlaces(){
+  // 자주 쓰는 7곳 먼저, 그다음 이름 있는 학교 건물 가나다순
+  const more = [...new Set(B.filter(x => x.k && x.n && !/^(전주|\d+동$|기숙사$|변전실|기자재)/.test(x.n) && !PLACES.includes(x.n)).map(x => x.n))].sort((a, b) => a.localeCompare(b, 'ko'));
+  PLACES.concat(more).forEach(n => {
+    const b = B.filter(x => x.n === n).sort((a, c) => c.h - a.h)[0]; if(!b) return;
+    const cx = b.p.reduce((a, q) => a + q[0], 0) / b.p.length, mz = Math.max(...b.p.map(q => q[1]));
+    placeEl.add(new Option(n + ' 앞', cx + ',' + (mz + 12)));
+  });
+  placeEl.add(new Option('직접 고르기(땅 누르기)', 'pick'));
+}
+function moveJJ(x, z, keepCam){
+  const dx = x - jj.position.x, dz = z - jj.position.z;
+  jj.position.set(x, 0, z);
+  if(keepCam){ cam.position.x += dx; cam.position.z += dz; }
+  controls.target.set(x, 1, z);
+  update();
+}
+function goPlace(){
+  if(placeEl.value === 'pick') return;
+  const [x, z] = placeEl.value.split(',').map(Number);
+  moveJJ(x, z);
+  const s = cur || { az: 180, alt: 30 }, v = vec(28, (s.az + 200) % 360, 16);
+  cam.position.set(x + v.x, v.y, z + v.z);
+}
+placeEl.addEventListener('change', goPlace);
+// 땅 누르기(끌기와 구분: 움직임 6px 안쪽만)
+const ray = new THREE.Raycaster(); let down = null;
+canvas.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+canvas.addEventListener('pointerup', e => {
+  if(!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
+  const r = canvas.getBoundingClientRect();
+  ray.setFromCamera({ x: (e.clientX - r.left) / r.width * 2 - 1, y: -(e.clientY - r.top) / r.height * 2 + 1 }, cam);
+  const hit = ray.intersectObject(ground)[0]; if(!hit) return;
+  placeEl.value = 'pick'; moveJJ(hit.point.x, hit.point.z, true);
+});
+
+const sky = { day: new THREE.Color(0x9cc4ec), gold: new THREE.Color(0xf3b77a), dusk: new THREE.Color(0x4a5a8c), night: new THREE.Color(0x141a2e) };
+const dEl = document.getElementById('d'), tEl = document.getElementById('t'), tOut = document.getElementById('tOut');
+const facts = document.getElementById('facts'), verdict = document.getElementById('verdict');
+// 기획서에서 넘어온 값: ?d=촬영일&t=시작&t2=끝&p=촬영 장소(글)
+const Q = new URLSearchParams(location.search);
+const hmMin = s => { const m = /^(\d{1,2}):(\d{2})$/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : null; };
+dEl.value = /^\d{4}-\d{2}-\d{2}$/.test(Q.get('d') || '') ? Q.get('d') : new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+(function(){
+  const a = hmMin(Q.get('t')), b = hmMin(Q.get('t2'));
+  if(a != null) tEl.value = Math.min(1140, Math.max(360, b != null ? Math.round((a + b) / 2 / 5) * 5 : a));
+  if(Q.get('d') || a != null || Q.get('p')){
+    const fe = document.getElementById('from'); fe.hidden = false;
+    fe.innerHTML = '기획서 촬영 일정: <b>' + [Q.get('d'), [Q.get('t'), Q.get('t2')].filter(Boolean).join('~'), Q.get('p')].filter(Boolean).map(s => s.replace(/[<>&]/g, '')).join(' · ') + '</b>';
+  }
+})();
+// 기획서 장소 글에 건물 이름이 있으면 그 앞으로
+function pickFromQuery(){
+  const p = (Q.get('p') || '').replace(/\s/g, ''); if(!p) return;
+  const o = [...placeEl.options].find(o => o.value !== 'pick' && p.includes(o.text.replace(/ 앞$/, '').replace(/\s/g, '')));
+  if(o) placeEl.value = o.value;
+}
+let cur = null;
+function update(){
+  const ymd = dEl.value || '2026-11-02', min = +tEl.value;
+  tOut.textContent = String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
+  const p = cur = sunPos(ymd, min), c = jj.position;
+  sun.position.copy(vec(Math.max(p.alt, -3), p.az, SUN_R)).add(new THREE.Vector3(c.x, 0, c.z)); sun.visible = p.alt > -1;
+  light.position.copy(vec(Math.max(p.alt, 0.5), p.az, 450)).add(new THREE.Vector3(c.x, 0, c.z));
+  light.target.position.set(c.x, 0, c.z);
+  const k = Math.max(0, Math.min(1, p.alt / 25));
+  light.intensity = p.alt > 0 ? 0.35 + 0.75 * k : 0;
+  light.color.setRGB(1, 0.72 + 0.28 * k, 0.45 + 0.55 * k);
+  amb.intensity = p.alt > 0 ? 0.45 : Math.max(0.12, 0.45 + p.alt / 20);
+  scene.background = p.alt > 12 ? sky.day : p.alt > 0 ? sky.gold.clone().lerp(sky.day, p.alt / 12) : p.alt > -6 ? sky.dusk : sky.night;
+  if(!B.length) return;
+  const sh = shadeAt(c.x, c.z, p);
+  if(sh && sh.night){ verdict.className = 'verdict shade'; verdict.innerHTML = '🌙 해가 진 시간이에요<small>그림자 없음 · 조명이 필요해요</small>'; }
+  else if(sh){ verdict.className = 'verdict shade'; verdict.innerHTML = `🏢 그늘이에요 — ${sh.by} 그림자<small>해 쪽으로 ${Math.round(sh.dist)}m 떨어진 건물이 해를 가려요. 고르게 부드러운 빛이에요.</small>`; }
+  else { verdict.className = 'verdict sun'; verdict.innerHTML = '☀️ 햇빛이 들어요<small>건물에 가리지 않아요.</small>'; }
+  if(p.alt > 0){
+    const ratio = 1 / Math.tan(p.alt * R), high = p.alt < 10 ? '아주 낮음(황금빛)' : p.alt < 25 ? '낮음' : p.alt < 45 ? '중간' : '높음';
+    facts.innerHTML = `<li>☀️ 해: <b>${dir(p.az)}쪽, ${high}</b> <small>(높이 ${Math.round(p.alt)}°)</small></li>
+      <li>👤 그림자: <b>${dir((p.az + 180) % 360)}쪽으로 키의 ${ratio >= 10 ? '10배 넘게' : ratio.toFixed(1) + '배'}</b></li>
+      <li>📷 얼굴 밝게: <b>${dir(p.az)}쪽을 등지고</b> 찍기</li>`;
+  } else facts.innerHTML = '';
+}
+dEl.addEventListener('change', update);
+tEl.addEventListener('input', update);
+function resize(){ const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(canvas); resize();
+cam.position.set(60, 60, 80);
+(function loop(){ controls.update(); renderer.render(scene, cam); requestAnimationFrame(loop); })();
+</script>
+</body>
+</html>

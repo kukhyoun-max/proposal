@@ -196,6 +196,8 @@
   .sun-fig svg{display:block; width:112px; height:auto;}
   .sun-facts{list-style:none; margin:0; padding:0; flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; font-size:14px; line-height:1.45; color:var(--ink); word-break:keep-all;}
   .sun-facts small{font-size:12px; color:var(--ink-soft);}
+  .sun-3d{display:flex; align-items:center; justify-content:center; min-height:44px; margin-top:12px; padding:0 14px; border-radius:12px; border:1px solid var(--line); background:var(--surface, #fff); color:var(--ink); font-size:14px; font-weight:700; text-decoration:none;}
+  .sun-3d:focus-visible{outline:2px solid var(--accent, #3182F6); outline-offset:2px;}
   .lt-warn{font-size:13px; line-height:1.5; color:#8A4B00; background:#FFF6E0; border-radius:10px; padding:8px 10px; margin:10px 0 0; word-break:keep-all;}
   .one-line{background:#F7F9FF; border:1.5px solid var(--purple-soft); border-radius:12px; padding:12px; margin-bottom:14px;}
   .one-line input{background:#fff;}
@@ -4997,8 +4999,12 @@ function sunRender(){
     facts.push(`👤 그림자: <b>${back}쪽으로 ${ratio >= 2 ? '길게' : ratio >= 1 ? '키만큼' : '짧게'}</b>`);
     facts.push(`📷 밝게: <b>해 등지기</b> · 역광: <b>해 보기</b>`);
   } else facts.push(`🌙 ${sunLight(sp.alt)}`);
+  // 캠퍼스 빛 3D(2026-10-30): 고른 날짜·시간·첫 촬영 장소를 넘겨 실제 건물 그늘을 확인
+  const place = ((data.plan || []).map(p => (p && p.location) || '').find(Boolean) || '').slice(0, 40);
+  const q = new URLSearchParams({ d, t: from }); if(to) q.set('t2', to); if(place) q.set('p', place);
   box.innerHTML = `<div class="sun-box"><h3>🧭 ${esc(from)}${to ? '~' + esc(to) : ''} 해 위치</h3>
-    <div class="sun-row">${compass ? `<div class="sun-fig">${compass}</div>` : ''}<ul class="sun-facts">${facts.map(f => `<li>${f}</li>`).join('')}</ul></div></div>`;
+    <div class="sun-row">${compass ? `<div class="sun-fig">${compass}</div>` : ''}<ul class="sun-facts">${facts.map(f => `<li>${f}</li>`).join('')}</ul></div>
+    <a class="sun-3d" href="light3d/?${q}" target="_blank" rel="noopener">🏫 3D 캠퍼스에서 그늘 확인하기</a></div>`;
 }
 ['f_filmdate', 'f_filmfrom', 'f_filmto'].forEach(id => document.getElementById(id).addEventListener('change', sunRender));
 // 막대 색: 촬영 예정 파랑 · 제작 중 주황 · 제작 완료 초록 · 업로드 완료 보라 · 제출일 지남(미완료) 빨강 · 학사 회색

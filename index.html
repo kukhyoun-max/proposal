@@ -6029,13 +6029,21 @@ function jjRosterApply(r){
   $('jjhScChips').innerHTML = [['all', '전체'], ['make', '제작'], ['duty', '의전/행사'], ['up', '업로드'], ['acad', '학사']].map(([k, t]) => `<button type="button" data-k="${k}" class="${k === 'all' ? 'on' : ''}"${k === 'all' ? '' : ` style="--cc:${CAL[k === 'up' ? 'sns' : k].c}"`}>${t}</button>`).join('');
   $('jjhScChips').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; scFilter = b.dataset.k;
     [...$('jjhScChips').children].forEach(x => x.classList.toggle('on', x === b)); renderSchedule(); });
-  // 제목은 한 줄로, 끝의 「 - 팀장 이름」은 빼고 보여 줌(2026-10-30 담당자 「두 줄은 보기 싫다, 팀장도 이제 누군지 다 알아」). 기획서 열기·메뉴는 원래 제목 그대로
-  // 제작 캘린더는 서버가 항상 「제목 - 팀장」으로 만들므로 끝 이름을 늘 뺌(오리지널 콘텐츠 담당처럼 명단에 없는 이름도, 2026-10-30). 다른 캘린더는 「체험왕 - 도서관」 같은 편 이름을 지우지 않도록, 끝말이 홍보대사 명단에 있는 이름일 때만 뺌(명단이 늦게 오면 'jjroster' 때 다시 그림)
-  const scTitle = (t, mk) => {
-    const s = String(t || ''), m = s.match(/^(.+?)\s+[-–—]\s+([가-힣]{2,4}(?:\s*[,·]\s*[가-힣]{2,4})*)(?:\s*외\s*\d+명)?\s*$/);
-    if (!m) return s;
-    const who = m[2].split(/\s*[,·]\s*/);
-    return (mk || who.every(n => AMBASSADOR_ROSTER.includes(n))) ? m[1] : s;
+  // 제목은 한 줄로(넘치면 …), 담당자 이름은 빼고 보여 줌(2026-10-30 담당자 「두 줄은 보기 싫다, 팀장·오리지널 담당도 누군지 다 알아」). 기획서 열기·⋯ 메뉴는 원래 제목 그대로
+  // 실제 캘린더 제목 모양(2026-10-30 9~11월 일정 확인):
+  //  · 제작: 서버가 「제목 - 팀장」으로 만듦 → 끝 「 - 이름」은 늘 뺌. 손으로 만든 「제목 | 김세영, 김현아」는 명단에 있는 이름일 때만
+  //  · 홍비디오: 「이다희 - 제목」「김현우-제목」처럼 이름이 앞 → 앞 이름은 늘 뺌
+  //  · 업로드·의전/행사: 이름이 붙지 않음. 혹시 붙어도 명단에 있는 이름일 때만 뺌(「체험왕 | 맨인블랙편」 같은 편 이름은 그대로)
+  const SC_TAIL = /^(.+?)(\s+[-–—]\s+|\s*[|ㅣ]\s*)([가-힣]{2,4}(?:\s*[,·]\s*[가-힣]{2,4})*)(?:\s*외\s*\d+명)?\s*$/;
+  const SC_HEAD = /^\s*([가-힣]{2,4}(?:\s*[,·]\s*[가-힣]{2,4})*)\s*[-–—|ㅣ:]\s*(.+)$/;
+  const scTitle = (t, cal) => {
+    let s = String(t || "").trim();
+    const inR = w => w.split(/\s*[,·]\s*/).every(n => AMBASSADOR_ROSTER.includes(n));
+    const h = s.match(SC_HEAD);
+    if (h && (cal === "hong" || inR(h[1]))) s = h[2].trim();
+    const m = s.match(SC_TAIL);
+    if (m && ((cal === "make" && /[-–—]/.test(m[2])) || inR(m[3]))) s = m[1].trim();
+    return s || String(t || "");
   };
   document.addEventListener('jjroster', () => { if (EVENTS.length) renderSchedule(); });
   function renderSchedule(){
@@ -6048,7 +6056,7 @@ function jjRosterApply(r){
       const when = e.step === 'shoot' ? (e.pair ? '제출 ' + md(e.pair) : '촬영일') : e.step === 'submit' ? (e.pair ? '촬영 ' + md(e.pair) : '제출일') :
         e.time ? e.time : (e.end && e.end !== e.start ? md(e.start) + '~' + md(e.end) : '종일');
       const ro = e.calKey === 'acad';
-      html += `<div class="jjh-row${ro ? '' : ' go'}" data-i="${EVENTS.indexOf(e)}" style="--cc:${c.c}"><span class="ico" style="background:${c.bg}">${c.e}</span><div class="t"><span class="one"><span class="tag" style="background:${c.c};color:#fff">${c.n}</span>${esc(scTitle(e.title, e.calKey === 'make'))}</span><small>${e.dup ? '<span class="dup">중복</span>' : ''}${esc(when)}</small></div>${ro ? '' : `<button type="button" class="more" data-i="${EVENTS.indexOf(e)}" aria-label="일정 메뉴">⋯</button>`}</div>`;
+      html += `<div class="jjh-row${ro ? '' : ' go'}" data-i="${EVENTS.indexOf(e)}" style="--cc:${c.c}"><span class="ico" style="background:${c.bg}">${c.e}</span><div class="t"><span class="one"><span class="tag" style="background:${c.c};color:#fff">${c.n}</span>${esc(scTitle(e.title, e.calKey))}</span><small>${e.dup ? '<span class="dup">중복</span>' : ''}${esc(when)}</small></div>${ro ? '' : `<button type="button" class="more" data-i="${EVENTS.indexOf(e)}" aria-label="일정 메뉴">⋯</button>`}</div>`;
     });
     $('jjhScList').innerHTML = html;
   }

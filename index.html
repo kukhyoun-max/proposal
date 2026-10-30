@@ -69,9 +69,11 @@
   }
   .progress-wrap{flex:1; margin-right:16px;}
   /* 관리자 테스트 모드 (2026-10-30) */
-  .test-chip{min-height:44px; padding:0 12px; margin-right:8px; border-radius:22px; border:1px dashed #B26A00; background:none; color:#8A5200; font-size:13px; font-weight:700; cursor:pointer;}
-  .test-chip[aria-pressed="true"]{border-style:solid; background:#FFF3D6; color:#7A4600;}
-  .test-banner{margin:0; padding:8px 16px; background:#FFF3D6; color:#7A4600; font-size:13px; font-weight:700; line-height:1.45;}
+  /* 「처음으로」와 같은 글자 버튼. 켜면 갈색 굵게 + 아래 안내줄 */
+  .test-link[aria-pressed="true"]{color:#7A4600; font-weight:700;}
+  .topbar.in-card #btnTestMode{display:none}
+  .topbar.in-card + .test-banner{display:none}
+  .test-banner{margin:0; padding:6px 16px; background:#FFF3D6; color:#7A4600; font-size:12.5px; line-height:1.45; word-break:keep-all;}
   .progress-track{display:flex; gap:4px; margin-bottom:6px;}
   .progress-seg{flex:1; height:5px; border-radius:4px; background:var(--line); border:none; padding:0; cursor:default;}
   .progress-seg.done{background:var(--purple); cursor:pointer;}
@@ -895,10 +897,10 @@
       <div class="progress-track" id="progressTrack"></div>
       <div class="progress-label" id="progressLabel">1 / 7</div>
     </div>
-    <button class="test-chip" id="btnTestMode" type="button" aria-pressed="false" hidden>테스트</button>
+    <button class="reset-link test-link" id="btnTestMode" type="button" aria-pressed="false" hidden>테스트</button>
     <button class="reset-link" id="btnReset">처음으로</button>
   </div>
-  <p class="test-banner" id="testBanner" hidden>🧪 테스트 모드: 빈칸이어도 다음 단계로 넘어가요. 제출·임시 저장은 되지 않아요.</p>
+  <p class="test-banner" id="testBanner" hidden>🧪 테스트 중 · 빈칸도 넘어가요 · 제출·저장 안 됨</p>
 
   <div class="content">
 
@@ -2479,6 +2481,7 @@ function testModeSync(){
   const b = document.getElementById('btnTestMode'), r = adminRole();
   b.hidden = !(r && r.full); if(b.hidden) testMode = false;
   b.setAttribute('aria-pressed', testMode); b.textContent = testMode ? '테스트 끄기' : '테스트';
+  b.setAttribute('aria-label', testMode ? '테스트 모드 끄기' : '테스트 모드 켜기(관리자)');
   document.getElementById('testBanner').hidden = !testMode;
   updateCta();
 }

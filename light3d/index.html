@@ -41,6 +41,14 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
 .facts small{color:var(--ink-soft); font-size:13px;}
 .note{font-size:12px; color:var(--ink-soft); margin:0;}
 .from{margin:-6px 0 0; font-size:14px; color:var(--ink-soft);}
+.cast{display:flex; flex-direction:column; gap:8px;}
+.cast .row{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
+.cast .lbl{font-size:13px; font-weight:700; color:var(--ink-soft); width:32px;}
+.cast output{min-width:52px; text-align:center; font-weight:900; font-size:15px;}
+.chip{min-height:44px; min-width:44px; padding:0 14px; border-radius:22px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:14px; font-weight:700; cursor:pointer;}
+.chip[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); color:var(--accent);}
+.chip:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+.verdict ul{margin:6px 0 0; padding:0; list-style:none; font-size:14px; font-weight:700;}
 .from b{color:var(--ink);}
 </style>
 </head>
@@ -53,7 +61,23 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
     <input type="date" id="d" aria-label="날짜">
     <div class="time"><output id="tOut">16:00</output><input type="range" id="t" min="360" max="1140" step="5" value="960" aria-label="시간"></div>
   </div>
-  <div class="stage"><canvas id="c"></canvas><div class="loading" id="loading">캠퍼스 불러오는 중…</div><span class="hint">땅을 누르면 제이제이가 그 자리로 · 끌어서 돌리기</span></div>
+  <div class="stage"><canvas id="c"></canvas><div class="loading" id="loading">캠퍼스 불러오는 중…</div><span class="hint">땅을 누르면 인원이 그 자리로 · 끌어서 돌리기</span></div>
+  <div class="cast">
+    <div class="row" role="group" aria-label="촬영 인원">
+      <span class="lbl">인원</span>
+      <button type="button" class="chip" data-who="jj" aria-pressed="true">제이제이</button>
+      <button type="button" class="chip" data-who="jt" aria-pressed="false">+ 제이트</button>
+      <button type="button" class="chip" data-who="by" aria-pressed="false">+ 별이</button>
+    </div>
+    <div class="row" role="group" aria-label="바라보는 방향">
+      <span class="lbl">방향</span>
+      <button type="button" class="chip" data-turn="-45" aria-label="왼쪽으로 45도">↺</button>
+      <output id="faceOut">남쪽</output>
+      <button type="button" class="chip" data-turn="45" aria-label="오른쪽으로 45도">↻</button>
+      <button type="button" class="chip" data-turn="sun">해 보기</button>
+      <button type="button" class="chip" data-turn="back">해 등지기</button>
+    </div>
+  </div>
   <div class="verdict" id="verdict"></div>
   <ul class="facts" id="facts"></ul>
   <p class="note">건물·항공사진: 국토교통부 브이월드(건물 높이, 없으면 층수 × 3.5m). 해 위치는 전주대 위치로 계산했고 날씨·나무 그늘은 넣지 않았어요.</p>
@@ -122,16 +146,44 @@ Object.assign(light.shadow.camera, { left: -160, right: 160, top: 160, bottom: -
 scene.add(light); scene.add(light.target);
 const amb = new THREE.HemisphereLight(0xdfe9ff, 0x8a8f7a, 0.5); scene.add(amb);
 
-// 제이제이 (블렌더 원본 → glb, 키 1.7m로 맞춤)
+// 촬영 인원: 제이제이·제이트·별이(블렌더 원본 → glb). 사람 대신 세우는 것이라 셋 다 키 1.7m로 맞춤
+// jj = 인원 묶음(그 자리·바라보는 방향). 모델 앞쪽은 +z(남쪽) → 방향 az(°, 북 0·동 90)이면 rotation.y = (180 - az)°
 const jj = new THREE.Group(); scene.add(jj);
-const ring = new THREE.Mesh(new THREE.RingGeometry(1.4, 1.9, 40), new THREE.MeshBasicMaterial({ color: 0x3d5fe0, transparent: true, opacity: .75, side: THREE.DoubleSide }));
-ring.rotation.x = -Math.PI / 2; ring.position.y = 0.05; jj.add(ring);
-new THREE.GLTFLoader().load('jj_basic.glb', g => {
-  const m = g.scene, box = new THREE.Box3().setFromObject(m), s = 1.7 / (box.max.y - box.min.y);
-  m.scale.setScalar(s); m.position.y = -box.min.y * s;
-  m.traverse(o => { if(o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
-  jj.add(m);
-});
+const ring = new THREE.Mesh(new THREE.RingGeometry(2.2, 2.6, 48), new THREE.MeshBasicMaterial({ color: 0x3d5fe0, transparent: true, opacity: .75, side: THREE.DoubleSide }));
+ring.rotation.x = -Math.PI / 2; ring.position.y = 0.05; scene.add(ring);
+const CAST = { jj: { file: 'jj_basic.glb', name: '제이제이', on: true }, jt: { file: 'jt_basic.glb', name: '제이트', on: false }, by: { file: 'by_basic.glb', name: '별이', on: false } };
+let face = 180; // 처음엔 남쪽을 봐요
+const loader = new THREE.GLTFLoader();
+function loadCast(k){
+  const c = CAST[k]; if(c.obj || c.loading) return; c.loading = true;
+  loader.load(c.file, g => {
+    const m = g.scene, b0 = new THREE.Box3().setFromObject(m); m.scale.setScalar(1.7 / (b0.max.y - b0.min.y));
+    const box = new THREE.Box3().setFromObject(m); m.position.y = -box.min.y;
+    m.traverse(o => { if(o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
+    c.obj = new THREE.Group(); c.obj.add(m); jj.add(c.obj); c.loading = false; layout(); update();
+  });
+}
+// 켜진 인원을 어깨 옆으로 1.6m 간격, 묶음 가운데 기준으로 한 줄
+function layout(){
+  const on = Object.values(CAST).filter(c => c.on && c.obj);
+  Object.values(CAST).forEach(c => { if(c.obj) c.obj.visible = c.on; });
+  on.forEach((c, i) => c.obj.position.set((i - (on.length - 1) / 2) * 1.6, 0, 0));
+  jj.rotation.y = (180 - face) * R;
+  ring.position.set(jj.position.x, 0.05, jj.position.z);
+}
+function castWorld(){ jj.updateMatrixWorld(true); return Object.values(CAST).filter(c => c.on && c.obj).map(c => ({ name: c.name, p: c.obj.getWorldPosition(new THREE.Vector3()) })); }
+loadCast('jj');
+document.querySelectorAll('[data-who]').forEach(b => b.addEventListener('click', () => {
+  const k = b.dataset.who, c = CAST[k];
+  if(c.on && Object.values(CAST).filter(x => x.on).length === 1) return; // 한 명은 남겨요
+  c.on = !c.on; b.setAttribute('aria-pressed', c.on); b.textContent = (c.on || k === 'jj' ? '' : '+ ') + c.name;
+  if(c.on) loadCast(k); layout(); update();
+}));
+document.querySelectorAll('[data-turn]').forEach(b => b.addEventListener('click', () => {
+  const t = b.dataset.turn, s = cur || { az: 180 };
+  face = t === 'sun' ? s.az : t === 'back' ? s.az + 180 : face + +t;
+  face = ((Math.round(face) % 360) + 360) % 360; layout(); update();
+}));
 
 // 건물 그리기 도우미: 돌출 모양에서 지붕/벽 부분만 떼어 색을 칠함(나중에 한 덩어리로 합침)
 function part(g, start, count, color, windows){
@@ -221,7 +273,7 @@ function buildPlaces(){
 }
 function moveJJ(x, z, keepCam){
   const dx = x - jj.position.x, dz = z - jj.position.z;
-  jj.position.set(x, 0, z);
+  jj.position.set(x, 0, z); layout();
   if(keepCam){ cam.position.x += dx; cam.position.z += dz; }
   controls.target.set(x, 1, z);
   update();
@@ -279,11 +331,18 @@ function update(){
   light.color.setRGB(1, 0.72 + 0.28 * k, 0.45 + 0.55 * k);
   amb.intensity = p.alt > 0 ? 0.45 : Math.max(0.12, 0.45 + p.alt / 20);
   scene.background = p.alt > 12 ? sky.day : p.alt > 0 ? sky.gold.clone().lerp(sky.day, p.alt / 12) : p.alt > -6 ? sky.dusk : sky.night;
+  document.getElementById('faceOut').textContent = dir(face) + '쪽';
   if(!B.length) return;
-  const sh = shadeAt(c.x, c.z, p);
-  if(sh && sh.night){ verdict.className = 'verdict shade'; verdict.innerHTML = '🌙 해가 진 시간이에요<small>그림자 없음 · 조명이 필요해요</small>'; }
-  else if(sh){ verdict.className = 'verdict shade'; verdict.innerHTML = `🏢 그늘이에요 — ${sh.by} 그림자<small>해 쪽으로 ${Math.round(sh.dist)}m 떨어진 건물이 해를 가려요. 고르게 부드러운 빛이에요.</small>`; }
-  else { verdict.className = 'verdict sun'; verdict.innerHTML = '☀️ 햇빛이 들어요<small>건물에 가리지 않아요.</small>'; }
+  // 얼굴에 드는 빛: 바라보는 방향과 해 방향의 차이
+  const diff = Math.abs(((face - p.az) % 360 + 540) % 360 - 180);
+  const faceLight = diff <= 60 ? '얼굴에 해가 바로 들어요(순광, 눈부심 주의)' : diff >= 120 ? '해를 등져요(역광: 얼굴은 어둡고 머리 둘레가 빛나요)' : '얼굴 옆으로 해가 들어요(옆빛, 입체감)';
+  const who = castWorld(), res = who.map(w => ({ name: w.name, sh: shadeAt(w.p.x, w.p.z, p) }));
+  const shaded = res.filter(r => r.sh), many = res.length > 1;
+  const list = many ? `<ul>${res.map(r => `<li>${r.sh ? '🏢' : '☀️'} ${r.name}: ${r.sh ? '그늘' : '햇빛'}</li>`).join('')}</ul>` : '';
+  if(p.alt <= 0){ verdict.className = 'verdict shade'; verdict.innerHTML = '🌙 해가 진 시간이에요<small>그림자 없음 · 조명이 필요해요</small>'; }
+  else if(shaded.length === res.length && res.length){ const sh = shaded[0].sh; verdict.className = 'verdict shade'; verdict.innerHTML = `🏢 ${many ? '모두 ' : ''}그늘이에요 — ${sh.by} 그림자<small>해 쪽으로 ${Math.round(sh.dist)}m 떨어진 건물이 해를 가려요. 고르게 부드러운 빛이에요.</small>`; }
+  else if(shaded.length){ verdict.className = 'verdict shade'; verdict.innerHTML = `⛅ ${res.length}명 중 ${shaded.length}명만 그늘이에요<small>빛이 서로 달라요. 자리를 옮기거나 방향을 돌려 보세요.</small>${list}`; }
+  else { verdict.className = 'verdict sun'; verdict.innerHTML = `☀️ ${many ? '모두 ' : ''}햇빛이 들어요<small>${faceLight}</small>`; }
   if(p.alt > 0){
     const ratio = 1 / Math.tan(p.alt * R), high = p.alt < 10 ? '아주 낮음(황금빛)' : p.alt < 25 ? '낮음' : p.alt < 45 ? '중간' : '높음';
     facts.innerHTML = `<li>☀️ 해: <b>${dir(p.az)}쪽, ${high}</b> <small>(높이 ${Math.round(p.alt)}°)</small></li>

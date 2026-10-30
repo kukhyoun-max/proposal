@@ -80,7 +80,7 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
   </div>
   <div class="verdict" id="verdict"></div>
   <ul class="facts" id="facts"></ul>
-  <p class="note">건물·항공사진: 국토교통부 브이월드(건물 높이, 없으면 층수 × 3.5m). 해 위치는 전주대 위치로 계산했고 날씨·나무 그늘은 넣지 않았어요.</p>
+  <p class="note">건물·항공사진: 국토교통부 브이월드(건물 높이, 없으면 층수 × 3.5m). 나무는 항공사진의 초록 무늬로 찾아 높이를 7·9·12m로 어림했어요. 해 위치는 전주대 위치로 계산했고 날씨·천막 같은 작은 구조물은 넣지 않았어요.</p>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -219,12 +219,19 @@ let B = [], grid = new Map();
 const tags = []; // 건물 이름표(누르면 그 건물 앞으로)
 const GS = 20, key = (x, z) => Math.floor(x / GS) + ',' + Math.floor(z / GS);
 function inPoly(x, z, p){ let c = false; for(let i = 0, j = p.length - 1; i < p.length; j = i++){ const [xi, zi] = p[i], [xj, zj] = p[j]; if((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; }
+// 나무: 항공사진에서 뽑은 2m 칸(trees.json, 값 1·2·3 = 높이 7·9·12m, 잎 아래 2.5m는 빛이 지나감)
+let T = null;
+function treeH(x, z){
+  if(!T) return 0; const gx = Math.floor((x - T.x0) / T.cs), gz = Math.floor((z - T.z0) / T.cs);
+  if(gx < 0 || gz < 0 || gx >= T.w || gz >= T.h) return 0; return T.hm[T.c[gz * T.w + gx]];
+}
 function shadeAt(x, z, s){
   if(s.alt <= 0) return { night: true };
   const d = vec(s.alt, s.az, 1), y0 = 1.0; // 제이제이 가슴 높이
   for(let t = 1; t < 700; t += 1){
     const px = x + d.x * t, pz = z + d.z * t, py = y0 + d.y * t;
     if(py > 70) break;
+    if(py >= 2.5 && py < 12){ const th = treeH(px, pz); if(th > py) return { tree: true, by: '나무 (높이 약 ' + th + 'm)', dist: t }; }
     const list = grid.get(key(px, pz)); if(!list) continue;
     for(const b of list) if(b.h > py && inPoly(px, pz, b.p)) return { by: (b.n && !/^전주(대학교|비전대학)$/.test(b.n) ? b.n : "옆 건물") + " (높이 " + Math.round(b.h) + "m)", dist: t };
   }
@@ -259,6 +266,46 @@ fetch('buildings.json').then(r => r.json()).then(data => {
   pickFromQuery(); goPlace(); update();
 });
 
+fetch('trees.json').then(r => r.json()).then(d => {
+  const c = new Uint8Array(d.w * d.h); let i = 0; for(let k = 0; k < d.rle.length; k += 2){ c.fill(d.rle[k], i, i + d.rle[k + 1]); i += d.rle[k + 1]; }
+  T = { x0: d.x0, z0: d.z0, cs: d.cs, w: d.w, h: d.h, hm: d.hm, c };
+  // 그리기: 3×3칸(6m)마다 나무 칸이 있으면 잎 덩어리 하나(그 칸들 가운데, 가장 높은 값)
+  const pts = [];
+  for(let bz = 0; bz < d.h; bz += 3) for(let bx = 0; bx < d.w; bx += 3){
+    let n = 0, sx = 0, sz = 0, mh = 0;
+    for(let z = bz; z < Math.min(bz + 3, d.h); z++) for(let x = bx; x < Math.min(bx + 3, d.w); x++){ const v = c[z * d.w + x]; if(v){ n++; sx += x; sz += z; mh = Math.max(mh, d.hm[v]); } }
+    if(n >= 2) pts.push([d.x0 + (sx / n + .5) * d.cs, d.z0 + (sz / n + .5) * d.cs, mh, n]);
+  }
+  // 잎 덩어리 행렬·색을 미리 만들어 두고, 인원 둘레 25m 나무는 아주 옅게(ghost) 그려 인원을 가리지 않게(그림자는 그대로)
+  const geo = new THREE.IcosahedronGeometry(1, 0), N = pts.length;
+  const solid = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ flatShading: true }), N);
+  const ghost = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ flatShading: true, transparent: true, opacity: .1, depthWrite: false }), N);
+  const mats = new Float32Array(N * 16), cols = new Float32Array(N * 3);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), col = new THREE.Color();
+  pts.forEach(([x, z, h, n], k) => {
+    const r = n >= 6 ? 3.3 : 2.4, ry = (h - d.base) / 2 + .4;
+    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), (k * 2.399) % 6.28);
+    m.compose(new THREE.Vector3(x, d.base + ry - .2, z), q, new THREE.Vector3(r, ry, r)); m.toArray(mats, k * 16);
+    col.setHSL(0.27 + (k % 7) * 0.008, 0.38, 0.24 + (k % 5) * 0.025).toArray(cols, k * 3);
+  });
+  [solid, ghost].forEach(o => { o.setColorAt(0, col); o.castShadow = true; o.receiveShadow = o === solid; o.frustumCulled = false; scene.add(o); });
+  ghost.renderOrder = 2;
+  trees = { pts, solid, ghost, mats, cols, at: null };
+  treeNear(); update();
+});
+let trees = null;
+function treeNear(){
+  if(!trees) return; const { pts, solid, ghost, mats, cols } = trees, c = jj.position;
+  if(trees.at && trees.at.distanceTo(c) < 1) return; trees.at = c.clone();
+  let a = 0, b = 0;
+  pts.forEach((p, k) => {
+    const near = Math.hypot(p[0] - c.x, p[1] - c.z) < 25, o = near ? ghost : solid, i = near ? b++ : a++;
+    o.instanceMatrix.array.set(mats.subarray(k * 16, k * 16 + 16), i * 16); o.instanceColor.array.set(cols.subarray(k * 3, k * 3 + 3), i * 3);
+  });
+  solid.count = a; ghost.count = b;
+  [solid, ghost].forEach(o => { o.instanceMatrix.needsUpdate = true; o.instanceColor.needsUpdate = true; });
+}
+
 // 장소: 건물 남쪽 입구 앞 12m (건물 가운데 x, 건물 가장 남쪽 + 12m)
 const PLACES = ['스타타워', '진리관', '자유관', '공학1관', '예술관', '천잠관', '대학본관'];
 const placeEl = document.getElementById('place');
@@ -274,7 +321,7 @@ function buildPlaces(){
 }
 function moveJJ(x, z, keepCam){
   const dx = x - jj.position.x, dz = z - jj.position.z;
-  jj.position.set(x, 0, z); layout();
+  jj.position.set(x, 0, z); layout(); treeNear();
   if(keepCam){ cam.position.x += dx; cam.position.z += dz; }
   controls.target.set(x, 1, z);
   update();
@@ -326,6 +373,8 @@ function pickFromQuery(){
   const o = [...placeEl.options].find(o => o.value !== 'pick' && p.includes(o.text.replace(/ 앞$/, '').replace(/\s/g, '')));
   if(o) placeEl.value = o.value;
 }
+// 잎이 지는 철: 11월 중순부터 3월까지는 나무 그늘이 옅어요
+function leafNote(){ const m = +(dEl.value || '').slice(5, 7), d = +(dEl.value || '').slice(8, 10); return (m === 11 && d >= 15) || m === 12 || m <= 3 ? ' 잎이 많이 진 때라 그늘이 옅을 수 있어요.' : ''; }
 let cur = null;
 function update(){
   const ymd = dEl.value || '2026-11-02', min = +tEl.value;
@@ -346,9 +395,9 @@ function update(){
   const faceLight = diff <= 60 ? '얼굴에 해가 바로 들어요(순광, 눈부심 주의)' : diff >= 120 ? '해를 등져요(역광: 얼굴은 어둡고 머리 둘레가 빛나요)' : '얼굴 옆으로 해가 들어요(옆빛, 입체감)';
   const who = castWorld(), res = who.map(w => ({ name: w.name, sh: shadeAt(w.p.x, w.p.z, p) }));
   const shaded = res.filter(r => r.sh), many = res.length > 1;
-  const list = many ? `<ul>${res.map(r => `<li>${r.sh ? '🏢' : '☀️'} ${r.name}: ${r.sh ? '그늘' : '햇빛'}</li>`).join('')}</ul>` : '';
+  const list = many ? `<ul>${res.map(r => `<li>${r.sh ? (r.sh.tree ? '🌳' : '🏢') : '☀️'} ${r.name}: ${r.sh ? '그늘' : '햇빛'}</li>`).join('')}</ul>` : '';
   if(p.alt <= 0){ verdict.className = 'verdict shade'; verdict.innerHTML = '🌙 해가 진 시간이에요<small>그림자 없음 · 조명이 필요해요</small>'; }
-  else if(shaded.length === res.length && res.length){ const sh = shaded[0].sh; verdict.className = 'verdict shade'; verdict.innerHTML = `🏢 ${many ? '모두 ' : ''}그늘이에요 — ${sh.by} 그림자<small>해 쪽으로 ${Math.round(sh.dist)}m 떨어진 건물이 해를 가려요. 고르게 부드러운 빛이에요.</small>`; }
+  else if(shaded.length === res.length && res.length){ const sh = shaded[0].sh; verdict.className = 'verdict shade'; verdict.innerHTML = sh.tree ? `🌳 ${many ? '모두 ' : ''}나무 그늘이에요<small>해 쪽 ${Math.round(sh.dist)}m 나무가 해를 가려요. 잎 사이로 빛이 새어 얼굴에 얼룩이 질 수 있으니 화면으로 한 번 확인하세요.${leafNote()}</small>` : `🏢 ${many ? '모두 ' : ''}그늘이에요 — ${sh.by} 그림자<small>해 쪽으로 ${Math.round(sh.dist)}m 떨어진 건물이 해를 가려요. 고르게 부드러운 빛이에요.</small>`; }
   else if(shaded.length){ verdict.className = 'verdict shade'; verdict.innerHTML = `⛅ ${res.length}명 중 ${shaded.length}명만 그늘이에요<small>빛이 서로 달라요. 자리를 옮기거나 방향을 돌려 보세요.</small>${list}`; }
   else { verdict.className = 'verdict sun'; verdict.innerHTML = `☀️ ${many ? '모두 ' : ''}햇빛이 들어요<small>${faceLight}</small>`; }
   if(p.alt > 0){

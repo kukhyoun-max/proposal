@@ -6022,7 +6022,8 @@ function jjRosterApply(r){
   /* ── 주요 일정 (구글 캘린더 4개) ── */
   // 종류별 색: 진한 색(c)은 태그·왼쪽 띠·필터 버튼, 연한 색(bg)은 아이콘 바탕. 의전/행사 분홍은 일정·장비 달력 막대와 같은 색
   // 학사(제작 캘린더의 「[학사]」 일정, 2026-10-18~)는 회색: 읽기 전용이라 ⋯ 메뉴·기획서 열기 없음
-  const CAL = { make:{ n:'제작', e:'🎬', c:'#1E6FE8', bg:'#DCE9FF' }, duty:{ n:'의전/행사', e:'🤝', c:'#D6336C', bg:'#FCE4EC' }, sns:{ n:'업로드', e:'📤', c:'#E8590C', bg:'#FFE5D1' }, hong:{ n:'업로드', e:'📤', c:'#E8590C', bg:'#FFE5D1' }, acad:{ n:'학사', e:'🎓', c:'#495057', bg:'#E9ECEF' } };
+  // 제작은 촬영일·제출일을 따로(2026-10-30 담당자 「촬영은 (촬영), 제출은 (제출), 색상도 다르게」): 촬영 파랑 · 제출 초록(구글 캘린더 일정 색과 같은 계열)
+  const CAL = { make:{ n:'제작', e:'🎬', c:'#1E6FE8', bg:'#DCE9FF' }, shoot:{ n:'촬영', e:'🎬', c:'#1E6FE8', bg:'#DCE9FF' }, submit:{ n:'제출', e:'📦', c:'#2E8B57', bg:'#DDF3E6' }, duty:{ n:'의전/행사', e:'🤝', c:'#D6336C', bg:'#FCE4EC' }, sns:{ n:'업로드', e:'📤', c:'#E8590C', bg:'#FFE5D1' }, hong:{ n:'업로드', e:'📤', c:'#E8590C', bg:'#FFE5D1' }, acad:{ n:'학사', e:'🎓', c:'#495057', bg:'#E9ECEF' } };
   let EVENTS = [], scFilter = 'all', target = null;
   $('jjhScChips').innerHTML = [['all', '전체'], ['make', '제작'], ['duty', '의전/행사'], ['up', '업로드'], ['acad', '학사']].map(([k, t]) => `<button type="button" data-k="${k}" class="${k === 'all' ? 'on' : ''}"${k === 'all' ? '' : ` style="--cc:${CAL[k === 'up' ? 'sns' : k].c}"`}>${t}</button>`).join('');
   $('jjhScChips').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; scFilter = b.dataset.k;
@@ -6033,8 +6034,9 @@ function jjRosterApply(r){
     let html = '', last = '';
     list.forEach((e, i) => {
       if (e.start !== last){ last = e.start; const d = new Date(e.start + 'T00:00:00'); html += `<div class="jjh-day">${md(e.start)} (${'일월화수목금토'[d.getDay()]})</div>`; }
-      const c = CAL[e.calKey] || CAL.make;
-      const when = e.time ? e.time : (e.end && e.end !== e.start ? md(e.start) + '~' + md(e.end) : '종일');
+      const c = (e.calKey === 'make' && CAL[e.step]) || CAL[e.calKey] || CAL.make;
+      const when = e.step === 'shoot' ? (e.pair ? '제출 ' + md(e.pair) : '촬영일') : e.step === 'submit' ? (e.pair ? '촬영 ' + md(e.pair) : '제출일') :
+        e.time ? e.time : (e.end && e.end !== e.start ? md(e.start) + '~' + md(e.end) : '종일');
       const ro = e.calKey === 'acad';
       html += `<div class="jjh-row${ro ? '' : ' go'}" data-i="${EVENTS.indexOf(e)}" style="--cc:${c.c}"><span class="ico" style="background:${c.bg}">${c.e}</span><div class="t"><span class="tag" style="background:${c.c};color:#fff">${c.n}</span>${esc(e.title)}<small>${e.dup ? '<span class="dup">중복</span>' : ''}${esc(when)}</small></div>${ro ? '' : `<button type="button" class="more" data-i="${EVENTS.indexOf(e)}" aria-label="일정 메뉴">⋯</button>`}</div>`;
     });
@@ -6045,7 +6047,8 @@ function jjRosterApply(r){
     if (!b){ const row = e.target.closest('.jjh-row[data-i]'); const ev = row && EVENTS[+row.dataset.i]; if (ev && ev.calKey !== 'acad') jjOpenPlanByTitle(ev.title); return; }
     target = EVENTS[+b.dataset.i]; if (!target) return;
     $('jjhEvTitle').textContent = target.title;
-    $('jjhEvSub').textContent = (CAL[target.calKey] || CAL.make).n + ' · ' + md(target.start) + (target.end && target.end !== target.start ? '~' + md(target.end) : '') + (target.dup ? ' · 중복 일정' : '');
+    $('jjhEvSub').textContent = ((target.calKey === 'make' && CAL[target.step]) || CAL[target.calKey] || CAL.make).n + ' · ' + md(target.start) + (target.end && target.end !== target.start ? '~' + md(target.end) : '') +
+      (target.step === 'shoot' && target.pair ? ' · 제출 ' + md(target.pair) : '') + (target.step === 'submit' && target.pair ? ' · 촬영 ' + md(target.pair) : '') + (target.dup ? ' · 중복 일정' : '');
     openSheet('jjhSheetEv');
   });
   $('jjhEvClose').addEventListener('click', () => openSheet(null));

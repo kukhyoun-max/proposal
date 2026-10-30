@@ -708,6 +708,7 @@
   .jjh-sc .jjh-row::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:4px;border-radius:2px;background:var(--cc,transparent)}
   .jjh-row .ico{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:17px}
   .jjh-row .t{flex:1;min-width:0;font-size:14.5px;font-weight:700;line-height:1.35;word-break:keep-all;overflow-wrap:anywhere}
+  .jjh-sc .jjh-row .one{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .jjh-row .t small{display:block;font-size:12px;font-weight:500;color:var(--ink-faint);margin-top:1px}
   .jjh-row .tag{display:inline-block;font-size:11px;font-weight:700;line-height:16px;border-radius:6px;padding:0 6px;margin-right:5px;vertical-align:2px}
   .jjh-row .dup{font-size:11px;font-weight:700;color:#fff;background:#F04452;border-radius:6px;padding:1px 6px;margin-right:4px}
@@ -6028,6 +6029,15 @@ function jjRosterApply(r){
   $('jjhScChips').innerHTML = [['all', '전체'], ['make', '제작'], ['duty', '의전/행사'], ['up', '업로드'], ['acad', '학사']].map(([k, t]) => `<button type="button" data-k="${k}" class="${k === 'all' ? 'on' : ''}"${k === 'all' ? '' : ` style="--cc:${CAL[k === 'up' ? 'sns' : k].c}"`}>${t}</button>`).join('');
   $('jjhScChips').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; scFilter = b.dataset.k;
     [...$('jjhScChips').children].forEach(x => x.classList.toggle('on', x === b)); renderSchedule(); });
+  // 제목은 한 줄로, 끝의 「 - 팀장 이름」은 빼고 보여 줌(2026-10-30 담당자 「두 줄은 보기 싫다, 팀장도 이제 누군지 다 알아」). 기획서 열기·메뉴는 원래 제목 그대로
+  // 「체험왕 - 도서관」 같은 편 이름은 지우지 않도록, 끝말이 홍보대사 명단에 있는 이름일 때만 뺌(명단이 늦게 오면 'jjroster' 때 다시 그림)
+  const scTitle = t => {
+    const s = String(t || ''), m = s.match(/^(.+?)\s+[-–—]\s+([가-힣]{2,4}(?:\s*[,·]\s*[가-힣]{2,4})*)(?:\s*외\s*\d+명)?\s*$/);
+    if (!m) return s;
+    const who = m[2].split(/\s*[,·]\s*/);
+    return who.every(n => AMBASSADOR_ROSTER.includes(n)) ? m[1] : s;
+  };
+  document.addEventListener('jjroster', () => { if (EVENTS.length) renderSchedule(); });
   function renderSchedule(){
     const list = EVENTS.filter(e => scFilter === 'all' || e.calKey === scFilter || (scFilter === 'up' && (e.calKey === 'sns' || e.calKey === 'hong')));
     if (!list.length){ $('jjhScList').innerHTML = '<div class="jjh-empty">2주 안에 잡힌 일정이 없어요</div>'; return; }
@@ -6038,7 +6048,7 @@ function jjRosterApply(r){
       const when = e.step === 'shoot' ? (e.pair ? '제출 ' + md(e.pair) : '촬영일') : e.step === 'submit' ? (e.pair ? '촬영 ' + md(e.pair) : '제출일') :
         e.time ? e.time : (e.end && e.end !== e.start ? md(e.start) + '~' + md(e.end) : '종일');
       const ro = e.calKey === 'acad';
-      html += `<div class="jjh-row${ro ? '' : ' go'}" data-i="${EVENTS.indexOf(e)}" style="--cc:${c.c}"><span class="ico" style="background:${c.bg}">${c.e}</span><div class="t"><span class="tag" style="background:${c.c};color:#fff">${c.n}</span>${esc(e.title)}<small>${e.dup ? '<span class="dup">중복</span>' : ''}${esc(when)}</small></div>${ro ? '' : `<button type="button" class="more" data-i="${EVENTS.indexOf(e)}" aria-label="일정 메뉴">⋯</button>`}</div>`;
+      html += `<div class="jjh-row${ro ? '' : ' go'}" data-i="${EVENTS.indexOf(e)}" style="--cc:${c.c}"><span class="ico" style="background:${c.bg}">${c.e}</span><div class="t"><span class="one"><span class="tag" style="background:${c.c};color:#fff">${c.n}</span>${esc(scTitle(e.title))}</span><small>${e.dup ? '<span class="dup">중복</span>' : ''}${esc(when)}</small></div>${ro ? '' : `<button type="button" class="more" data-i="${EVENTS.indexOf(e)}" aria-label="일정 메뉴">⋯</button>`}</div>`;
     });
     $('jjhScList').innerHTML = html;
   }

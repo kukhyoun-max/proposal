@@ -938,7 +938,7 @@
         <div class="jjh-names" id="jjhNames"></div>
         <div class="input-box name-picker" id="nameBox" style="display:none;">
           <label for="in_name">담당자(팀장) 이름을 입력해 주세요</label>
-          <input type="text" id="in_name" placeholder="예: ***" autocomplete="off">
+          <input type="text" id="in_name" placeholder="예: 홍길동" autocomplete="off">
           <div class="suggest-list" id="suggest_name"></div>
         </div>
       </div>
@@ -1165,6 +1165,7 @@
     </div>
   </div>
   <div class="content" id="pfPending" style="padding-top:0; padding-bottom:0;"></div>
+  <div class="content" id="cmPending" style="padding-top:0; padding-bottom:0;"></div>
   <div class="content" id="mlPending" style="padding-top:0; padding-bottom:0;"></div>
   <div class="content" id="srPending" style="padding-top:0; padding-bottom:0;"></div>
   <div class="content" id="areaCov" style="padding-top:0; padding-bottom:0;"></div>
@@ -1360,7 +1361,7 @@
         <div><label>시작 시간 <span style="color:var(--ink-faint);">(비우면 종일)</span></label><input type="time" id="eqFrom" step="1800"></div>
         <div><label>종료 시간</label><input type="time" id="eqTo" step="1800"></div>
       </div>
-      <label>대여자</label><input type="text" id="eqWho" placeholder="예) ***">
+      <label>대여자</label><input type="text" id="eqWho" placeholder="예) 홍길동">
       <label>메모</label><input type="text" id="eqMemo" placeholder="예) 반납 하루 연장">
       <p id="eqPlanNote" style="font-size:12px; color:var(--ink-soft); margin:8px 0 0;"></p>
       <button class="mt-save" id="eqSave">저장</button>
@@ -1514,14 +1515,14 @@ function showAlert(message){
     okBtn.addEventListener('click', onOk);
   });
 }
-function showPrompt(message){
+function showPrompt(message, def){
   return new Promise(resolve=>{
     const modal = document.getElementById('promptModal');
     const input = document.getElementById('promptModalInput');
     const okBtn = document.getElementById('promptModalOk');
     const cancelBtn = document.getElementById('promptModalCancel');
     document.getElementById('promptModalText').textContent = message;
-    input.value = '';
+    input.value = def || '';
     modal.style.display = 'flex';
     setTimeout(()=>input.focus(), 50);
     const cleanup = (result)=>{
@@ -1602,7 +1603,7 @@ function adminRole(){ return JJ_ADMIN_ROLES[memberTkEmail(memberToken()).toLower
   btn.firstChild.textContent = role.label + ' ';
 })();
 function memberGate(msg){
-  try{ localStorage.removeItem(MEMBER_TK_KEY); localStorage.removeItem('planRowsCache_v1'); sessionStorage.clear();
+  try{ localStorage.removeItem(MEMBER_TK_KEY); localStorage.removeItem('planRowsCache_v1'); localStorage.removeItem('jjRoster_v1'); localStorage.removeItem('jjWho_v1'); sessionStorage.clear();
     Object.keys(localStorage).forEach(k => { if(k.indexOf(HOME_LS) === 0) localStorage.removeItem(k); }); }catch(e){}
   const g = document.getElementById('jjGate'); if(!g) return;
   if(msg) document.getElementById('jjGateMsg').innerHTML = msg;
@@ -1673,31 +1674,61 @@ function jsonp(params){
   });
 }
 
+// 본 서버 저장 (2026-10-30): no-cors를 빼고 응답을 읽는다. 본 서버는 { ok:true } / { ok:false, error, fields }로 답한다.
+// 예전 본 서버(글자 'ok'만 답함)면 legacy로 표시하고, 저장 뒤 목록을 다시 받아 값이 들어갔는지 확인한다(sheetVerify)
+function jjErrText(r){
+  const e = String((r && r.error) || ''), f = String((r && r.fields) || '');
+  if(e === 'auth') return f === '계정 연결 전' ? '홈 「내 기록」에서 내 이름 연결이 승인된 뒤 고칠 수 있어요.'
+    : f === '팀원 아님' ? '이 기획서의 팀원만 고칠 수 있어요.'
+    : f ? '관리자만 바꿀 수 있는 칸이에요: ' + f + ' (관리자 로그인이 만료됐으면 다시 들어와 주세요)' : '권한이 없어요. 관리자 로그인이 만료됐으면 다시 들어와 주세요.';
+  if(e === 'busy') return '다른 계산·저장이 진행 중이에요. 잠시 뒤 다시 해 주세요.';
+  if(e === 'login' || e === 'not_member') return '로그인이 필요해요.';
+  return e || '알 수 없는 오류';
+}
 async function sheetPost(body){
   planInvalidate();
-  await fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify(body)
-  });
-  // no-cors 방식이라 응답 내용을 읽을 수 없어서, 잠깐 기다렸다가 목록을 다시 불러와 확인해요
-  await new Promise(r => setTimeout(r, 900));
+  let r;
+  try{
+    const res = await fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(body) });
+    const txt = (await res.text()).trim();
+    try{ r = JSON.parse(txt); }
+    catch(e){ r = txt === 'ok' ? { ok:true, legacy:true } : txt === 'login' ? { ok:false, error:'login' } : { ok:false, error:'서버 응답을 읽지 못했어요' }; }
+  }catch(e){ r = { ok:false, error:'서버에 연결하지 못했어요' }; }
+  if(r && r.ok === false){ memberCheckReply(r); r.error = jjErrText(r); }
+  return r || { ok:false, error:'서버 응답 없음' };
+}
+// 예전 본 서버일 때만: 목록을 다시 받아 보낸 값(상태·제목·촬영일·제출일·팀장)이 들어갔는지 본다
+async function sheetVerify(id, fields){
+  const keys = Object.keys(fields).filter(k => ['상태','제목','촬영일','제출일(영상)','작성자(팀장)'].includes(k));
+  if(!keys.length) return { ok:true };
+  const same = (k, a, b) => k === '상태' ? (String(a) === String(b) || planAutoStatus(String(b), normalizeDateStr(fields['촬영일'] || ''), '') === String(a))
+    : /일$|\(영상\)$/.test(k) ? normalizeDateStr(a) === normalizeDateStr(b) : String(a ?? '').trim() === String(b ?? '').trim();
+  for(let i = 0; i < 2; i++){
+    let rows; try{ planInvalidate(); rows = await planFetch(); }catch(e){ return { ok:true }; }
+    const row = (rows || []).find(r => r['ID'] === id);
+    if(!row) return { ok:false, error:'기획서를 찾지 못했어요' };
+    const bad = keys.filter(k => !same(k, row[k], fields[k]));
+    if(!bad.length) return { ok:true };
+    if(i === 0) await new Promise(r => setTimeout(r, 1500));
+    else return { ok:false, error:'저장이 확인되지 않았어요 (' + bad.join(', ') + '). 권한이 없는 칸일 수 있어요.' };
+  }
 }
 
 async function sheetCreate(record){
-  await sheetPost({ action:'create', ...record });
+  const r = await sheetPost({ action:'create', ...record });
+  if(!r || r.ok === false) return r;
   try{
     const rows = await jsonp({ action:'list' });
-    const found = (rows||[]).some(r => r['ID'] === record.id);
-    return { ok: found };
+    const found = (rows||[]).some(x => x['ID'] === record.id);
+    return found ? { ok:true } : { ok:false, error:'목록에서 새 기획서를 찾지 못했어요' };
   }catch(e){
-    return { ok: true }; // 확인 자체는 실패했지만 전송은 시도됐어요
+    return { ok: true }; // 확인 자체는 실패했지만 서버는 저장됐다고 답했어요
   }
 }
 async function sheetUpdate(id, koreanKeyedFields){
-  await sheetPost({ action:'update', id, ...koreanKeyedFields });
-  return { ok: true };
+  const r = await sheetPost({ action:'update', id, ...koreanKeyedFields });
+  if(r && r.ok !== false && r.legacy) return sheetVerify(id, koreanKeyedFields);
+  return r;
 }
 // 기획서 목록 캐시: 같은 목록을 여러 곳에서 동시에 부르면 한 번만 받아요.
 // 처음 열 때는 지난번 목록(브라우저 저장)을 바로 보여주고, 뒤에서 새로 받아 바뀐 게 있으면 화면을 다시 그려요.
@@ -1783,11 +1814,9 @@ let data = {
   plan:[{content:'', location:''},{content:'', location:''},{content:'', location:''}]
 };
 
-const AMBASSADOR_ROSTER = [
-  '***','***','***','***','***','***',
-  '***','***','***','***','***','***','***','***',
-  '***','***' // *** 활동 중단 (2026-10-30)
-].sort((a,b)=>a.localeCompare(b,'ko'));
+// 홍보대사 이름은 공개 저장소에 두지 않고, 로그인 뒤 자동매칭 서버(GET roster = 기획서 시트 「명단」 탭)에서 받아 채운다 (2026-10-30)
+// 지난번 받은 목록은 이 기기에 저장해 두고 화면을 열 때 바로 쓴다(jjRosterApply). 나간 사람은 서버 탭에서 종료일로 빠진다
+const AMBASSADOR_ROSTER = [];
 
 const namePickers = {};
 
@@ -2625,7 +2654,7 @@ function syncTitleFields(){
   document.getElementById('f_oneoff').checked = !!data.oneoff;
   syncTitleUi();
 }
-const MEMBER_DEPT = { '***':'경영학과','***':'외식산업학과','***':'영화방송학과','***':'영화방송학과','***':'영화방송학과','***':'영화방송학과','***':'경영학과','***':'사회복지학과','***':'경영학과','***':'외식산업조리학과','***':'관광경영학과','***':'경영학과','***':'경영학과','***':'가정교육과','***':'한식조리학과','***':'한식조리학과','***':'태권도학과' };
+const MEMBER_DEPT = {};   // 이름 → 학과 (크레딧 복사용). 서버 명단에서 채움 (2026-10-30)
 function buildCreditText(rec){
   const seen = new Set(), lines = [];
   ['lead','member','filming','editing','extra'].forEach(k => String(rec[k]||'').split(/[,\n]/).forEach(raw => {
@@ -3203,7 +3232,8 @@ function renderStatusListView(items){
     card.addEventListener('click', async ()=>{
       const key = card.dataset.open;
       try{
-        const rows = await sheetGetAll();
+        // 편집을 시작할 수 있는 화면이라 저장본(최대 7일) 대신 최신 목록을 받아요. 실패하면 저장본으로 (2026-10-30)
+        const [rows] = await Promise.all([planFetch().catch(() => sheetGetAll()), jjWho()]);
         const row = rows.find(r=>r['ID']===key);
         if(row) renderStatusDetail(key, mapRowToRecord(row));
         else showAlert('해당 기획서를 찾을 수 없어요.');
@@ -3228,6 +3258,27 @@ function fmtDateTime(iso){
   try{ return new Date(iso).toLocaleString('ko-KR'); }catch(e){ return '-'; }
 }
 
+// 수정·단계 버튼은 관리자와 그 기획서 팀원에게만 (2026-10-30). 이름은 자동매칭 GET whoami(「계정연결」 승인)로 알고, 이 기기에 저장해 둠
+// 서버도 같은 기준으로 막는다(본 서버 update · 자동매칭 planTag/planMeta/planTime). 여기는 화면에서 버튼을 숨기는 것
+const WHO_LS = 'jjWho_v1';
+let JJ_ME = (()=>{ try{ const o = JSON.parse(localStorage.getItem(WHO_LS) || 'null'); return o && o.email === memberTkEmail(memberToken()).toLowerCase() ? o : null; }catch(e){ return null; } })();
+let JJ_ME_P = null;
+function jjWho(){
+  if(!JJ_ME_P) JJ_ME_P = attendJsonpRaw({ action:'whoami' }).then(r => {
+    if(r && !r.error){ JJ_ME = { name: String(r.name || ''), admin: !!r.admin, email: memberTkEmail(memberToken()).toLowerCase() }; try{ localStorage.setItem(WHO_LS, JSON.stringify(JJ_ME)); }catch(e){} }
+    return JJ_ME;
+  }).catch(() => JJ_ME);
+  return JJ_ME_P;
+}
+function isFullAdmin(){ const r = adminRole(); return !!(r && r.full); }
+function canEditPlan(rec){
+  if(isFullAdmin()) return true;
+  const n = JJ_ME && JJ_ME.name;
+  if(!n) return true; // 계정 연결 전엔 예전처럼(서버도 같은 기준). 「제작 완료 처리」 등 관리자 버튼은 따로 숨김
+  return [rec.lead, rec.member, rec.filming, rec.editing, rec.extra].some(v => parseNames(v || '').includes(n));
+}
+setTimeout(() => { if(memberToken()) jjWho(); }, 1500);
+
 function renderStatusDetail(key, rec){
   editingKey = key;
   editingRecord = JSON.parse(JSON.stringify(rec));
@@ -3246,16 +3297,18 @@ function renderStatusDetail(key, rec){
     <button id="statusCopyCredit" style="width:100%; margin:0 0 20px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14.5px; cursor:pointer;">📋 캡션 크레딧 복사</button>
   ` : '';
 
+  const canEdit = canEditPlan(editingRecord);
   let stageSection = '';
-  if(editingRecord.status === 'approved'){
+  if(!canEdit){ /* 팀원·관리자가 아니면 단계 버튼 없음 */ }
+  else if(editingRecord.status === 'approved'){
     stageSection = `<button class="save-edit-btn" id="stageBtn" style="background:#1E4FA0; margin-top:0; margin-bottom:20px;" data-next="filming">촬영 시작</button>`;
   }else if(editingRecord.status === 'filming'){
     stageSection = `<button class="save-edit-btn" id="stageBtn" style="background:#95590B; margin-top:0; margin-bottom:20px;" data-next="editing">편집 시작</button>`;
-  }else if(editingRecord.status === 'editing'){
+  }else if(editingRecord.status === 'editing' && isFullAdmin()){   // 제작 완료는 관리자(검수 뒤) 또는 최종본 폴더 자동 처리 (2026-10-30)
     stageSection = `<button class="save-edit-btn" id="stageBtn" style="margin-top:0; margin-bottom:20px;" data-next="completed">제작 완료 처리</button>`;
   }
 
-  const toggleEditHtml = `<button id="toggleEditBtn" style="width:100%; margin:0 0 16px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14px; cursor:pointer;">✏️ 수정하기</button>`;
+  const toggleEditHtml = !canEdit ? `<p class="req-hint" style="margin:0 0 16px;">이 기획서의 팀원과 관리자만 수정할 수 있어요${JJ_ME && !JJ_ME.name ? ' · 홈 「내 기록」에서 내 이름 연결이 승인돼야 해요' : ''}</p>` : `<button id="toggleEditBtn" style="width:100%; margin:0 0 16px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14px; cursor:pointer;">✏️ 수정하기</button>`;
 
   el.innerHTML = `
     <button class="back-link" id="statusToList">← 목록으로</button>
@@ -3497,7 +3550,7 @@ async function saveEditedSubmission(){
   };
   try{
     const result = await sheetUpdate(editingKey, fields);
-    if(!result || result.ok === false) throw new Error('시트 응답 실패');
+    if(!result || result.ok === false) throw new Error((result && result.error) || '시트 응답 실패');
     const by = adminToken() ? 'admin' : 'team';   // 관리자 로그인 상태면 어디서 고쳐도 '관리자' (서버도 출입증으로 다시 확인)
     await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({ action:'planEditor', planId: editingKey, by }) });
@@ -3554,6 +3607,7 @@ document.getElementById('btnAdminToggle').addEventListener('click', async ()=>{
     if(window.jjLoadPending) window.jjLoadPending();
     if(!allowedTabs && window.jjLoadLinks) window.jjLoadLinks();
     if(!allowedTabs && window.jjLoadPf) window.jjLoadPf();
+    if(!allowedTabs && window.jjLoadCheck) window.jjLoadCheck();
   });
 });
 document.getElementById('btnAdminBack').addEventListener('click', ()=>{
@@ -3638,6 +3692,7 @@ function renderAdminList(items){
         <p class="sub-meta">${nb(rec.name)}${esc(rec.name||'-')} · ${esc(rec.tag || catLabel)} · ${esc(when)}</p>
         <div class="sub-detail" id="detail-${esc(key)}" style="display:none; white-space:normal; padding:0; border:none; margin:10px 0 0;">${buildDocCardHTML(rec)}</div>
         ${actions}
+        ${['filming','editing','completed','uploaded'].includes(rec.status) ? `<div class="st-force rv-row" data-rv="${esc(key)}"><span>🔎 검수 <b class="rv-last" style="font-weight:600;">-</b></span><span style="display:flex;gap:10px;"><button type="button" class="toggle-detail" data-rvset="수정요청">수정요청</button><button type="button" class="toggle-detail" data-rvset="통과">통과</button></span></div>` : ''}
         ${rec.uploadedAt ? `<a class="up-link" ${/^https?:/.test(rec.uploadUrl) ? `href="${esc(safeUrl(rec.uploadUrl))}" target="_blank" rel="noopener"` : ''}>📺 ${mtFmt(rec.uploadedAt)} 업로드${/^https?:/.test(rec.uploadUrl) ? ' · 게시물 보기' : ''}</a>` : ''}
         ${['completed','uploaded'].includes(rec.status) ? `<div class="st-force" style="border-top:none; margin-top:8px; padding-top:0;"><span>제작 완료일 <small>(지연 감점 기준)</small></span><input type="date" data-done="${esc(key)}" value="${esc(doneYmd(rec.completedAt))}" style="font-size:12px; padding:5px 8px; border-radius:8px; border:1px solid #D9D9E0;"></div>` : ''}
         ${['approved','filming','editing','completed','uploaded','dropped'].includes(rec.status) ? `<div class="st-force"><span>${rec.locked ? '🔒 관리자 지정' : ({completed:'✅ 제작 완료 (관리자 처리)', uploaded:'📺 게시물이 올라와 자동 처리', dropped:'⏸ 제작 중단 · 불참·장비 집계에서 빠짐'}[rec.status] || '⏱ 촬영일 기준 자동')}</span>
@@ -3647,9 +3702,12 @@ function renderAdminList(items){
   }).join('');
 
   stBindFilter(listEl, 'admin', ()=>renderAdminList(allItems));
-  listEl.querySelectorAll('[data-edit]').forEach(btn=>{ btn.addEventListener('click', ()=>{
+  rvBind(listEl);
+  listEl.querySelectorAll('[data-edit]').forEach(btn=>{ btn.addEventListener('click', async ()=>{
     const it = items.find(x => x.key === btn.dataset.edit); if(!it) return;
-    detailFromAdmin = true; showView('status'); renderStatusDetail(it.key, it.rec);
+    let rec = it.rec;   // 수정 화면은 최신 값으로 (2026-10-30)
+    try{ const rows = await planFetch(); const row = (rows || []).find(r => r['ID'] === it.key); if(row) rec = mapRowToRecord(row); }catch(e){}
+    detailFromAdmin = true; showView('status'); renderStatusDetail(it.key, rec);
     const t = document.getElementById('toggleEditBtn'); if(t) t.click();
     window.scrollTo(0, 0);
   }); });
@@ -3671,6 +3729,35 @@ function renderAdminList(items){
   listEl.querySelectorAll('[data-start-filming]').forEach(btn=>{ btn.addEventListener('click', ()=>setSubmissionStatus(btn.dataset.startFilming, 'filming')); });
   listEl.querySelectorAll('[data-start-editing]').forEach(btn=>{ btn.addEventListener('click', ()=>setSubmissionStatus(btn.dataset.startEditing, 'editing')); });
   listEl.querySelectorAll('[data-complete-filming]').forEach(btn=>{ btn.addEventListener('click', ()=>setSubmissionStatus(btn.dataset.completeFilming, 'completed')); });
+}
+
+/* ── 검수 기록 (2026-10-30, 자동매칭 「검수」 탭) ──
+   본 서버 상태값은 그대로 두고 차수·결과(제출됨/수정요청/통과)·요청 요약만 남겨요. 최종본 폴더에 새 파일이 오면 「제출됨」은 자동.
+   학생 홈 「내 기록」에 자기 기획서의 마지막 검수 결과가 보여요 */
+let RV_LAST = {};
+function rvText(x){ return x ? x.round + '차 ' + x.result + (x.note && x.result === '수정요청' ? ' · ' + x.note : '') + (x.at ? ' (' + String(x.at).slice(5, 10).replace('-', '/') + ')' : '') : '기록 없음'; }
+function rvPaint(root){ root.querySelectorAll('[data-rv]').forEach(el => { const b = el.querySelector('.rv-last'); if(b) b.textContent = rvText(RV_LAST[el.dataset.rv]); }); }
+async function rvBind(root){
+  if(!adminToken()){ root.querySelectorAll('.rv-row').forEach(x => { x.style.display = 'none'; }); return; }
+  rvPaint(root);
+  root.querySelectorAll('[data-rv] [data-rvset]').forEach(btn => btn.addEventListener('click', async () => {
+    const id = btn.closest('[data-rv]').dataset.rv, result = btn.dataset.rvset;
+    let note = '';
+    if(result === '수정요청'){
+      note = await showPrompt('수정 요청 내용을 짧게 적어 주세요 (팀에게 보여요)');
+      if(note === null) return;
+      if(!note.trim()){ showAlert('수정 요청 내용을 적어 주세요.'); return; }
+    } else if(!(await showConfirm('이 기획서 영상을 검수 「통과」로 남길까요?'))) return;
+    btn.disabled = true;
+    try{
+      const res = await fetch(ATTEND_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'reviewSave', planId: id, result, note: note.trim() }) });
+      const r = await res.json();
+      if(!r || r.ok === false) throw new Error(jjErrText(r || {}));
+      RV_LAST = r.last || RV_LAST; rvPaint(root); showToast('검수 「' + result + '」을 남겼어요');
+    }catch(e){ showAlert('검수 기록을 남기지 못했어요: ' + (e && e.message ? e.message : '오류')); }
+    btn.disabled = false;
+  }));
+  try{ const r = await attendJsonpRaw({ action:'reviewList', tk: adminToken() }); if(r && r.ok){ RV_LAST = r.last || {}; rvPaint(root); } }catch(e){}
 }
 
 /* ── 오리지널 콘텐츠 등록: 기획서 없이 제목·일정·참가자만 넣고 바로 승인 + 참여자 가점 ── */
@@ -3766,7 +3853,8 @@ async function saveDoneDate(key, ymd, inp){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return;
   inp.disabled = true;
   try{
-    await sheetUpdate(key, { [COL.completedAt]: ymd });
+    const r = await sheetUpdate(key, { [COL.completedAt]: ymd });
+    if(!r || r.ok === false) throw new Error((r && r.error) || '시트 응답 실패');
     await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'recalc' }) });
     planInvalidate();
     inp.style.borderColor = '#1B7A38';
@@ -3778,10 +3866,21 @@ async function forceStatus(key, value, sel){
   const label = value === 'auto' ? '촬영일 기준 자동' : STATUS_LABELS[value];
   const ok = await showConfirm(value === 'auto' ? '이 기획서 상태를 다시 촬영일에 맞춰 자동으로 바뀌게 할까요?' : value === 'dropped' ? '이 기획서를 제작 중단으로 바꿀까요? 불참 집계와 장비 대여에서 빠져요. (나중에 되돌릴 수 있어요)' : `'${label}'(으)로 고정할까요? 고정하면 날짜가 지나도 자동으로 바뀌지 않아요.`);
   if(!ok){ sel.value = ''; return; }
+  // 업로드 완료는 업로드일·게시물 주소를 같이 받아요(점수·지연 계산 기준, 2026-10-30)
+  let up = {};
+  if(value === 'uploaded'){
+    const d = await showPrompt('업로드한 날짜 (예: 2026-10-30)', mtYmd(new Date()));
+    if(d === null){ sel.value = ''; return; }
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(d.trim())){ await showAlert('날짜는 2026-10-30처럼 입력해 주세요.'); sel.value = ''; return; }
+    const u = await showPrompt('게시물 주소 (https://로 시작)');
+    if(u === null){ sel.value = ''; return; }
+    if(!/^https?:\/\/\S+$/.test(u.trim())){ await showAlert('게시물 주소는 https://로 시작해야 해요.'); sel.value = ''; return; }
+    up = { upAt: d.trim(), upUrl: u.trim() };
+  }
   sel.disabled = true;
   try{
     await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify(value === 'auto' ? { action:'planStatus', planId:key, lock:false } : { action:'planStatus', planId:key, status:value, lock:true }) });
+      body: JSON.stringify(value === 'auto' ? { action:'planStatus', planId:key, lock:false } : { action:'planStatus', planId:key, status:value, lock:true, ...up }) });
     await new Promise(r => setTimeout(r, 1500));
     planInvalidate(); loadSubmissions(); refreshOverview();
   }catch(e){ showAlert('상태 변경에 실패했어요: ' + (e && e.message ? e.message : '오류')); sel.disabled = false; }
@@ -3856,7 +3955,7 @@ async function rejectSubmission(key){
   const reason = reasonInput || '';
   try{
     const result = await sheetUpdate(key, { [COL.status]:'rejected', [COL.reviewedAt]: new Date().toISOString(), [COL.rejectReason]: reason });
-    if(!result || result.ok === false) throw new Error('시트 응답 실패');
+    if(!result || result.ok === false) throw new Error((result && result.error) || '시트 응답 실패');
     loadSubmissions(); refreshPendingBadge(); refreshOverview();
   }catch(e){ showAlert('반려 처리에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
 }
@@ -4079,11 +4178,7 @@ loadAutosave();
 
 /* ───────── 회의 출결 ───────── */
 const ATTEND_URL = 'https://script.google.com/macros/s/AKfycby04XfWbKhTXlq9cFQ-QpMz76GwhS6MeNLsQw-g-Q6YULmYa3j_MKQuiPdZ1ahQDtM/exec';
-const MEETING_ROSTER = [
-  '***','***','***','***','***','***','***',
-  '***','***','***','***','***','***','***',
-  '***','***'
-].sort((a,b)=>a.localeCompare(b,'ko'));
+const MEETING_ROSTER = AMBASSADOR_ROSTER;   // 회의 출결·행사 명단 = 활동 중인 홍보대사 (서버 명단, 2026-10-30)
 const MT_STATUSES = ['출석','지각','사유불참','불참','무단불참'];   // 사유불참 = 하루 전까지 알린 불참, 0점 (활동 가이드 5번)
 const MEETING_START = '2026-08-31';   // 이 주부터 매주 월요일마다 회의 칸 자동 생성
 let mtState = {};
@@ -4113,12 +4208,31 @@ function attendJsonp(params){
   // 읽기만 하는 POST(관리자 로그인, 연결 요청 목록)는 비우지 않아요. 관리자 창을 열 때마다 미리 받은 탭 목록이 지워져 다시 받느라 느렸어요.
   const READ_ONLY = ['adminLogin', 'linkList'];
   const bust = () => { attendCache.clear(); attCacheClear(); };
+  // 저장 실패가 보이게(2026-10-30): 자동매칭으로 no-cors로 보내던 저장은 no-cors를 빼고(text/plain POST라 그대로 단순 요청, 리다이렉트 따라감) 응답을 읽는다.
+  // 서버가 { ok:false, error }로 답하거나 연결이 안 되면 오류(jjSave)로 거절 → 기다리는 쪽은 자기 catch에서, 기다리지 않는 쪽은 아래 unhandledrejection에서 알림
+  const check = act => async res => {
+    let txt = ''; try{ txt = (await res.clone().text()).trim(); }catch(e){}
+    if(txt === 'ok') return res;
+    let j = null; try{ j = JSON.parse(txt); }catch(e){}
+    if(j && j.ok !== false && !j.error) return res;
+    if(j) memberCheckReply(j);
+    const err = new Error(j ? jjErrText(j) : '서버 응답을 읽지 못했어요'); err.jjSave = true; err.action = act;
+    throw err;
+  };
+  const netFail = act => err => { if(err && err.jjSave) throw err; const e2 = new Error('서버에 연결하지 못했어요'); e2.jjSave = true; e2.action = act; throw e2; };
   window.fetch = (u, o) => { const s = String(u); if(s === ATTEND_URL || s === APPS_SCRIPT_URL){
     let act = '';
     if(o && o.method === 'POST' && typeof o.body === 'string'){ const tk = adminToken(), mt = memberToken();
       try{ const b = JSON.parse(o.body); if(b && typeof b === 'object'){ act = b.action; if(tk && !b.tk) b.tk = tk; if(mt && !b.mt) b.mt = mt; o = Object.assign({}, o, { body: JSON.stringify(b) }); } }catch(e){} }
-    if(READ_ONLY.includes(act)) return _fetch(u, o);
-    bust(); return _fetch(u, o).finally(bust); } return _fetch(u, o); };
+    const blind = s === ATTEND_URL && o && o.mode === 'no-cors';
+    if(blind){ o = Object.assign({}, o); delete o.mode; }
+    const run = () => blind ? _fetch(u, o).then(check(act), netFail(act)) : _fetch(u, o);
+    if(READ_ONLY.includes(act)) return run();
+    bust(); return run().finally(bust); } return _fetch(u, o); };
+  window.addEventListener('unhandledrejection', ev => {
+    const r = ev.reason;
+    if(r && r.jjSave){ ev.preventDefault(); showAlert('저장하지 못했어요' + (r.action ? ' (' + r.action + ')' : '') + ': ' + r.message); }
+  });
 })();
 function attendPrefetch(){
   const today = mtYmd(new Date());
@@ -4303,7 +4417,7 @@ let pcWeek = '';
 let pcState = {};   // name -> { plan, content }
 let pcWeeksDone = {};
 let pcCancelled = false;   // 이번 회차 휴회 (개인콘 쉬는 주)
-const PC_DEFAULT = ['***','***','***','***','***','***','***','***','***','***','***'];
+const PC_DEFAULT = [];   // 개인콘 기본 대상 = 활동 중 − 개인콘 면제(촬영·편집 담당). 서버 명단에서 채움 (2026-10-30)
 let pcExtra = new Set();
 let pcOnlyMissing = false, pcLoadedWeek = '';   // 이번 주에 추가로 넣은 인원
 function pcNames(){ return MEETING_ROSTER.filter(n => PC_DEFAULT.includes(n) || pcExtra.has(n)); }
@@ -5434,7 +5548,7 @@ async function scLoadMonth(){
         o.personal += Number(r['점수']) || 0;
         [r['기획서'], r['콘텐츠']].forEach(v => { v = String(v || ''); if(/지각/.test(v)) o.pcLate++; else if(/미제출/.test(v)) o.pcMiss++; });
       });
-      dl.forEach(r => { const o = get(scMonthKey(r['영상 제출일']), r['팀장']); if(o){ o.delay += Number(r['감점']) || 0; o.delayDays += Number(r['지연일']) || 0; } });
+      dl.forEach(r => { const o = get(scMonthKey(r['영상 제출일']), String(r['대상'] || r['팀장']).trim()); if(o){ o.delay += Number(r['감점']) || 0; o.delayDays += Number(r['지연일']) || 0; } });
       tk.forEach(r => {
         const n = String(r['이름']).trim(); if(n === '(항목)') return;
         const o = get(scMonthKey(r['마감일']), n); if(!o) return;
@@ -5604,13 +5718,13 @@ const HB_TIERS = [
 // 아직 10만 게시물이 없는 홍보대사에게 붙는 새싹 패치
 const HB_SPROUT_IMG = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 28%22%3E%3Cdefs%3E%3ClinearGradient id=%22gsprout%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23EAF9D9%22/%3E%3Cstop offset=%220.5%22 stop-color=%22%23C6EBA4%22/%3E%3Cstop offset=%221%22 stop-color=%22%238FCF66%22/%3E%3C/linearGradient%3E%3ClinearGradient id=%22ssprout%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220.85%22/%3E%3Cstop offset=%220.5%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x=%221%22 y=%221%22 width=%2262%22 height=%2226%22 rx=%2213%22 fill=%22url(%23gsprout)%22 stroke=%22%234E9A2C%22 stroke-width=%221.5%22/%3E%3Crect x=%223.5%22 y=%223.5%22 width=%2257%22 height=%2221%22 rx=%2210.5%22 fill=%22none%22 stroke=%22%23F4FFE8%22 stroke-width=%221%22 stroke-dasharray=%222 1.6%22 opacity=%220.9%22/%3E%3Cpath d=%22M5 13 A9 9 0 0 1 14 4 H40 L30 13 Z%22 fill=%22url(%23ssprout)%22/%3E%3Cpath d=%22M13.2 19.2 V13.4%22 stroke=%22%233F7F22%22 stroke-width=%221.4%22 stroke-linecap=%22round%22 fill=%22none%22/%3E%3Cpath d=%22M13.2 13.6 C 12.6 10.4, 9.8 9.4, 7.6 9.8 C 7.8 12.4, 10.2 14.2, 13.2 13.6 Z%22 fill=%22%235DB536%22 stroke=%22%233F7F22%22 stroke-width=%220.8%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M13.2 12.6 C 13.6 9.2, 16.4 7.6, 18.8 8 C 18.8 10.8, 16.4 12.8, 13.2 12.6 Z%22 fill=%22%237BCB4C%22 stroke=%22%233F7F22%22 stroke-width=%220.8%22 stroke-linejoin=%22round%22/%3E%3Ctext x=%2239.5%22 y=%2218.6%22 text-anchor=%22middle%22 font-family=%22'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif%22 font-size=%2212.5%22 font-weight=%22800%22 fill=%22%232E5E16%22 letter-spacing=%22-0.3%22%3E%EC%83%88%EC%8B%B9%3C/text%3E%3C/svg%3E";
 // 패치에서 제외할 사람 (본인 콘텐츠가 아닌 게시물로 잡히는 경우 등)
-const HB_EXCLUDE = ['***'];
+const HB_EXCLUDE = [];   // 서버 명단(hbExclude)에서 채움 (2026-10-30)
 const HB_CACHE_KEY = 'hbBadges.v5', HB_TTL = 6*60*60*1000;
 
 // 이름 앞에 붙는 패치 자리. 패치가 없는 사람은 아무것도 안 보여요.
 function hbEscAttr(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function nb(name){ const n = String(name||'').trim(); return n ? `<i class="hb" data-hb="${hbEscAttr(n)}"></i>` : ''; }
-// "***, ***" 같은 목록 문자열 → 각 이름 앞에 패치 (html은 이미 이스케이프된 문자열)
+// "홍길동, 김철수" 같은 목록 문자열 → 각 이름 앞에 패치 (html은 이미 이스케이프된 문자열)
 function nbList(html){ return String(html||'').replace(/[가-힣]{2,4}/g, m => hbRoster().includes(m) ? nb(m) + m : m); }
 
 function hbRoster(){ return MEETING_ROSTER.filter(n => !HB_EXCLUDE.includes(n)); }   // 현재 활동 중인 홍보대사만 (회의 출결 명단 기준)
@@ -5672,6 +5786,26 @@ function hbApply(badges){
       try{ localStorage.setItem(HB_CACHE_KEY, JSON.stringify({ at: hbCompute.partial ? Date.now() - HB_TTL + 10*60*1000 : Date.now(), badges })); }catch(e){}
     }).catch(() => {});
   }, 1500);
+})();
+
+/* ───── 홍보대사 명단 받기 (2026-10-30) ─────
+   자동매칭 GET roster → AMBASSADOR_ROSTER(=MEETING_ROSTER)·MEMBER_DEPT·PC_DEFAULT·HB_EXCLUDE를 제자리에서 채운다(다른 코드가 같은 배열을 그대로 씀).
+   받은 뒤 'jjroster' 이벤트로 홈 이름 칩 등을 다시 그린다. 로그아웃하면 저장본도 지운다(memberGate) */
+const ROSTER_LS = 'jjRoster_v1';
+function jjRosterApply(r){
+  if(!r || !Array.isArray(r.current) || !r.current.length) return false;
+  const fill = (arr, list) => { arr.length = 0; list.forEach(x => arr.push(x)); };
+  fill(AMBASSADOR_ROSTER, r.current.slice().sort((a,b)=>a.localeCompare(b,'ko')));
+  Object.keys(MEMBER_DEPT).forEach(k => delete MEMBER_DEPT[k]); Object.assign(MEMBER_DEPT, r.dept || {});
+  fill(PC_DEFAULT, AMBASSADOR_ROSTER.filter(n => !(r.pcExempt || []).includes(n)));
+  fill(HB_EXCLUDE, r.hbExclude || []);
+  try{ document.dispatchEvent(new Event('jjroster')); }catch(e){}
+  return true;
+}
+(function(){
+  try{ jjRosterApply(JSON.parse(localStorage.getItem(ROSTER_LS) || 'null')); }catch(e){}
+  if(!memberToken()) return;
+  attendJsonpRaw({ action:'roster' }).then(r => { if(r && !r.error && jjRosterApply(r)){ try{ localStorage.setItem(ROSTER_LS, JSON.stringify(r)); }catch(e){} } }).catch(()=>{});
 })();
 
 /* ───── JJ 홈: 공동목표 · 지난주 우수 홍보대사 · 이름 칩 · 주요 일정 · 정규 편성 (자동매칭 Apps Script: ATTEND_URL) ───── */
@@ -5844,9 +5978,13 @@ function hbApply(badges){
     return { label: (now.getMonth() + 1) + '월', posts, views: posts.reduce((t, p) => t + (p.views || 0), 0) };
   }
   const minePosts = list => list.map(p => {
-    const inner = `<span class="dt">${p.date ? md(p.date) : ''}</span><span class="pf">${esc(p.platform)}</span><span class="t">${esc(p.title)}</span><span class="vw">${kv(p.views)}회</span>`;
+    // 참여율(좋아요·댓글·공유·저장 ÷ 도달, 유튜브는 ÷ 조회)·공유 수가 있으면 조회수 아래 작게 (2026-10-30)
+    const ex = [p.rate != null ? '참여 ' + p.rate + '%' : '', p.shares ? '공유 ' + kv(p.shares) : ''].filter(Boolean).join(' · ');
+    const inner = `<span class="dt">${p.date ? md(p.date) : ''}</span><span class="pf">${esc(p.platform)}</span><span class="t">${esc(p.title)}</span><span class="vw">${kv(p.views)}회${ex ? `<small style="display:block;font-size:11px;color:var(--ink-faint);font-weight:500;">${esc(ex)}</small>` : ''}</span>`;
     return /^https?:\/\//.test(p.url) ? `<a class="jjh-post" href="${esc(safeUrl(p.url))}" target="_blank" rel="noopener">${inner}</a>` : `<div class="jjh-post">${inner}</div>`;
   }).join('');
+  // 내 기획서 검수 결과 (2026-10-30, 자동매칭 「검수」 탭의 기획서별 마지막 기록)
+  const mineReviews = list => (list && list.length) ? '<div style="margin:18px 0 6px;font-weight:700;font-size:14px;">🔎 내 기획서 검수</div>' + list.map(r => `<div class="jjh-post"><span class="dt">${r.at ? md(r.at) : ''}</span><span class="pf">${esc(r.round)}차</span><span class="t">${esc(r.title)}${r.note && r.result === '수정요청' ? `<small style="display:block;font-size:11.5px;color:var(--ink-soft);">${esc(r.note)}</small>` : ''}</span><span class="vw" style="color:${r.result === '통과' ? '#1B7A38' : r.result === '수정요청' ? '#B23A3A' : 'var(--ink-soft)'}">${esc(r.result)}</span></div>`).join('') : '';
   function openMine(){
     const d = MINE; if (!d || !d.count) return;
     const mon = mineMonth(d);
@@ -5859,7 +5997,7 @@ function hbApply(badges){
     $('jjhMineAllH').textContent = '🏁 누적 기록 (' + md(d.since) + '부터)';
     $('jjhMineCnt').textContent = d.count + '개';
     $('jjhMineViews').textContent = kv(d.views) + '회';
-    $('jjhMineList').innerHTML = minePosts(d.posts);
+    $('jjhMineList').innerHTML = minePosts(d.posts) + mineReviews(d.reviews);
     openSheet('jjhSheetMine');
   }
   $('jjhMine').addEventListener('click', openMine);
@@ -6051,6 +6189,41 @@ function hbApply(badges){
     catch (err){ showAlert('처리하지 못했어요. 잠시 후 다시 해주세요.'); b.disabled = false; }
   });
   window.jjLoadPf = loadPf;
+
+  /* ── 자동매칭 「확인필요」 → 기획서 확정 (2026-10-30, 서버 Review.gs 「수동연결」 탭) ──
+     자동매칭이 애매해서 확정하지 못한 게시물을 관리자가 기획서에 붙여요. 다음 자동매칭(매일 23시)이나 「지금 다시 계산」부터 이 표를 먼저 따라요. */
+  let CM = null;
+  async function loadCheck(){
+    const box = $('cmPending'); if (!box) return;
+    if (!adminToken()){ box.innerHTML = ''; return; }
+    try {
+      const r = CM = await api({ action:'checkList', tk: adminToken() });
+      const items = (r && r.ok && r.items) || [];
+      if (!items.length){ box.innerHTML = ''; return; }
+      const opts = sel => '<option value="">기획서 고르기</option><option value="-">기획서 아님 (연결 안 함)</option>' +
+        (r.plans || []).map(p => `<option value="${esc(p.id)}"${p.id === sel ? ' selected' : ''}>${esc(p.title)} · ${esc(p.lead)}${p.shoot ? ' · 촬영 ' + esc(p.shoot.slice(5)) : ''}</option>`).join('');
+      const head = p => /^https?:/.test(p.url) ? `<a href="${esc(safeUrl(p.url))}" target="_blank" rel="noopener">${esc(p.platform)} · ${esc(p.title)}</a>` : esc(p.platform + ' · ' + p.title);
+      box.innerHTML = `<div class="sr-box"><h4>확인 필요 매칭 <span style="color:var(--ink-faint);font-weight:700;">${items.length}</span></h4><p class="req-hint" style="margin:0 0 4px;">자동매칭이 기획서를 확정하지 못한 게시물이에요 · 맞는 기획서를 골라 확정하면 다음 계산부터 반영돼요</p>` +
+        items.map((p, i) => `<div class="sr-row" style="flex-wrap:wrap;gap:6px;"><div class="t" style="min-width:200px;"><b>${head(p)}</b><small>${esc(p.date)} · 조회 ${Number(p.views || 0).toLocaleString()}${p.who ? ' · ' + esc(p.who) : ''} · ${esc(p.why)}</small></div><select data-cm="${i}" style="max-width:100%;font-size:12.5px;padding:6px;border-radius:8px;border:1px solid #D9D9E0;">${opts(p.planId)}</select><button type="button" data-cmok="${i}">이 기획서로 확정</button></div>`).join('') + '</div>';
+    } catch (e){ box.innerHTML = ''; }
+  }
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('#cmPending button[data-cmok]'); if (!b || !CM) return;
+    const i = Number(b.dataset.cmok), it = CM.items[i];
+    const planId = (document.querySelector('#cmPending select[data-cm="' + i + '"]') || {}).value || '';
+    if (!it || !planId){ showAlert('기획서를 골라 주세요.'); return; }
+    const pl = (CM.plans || []).find(p => p.id === planId);
+    if (!(await showConfirm('「' + it.title + '」을(를) ' + (planId === '-' ? '기획서 없는 게시물로' : '「' + (pl ? pl.title : planId) + '」 기획서로') + ' 확정할까요?'))) return;
+    b.disabled = true;
+    try {
+      const r = await post({ action:'amConfirm', platform: it.platform, url: it.url, date: it.date, title: it.title, planId });
+      if (r && r.ok){ showToast('확정했어요 · 다음 자동매칭(매일 23시)이나 「지금 다시 계산」 때 반영돼요'); b.closest('.sr-row').remove(); }
+      else { showAlert('확정하지 못했어요: ' + jjErrText(r || {})); b.disabled = false; }
+    } catch (err){ showAlert('확정하지 못했어요. 잠시 후 다시 해주세요.'); b.disabled = false; }
+  });
+  window.jjLoadCheck = loadCheck;
+
+  document.addEventListener('jjroster', () => { try { renderNames(); } catch (e){} });   // 서버 명단을 받은 뒤 이름 칩 다시 그리기 (2026-10-30)
 })();
 </script>
 

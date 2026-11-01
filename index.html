@@ -6344,13 +6344,16 @@ function jjRosterApply(r){
       const nz = s => String(s || '').toLowerCase().replace(/[\s\-–—_|:·.,!?()\[\]'"~]/g, '').replace(/^(oo|○○|◯◯|00)/, '');
       // 정규 편성 후보가 아닌 것(2026-10-30 담당자): 정규 시리즈의 한 편이 다른 제목으로 들어온 것, 폐지된 콘텐츠
       const SR_SKIP = ['더위 피하다가 시작된 토크' /* OO하면 끝나는 인터뷰의 한 편 */, '1234!' /* 폐지 */].map(nz);
-      const seriesOf = t => String(t || '').split(/\s[-–—|]\s|\|/)[0].trim();
-      const reg = (window.JJH_SERIES || []).map(nz).filter(Boolean);
-      const isReg = t => { const a = nz(t), b = nz(seriesOf(t)); return reg.some(x => b === x || a.startsWith(x)); };
+      // 2026-11-01 담당자 「이거 다 아바타 소개팅인데 뭘 정규편성해?」: 「모솔 언니 구출 작전 : 아바타 소개팅 (…)」처럼 시리즈 이름이 제목 가운데 있어도,
+      // 「아바타 소개팅」(정규 이름은 「아바타 과팅」)처럼 다르게 불러도 정규 시리즈로 봄. 괄호 속 편 이름·「2화」는 떼고 같은 콘텐츠끼리 한 줄로
+      const SR_ALIAS = { '아바타 과팅': ['아바타 소개팅'] };
+      const seriesOf = t => String(t || '').split(/\s[-–—|ㅣ]\s|\||ㅣ/)[0].replace(/\s*[(（][^)）]*[)）]\s*/g, ' ').replace(/\s*\d+\s*화\s*$/, '').trim();
+      const reg = (window.JJH_SERIES || []).flatMap(s => [s, ...(SR_ALIAS[s] || [])]).map(nz).filter(x => x.length >= 2);
+      const isReg = t => { const a = nz(t); return reg.some(x => a.includes(x)); };
       const seen = {};
       const uniq = ((r && r.pending) || [])
-        .map(p => Object.assign({}, p, { title: seriesOf(p.title) || p.title }))
-        .filter(p => !isReg(p.title) && !SR_SKIP.includes(nz(p.title)))
+        .map(p => Object.assign({}, p, { full: p.title, title: seriesOf(p.title) || p.title }))
+        .filter(p => !isReg(p.full) && !SR_SKIP.includes(nz(p.title)))
         .filter(p => { const k = nz(p.title); if (seen[k]) return false; seen[k] = 1; return true; })
         .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
       if (!uniq.length){ box.innerHTML = ''; return; }

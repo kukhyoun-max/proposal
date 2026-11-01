@@ -68,6 +68,12 @@
     min-height:44px; padding:10px 8px;
   }
   .progress-wrap{flex:1; margin-right:16px;}
+  /* 이전 질문 버튼 (2026-11-01, 한 화면 한 질문이라 막대 조각 대신 이걸로 돌아감) */
+  .prev-btn{flex:none; width:44px; height:44px; margin:0 6px 0 -12px; display:flex; align-items:center; justify-content:center; background:none; border:none; border-radius:12px; color:var(--ink); cursor:pointer;}
+  .prev-btn[hidden]{display:none;}
+  .prev-btn svg{width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round;}
+  .prev-btn:focus-visible{outline:2px solid var(--purple); outline-offset:2px;}
+  .topbar.in-card .prev-btn{display:none;}
   /* 관리자 테스트 모드 (2026-10-30) */
   /* 「처음으로」와 같은 글자 버튼. 켜면 갈색 굵게 + 아래 안내줄 */
   .test-link[aria-pressed="true"]{color:#7A4600; font-weight:700;}
@@ -924,6 +930,7 @@
 
 <div class="phone" id="formView">
   <div class="topbar">
+    <button class="prev-btn" id="btnPrev" type="button" aria-label="이전 질문" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
     <div class="progress-wrap">
       <div class="progress-track" id="progressTrack"></div>
       <div class="progress-label" id="progressLabel">1 / 7</div>
@@ -2590,6 +2597,7 @@ function updateProgress(){
     topbar.style.display='flex';
     bottomBar.style.display = step===1 ? 'none' : 'block';
   }
+  document.getElementById('btnPrev').hidden = !(step >= 2 && step <= TOTAL_STEPS);
   if(step===1){ refreshOverview(); }
   draftBanner();
   if(step>=5 && step<=7){ renderFormMeta(); }
@@ -3012,6 +3020,11 @@ document.getElementById('ctaBtn').addEventListener('click', ()=>{
   }
 });
 
+document.getElementById('btnPrev').addEventListener('click', () => {
+  let to = step - 1;
+  if(to === 5 && !testMode && seriesKind(titleParts(data.title).series) && stepValid(5)) to = 4;   // 건너뛴 유형 질문은 돌아갈 때도 건너뜀
+  goStep(to);
+});
 document.getElementById('btnBackEdit').addEventListener('click', ()=>{ goStep(TOTAL_STEPS); });
 
 document.getElementById('btnSaveImage').addEventListener('click', ()=>{

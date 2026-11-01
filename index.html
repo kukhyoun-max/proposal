@@ -182,6 +182,18 @@
   .lt-box{margin-top:18px; padding:14px; border:1px solid var(--line); border-radius:14px; background:#fff;}
   .lt-title{font-size:14px; font-weight:700; color:var(--ink); margin:0;}
   .lt-sub{font-size:13px; line-height:1.5; color:var(--ink-soft); margin:4px 0 10px; word-break:keep-all;}
+  /* 접히는 선택 칸: 빛 고르기·더 적을 것 (2026-11-01 기획서 단계 줄이기) */
+  details.lt-box > summary, .more-box > summary{display:flex; align-items:center; gap:8px; min-height:44px; cursor:pointer; list-style:none; font-size:14px; font-weight:700; color:var(--ink);}
+  details.lt-box > summary::-webkit-details-marker, .more-box > summary::-webkit-details-marker{display:none;}
+  details.lt-box > summary::after, .more-box > summary::after{content:'▾'; margin-left:auto; color:var(--ink-soft); transition:transform .15s;}
+  details.lt-box[open] > summary::after, .more-box[open] > summary::after{transform:rotate(180deg);}
+  details.lt-box > summary span, .more-box > summary span{font-size:12px; font-weight:400; color:var(--ink-soft);}
+  details.lt-box{padding:4px 14px;}
+  details.lt-box[open]{padding-bottom:14px;}
+  .more-box{margin-top:22px; padding:4px 14px; border:1px solid var(--line); border-radius:14px; background:#fff;}
+  .more-box[open]{padding-bottom:6px;}
+  .more-box .field-sm:first-of-type{margin-top:8px;}
+  @media (prefers-reduced-motion: reduce){ details.lt-box > summary::after, .more-box > summary::after{transition:none;} }
   .lt-chips{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
   .lt-chips button{min-height:52px; padding:8px 10px; border:1px solid var(--line-input); border-radius:12px; background:#fff; color:var(--ink); font:inherit; font-size:14px; font-weight:700; text-align:left; cursor:pointer;}
   .lt-chips button small{display:block; font-size:12px; font-weight:400; color:var(--ink-soft); margin-top:2px;}
@@ -764,7 +776,7 @@
   /* 기획서 단계: 못 넘어가는 이유 안내 · 접근성 (2026-10-22) */
   .cta{cursor:pointer;}
   .step-panel > .heading:first-child{margin-top:22px;}
-  #panel8 > .heading:first-child{margin-top:30px;}
+  #panel6 > .heading:first-child{margin-top:30px;}
   .cta-why{min-height:0; margin:0 0 10px; font-size:13px; font-weight:700; color:#C2410C; text-align:center; display:none;}
   .cta-why.on{display:block;}
   .need-fix{outline:2px solid #F59E0B !important; outline-offset:3px; border-radius:12px;}
@@ -988,33 +1000,24 @@
         <ul class="ex-list"><li class="ok"><b>좋은 예</b>인공지능학과에 가면 해외 탐방을 갈 수 있다</li><li class="no"><b>나쁜 예</b>인공지능학과 소개 + 커리큘럼 + 해외 탐방 + 취업 <small>(메시지가 4개라 기획을 나눠야 해요)</small></li></ul>
       </div>
       </section>
-    </div>
-
-    <div class="step-panel" id="panel3">
-      <h2 class="heading">어떻게<br>찍을까요?</h2>
-      <p class="hint-caption">유형과 주제를 고르고, 참고할 영상을 알려 주세요.</p>
-      <div id="metaKind" class="sec"></div>
-      <div id="metaArea" class="sec"></div>
       <section class="sec">
       <p class="pick-label">형식 <span>기본은 롱폼+쇼츠예요</span></p>
       <div class="pick-chips" id="fmtChips"></div>
       </section>
+    </div>
+
+    <!-- 2026-11-01 담당자 「기획서 쓰는 프로세스가 너무 복잡하고 한 페이지에 입력창이 너무 많음」: 7단계 → 4단계(콘텐츠·유형/주제·팀/일정·장면/장비) + 미리 보기.
+         형식은 2단계로, 참고 URL·요청사항은 선택 칸으로 5단계 「더 적을 것」에, 팀원·일정은 한 장으로, 장비는 장면과 한 장으로 -->
+    <div class="step-panel" id="panel3">
+      <h2 class="heading">어떤 콘텐츠인지<br>골라 주세요</h2>
+      <p class="hint-caption">누르기만 하면 돼요.</p>
+      <div id="metaKind" class="sec"></div>
+      <div id="metaArea" class="sec"></div>
       <div id="metaUniq" class="sec"></div>
-      <div class="field-sm sec">
-        <label for="f_url">참고 URL <span class="lab-note">인스타·유튜브 링크</span></label>
-        <input type="url" id="f_url" placeholder="https://..." inputmode="url" autocomplete="off" aria-describedby="f_urlErr">
-        <p class="field-err" id="f_urlErr" role="status" aria-live="polite" hidden></p>
-        <label class="url-none"><input type="checkbox" id="f_urlNone"> 참고 영상 없음</label>
-      </div>
-      <div class="field-sm sec">
-        <label for="f_request">요청사항 <span class="lab-note">없으면 「없음」</span></label>
-        <textarea id="f_request" placeholder="예: 강의실 대여, 소품, 출연자 섭외" aria-describedby="f_requestHint"></textarea>
-        <p class="req-hint" id="f_requestHint">장소 대여·소품·출연자 섭외 등 필요한 것을 써요. 없으면 「없음」이라고 써요. 장소 대여는 담당자에게 미리 연락해 주세요.</p>
-      </div>
     </div>
 
     <div class="step-panel" id="panel4">
-      <h2 class="heading">팀원 정보를<br>입력해주세요</h2>
+      <h2 class="heading">누가, 언제<br>찍나요?</h2>
       <div class="field-sm"><label for="f_lead">팀장</label><input type="text" id="f_lead"></div>
 
       <div class="field-sm name-picker">
@@ -1038,14 +1041,9 @@
         <div class="suggest-list" id="suggest_extra"></div>
       </div>
 
-      <div class="field-sm"><label for="f_member">팀원 <span style="color:var(--ink-faint);font-weight:400;">촬영·편집·출연에 넣으면 자동으로 채워져요</span></label><input type="text" id="f_member" readonly style="background:var(--purple-soft);color:var(--ink-soft);"></div>
-      <div class="field-sm"><label for="f_participants">참여 인원 <span style="color:var(--ink-faint);font-weight:400;">자동으로 세요</span></label><input type="text" id="f_participants" readonly style="background:var(--purple-soft);color:var(--ink-soft);"></div>
-    </div>
-
-    <div class="step-panel" id="panel5">
-      <h2 class="heading">촬영·제출 기간을<br>선택해주세요</h2>
-      <p class="hint-caption">촬영일은 오늘로부터 7일 이내, 제출일은 촬영일로부터 4일 이내로 선택할 수 있어요.</p>
-      <div class="field-sm"><label for="f_filmdate">촬영일</label><select id="f_filmdate"></select></div>
+      <!-- 팀원·참여 인원은 자동으로 채워지는 칸이라 화면에서는 숨기고 값만 씀 -->
+      <input type="hidden" id="f_member"><input type="hidden" id="f_participants">
+      <div class="field-sm" style="margin-top:28px;"><label for="f_filmdate">촬영일 <span class="lab-note">오늘부터 7일 안, 제출일은 촬영일부터 4일 안</span></label><select id="f_filmdate"></select></div>
       <div class="grid2">
         <div class="field-sm"><label for="f_filmfrom">촬영 시작</label><select id="f_filmfrom"></select></div>
         <div class="field-sm"><label for="f_filmto">촬영 종료</label><select id="f_filmto"></select></div>
@@ -1055,8 +1053,8 @@
       <a class="sun-3d" id="f_3d" href="light3d/" target="_blank" rel="noopener" style="margin:0 0 16px;">🏫 3D 캠퍼스에서 이 시간 그늘 확인하기</a>
       <div class="field-sm"><label for="f_submitdate">제출일</label><select id="f_submitdate"><option value="">촬영일을 먼저 선택해주세요</option></select></div>
       <p class="req-hint" id="acadHint" style="display:none; margin:-4px 0 0; color:#495057;"></p>
-      <div class="lt-box">
-        <p class="lt-title">☀️ 야외 촬영이면, 원하는 빛을 골라 보세요</p>
+      <details class="lt-box">
+        <summary class="lt-title">☀️ 야외 촬영이면, 원하는 빛으로 시간 고르기 <span>선택</span></summary>
         <p class="lt-sub">날씨를 보고 찍기 좋은 시간을 알려 드려요.</p>
         <div class="lt-chips" id="ltChips">
           <button type="button" data-lt="sun">맑은 햇빛<small>파란 하늘·긴 그림자</small></button>
@@ -1066,27 +1064,39 @@
         </div>
         <div id="ltOut" aria-live="polite"></div>
         <div id="ltSun"></div>
-      </div>
+      </details>
     </div>
 
-    <div class="step-panel" id="panel6">
-      <h2 class="heading">필요한 장비를<br>선택해주세요</h2>
-      <p class="hint-caption" id="equipHint">촬영일 기준으로 이미 예약된 장비는 자동으로 선택이 막혀요.</p>
+    <div class="step-panel" id="panel5">
+      <h2 class="heading">어떤 장면을<br>찍나요?</h2>
+      <p class="hint-caption">최종 영상 순서대로 적어 주세요. 첫 장면만 써도 넘어가요.</p>
+      <div id="planRows"></div>
+      <button class="add-plan" id="addPlan">+ 장면 추가</button>
+      <section class="sec">
+      <p class="pick-label">필요한 장비 <span id="equipHint">촬영일 기준으로 이미 예약된 장비는 자동으로 선택이 막혀요.</span></p>
       <div id="equipSelectedWrap" style="display:none; margin-bottom:16px;">
         <p style="font-size:12px; font-weight:700; color:var(--purple-dark); margin:0 0 8px;">선택한 장비 <span id="equipSelectedCount" style="color:var(--ink-faint); font-weight:400;"></span></p>
         <div class="chips" id="equipSelectedChips"></div>
       </div>
       <div id="equipmentPicker"></div>
+      </section>
+      <details class="more-box" id="moreBox">
+        <summary>더 적을 것 <span>선택 · 참고 영상, 요청사항</span></summary>
+        <div class="field-sm">
+          <label for="f_url">참고 URL <span class="lab-note">인스타·유튜브 링크</span></label>
+          <input type="url" id="f_url" placeholder="https://..." inputmode="url" autocomplete="off" aria-describedby="f_urlErr">
+          <p class="field-err" id="f_urlErr" role="status" aria-live="polite" hidden></p>
+          <label class="url-none" hidden><input type="checkbox" id="f_urlNone"> 참고 영상 없음</label>
+        </div>
+        <div class="field-sm">
+          <label for="f_request">요청사항 <span class="lab-note">장소 대여·소품·출연자 섭외 등</span></label>
+          <textarea id="f_request" placeholder="예: 강의실 대여, 소품, 출연자 섭외" aria-describedby="f_requestHint"></textarea>
+          <p class="req-hint" id="f_requestHint">장소 대여는 담당자에게 미리 연락해 주세요.</p>
+        </div>
+      </details>
     </div>
 
-    <div class="step-panel" id="panel7">
-      <h2 class="heading">시나리오를<br>작성해주세요</h2>
-      <p class="hint-caption">최종 영상 순서대로 장면을 적어주세요.</p>
-      <div id="planRows"></div>
-      <button class="add-plan" id="addPlan">+ 장면 추가</button>
-    </div>
-
-    <div class="step-panel" id="panel8">
+    <div class="step-panel" id="panel6">
       <h2 class="heading">제출 전에<br>한 번 확인해 주세요</h2>
       <p class="hint-caption">틀린 곳이 있으면 맨 아래 「내용 고치기」로 돌아가요.</p>
 
@@ -1818,7 +1828,7 @@ let data = {
   lead:'', member:'', filming:'', extra:'', editing:'', participants:'',
   title:'', summary:'', url:'', request:'',
   filmdate:'', submitdate:'', equipment:'',
-  plan:[{content:'', location:''},{content:'', location:''},{content:'', location:''}]
+  plan:[{content:'', location:''}]
 };
 
 // 홍보대사 이름은 공개 저장소에 두지 않고, 로그인 뒤 자동매칭 서버(GET roster = 기획서 시트 「명단」 탭)에서 받아 채운다 (2026-10-30)
@@ -2464,8 +2474,8 @@ function renderPlanRows(){
   });
 }
 
-const TOTAL_STEPS = 7;
-const STEP_NAMES = { 1:'팀장', 2:'콘텐츠', 3:'촬영 방식', 4:'제작진', 5:'일정', 6:'장비', 7:'장면 구성' };
+const TOTAL_STEPS = 5;   // 2026-11-01 7단계 → 5단계(홈 포함), 6 = 미리 보기
+const STEP_NAMES = { 1:'팀장', 2:'콘텐츠', 3:'유형·주제', 4:'팀·일정', 5:'장면·장비' };
 
 let maxStepReached = 1;
 
@@ -2496,7 +2506,7 @@ function updateProgress(){
   const progSlot = document.getElementById('jjhPlanProg'), fv = document.getElementById('formView');
   if(step===1 && progSlot){ if(topbar.parentElement !== progSlot) progSlot.appendChild(topbar); topbar.classList.add('in-card'); }
   else if(topbar.parentElement !== fv){ fv.insertBefore(topbar, fv.firstChild); topbar.classList.remove('in-card'); }
-  if(step===8){
+  if(step===6){
     topbar.style.display='none';
     bottomBar.style.display='none';
     renderFinalDoc();
@@ -2507,7 +2517,7 @@ function updateProgress(){
   if(step===1){ refreshOverview(); }
   draftBanner();
   if(step===3){ renderFormMeta(); }
-  if(step===6){ renderEquipmentPicker(); }
+  if(step===5){ renderEquipmentPicker(); }
   updateCta();
 }
 
@@ -2530,13 +2540,12 @@ function stepValid(n){
   if(n===1) return data.name.trim().length>0;
   if(n===2){
     const tp = titleParts(data.title);
-    return tp.series.length>0 && (data.oneoff || tp.episode.length>0) && data.summary.trim().length>0;
+    return tp.series.length>0 && (data.oneoff || tp.episode.length>0) && data.summary.trim().length>0 && !!data.format;
   }
-  if(n===3) return !!data.format && !metaMissing(data, ['kind','area','uniq']) && ['ok','none'].includes(urlState(data.url)) && data.request.trim().length>0;
-  if(n===4) return data.lead.trim().length>0 && data.filming.trim().length>0 && data.editing.trim().length>0 && data.extra.trim().length>0;
-  if(n===5) return data.filmdate.trim().length>0 && data.submitdate.trim().length>0 && !!data.filmfrom && !!data.filmto && data.filmfrom < data.filmto;
-  if(n===6) return data.equipment.trim().length>0;
-  if(n===7) return !!(data.plan[0] && data.plan[0].content && data.plan[0].content.trim().length>0);
+  if(n===3) return !metaMissing(data, ['kind','area','uniq']);
+  if(n===4) return data.lead.trim().length>0 && data.filming.trim().length>0 && data.editing.trim().length>0 && data.extra.trim().length>0
+    && data.filmdate.trim().length>0 && data.submitdate.trim().length>0 && !!data.filmfrom && !!data.filmto && data.filmfrom < data.filmto;
+  if(n===5) return !!(data.plan[0] && data.plan[0].content && data.plan[0].content.trim().length>0) && data.equipment.trim().length>0 && urlState(data.url) !== 'bad';   // 참고 URL·요청사항은 선택(빈칸이면 서버에 「없음」)
   return true;
 }
 
@@ -2815,30 +2824,27 @@ function stepMissing(n){
     if(!tp.series.length) return ['콘텐츠 이름을 골라 주세요', 'f_series'];
     if(!data.oneoff && !tp.episode.length) return ['회차를 써 주세요', 'f_episode'];
     if(!v(data.summary)) return ['콘텐츠를 한 문장으로 써 주세요', 'f_summary'];
+    if(!data.format) return ['형식을 골라 주세요', 'fmtChips'];
   }
   if(n===3){
-    const ma = metaMissing(data, ['kind','area']); if(ma) return [ma[0], META_IDS[ma[1]]];
-    if(!data.format) return ['형식을 골라 주세요', 'fmtChips'];
-    const mu = metaMissing(data, ['uniq']); if(mu) return [mu[0], META_IDS[mu[1]]];
-    if(!v(data.url)) return ['참고 URL을 넣어 주세요. 없으면 「참고 영상 없음」을 눌러요', 'f_url'];
-    if(urlState(data.url) === 'bad'){ showUrlErr(true); return ['참고 URL이 주소 모양이 아니에요', 'f_url']; }
-    if(!v(data.request)) return ['요청사항을 써 주세요. 없으면 「없음」이라고 써요', 'f_request'];
+    const ma = metaMissing(data, ['kind','area','uniq']); if(ma) return [ma[0], META_IDS[ma[1]]];
   }
   if(n===4){
     if(!v(data.lead)) return ['팀장 이름을 써 주세요', 'f_lead'];
     if(!v(data.filming)) return ['촬영할 사람을 한 명 이상 넣어 주세요', 'search_filming'];
     if(!v(data.editing)) return ['편집할 사람을 한 명 이상 넣어 주세요', 'search_editing'];
     if(!v(data.extra)) return ['출연할 사람을 한 명 이상 넣어 주세요', 'search_extra'];
-  }
-  if(n===5){
     if(!v(data.filmdate)) return ['촬영일을 골라 주세요', 'f_filmdate'];
     if(!data.filmfrom) return ['촬영 시작 시간을 골라 주세요', 'f_filmfrom'];
     if(!data.filmto) return ['촬영 종료 시간을 골라 주세요', 'f_filmto'];
     if(!(data.filmfrom < data.filmto)) return ['촬영 종료가 시작보다 늦어야 해요', 'f_filmto'];
     if(!v(data.submitdate)) return ['제출일을 골라 주세요', 'f_submitdate'];
   }
-  if(n===6 && !v(data.equipment)) return ['장비를 하나 이상 골라 주세요', 'equipmentPicker'];
-  if(n===7 && !stepValid(7)) return ['첫 장면을 써 주세요', 'planRows'];
+  if(n===5){
+    if(!(data.plan[0] && v(data.plan[0].content))) return ['첫 장면을 써 주세요', 'planRows'];
+    if(!v(data.equipment)) return ['장비를 하나 이상 골라 주세요', 'equipmentPicker'];
+    if(urlState(data.url) === 'bad'){ document.getElementById('moreBox').open = true; showUrlErr(true); return ['참고 URL이 주소 모양이 아니에요', 'f_url']; }
+  }
   return null;
 }
 function showCtaWhy(msg){
@@ -2874,12 +2880,12 @@ document.getElementById('ctaBtn').addEventListener('click', ()=>{
     data.lead = data.lead || data.name;
     computeTeam();
   }
-  if(step < 8){
+  if(step < 6){
     goStep(step + 1); scheduleAutosave();
   }
 });
 
-document.getElementById('btnBackEdit').addEventListener('click', ()=>{ goStep(7); });
+document.getElementById('btnBackEdit').addEventListener('click', ()=>{ goStep(5); });
 
 document.getElementById('btnSaveImage').addEventListener('click', ()=>{
   const btn = document.getElementById('btnSaveImage');
@@ -2926,8 +2932,8 @@ document.getElementById('btnCopyText').addEventListener('click', async ()=>{
 
 async function submitForReview(){
   if(testMode){ showAlert('테스트 모드에서는 제출되지 않아요. 위쪽 「테스트 끄기」를 누르고 다시 제출해 주세요.'); return; }
-  // 위 단계 막대로 앞 단계에 돌아가 고친 뒤 바로 건너오면 그 단계 확인(예: 바꾼 시간의 햇빛 확인)을 안 거쳐서, 내기 직전에 2~7단계를 다시 봄(2026-10-31)
-  for(let k = 2; k <= 7; k++) if(!stepValid(k)){ goStep(k); setTimeout(flagMissing, 350); return; }
+  // 위 단계 막대로 앞 단계에 돌아가 고친 뒤 바로 건너오면 그 단계 확인을 안 거쳐서, 내기 직전에 2~5단계를 다시 봄(2026-10-31, 11-01 단계 줄임)
+  for(let k = 2; k <= 5; k++) if(!stepValid(k)){ goStep(k); setTimeout(flagMissing, 350); return; }
   const btn = document.getElementById('btnSubmitReview');
   const statusEl = document.getElementById('submitStatus');
   // 제출 중·완료·실패를 눈에 띄게 (2026-10-24)
@@ -2941,7 +2947,7 @@ async function submitForReview(){
     submittedAt: new Date().toISOString(), updatedAt:'', reviewedAt:'', filmingAt:'', completedAt:'',
     lead: data.lead, category: (catFromKind(data), data.category), member: data.member, filming: data.filming,
     editing: data.editing, extra: data.extra, participants: data.participants,
-    title: data.title, summary: data.summary, url: data.url, request: data.request,
+    title: data.title, summary: data.summary, url: String(data.url||'').trim() || URL_NONE, request: String(data.request||'').trim() || '없음',   // 선택 칸이 비면 예전처럼 「없음」
     filmdate: data.filmdate, submitdate: data.submitdate, equipment: data.equipment,
     planText: planArrayToText(data.plan), rejectReason:''
   };
@@ -3077,7 +3083,7 @@ async function jjGoHomeFromPop(toFirst){
 // 기록은 [바닥, 홈(1단계), 2단계, 3단계, …, 지금 단계] 순서로 쌓여요. jjHistStep = 기록에 있는 기획서 단계 중 맨 위
 let jjHistStep = 1, jjExpectPop = 0;
 function goStep(n){
-  n = Math.max(1, Math.min(8, n));
+  n = Math.max(1, Math.min(6, n));
   if(n === step){ updateProgress(); return; }
   const fwd = n > step;
   step = n; updateProgress();
@@ -3111,7 +3117,7 @@ window.addEventListener('popstate', async e => {
   }
   // 기획서 화면에서 뒤로(앞으로) 가기 → 기록에 적힌 단계로
   if(s.jj === 'form' && vis('formView')){
-    const t = Math.min(s.step || 1, 8);
+    const t = Math.min(s.step || 1, 6);
     jjHistStep = t;
     if(t !== step){ step = t; updateProgress(); window.scrollTo(0, 0); }
     return;
@@ -3981,7 +3987,7 @@ document.getElementById('btnReset').addEventListener('click', async ()=>{
     lead:'', member:'', filming:'', extra:'', editing:'', participants:'',
     title:'', summary:'', url:'', request:'',
     filmdate:'', submitdate:'', equipment:'',
-    plan:[{content:'', location:''},{content:'', location:''},{content:'', location:''}]
+    plan:[{content:'', location:''}]
   };
   step=1;
   maxStepReached = 1;
@@ -4056,7 +4062,7 @@ function draftBanner(){
   if(!b){ b = document.createElement('div'); b.id = 'draftBanner'; b.className = 'draft-banner'; b.setAttribute('role', 'status'); card.appendChild(b); }
   const d = new Date(o.t), when = (d.getMonth()+1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   const what = titleParts(o.data.title || '').series || String(o.data.summary||'').trim() || '제목 없음';
-  b.innerHTML = `쓰던 기획서가 있어요. 이어서 쓸까요?<br><b>${esc(what)}</b> · ${esc(o.data.lead || o.data.name || '')} · ${when} 저장 · ${Math.min(o.step||2, 8)}단계
+  b.innerHTML = `쓰던 기획서가 있어요. 이어서 쓸까요?<br><b>${esc(what)}</b> · ${esc(o.data.lead || o.data.name || '')} · ${when} 저장 · ${Math.min(o.step||2, 5)}단계
     <div class="row"><button type="button" class="go" data-a="go">이어서 쓰기</button><button type="button" data-a="new">지우고 새로 쓰기</button></div>`;
   b.querySelector('[data-a="go"]').addEventListener('click', ()=>{
     const cur = draftRead(); if(!cur){ draftBanner(); return; }
@@ -4064,7 +4070,7 @@ function draftBanner(){
     if(!data.plan || data.plan.length === 0) data.plan = [{content:'',location:''}];
     draftOff = false;
     syncFormFromData();
-    const to = Math.min(Math.max(cur.step || 2, 2), 8);
+    const to = Math.min(Math.max(cur.step || 2, 2), 5);   // 예전(7단계) 저장본도 5단계 안으로
     maxStepReached = Math.max(maxStepReached, to);
     goStep(to);
   });
@@ -4124,14 +4130,15 @@ function applyDateLimits(){
   filmEl.innerHTML = '<option value="">선택해주세요</option>' + filmDates.map(d=>`<option value="${d}">${formatDateLabel(d)}</option>`).join('');
   filmEl.value = filmDates.includes(data.filmdate) ? data.filmdate : '';
 
-  function refreshSubmitOptions(){
+  // 촬영일을 고르면 제출일을 촬영일 + 3일로 미리 채워요(2026-11-01 단계 줄이기). 이미 고른 제출일이 범위 안이면 그대로
+  function refreshSubmitOptions(auto){
     if(filmEl.value){
       const submitDates = dateRangeArray(new Date(filmEl.value+'T00:00:00'), 5);
       submitEl.disabled = false;
-      const keepValue = submitDates.includes(data.submitdate) ? data.submitdate : '';
+      const keepValue = submitDates.includes(data.submitdate) ? data.submitdate : auto ? submitDates[Math.min(3, submitDates.length - 1)] : '';
       submitEl.innerHTML = '<option value="">선택해주세요</option>' + submitDates.map(d=>`<option value="${d}">${formatDateLabel(d)}</option>`).join('');
       submitEl.value = keepValue;
-      if(!keepValue && data.submitdate){ data.submitdate = ''; scheduleAutosave(); }
+      if(keepValue !== data.submitdate){ data.submitdate = keepValue; scheduleAutosave(); }
     }else{
       submitEl.disabled = true;
       submitEl.innerHTML = '<option value="">촬영일을 먼저 선택해주세요</option>';
@@ -4142,7 +4149,7 @@ function applyDateLimits(){
 
   filmEl.addEventListener('change', ()=>{
     data.filmdate = filmEl.value;
-    refreshSubmitOptions();
+    refreshSubmitOptions(true);
     updateCta();
     scheduleAutosave();
     acadHint();
@@ -5199,7 +5206,7 @@ function wxRender(ask){
     if(max('wind') > 25) parts.push('바람 강함');
     el.className = 'sg-wx' + (rain ? ' rain' : '');
     el.innerHTML = `${esc(formatDateLabel(d))} ${esc(data.filmfrom)}~${esc(data.filmto)} · ${esc(parts.join(' · '))}<small>예보는 바뀔 수 있어요. 촬영 전날 한 번 더 확인해 주세요.</small>`;
-    if(!(ask && rain && wxWarned !== key && step === 5)) return;
+    if(!(ask && rain && wxWarned !== key && step === 4)) return;
     wxWarned = key;
     showAlert(`☔ 이 시간에 비 예보가 있어요(비 올 확률 ${pp}%${mm >= 0.1 ? `, ${mm.toFixed(1)}mm` : ''}).\n\n야외 촬영이면 날짜·시간을 바꾸는 걸 생각해 보세요.`);
   }).catch(() => { if(key === sunKey()){ el.className = 'sg-wx'; el.innerHTML = '예보를 불러오지 못했어요.<small>촬영 전날 날씨를 꼭 확인해 주세요.</small>'; } });

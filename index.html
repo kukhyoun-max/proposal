@@ -3459,7 +3459,8 @@ function renderStatusDetail(key, rec){
   eTagOrig = { format: editingRecord.format || '', tag: editingRecord.tag || '' };
   normMeta(editingRecord);
   eMetaOrig = JSON.stringify(metaPayload(editingRecord));
-  const metaMiss = ['rejected','dropped'].includes(editingRecord.status) ? [] : metaMissingNames(editingRecord);
+  // 2026-11-01 제작 완료·업로드 완료 기획서엔 「새 필수 항목」 안내를 띄우지 않음(담당자)
+  const metaMiss = ['rejected','dropped','completed','uploaded'].includes(editingRecord.status) ? [] : metaMissingNames(editingRecord);
   if(!editingRecord.plan || editingRecord.plan.length===0) editingRecord.plan=[{content:'',location:''}];
   document.getElementById('statusHeader').textContent = '기획서 상세';
   const el = document.getElementById('statusContent');
@@ -3746,7 +3747,7 @@ async function saveEditedSubmission(){
     editingRecord.updatedAt = updatedAt;
     editDirty = false;
     renderStatusDetail(editingKey, editingRecord);
-    showToast(stillMiss.length && !['rejected','dropped'].includes(editingRecord.status) ? '✅ 저장했어요. 아직 비어 있어요: ' + stillMiss.join(' · ') : '✅ 수정 내용을 저장했어요');
+    showToast(stillMiss.length && !['rejected','dropped','completed','uploaded'].includes(editingRecord.status) ? '✅ 저장했어요. 아직 비어 있어요: ' + stillMiss.join(' · ') : '✅ 수정 내용을 저장했어요');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }catch(e){
     showAlert('수정 저장에 실패했어요: ' + (e && e.message ? e.message : '알 수 없는 오류'));

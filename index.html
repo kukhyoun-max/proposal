@@ -121,6 +121,7 @@
   .pick{border:1.5px solid var(--line); background:transparent; color:var(--ink); border-radius:20px; padding:10px 14px; min-height:44px; font:600 13px 'Noto Sans KR',sans-serif; cursor:pointer;}
   .pick small{font-size:12px; font-weight:400; color:var(--ink-faint); margin-left:4px;}
   .pick.on{border-color:var(--purple); background:var(--purple-soft); color:var(--purple-dark);}
+  .pick.no-edit{margin-top:14px;} .no-edit-hint{margin-top:8px;}
   .pick-desc{font-size:12px; color:var(--ink-faint); margin:8px 2px 0; min-height:18px;}
   /* 경험 영역·타대학 확인·검색어 (2026-10-23) */
   .meta-part[hidden]{display:none !important;}
@@ -1072,6 +1073,9 @@
         <input type="text" id="search_editing" placeholder="명단에 없으면 이름 입력" autocomplete="off">
         <div class="suggest-list" id="suggest_editing"></div>
       </div>
+      <!-- 2026-11-03 담당자 「팀원 체크에 편집이 안 잡혀 있으면 원본 소스만 보내도 제출로 인정」 -->
+      <button type="button" class="pick no-edit" id="noEditBtn" aria-pressed="false">편집 없이 원본 소스만 보내요</button>
+      <p class="hint-caption no-edit-hint" id="noEditHint" hidden>원본을 팀콘 폴더 「최종본」 안 「원본」 폴더에 올리면 제출로 셈해요</p>
     </div>
 
     <div class="step-panel" id="panel10">
@@ -1888,7 +1892,7 @@ let step = 1;
 let data = {
   name:'', category:'', format:'', tag:'', oneoff:true,
   areas:[], kind:'', corner:'', uniq:'', uniqNote:'', keywords:[], kwFree:'', thumb2:false,
-  lead:'', member:'', filming:'', extra:'', editing:'', participants:'',
+  lead:'', member:'', filming:'', extra:'', editing:'', noEdit:false, participants:'',
   title:'', summary:'', url:'', request:'',
   filmdate:'', submitdate:'', equipment:'',
   plan:[{content:'', location:''}]
@@ -1900,6 +1904,19 @@ const AMBASSADOR_ROSTER = [];
 
 const namePickers = {};
 
+// 편집 없이 원본 소스만 (2026-11-03): 켜면 편집 명단을 비우고 다음 질문으로. 서버는 편집 칸이 비면 최종본 폴더(하위 폴더 포함)에 파일이 하나라도 오면 제작 완료
+function noEditSync(){
+  const b = document.getElementById('noEditBtn'); if(!b) return;
+  const on = !!data.noEdit && !String(data.editing||'').trim();
+  b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+  document.getElementById('noEditHint').hidden = !on;
+}
+document.getElementById('noEditBtn').addEventListener('click', () => {
+  data.noEdit = !(data.noEdit && !String(data.editing||'').trim());
+  if(data.noEdit) data.editing = '';
+  computeTeam(); refreshNamePickerChips('editing'); noEditSync(); updateCta(); scheduleAutosave();
+  if(data.noEdit && step === 9) setTimeout(() => { if(step === 9 && data.noEdit) document.getElementById('ctaBtn').click(); }, 250);
+});
 function refreshNamePickerChips(key){
   if(namePickers[key]) namePickers[key].renderChips();
 }
@@ -1929,6 +1946,7 @@ function initNamePicker(key){
   }
   function setNames(names){
     data[key] = names.join(', ');
+    if(key === 'editing' && names.length) data.noEdit = false;   // 편집할 사람을 고르면 「편집 없이」는 풀림
     computeTeam();
     renderChips();
     updateCta();
@@ -1954,6 +1972,7 @@ function initNamePicker(key){
   }
   function renderChips(){
     renderRoster();
+    if(key === 'editing') noEditSync();
     const names = getNames().filter(n => !rosterEl || !AMBASSADOR_ROSTER.includes(n));   // 명단 밖 이름만 칩으로
     chipsEl.innerHTML = names.map(n=>`
       <span class="chip">${nb(n)}${esc(n)}<button type="button" data-name="${esc(n)}" aria-label="${esc(n)} 빼기">✕</button></span>
@@ -2652,7 +2671,7 @@ function stepValid(n){
   if(n===6) return !metaMissing(data, ['area']);
   if(n===7) return !metaMissing(data, ['uniq']);
   if(n===8) return v(data.lead) && v(data.filming);
-  if(n===9) return v(data.editing);
+  if(n===9) return v(data.editing) || !!data.noEdit;
   if(n===10) return v(data.extra);
   if(n===11) return v(data.filmdate);
   if(n===12) return !!data.filmfrom && !!data.filmto && data.filmfrom < data.filmto;
@@ -2732,7 +2751,7 @@ function renderFinalDoc(){
   const set = (id,val)=>{ document.getElementById(id).textContent = (val && String(val).trim()) ? val : '-'; };
   document.getElementById('fd_category').textContent = ['콘텐츠 기획서', tagLine(data) || catLabel].filter(Boolean).join(' · ');
   set('fd_title', data.title); set('fd_lead', data.lead); set('fd_member', data.member);
-  set('fd_filming', data.filming); set('fd_editing', data.editing); set('fd_extra', data.extra);
+  set('fd_filming', data.filming); set('fd_editing', data.noEdit && !String(data.editing||'').trim() ? '없음 (원본 소스만)' : data.editing); set('fd_extra', data.extra);
   set('fd_participants', data.participants ? data.participants+'명' : '');
   document.getElementById('fd_summary').textContent = data.summary ? '💬 ' + data.summary : '';
   document.getElementById('fd_url').textContent = data.url || '';
@@ -2985,7 +3004,7 @@ function stepMissing(n){
     if(!v(data.lead)) return ['팀장 이름이 없어요. 처음 화면에서 이름을 골라 주세요', 'roster_filming'];
     if(!v(data.filming)) return ['촬영할 사람을 한 명 이상 골라 주세요', 'roster_filming'];
   }
-  if(n===9 && !v(data.editing)) return ['편집할 사람을 한 명 이상 골라 주세요', 'roster_editing'];
+  if(n===9 && !v(data.editing) && !data.noEdit) return ['편집할 사람을 한 명 이상 골라 주세요', 'roster_editing'];
   if(n===10 && !v(data.extra)) return ['출연할 사람을 한 명 이상 골라 주세요', 'roster_extra'];
   if(n===11 && !v(data.filmdate)) return ['촬영일을 골라 주세요', 'filmDayPick'];
   if(n===12){
@@ -4145,7 +4164,7 @@ document.getElementById('btnReset').addEventListener('click', async ()=>{
   data = {
     name:'', category:'', format:'', tag:'', oneoff:true,
     areas:[], kind:'', corner:'', uniq:'', uniqNote:'', keywords:[], kwFree:'', thumb2:false,
-    lead:'', member:'', filming:'', extra:'', editing:'', participants:'',
+    lead:'', member:'', filming:'', extra:'', editing:'', noEdit:false, participants:'',
     title:'', summary:'', url:'', request:'',
     filmdate:'', submitdate:'', equipment:'',
     plan:[{content:'', location:''}]

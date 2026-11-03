@@ -938,7 +938,7 @@
     <button class="reset-link test-link" id="btnTestMode" type="button" aria-pressed="false" hidden>테스트</button>
     <button class="reset-link" id="btnReset">처음으로</button>
   </div>
-  <p class="test-banner" id="testBanner" hidden>🧪 테스트 중 · 빈칸도 넘어가요 · 제출·저장 안 됨</p>
+  <p class="test-banner" id="testBanner" hidden>🧪 테스트 중 · 빈칸도 넘어가요 · 이 작성 화면의 제출·임시 저장만 막혀요(관리자 승인은 돼요)</p>
 
   <div class="content">
 
@@ -2627,17 +2627,19 @@ function updateProgress(){
 
 // 관리자 테스트 모드 (2026-10-30): 전체 관리자만. 켜면 빈칸이어도 다음 단계로, 제출·임시 저장은 막음(운영 시트에 시험 기획서가 들어가지 않게)
 // 2026-11-01 담당자 「관리자로 기획서 바로 넘어가게 안 되는데」: 버튼을 눌러야 켜지던 것을 전체 관리자면 처음부터 켜 둠(「테스트 끄기」로 끄면 이 창에서는 꺼진 채)
-let testMode = false, testModeUser = null;
+// 2026-11-03 담당자 「관리자 지금 계속 테스트 걸려 있어서 기획서 승인도 안됨」: 저절로 켜지지 않게 되돌림. 「테스트」를 눌러야 켜지고, 고른 값은 이 기기에 기억
+const TEST_MODE_KEY = 'jjTestMode_v2';
+let testMode = false, testModeUser = (() => { try{ return localStorage.getItem(TEST_MODE_KEY) === '1'; }catch(e){ return false; } })();
 function testModeSync(){
   const b = document.getElementById('btnTestMode'), r = adminRole();
   b.hidden = !(r && r.full);
-  testMode = b.hidden ? false : testModeUser === null ? true : testModeUser;
+  testMode = b.hidden ? false : !!testModeUser;
   b.setAttribute('aria-pressed', testMode); b.textContent = testMode ? '테스트 끄기' : '테스트';
   b.setAttribute('aria-label', testMode ? '테스트 모드 끄기' : '테스트 모드 켜기(관리자)');
   document.getElementById('testBanner').hidden = !testMode;
   updateCta();
 }
-document.getElementById('btnTestMode').addEventListener('click', () => { testModeUser = !testMode; testModeSync(); });
+document.getElementById('btnTestMode').addEventListener('click', () => { testModeUser = !testMode; try{ localStorage.setItem(TEST_MODE_KEY, testModeUser ? '1' : '0'); }catch(e){} testModeSync(); });
 testModeSync();
 function stepValid(n){
   if(testMode) return true;

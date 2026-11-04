@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>캠퍼스 빛 3D</title>
 <link rel="icon" href="data:,">
-<script>try{var t=localStorage.getItem('light3d-theme');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t;}catch(e){}</script>
+<script>try{var t=localStorage.getItem('jj-theme');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t;}catch(e){}</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap">
 <style>
 /* 화면 틀은 JJ 스튜디오 light3d 그대로. 3D 모델과 그늘 판정만 새 모델(도면 기반 건물 + 지형) */
@@ -125,7 +125,7 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
     var r = document.documentElement, b = document.getElementById('themeBtn'), m = matchMedia('(prefers-color-scheme: dark)');
     function isDark(){ return r.dataset.theme ? r.dataset.theme === 'dark' : m.matches; }
     function show(){ b.textContent = isDark() ? '밝게 보기' : '어둡게 보기'; }
-    b.addEventListener('click', function(){ var t = isDark() ? 'light' : 'dark'; r.dataset.theme = t; try { localStorage.setItem('light3d-theme', t); } catch(e){} show(); document.dispatchEvent(new Event('themechange')); });
+    b.addEventListener('click', function(){ var t = isDark() ? 'light' : 'dark'; r.dataset.theme = t; try { localStorage.setItem('jj-theme', t); } catch(e){} show(); document.dispatchEvent(new Event('themechange')); });
     m.addEventListener('change', show); show();
   })();</script>
   <p class="from" id="from" hidden></p>

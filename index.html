@@ -360,8 +360,18 @@
   .ia-box a{color:inherit;}
   @media (max-width:360px){ .ia-box{padding:10px;} .ia-box table{font-size:11.5px;} .ia-box th, .ia-box td{padding-left:5px;} .ia-box small{font-size:9.5px;} }
   .ia-box .ia-few{font-size:11px; color:var(--ink-faint);}
-  .ia-box .ia-sug{white-space:pre-wrap;}
-  .ia-box button.ia-ask{margin-top:4px; padding:7px 12px; border-radius:10px; border:1px solid #C9CBD6; background:#fff; font-size:12.5px; cursor:pointer;}
+  .ia-box .ia-sug{font-size:13px; line-height:1.6;}
+  .ia-sug .ia-verdict{display:flex; align-items:baseline; gap:8px; padding:8px 10px; border-radius:10px; background:var(--surface, #fff); border:1px solid var(--line, #E7E4EC);}
+  .ia-sug .ia-pill{flex:none; padding:1px 8px; border-radius:999px; font-size:12px; font-weight:700; white-space:nowrap;}
+  .ia-pill.ok{background:#E6F5E9; color:#14632C;} .ia-pill.fix{background:#FFF1DB; color:#8A4B00;} .ia-pill.no{background:#FCEAEA; color:#B23A3A;}
+  .ia-sug .ia-sg{margin-top:10px;}
+  .ia-sug .ia-sg h5{margin:0 0 2px; font-size:12px; font-weight:700; color:var(--ink-faint);}
+  .ia-sug .ia-sg p{margin:0;}
+  .ia-sug ul{margin:0; padding-left:15px; list-style:disc;}
+  .ia-sug li{display:list-item; padding:0; white-space:normal;}
+  .ia-sug li + li{margin-top:4px;}
+  .ia-sug li > b{display:block;}
+  .ia-box button.ia-ask{margin-top:10px; padding:7px 12px; border-radius:10px; border:1px solid #C9CBD6; background:#fff; font-size:12.5px; cursor:pointer;}
   .ia-box button.ia-ask:disabled{opacity:.6; cursor:default;}
   .st-force{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line, #E5E5EA); font-size:11.5px; color:var(--ink-faint);}
   .st-force select{font-size:12px; padding:5px 8px; border-radius:8px; border:1px solid #D9D9E0; background:#fff; color:var(--ink);}
@@ -3982,8 +3992,26 @@ async function rvBind(root){
    자동매칭 GET insightList(담당자 계정 + 관리자 출입증만, 아니면 auth → 칸을 숨김). 숫자는 PC _도구/scripts/기획서분석이 5분마다 만들고, 제안은 POST insightAsk 뒤 PC가 claude로 만듦 */
 let IA_DATA = null, IA_TIMER = 0;
 function iaNum(v){ if(v == null || isNaN(v)) return '-'; return v >= 10000 ? (v/10000).toFixed(1).replace(/\.0$/,'') + '만' : Math.round(v).toLocaleString(); }
-function iaSug(t){   // **굵게**·「- 」 줄만 바꿈, 나머지는 글자 그대로
-  return esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^- /gm, '• ');
+function iaSug(t){   // 「**항목:** 내용」과 「- 줄」을 항목별로 나눈다. 판단은 배지, 문장은 한 줄씩. 형식이 달라도 글자는 그대로 보인다
+  const inl = x => esc(x).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'), secs = []; let cur = null;
+  String(t || '').split(/\r?\n/).forEach(raw => {
+    const l = raw.trim(); if(!l) return;
+    const m = l.match(/^\*\*(.+?)[:：]\s*\*\*\s*(.*)$/) || l.match(/^\*\*(.+?)\*\*\s*[:：]\s*(.*)$/);
+    if(m){ cur = { k:m[1], items:[] }; secs.push(cur); if(m[2]) cur.items.push(m[2]); return; }
+    if(!cur){ cur = { k:'', items:[] }; secs.push(cur); }
+    cur.items.push(l.replace(/^[-•]\s*/, ''));
+  });
+  return secs.map(sec => {
+    if(/판단/.test(sec.k)){
+      const v = sec.items.join(' '), p = v.match(/^(바로 승인|고친 뒤 승인|다시 생각)\s*[—–-]?\s*(.*)$/);
+      if(p) return `<div class="ia-verdict"><span class="ia-pill ${p[1] === '바로 승인' ? 'ok' : p[1] === '다시 생각' ? 'no' : 'fix'}">${p[1]}</span><span>${inl(p[2])}</span></div>`;
+    }
+    let items = sec.items;
+    if(/제목/.test(sec.k) && items.length === 1 && items[0].includes(' / ')){ const q = items[0].split(' / '); items = ['제목: ' + q[0], '썸네일: ' + q.slice(1).join(' / ')]; }
+    else items = items.flatMap(x => x.includes('→') ? [x] : x.replace(/([.!?])\s+/g, '$1\n').split('\n'));
+    const one = x => { const i = x.indexOf('→'); return i > 0 ? `<b>${inl(x.slice(0, i).trim())}</b>${inl(x.slice(i + 1).trim())}` : inl(x); };
+    return `<div class="ia-sg">${sec.k ? `<h5>${esc(sec.k)}</h5>` : ''}${items.length === 1 ? `<p>${one(items[0])}</p>` : `<ul>${items.map(x => `<li>${one(x)}</li>`).join('')}</ul>`}</div>`;
+  }).join('');
 }
 function iaSlot(s){ return String(s).replace(/^(유튜브|인스타) /, ''); }
 function iaChan(x){ return x.c === '유튜브' ? (x.t ? (x.t === '1분 이하' ? '쇼츠' : '롱폼') : '유튜브') : x.c === '인스타그램' ? '인스타' : /^hong/.test(x.c) ? 'hong' : x.c; }

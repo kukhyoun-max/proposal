@@ -639,7 +639,8 @@ dEl.value = /^\d{4}-\d{2}-\d{2}$/.test(Q.get('d') || '') ? Q.get('d') : new Date
   }
 })();
 function pickFromQuery(){
-  const p = (Q.get('p') || '').replace(/\s/g, ''); if(!p) return;
+  let p = (Q.get('p') || '').replace(/\s/g, ''); if(!p) return;
+  if(p.includes('도서관')) p = '스타센터'; // 중앙도서관은 스타센터 안에 있다(담당자 확인 2026-11-04)
   const opts = [...placeEl.options].filter(o => o.value !== 'pick'), nm = o => o.text.replace(/ 앞$/, '').replace(/\s/g, '');
   const part = opts.filter(o => p.length >= 2 && nm(o).includes(p));
   const o = opts.find(o => p.includes(nm(o))) || (part.length === 1 ? part[0] : null);

@@ -227,6 +227,9 @@
   .sg-wx small{display:block; font-size:12px; font-weight:400; color:var(--ink-soft);}
   .sg-wx[hidden]{display:none;}
   .sun-3d:focus-visible{outline:2px solid var(--accent, #3182F6); outline-offset:2px;}
+  .plan-row .plan-loc{display:flex; gap:8px; align-items:stretch;}
+  .plan-row .plan-loc input{flex:1; width:auto; min-width:0;}
+  .plan-row .plan-3d{flex:none; margin:0; padding:0 12px; white-space:nowrap;}
   .lt-warn{font-size:13px; line-height:1.5; color:#8A4B00; background:#FFF6E0; border-radius:10px; padding:8px 10px; margin:10px 0 0; word-break:keep-all;}
   .one-line{background:#F7F9FF; border:1.5px solid var(--purple-soft); border-radius:12px; padding:12px; margin-bottom:14px;}
   .one-line input{background:#fff;}
@@ -2561,8 +2564,13 @@ function renderPlanRows(){
       <button class="plan-del" title="삭제">✕</button>
       <textarea id="plan_c${i}" placeholder="장면(씬) 설명, 대사 또는 연출 포인트를 적어주세요.">${esc(row.content)}</textarea>
       <label class="plan-lab-sm" for="plan_l${i}">촬영 장소</label>
-      <input type="text" id="plan_l${i}" placeholder="예: 중앙도서관 1층" value="${esc(row.location||'')}">
+      <div class="plan-loc">
+        <input type="text" id="plan_l${i}" placeholder="예: 중앙도서관 1층" value="${esc(row.location||'')}">
+        <a class="sun-3d plan-3d" href="light3d/" target="_blank" rel="noopener" aria-label="장면 ${i+1} 장소를 3D로 보기">🏫 3D로 보기</a>
+      </div>
     `;
+    // 장면 3D 버튼(2026-11-04): 장소 칸이 촬영 시간 버튼보다 뒤 단계라, 이 장면 장소를 여기서 넘겨요. 누르는 순간의 값으로 맞춰요
+    div.querySelector('.plan-3d').addEventListener('click', e=>{ e.currentTarget.href = light3dHref(data.filmdate, data.filmfrom, data.filmto, [row]); });
     div.querySelector('textarea').addEventListener('input', e=>{ row.content=e.target.value; updateCta(); scheduleAutosave(); });
     div.querySelector('input').addEventListener('input', e=>{ row.location=e.target.value; scheduleAutosave(); });
     div.querySelector('.plan-del').addEventListener('click', ()=>{
@@ -3680,8 +3688,12 @@ function renderEditPlanRows(){
       <div class="plan-num">#${i+1}</div>
       <button class="plan-del" title="삭제">✕</button>
       <textarea placeholder="장면(씬) 설명, 대사 또는 연출 포인트를 적어주세요.">${esc(row.content||'')}</textarea>
-      <input type="text" placeholder="장소" value="${esc(row.location||'')}">
+      <div class="plan-loc">
+        <input type="text" placeholder="장소" value="${esc(row.location||'')}">
+        <a class="sun-3d plan-3d" href="light3d/" target="_blank" rel="noopener" aria-label="장면 ${i+1} 장소를 3D로 보기">🏫 3D로 보기</a>
+      </div>
     `;
+    div.querySelector('.plan-3d').addEventListener('click', e=>{ const v = id => (document.getElementById(id) || {}).value; e.currentTarget.href = light3dHref(v('e_filmdate'), v('e_filmfrom'), v('e_filmto'), [row]); });
     div.querySelector('textarea').addEventListener('input', e=>{ row.content=e.target.value; });
     div.querySelector('input').addEventListener('input', e=>{ row.location=e.target.value; });
     div.querySelector('.plan-del').addEventListener('click', ()=>{

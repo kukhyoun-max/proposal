@@ -11,14 +11,15 @@
 :root{
   --bg:#F2F1F6; --surface:#FFFFFF; --ink:#19181D; --ink-soft:#5F5C68; --line:#E2DFE8;
   --accent:#3D5FE0; --accent-soft:#EAF0FF; --sunny:#8A5A00; --sunny-bg:#FFF3D6; --shade:#3B4A6B; --shade-bg:#E6EBF5;
+  --bar-sun:#F5C542; --bar-gold:#E97F24; --bar-shade:#5C6B8C; --bar-night:#2A2E44;
   --font:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#141318; --surface:#1E1D24; --ink:#EEEDF2; --ink-soft:#A9A6B3; --line:#33313C; --accent:#8EA6FF; --accent-soft:#232A45;
-  --sunny:#F2C14E; --sunny-bg:#3A2F14; --shade:#B9C6E6; --shade-bg:#232A3A; color-scheme:dark } }
+  --sunny:#F2C14E; --sunny-bg:#3A2F14; --shade:#B9C6E6; --shade-bg:#232A3A; --bar-shade:#7A8BB0; --bar-night:#0B0C14; color-scheme:dark } }
 :root[data-theme="dark"]{
   --bg:#141318; --surface:#1E1D24; --ink:#EEEDF2; --ink-soft:#A9A6B3; --line:#33313C; --accent:#8EA6FF; --accent-soft:#232A45;
-  --sunny:#F2C14E; --sunny-bg:#3A2F14; --shade:#B9C6E6; --shade-bg:#232A3A; color-scheme:dark }
+  --sunny:#F2C14E; --sunny-bg:#3A2F14; --shade:#B9C6E6; --shade-bg:#232A3A; --bar-shade:#7A8BB0; --bar-night:#0B0C14; color-scheme:dark }
 *{box-sizing:border-box}
 body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font); font-size:15px; line-height:1.55;
   padding:20px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px));}
@@ -50,6 +51,24 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
 .chip[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); color:var(--accent);}
 .chip:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 .verdict ul{margin:6px 0 0; padding:0; list-style:none; font-size:14px; font-weight:700;}
+.from small{display:block; font-size:13px; margin-top:2px;}
+/* 하루 빛 막대: 칸 하나 = 슬라이더 5분 한 칸(그 시간의 판정과 같다) */
+.daybar{margin-top:-4px;}
+.bar-title{font-size:13px; font-weight:700; color:var(--ink-soft);}
+.bar{position:relative; height:44px; cursor:pointer; touch-action:pan-y; user-select:none; -webkit-user-select:none;}
+.track{position:absolute; left:0; right:0; top:9px; height:26px; border-radius:8px; overflow:hidden; background:var(--line); transition:opacity .15s;}
+.bar.busy .track{opacity:.45;}
+.track b{position:absolute; top:0; bottom:0;}
+.now{position:absolute; top:4px; bottom:4px; width:4px; margin-left:-2px; border-radius:2px; background:var(--ink); box-shadow:0 0 0 2px var(--surface); pointer-events:none;}
+.c-sun{background:var(--bar-sun);} .c-gold{background:var(--bar-gold);} .c-shade{background:var(--bar-shade);} .c-night{background:var(--bar-night);}
+.c-part{background:repeating-linear-gradient(135deg, var(--bar-sun) 0 4px, var(--bar-shade) 4px 8px);}
+.bar-ends{display:flex; justify-content:space-between; font-size:12px; color:var(--ink-soft); margin-top:-4px; font-variant-numeric:tabular-nums;}
+.bar-sum{display:flex; flex-wrap:wrap; gap:2px 12px; margin:4px 0 0; font-size:14px; font-weight:700; font-variant-numeric:tabular-nums;}
+.bar-sum span{display:inline-flex; align-items:center; gap:5px;}
+.bar-sum i{width:11px; height:11px; border-radius:3px; flex:none;}
+.wx{margin:-6px 0 0; border-radius:12px; padding:9px 12px; font-size:14px; font-weight:700; background:var(--accent-soft); color:var(--ink);}
+.wx small{display:block; font-size:13px; font-weight:400; color:var(--ink-soft); margin-top:1px;}
+.wx[hidden], .daybar[hidden]{display:none;}
 </style>
 </head>
 <body>
@@ -59,9 +78,15 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
   <div class="ctrl">
     <select id="place" aria-label="장소"></select>
     <input type="date" id="d" aria-label="날짜">
-    <div class="time"><output id="tOut">16:00</output><input type="range" id="t" min="360" max="1140" step="5" value="960" aria-label="시간"></div>
+    <div class="time"><output id="tOut">16:00</output><input type="range" id="t" min="360" max="1200" step="5" value="960" aria-label="시간"></div>
   </div>
   <div class="stage"><canvas id="c"></canvas><div class="loading" id="loading">캠퍼스 불러오는 중…</div><span class="hint">건물 이름·땅을 누르면 그 자리로 · 끌어서 돌리기</span></div>
+  <div class="daybar">
+    <div class="bar-title">이 자리의 하루 빛 · 누르면 그 시간으로 가요</div>
+    <div class="bar busy" id="bar" role="img" aria-label="하루 빛을 계산하는 중이에요"><div class="track" id="barTrack"></div><i class="now" id="barNow"></i></div>
+    <div class="bar-ends"><span id="barRise"></span><span id="barSet"></span></div>
+    <p class="bar-sum" id="barSum"></p>
+  </div>
   <div class="cast">
     <div class="row" role="group" aria-label="촬영 인원">
       <span class="lbl">인원</span>
@@ -83,8 +108,9 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
     </div>
   </div>
   <div class="verdict" id="verdict"></div>
+  <p class="wx" id="wx" aria-live="polite" hidden></p>
   <ul class="facts" id="facts"></ul>
-  <p class="note">건물과 땅 높낮이는 캠퍼스 3D 모델로 계산했어요. 나무는 항공사진의 초록 무늬로 찾아 높이를 7·9·12m로 어림했어요. 날씨와 천막 같은 임시 구조물은 넣지 않았어요.</p>
+  <p class="note">건물과 땅 높낮이는 캠퍼스 3D 모델로 계산했어요. 나무는 항공사진의 초록 무늬로 찾아 높이를 7·9·12m로 어림했어요. 판정과 하루 빛 막대는 맑은 날 기준이고, 천막 같은 임시 구조물은 넣지 않았어요.</p>
 </div>
 <script type="importmap">{"imports":{
   "three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
@@ -353,11 +379,21 @@ const dEl = document.getElementById('d'), tEl = document.getElementById('t'), tO
 const facts = document.getElementById('facts'), verdict = document.getElementById('verdict');
 // 기획서에서 넘어온 값: ?d=촬영일&t=시작&t2=끝&p=촬영 장소(글)
 const Q = new URLSearchParams(location.search);
+const hm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+// 해 뜸·해 짐(태양 윗가장자리 + 대기 굴절 기준 -0.833°). 슬라이더와 막대는 그 앞뒤 30분까지 본다(6/21 해 짐 19:52도 볼 수 있게)
+let riseSet = [0, 0];
+function sunRange(ymd){ let rise = 0, set = 0, was = sunPos(ymd, 0).alt > -0.833; for(let m = 1; m < 1440; m++){ const up = sunPos(ymd, m).alt > -0.833; if(up && !was) rise = m; if(!up && was) set = m; was = up; } return [rise, set]; }
+function applyRange(){
+  riseSet = sunRange(dEl.value || '2026-11-02');
+  const v = +tEl.value, a = Math.floor((riseSet[0] - 30) / 5) * 5, b = Math.ceil((riseSet[1] + 30) / 5) * 5;
+  tEl.min = a; tEl.max = b; tEl.value = Math.min(b, Math.max(a, v));
+}
 const hmMin = s => { const m = /^(\d{1,2}):(\d{2})$/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : null; };
 dEl.value = /^\d{4}-\d{2}-\d{2}$/.test(Q.get('d') || '') ? Q.get('d') : new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
 (function(){
   const a = hmMin(Q.get('t')), b = hmMin(Q.get('t2'));
-  if(a != null) tEl.value = Math.min(1140, Math.max(360, b != null ? Math.round((a + b) / 2 / 5) * 5 : a));
+  applyRange();
+  if(a != null) tEl.value = Math.min(+tEl.max, Math.max(+tEl.min, b != null ? Math.round((a + b) / 2 / 5) * 5 : Math.round(a / 5) * 5));
   if(Q.get('d') || a != null || Q.get('p')){
     const fe = document.getElementById('from'); fe.hidden = false;
     fe.innerHTML = '기획서 촬영 일정: <b>' + [Q.get('d'), [Q.get('t'), Q.get('t2')].filter(Boolean).join('~'), Q.get('p')].filter(Boolean).map(s => s.replace(/[<>&]/g, '')).join(' · ') + '</b>';
@@ -365,14 +401,88 @@ dEl.value = /^\d{4}-\d{2}-\d{2}$/.test(Q.get('d') || '') ? Q.get('d') : new Date
 })();
 function pickFromQuery(){
   const p = (Q.get('p') || '').replace(/\s/g, ''); if(!p) return;
-  const o = [...placeEl.options].find(o => o.value !== 'pick' && p.includes(o.text.replace(/ 앞$/, '').replace(/\s/g, '')));
-  if(o) placeEl.value = o.value;
+  const opts = [...placeEl.options].filter(o => o.value !== 'pick'), nm = o => o.text.replace(/ 앞$/, '').replace(/\s/g, '');
+  const part = opts.filter(o => p.length >= 2 && nm(o).includes(p));
+  const o = opts.find(o => p.includes(nm(o))) || (part.length === 1 ? part[0] : null);
+  if(o){ placeEl.value = o.value; return; }
+  const fe = document.getElementById('from'), sm = document.createElement('small');
+  sm.textContent = '「' + Q.get('p') + '」은 3D 장소 목록에 없어서 ' + placeEl.options[0].text + '을 보여 줘요. 장소를 고르거나 땅을 눌러 주세요.';
+  fe.append(sm);
 }
 function leafNote(){ const m = +(dEl.value || '').slice(5, 7), d = +(dEl.value || '').slice(8, 10); return (m === 11 && d >= 15) || m === 12 || m <= 3 ? ' 잎이 많이 진 때라 그늘이 옅을 수 있어요.' : ''; }
+// ── 하루 빛 막대: 슬라이더의 5분 칸마다 판정과 같은 계산을 한다. 자리·날짜·인원이 바뀔 때만 다시 계산 ──
+const barEl = document.getElementById('bar'), barTrack = document.getElementById('barTrack'), barNow = document.getElementById('barNow');
+const judge = (who, p) => who.map(w => ({ name: w.name, sh: shadeAt(w.p.x, w.p.y, w.p.z, p) }));
+const BAR_NAME = { sun: '햇빛', gold: '황금빛', part: '일부만 그늘', shade: '그늘' };
+let barKey = '', barJob = 0, barCells = null, barA = 0;
+function barMark(min){ const a = +tEl.min, n = (+tEl.max - a) / 5 + 1; barNow.style.left = ((min - a) / 5 + .5) / n * 100 + '%'; }
+function barPlan(ymd, who){
+  const key = [ymd, tEl.min, T ? 1 : 0, who.map(w => [w.p.x.toFixed(1), w.p.y.toFixed(1), w.p.z.toFixed(1)].join())].join('|');
+  if(key === barKey) return; barKey = key;
+  const job = ++barJob, a = +tEl.min, n = (+tEl.max - a) / 5 + 1, cells = new Array(n); let i = 0;
+  barEl.classList.add('busy');
+  (function run(){
+    if(job !== barJob) return;
+    const t0 = performance.now();
+    while(i < n && performance.now() - t0 < 10){
+      const s = sunPos(ymd, a + i * 5);
+      if(s.alt <= 0) cells[i] = 'night';
+      else { const r = judge(who, s), k = r.filter(x => x.sh).length; cells[i] = k === r.length ? 'shade' : k ? 'part' : s.alt < 10 ? 'gold' : 'sun'; }
+      i++;
+    }
+    if(i < n) requestAnimationFrame(run); else barPaint(cells, a);
+  })();
+}
+function barPaint(cells, a){
+  barCells = cells; barA = a;
+  const n = cells.length, runs = [];
+  cells.forEach((c, i) => { const r = runs[runs.length - 1]; if(r && r.c === c) r.len++; else runs.push({ c, i, len: 1 }); });
+  barTrack.replaceChildren(...runs.map(r => { const b = document.createElement('b'); b.className = 'c-' + r.c; b.style.left = r.i / n * 100 + '%'; b.style.width = r.len / n * 100 + '%'; return b; }));
+  document.getElementById('barRise').textContent = '해 뜸 ' + hm(riseSet[0]);
+  document.getElementById('barSet').textContent = '해 짐 ' + hm(riseSet[1]);
+  // 글 요약: 15분이 안 되는 잠깐은 빼고, 종류마다 긴 구간 2개까지
+  const sum = document.getElementById('barSum'), lines = [];
+  Object.keys(BAR_NAME).forEach(c => {
+    const all = runs.filter(r => r.c === c), long = all.filter(r => r.len >= 3).sort((x, y) => y.len - x.len);
+    if(!all.length) return;
+    const show = long.slice(0, 2).sort((x, y) => x.i - y.i).map(r => hm(a + r.i * 5) + '~' + hm(a + (r.i + r.len - 1) * 5));
+    const more = long.length - show.length, text = show.length ? show.join(', ') + (more > 0 ? ' 외 ' + more + '번' : '') : '잠깐씩';
+    lines.push({ c, text });
+  });
+  sum.replaceChildren(...lines.map(l => { const s = document.createElement('span'), i = document.createElement('i'); i.className = 'c-' + l.c; s.append(i, BAR_NAME[l.c] + ' ' + l.text); return s; }));
+  barEl.setAttribute('aria-label', '이 자리의 하루 빛. ' + lines.map(l => BAR_NAME[l.c] + ' ' + l.text).join('. '));
+  barEl.classList.remove('busy');
+}
+let barDown = false;
+function barPick(e){
+  const r = barEl.getBoundingClientRect(), a = +tEl.min, n = (+tEl.max - a) / 5 + 1;
+  const i = Math.max(0, Math.min(n - 1, Math.floor((e.clientX - r.left) / r.width * n)));
+  if(+tEl.value !== a + i * 5){ tEl.value = a + i * 5; update(); }
+}
+barEl.addEventListener('pointerdown', e => { barDown = true; barEl.setPointerCapture(e.pointerId); });
+barEl.addEventListener('pointermove', e => { if(barDown) barPick(e); });
+barEl.addEventListener('pointerup', e => { if(barDown){ barDown = false; barPick(e); } });
+barEl.addEventListener('pointercancel', () => { barDown = false; });
+
+// ── 날씨 한 줄: 흐림·비 예보일 때만 판정 아래에 알린다. 판정은 그대로(맑은 날 기준). 비 기준은 기획서 촬영 시간 날씨와 같다 ──
+let wxHours = null;
+function wxLine(ymd, min, p){
+  const el = document.getElementById('wx'), r = wxHours && wxHours[ymd + 'T' + hm(min - min % 60)];
+  const rain = r && ((r.pr || 0) > 0.2 || (r.pp || 0) >= 60), cloudy = r && r.cc >= 70 && p.alt > 0;
+  el.hidden = !(rain || cloudy); if(el.hidden) return;
+  const b = document.createElement('small');
+  b.textContent = (rain ? '위 판정은 맑은 날 기준이에요. 야외 촬영이면 시간을 바꾸는 걸 생각해 보세요.' : '위 판정은 맑은 날 기준이에요. 구름이 해를 가리면 그림자가 옅거나 없어요.') + ' 예보는 바뀔 수 있어요.';
+  el.replaceChildren(rain ? '☔ 이 시간은 비 예보예요 (비 올 확률 ' + (r.pp || 0) + '%)' : '☁️ 이 시간은 흐림 예보예요', b);
+}
+fetch('https://api.open-meteo.com/v1/forecast?latitude=35.814&longitude=127.090&hourly=cloud_cover,precipitation_probability,precipitation&timezone=Asia%2FSeoul&forecast_days=9')
+  .then(r => r.json()).then(w => { const h = w.hourly, o = {}; h.time.forEach((t, i) => { o[t] = { cc: h.cloud_cover[i], pp: h.precipitation_probability[i], pr: h.precipitation[i] }; }); wxHours = o; update(); })
+  .catch(() => {}); // 못 받으면 줄을 안 보여 준다(아래 안내문에 맑은 날 기준이라고 적혀 있다)
+
 let cur = null;
 function update(){
   const ymd = dEl.value || '2026-11-02', min = +tEl.value;
-  tOut.textContent = String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
+  tOut.textContent = hm(min);
+  barMark(min);
   const p = cur = sunPos(ymd, min), c = jj.position;
   sun.position.copy(vec(Math.max(p.alt, -3), p.az, 400)).add(c); sun.visible = p.alt > -1;
   light.position.copy(vec(Math.max(p.alt, 0.5), p.az, 900)).add(c); light.target.position.copy(c); light.target.updateMatrixWorld();
@@ -388,7 +498,9 @@ function update(){
   const diff = Math.abs(((face - p.az) % 360 + 540) % 360 - 180);
   const faceLight = diff <= 60 ? '얼굴에 해가 바로 들어요(순광, 눈부심 주의)' : diff >= 120 ? '해를 등져요(역광: 얼굴은 어둡고 머리 둘레가 빛나요)' : '얼굴 옆으로 해가 들어요(옆빛, 입체감)';
   const who = castWorld(); if(!who.length) return;
-  const res = who.map(w => ({ name: w.name, sh: shadeAt(w.p.x, w.p.y, w.p.z, p) }));
+  barPlan(ymd, who);
+  wxLine(ymd, min, p);
+  const res = judge(who, p);
   const shaded = res.filter(r => r.sh), many = res.length > 1;
   const icon = s => s.tree ? '🌳' : s.hill ? '⛰️' : '🏢';
   const list = many ? `<ul>${res.map(r => `<li>${r.sh ? icon(r.sh) : '☀️'} ${r.name}: ${r.sh ? '그늘' : '햇빛'}</li>`).join('')}</ul>` : '';
@@ -406,7 +518,7 @@ function update(){
       <li>📷 얼굴 밝게: <b>${dir(p.az)}쪽을 등지고</b> 찍기</li>`;
   } else facts.innerHTML = '';
 }
-dEl.addEventListener('change', update);
+dEl.addEventListener('change', () => { applyRange(); update(); });
 tEl.addEventListener('input', update);
 function resize(){ const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); dirty = true; }
 new ResizeObserver(resize).observe(canvas); resize();

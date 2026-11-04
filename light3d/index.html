@@ -45,6 +45,7 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
 .from b{color:var(--ink);}
 .cast{display:flex; flex-direction:column; gap:8px;}
 .cast .row{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
+.cast .row[hidden]{display:none;}
 .cast .lbl{font-size:13px; font-weight:700; color:var(--ink-soft); width:32px;}
 .cast output{min-width:52px; text-align:center; font-weight:900; font-size:15px;}
 .chip{min-height:44px; min-width:44px; padding:0 14px; border-radius:22px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; font-size:14px; font-weight:700; cursor:pointer;}
@@ -77,6 +78,8 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
 .pad .up{grid-area:1/2;} .pad .left{grid-area:2/1;} .pad .right{grid-area:2/3;} .pad .down{grid-area:3/2;}
 .toast{position:absolute; left:50%; top:12px; transform:translateX(-50%); padding:6px 12px; border-radius:10px; background:rgba(25,24,29,.85); color:#fff; font-size:13px; font-weight:700; white-space:nowrap; pointer-events:none;}
 .toast[hidden]{display:none;}
+.near{position:absolute; right:10px; top:10px; box-shadow:0 2px 8px rgba(0,0,0,.45);}
+.near[hidden]{display:none;}
 /* 찍는 사람 눈: 화면 자체를 세로 9:16으로 바꾼다 */
 .stage.pov{aspect-ratio:9/16; width:auto; height:min(78vh, calc((100vw - 32px) * 16 / 9)); max-height:none; margin:0 auto;}
 .stage.pov .hint{display:none;}
@@ -128,6 +131,7 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
       <button type="button" class="down" data-move="0,-1" aria-label="뒤로">↓</button>
     </div>
     <p class="toast" id="toast" role="status" hidden></p>
+    <button type="button" class="chip near" id="nearBtn" hidden>인원 가까이 보기</button>
     <button type="button" class="mini" id="mini" aria-label="캠퍼스 지도 열기" hidden><span class="mapframe"><img id="miniImg" alt=""><i class="cone" id="miniCone"></i><i class="me" id="miniMe"></i></span><span>건물로 이동</span></button>
     <div class="mapsheet" id="mapSheet" role="dialog" aria-label="캠퍼스 지도" hidden>
       <div class="map-head"><span>건물을 누르면 그 앞으로 가요</span><button type="button" class="chip" id="mapClose" aria-label="지도 닫기">✕</button></div>
@@ -297,7 +301,7 @@ function nameTag(text){
 }
 
 // ── 그늘 판정: 발 위 1m에서 해 쪽으로 실제 모델 면에 광선을 쏜다 + 나무 칸을 1m씩 걷는다 ──
-let groundMat = null; const solids = []; const tags = []; let PL = [], TR = null, T = null, ready = false;
+const bldBox = {}; let groundMat = null; const solids = []; const tags = []; let PL = [], TR = null, T = null, ready = false;
 const NODE_KO = {};
 const nodeOf = o => { while(o && !/^(BLD|FAC|MASS|TERRAIN)/.test(o.name)) o = o.parent; return o ? o.name.replace(/_[0-9]+$/, '') : ''; };
 const rc = new THREE.Raycaster(); rc.firstHitOnly = true;
@@ -343,6 +347,8 @@ Promise.all([
   shadowLayer.receiveShadow = true; shadowLayer.raycast = () => {}; shadowLayer.renderOrder = 1;
   tm.parent.add(shadowLayer); shadowLayer.position.copy(tm.position); shadowLayer.quaternion.copy(tm.quaternion); shadowLayer.scale.copy(tm.scale);
   scene.add(g.scene);
+  scene.updateMatrixWorld(true);
+  solids.forEach(m => { const n = nodeOf(m); if(/^(BLD|FAC)/.test(n)) (bldBox[n] = bldBox[n] || new THREE.Box3()).expandByObject(m); });
   try { bakeMap(places, shadowLayer); } catch(e){ console.warn('지도를 만들지 못했어요', e); }
   places.forEach(p => { const s = nameTag(p.n); s.position.set(p.tx, p.ty, p.tz); s.userData.name = p.n; tags.push(s); scene.add(s); });
   buildPlaces(); document.getElementById('loading').remove(); ready = true;
@@ -406,7 +412,7 @@ function moveJJ(x, z, keepCam, y){
   const dx = x - jj.position.x, dy = yy - jj.position.y, dz = z - jj.position.z;
   jj.position.set(x, yy, z); layout(); treeNear();
   if(keepCam) cam.position.add(new THREE.Vector3(dx, dy, dz));
-  controls.target.set(x, yy + 1, z); mapMark(); update();
+  controls.target.set(x, yy + 1, z); if(overview && keepCam) closeView(); mapMark(); update();
 }
 // ── 미니맵 ──
 const MAP = { x0: -500, x1: 240, z0: -350, z1: 620 }; // 22곳이 모두 들어가는 범위(m)
@@ -503,8 +509,10 @@ function povPlace(){
   cam.position.set(x, (g == null ? p.y : g) + EYE, z); controls.target.set(p.x, y0, p.z); dirty = true;
 }
 function povSet(on){
+  overviewOff();
   povOn = on;
   document.querySelector('.stage').classList.toggle('pov', on);
+  resize(); // 화면 비율을 바로 맞춘다(곧이어 시점 계산에 쓴다)
   const b = document.getElementById('povBtn'); b.setAttribute('aria-pressed', on);
   document.getElementById('lensRow').hidden = !on; document.getElementById('povNote').hidden = !on;
   [pin, ring].concat(tags).forEach(o => { o.visible = !on; });
@@ -523,15 +531,63 @@ document.querySelectorAll('[data-lens]').forEach(b => b.addEventListener('click'
 }));
 function mapGo(name){
   const o = [...placeEl.options].find(o => o.text === name + ' 앞'); if(!o) return;
+  if(povOn) povSet(false); // 전경을 보여 주려고 찍는 사람 눈은 끈다
   placeEl.value = o.value; goPlace();
-  // 휴대폰은 지도가 화면을 다 덮으니 닫아서 3D를 보여 준다. 넓은 화면은 옆에 3D가 보이니 열어 둔다
-  if(getComputedStyle(sheetEl).position === 'fixed'){ mapShut(); canvas.scrollIntoView({ block: 'nearest' }); } else mapMark();
+  mapShut(); canvas.scrollIntoView({ block: 'nearest' });
+  showOverview(PL.find(p => p.n === name));
+}
+// ── 건물 전경: 건물 전체와 인원이 한 화면에 들어오게. 건물·언덕·나무에 덜 가리는 각도를 고른다 ──
+let overview = false;
+const nearBtn = document.getElementById('nearBtn');
+function overviewOff(){ if(overview) tags.forEach(o => { o.visible = !povOn; }); overview = false; nearBtn.hidden = true; }
+function closeView(){
+  overviewOff();
+  const s = cur || { az: 180 }, v = vec(24, (s.az + 200) % 360, 13), p = jj.position;
+  cam.position.set(p.x + v.x, p.y + v.y, p.z + v.z); controls.target.set(p.x, p.y + 1, p.z); dirty = true;
+}
+nearBtn.addEventListener('click', () => { closeView(); update(); });
+function viewClear(from, b){
+  // 건물 가운데·좌우 끝을 보는 선이 다른 것에 막히지 않는지 센다
+  const c = b.getCenter(new THREE.Vector3()), side = new THREE.Vector3(from.z - c.z, 0, c.x - from.x).normalize(), half = Math.max(b.max.x - b.min.x, b.max.z - b.min.z) * .35;
+  const blockers = solids.filter(m => !/^MASS/.test(nodeOf(m)));
+  return [0, -1, 1].reduce((n, k) => {
+    const to = c.clone().addScaledVector(side, k * half), d = to.clone().sub(from), len = d.length(); d.normalize();
+    const h = hitFirst(from, d, blockers);
+    let open = !h || h.distance >= len - half * 1.5 || bldBox[nodeOf(h.object)] === b;
+    for(let t = 2; open && T && t < len - 2; t += 2){ const x = from.x + d.x * t, z = from.z + d.z * t, th = treeH(x, z); if(!th) continue; const g = terrY(x, z); if(g != null && from.y + d.y * t < g + th) open = false; }
+    return n + (open ? 1 : 0);
+  }, 0);
+}
+function showOverview(place){
+  const box = bldBox[place.node]; if(!box) return;
+  const all = box.clone().expandByPoint(jj.position), t = all.getCenter(new THREE.Vector3());
+  const bc = box.getCenter(new THREE.Vector3()), front = Math.atan2(jj.position.x - bc.x, -(jj.position.z - bc.z)) / R;
+  const tanV = Math.tan(cam.fov * R / 2), xs = [all.min.x, all.max.x], ys = [all.min.y, all.max.y], zs = [all.min.z, all.max.z];
+  let best = null;
+  for(const el of [24, 32, 42, 54]) for(const off of [0, 25, -25, 50, -50]){
+    const v = vec(el, front + off, 1), r = new THREE.Vector3(0, 1, 0).cross(v).normalize(), u = v.clone().cross(r);
+    let dist = 0;
+    xs.forEach(x => ys.forEach(y => zs.forEach(z => {
+      const q = new THREE.Vector3(x, y, z).sub(t);
+      dist = Math.max(dist, Math.abs(q.dot(u)) / tanV + q.dot(v), Math.abs(q.dot(r)) / (tanV * cam.aspect) + q.dot(v));
+    })));
+    const from = t.clone().addScaledVector(v, dist * 1.12), g = terrY(from.x, from.z);
+    if(g != null && from.y < g + 3) continue; // 땅속·언덕 안은 뺀다
+    const score = viewClear(from, box);
+    if(!best || score > best.score) best = { from, score };
+    if(score === 3) break;
+  }
+  if(!best) return;
+  overview = true; nearBtn.hidden = false;
+  tags.forEach(o => { o.visible = o.userData.name === place.n; }); // 고른 건물 이름표만
+  cam.position.copy(best.from); controls.target.copy(t); dirty = true; mapMark();
 }
 miniEl.addEventListener('click', mapOpen);
 document.getElementById('mapClose').addEventListener('click', mapShut);
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && !sheetEl.hidden) mapShut(); });
 function goPlace(){
   if(placeEl.value === 'pick') return;
+  overviewOff();
   const [x, z] = placeEl.value.split(',').map(Number);
   moveJJ(x, z);
   const s = cur || { az: 180 }, v = vec(24, (s.az + 200) % 360, 13);

@@ -343,17 +343,26 @@
   .ia-box h4{margin:0 0 6px; font-size:12.5px; font-weight:700;}
   .ia-box h4 small{font-weight:400; color:var(--ink-faint);}
   .ia-box .ia-sec + .ia-sec{margin-top:10px; padding-top:10px; border-top:1px dashed var(--line, #E7E4EC);}
-  .ia-box table{width:100%; border-collapse:collapse;}
-  .ia-box td{padding:3px 0; vertical-align:top;}
-  .ia-box td:first-child{white-space:nowrap; padding-right:10px; color:var(--ink-faint);}
-  .ia-box ul{margin:2px 0 0; padding-left:18px;}
+  .ia-box table{width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; white-space:nowrap;}
+  .ia-box th, .ia-box td{padding:3px 0 3px 8px; text-align:right; font-weight:400;}
+  .ia-box tr > :first-child{padding-left:0; text-align:left; color:var(--ink-faint);}
+  .ia-box thead th{font-weight:700;}
+  .ia-box small{font-size:10.5px; color:var(--ink-faint);}
+  .ia-box .ia-foot{margin:5px 0 0; font-size:11px; line-height:1.45; color:var(--ink-faint);}
+  .ia-box .ia-sub{margin-top:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700;}
+  .ia-box h4 + .ia-sub{margin-top:0;}
+  .ia-box .ia-sub small{font-size:11px; font-weight:400;}
+  .ia-box ul{margin:1px 0 0; padding:0; list-style:none;}
+  .ia-box li{display:flex; align-items:baseline; gap:6px; padding:2px 0; white-space:nowrap; font-variant-numeric:tabular-nums;}
+  .ia-box li > i{flex:none; font-style:normal; color:var(--ink-faint);}
+  .ia-box li > .t{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis;}
+  .ia-box li > b{flex:none;}
   .ia-box a{color:inherit;}
+  @media (max-width:360px){ .ia-box{padding:10px;} .ia-box table{font-size:11.5px;} .ia-box th, .ia-box td{padding-left:5px;} .ia-box small{font-size:9.5px;} }
   .ia-box .ia-few{font-size:11px; color:var(--ink-faint);}
   .ia-box .ia-sug{white-space:pre-wrap;}
   .ia-box button.ia-ask{margin-top:4px; padding:7px 12px; border-radius:10px; border:1px solid #C9CBD6; background:#fff; font-size:12.5px; cursor:pointer;}
   .ia-box button.ia-ask:disabled{opacity:.6; cursor:default;}
-  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .ia-box{background:#1E1F24;} :root:not([data-theme="light"]) .ia-box button.ia-ask{background:#2A2B31; color:inherit; border-color:#44454D;} }
-  :root[data-theme="dark"] .ia-box{background:#1E1F24;} :root[data-theme="dark"] .ia-box button.ia-ask{background:#2A2B31; color:inherit; border-color:#44454D;}
   .st-force{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line, #E5E5EA); font-size:11.5px; color:var(--ink-faint);}
   .st-force select{font-size:12px; padding:5px 8px; border-radius:8px; border:1px solid #D9D9E0; background:#fff; color:var(--ink);}
   .sub-card .sub-actions button, .qa-box .sub-actions button{flex:1; padding:9px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; border:none;}
@@ -3976,26 +3985,35 @@ function iaNum(v){ if(v == null || isNaN(v)) return '-'; return v >= 10000 ? (v/
 function iaSug(t){   // **굵게**·「- 」 줄만 바꿈, 나머지는 글자 그대로
   return esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^- /gm, '• ');
 }
+function iaSlot(s){ return String(s).replace(/^(유튜브|인스타) /, ''); }
+function iaChan(x){ return x.c === '유튜브' ? (x.t ? (x.t === '1분 이하' ? '쇼츠' : '롱폼') : '유튜브') : x.c === '인스타그램' ? '인스타' : /^hong/.test(x.c) ? 'hong' : x.c; }
+function iaTitle(n){ return String(n).split(/\s*(?:\||#|❶|- - -)/)[0].trim() || String(n); }
 function iaHtml(id){
   const it = (IA_DATA.items || {})[id], ask = (IA_DATA.ask || {})[id];
   const e = it && it.exp;
   let h = '';
   if(!e) h += `<div class="ia-sec"><h4>📊 예상 성과</h4><span class="ia-few">아직 계산 전이에요. PC가 켜져 있으면 5~10분 안에 나와요.</span></div>`;
   else {
-    const rows = (e.slots || []).map(s => {
-      const b = s.base || {}, few = n => n < 5 ? ' <span class="ia-few">표본 적음</span>' : '';
-      let t = `보통 <b>${iaNum(b.med)}</b> · ${iaNum(b.p10)}~${iaNum(b.p90)} <span class="ia-few">(최근 6개월 ${esc(s.baseWho)} ${b.n}건)</span>`;
-      if(s.sim) t += `<br>비슷한 게시물 중앙값 ${iaNum(s.sim.med)} <span class="ia-few">(${s.sim.n}건)</span>${few(s.sim.n)}`;
-      if(s.type && s.type.n >= 3) t += `<br>같은 유형 1년 중앙값 ${iaNum(s.type.med)} <span class="ia-few">(${s.type.n}건)</span>${few(s.type.n)}`;
-      return `<tr><td>${esc(s.slot)}</td><td>${t}</td></tr>`;
-    }).join('');
-    h += `<div class="ia-sec"><h4>📊 예상 성과 <small>· 참고용(과거 같은 종류의 분포, 영상 완성도는 못 봄) · 데이터 ${esc(e.data || '')}</small></h4><table>${rows}</table></div>`;
+    // 채널을 열로 놓은 표. 숫자 옆 건수, 5건 미만은 *(표본 적음). 설명은 표 아래 두 줄로 모은다
+    const slots = e.slots || [], cnt = st => `<small>${st.n}건${st.n < 5 ? '*' : ''}</small>`;
+    const row = (name, f) => `<tr><th scope="row">${name}</th>${slots.map(s => `<td>${f(s)}</td>`).join('')}</tr>`;
+    const typeOf = s => s.type && s.type.n >= 3 ? s.type : null;
+    const whos = [...new Set(slots.map(s => s.baseWho))];
+    const who = whos.length === 1 ? esc(whos[0]) : slots.map(s => esc(iaSlot(s.slot) + ' ' + s.baseWho)).join(', ');
+    let rows = `<thead><tr><th></th>${slots.map(s => `<th scope="col">${esc(iaSlot(s.slot))}</th>`).join('')}</tr></thead><tbody>`
+      + row('보통', s => { const b = s.base || {}; return `<b>${iaNum(b.med)}</b> ${cnt(b)}`; })
+      + row('범위', s => { const b = s.base || {}; return `${iaNum(b.p10)}~${iaNum(b.p90)}`; });
+    if(slots.some(s => s.sim)) rows += row('비슷한 글', s => s.sim ? `${iaNum(s.sim.med)} ${cnt(s.sim)}` : '-');
+    if(slots.some(typeOf)) rows += row('같은 유형', s => typeOf(s) ? `${iaNum(s.type.med)} ${cnt(s.type)}` : '-');
+    h += `<div class="ia-sec"><h4>📊 예상 성과 <small>· 참고용 · 데이터 ${esc(e.data || '')}</small></h4><table>${rows}</tbody></table>`
+      + `<p class="ia-foot">보통·범위: 최근 6개월 ${who}${slots.some(typeOf) ? ' · 같은 유형: 1년' : ''} · *표본 적음<br>과거 분포예요. 영상 완성도는 못 봐요.</p></div>`;
     const sim = e.similar, rec = e.recentArea;
     if(sim || rec){
-      const li = x => `<li>${esc(String(x.d).slice(5).replace('-','/'))} ${esc(x.c)} ${x.u ? `<a href="${esc(safeUrl(x.u))}" target="_blank" rel="noopener">${esc(x.n)}</a>` : esc(x.n)}${x.v != null ? ` · <b>${iaNum(x.v)}</b>` : ''}</li>`;
+      // 한 줄: 날짜 채널 제목(넘치면 …) 조회수. 제목은 | · # 앞까지만 보여 주고 전체는 title에
+      const li = x => { const t = iaTitle(x.n); return `<li><i>${esc(String(x.d).slice(5).replace('-','/'))} ${esc(iaChan(x))}</i>${x.u ? `<a class="t" title="${esc(x.n)}" href="${esc(safeUrl(x.u))}" target="_blank" rel="noopener">${esc(t)}</a>` : `<span class="t" title="${esc(x.n)}">${esc(t)}</span>`}${x.v != null ? `<b>${iaNum(x.v)}</b>` : ''}</li>`; };
       h += `<div class="ia-sec"><h4>🔗 관련 정보</h4>`;
-      if(sim) h += `<div>비슷한 과거 게시물 <span class="ia-few">(${esc(sim.by)}로 찾음 · ${sim.n}건 중 최근)</span><ul>${sim.list.map(li).join('')}</ul></div>`;
-      if(rec) h += `<div style="margin-top:6px;">최근 60일 같은 경험영역 게시<ul>${rec.map(li).join('')}</ul></div>`;
+      if(sim) h += `<div class="ia-sub">비슷한 게시물 <small>${esc(sim.by)}로 찾음, ${sim.n}건 중 최근</small></div><ul>${sim.list.map(li).join('')}</ul>`;
+      if(rec) h += `<div class="ia-sub">최근 60일 같은 경험영역</div><ul>${rec.map(li).join('')}</ul>`;
       h += `</div>`;
     }
   }

@@ -69,6 +69,46 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
 .wx{margin:-6px 0 0; border-radius:12px; padding:9px 12px; font-size:14px; font-weight:700; background:var(--accent-soft); color:var(--ink);}
 .wx small{display:block; font-size:13px; font-weight:400; color:var(--ink-soft); margin-top:1px;}
 .wx[hidden], .daybar[hidden]{display:none;}
+/* 화살표: 화면 기준 앞·뒤·왼쪽·오른쪽으로 인원을 옮긴다 */
+.pad{position:absolute; right:8px; bottom:30px; display:grid; grid-template-columns:repeat(3, 40px); grid-template-rows:repeat(3, 40px); gap:2px;}
+.pad button{padding:0; border:1px solid rgba(255,255,255,.75); border-radius:10px; background:rgba(25,24,29,.62); color:#fff; font:inherit; font-size:20px; font-weight:900; line-height:1; cursor:pointer; touch-action:none; user-select:none; -webkit-user-select:none;}
+.pad button:active{background:#3D5FE0;}
+.pad button:focus-visible{outline:3px solid #fff; outline-offset:1px;}
+.pad .up{grid-area:1/2;} .pad .left{grid-area:2/1;} .pad .right{grid-area:2/3;} .pad .down{grid-area:3/2;}
+.toast{position:absolute; left:50%; top:12px; transform:translateX(-50%); padding:6px 12px; border-radius:10px; background:rgba(25,24,29,.85); color:#fff; font-size:13px; font-weight:700; white-space:nowrap; pointer-events:none;}
+.toast[hidden]{display:none;}
+/* 찍는 사람 눈: 화면 자체를 세로 9:16으로 바꾼다 */
+.stage.pov{aspect-ratio:9/16; width:auto; height:min(78vh, calc((100vw - 32px) * 16 / 9)); max-height:none; margin:0 auto;}
+.stage.pov .hint{display:none;}
+.povnote{margin:-6px 0 0;}
+.povnote[hidden]{display:none;}
+/* 미니맵: 3D 왼쪽 위 작은 지도 → 누르면 건물 버튼이 있는 큰 지도. 휴대폰은 전체 화면, 넓은 화면은 3D 위 왼쪽에 펼친다 */
+.mini{position:absolute; left:10px; top:10px; width:84px; padding:0; border:2px solid #fff; border-radius:10px; overflow:hidden; background:#33402b; box-shadow:0 2px 8px rgba(0,0,0,.45); cursor:pointer; font:inherit;}
+.mini[hidden], .mapsheet[hidden]{display:none;}
+.mini:focus-visible, .map-chip:focus-visible{outline:3px solid var(--accent); outline-offset:2px;}
+.mini > span{display:block; padding:3px 0; font-size:11px; font-weight:700; line-height:1.3; text-align:center; color:#fff; background:rgba(25,24,29,.85);}
+.mapframe{position:relative; display:block; overflow:hidden; aspect-ratio:740/970;}
+.mapframe img{display:block; width:100%; height:100%; object-fit:cover;}
+.me{position:absolute; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:#3D5FE0; border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,.4); pointer-events:none;}
+.cone{position:absolute; width:56px; height:56px; margin:-28px 0 0 -28px; border-radius:50%; background:conic-gradient(from -32deg, rgba(90,125,255,.7) 0 64deg, transparent 0); pointer-events:none;}
+.mapsheet{position:fixed; inset:0; z-index:20; display:flex; flex-direction:column; gap:8px; padding:10px 16px 16px; background:var(--surface); overscroll-behavior:contain;}
+.map-head{display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:15px; font-weight:700; color:var(--ink);}
+.map-body{position:relative; width:min(100%, calc((100vh - 86px) * 740 / 970)); width:min(100%, calc((100dvh - 86px) * 740 / 970)); margin:0 auto; border-radius:12px; overflow:hidden; aspect-ratio:740/970; background:#33402b;}
+.map-body > img{position:absolute; inset:0; width:100%; height:100%;}
+.map-body svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+.map-chip{position:absolute; height:32px; padding:0 8px; border:1px solid rgba(0,0,0,.25); border-radius:9px; background:#fff; color:#19181D; font:inherit; font-size:12.5px; font-weight:700; white-space:nowrap; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.45);}
+.map-chip:hover{background:#EAF0FF;}
+.map-chip[aria-current="true"]{background:#3D5FE0; border-color:#fff; color:#fff;}
+@media (min-width:760px) and (min-height:620px){
+  .mini{width:112px;}
+  .mapsheet{position:absolute; inset:0 auto 0 0; width:fit-content; padding:8px 10px 10px; gap:6px; border-right:1px solid var(--line);}
+  .map-body{flex:1 1 0; min-height:0; width:auto; height:calc(100% - 50px); margin:0;}
+  .map-chip{height:28px;}
+  /* 세로 화면은 좁아서 큰 지도를 전체 화면으로 */
+  .stage.pov .mapsheet{position:fixed; inset:0; width:auto; padding:10px 16px 16px;}
+  .stage.pov .map-body{flex:none; height:auto; width:min(100%, calc((100vh - 86px) * 740 / 970)); margin:0 auto;}
+  .stage.pov .map-chip{height:32px;}
+}
 </style>
 </head>
 <body>
@@ -80,7 +120,19 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
     <input type="date" id="d" aria-label="날짜">
     <div class="time"><output id="tOut">16:00</output><input type="range" id="t" min="360" max="1200" step="5" value="960" aria-label="시간"></div>
   </div>
-  <div class="stage"><canvas id="c"></canvas><div class="loading" id="loading">캠퍼스 불러오는 중…</div><span class="hint">건물 이름·땅을 누르면 그 자리로 · 끌어서 돌리기</span></div>
+  <div class="stage"><canvas id="c"></canvas>
+    <div class="pad" role="group" aria-label="인원 옮기기">
+      <button type="button" class="up" data-move="0,1" aria-label="앞으로">↑</button>
+      <button type="button" class="left" data-move="-1,0" aria-label="왼쪽으로">←</button>
+      <button type="button" class="right" data-move="1,0" aria-label="오른쪽으로">→</button>
+      <button type="button" class="down" data-move="0,-1" aria-label="뒤로">↓</button>
+    </div>
+    <p class="toast" id="toast" role="status" hidden></p>
+    <button type="button" class="mini" id="mini" aria-label="캠퍼스 지도 열기" hidden><span class="mapframe"><img id="miniImg" alt=""><i class="cone" id="miniCone"></i><i class="me" id="miniMe"></i></span><span>건물로 이동</span></button>
+    <div class="mapsheet" id="mapSheet" role="dialog" aria-label="캠퍼스 지도" hidden>
+      <div class="map-head"><span>건물을 누르면 그 앞으로 가요</span><button type="button" class="chip" id="mapClose" aria-label="지도 닫기">✕</button></div>
+      <div class="map-body" id="mapBody"><img id="mapImg" alt=""><svg id="mapLines" aria-hidden="true"></svg><i class="cone" id="mapCone"></i><i class="me" id="mapMe"></i></div>
+    </div><div class="loading" id="loading">캠퍼스 불러오는 중…</div><span class="hint">건물 이름·땅을 누르면 그 자리로 · 끌어서 돌리기</span></div>
   <div class="daybar">
     <div class="bar-title">이 자리의 하루 빛 · 누르면 그 시간으로 가요</div>
     <div class="bar busy" id="bar" role="img" aria-label="하루 빛을 계산하는 중이에요"><div class="track" id="barTrack"></div><i class="now" id="barNow"></i></div>
@@ -105,8 +157,15 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
     <div class="row" role="group" aria-label="보기">
       <span class="lbl">보기</span>
       <button type="button" class="chip" id="treeBtn" aria-pressed="false">나무 숨기기</button>
+      <button type="button" class="chip" id="povBtn" aria-pressed="false">찍는 사람 눈</button>
+    </div>
+    <div class="row" id="lensRow" role="group" aria-label="렌즈" hidden>
+      <span class="lbl">렌즈</span>
+      <button type="button" class="chip" data-lens="110" aria-pressed="false">0.5배</button>
+      <button type="button" class="chip" data-lens="72" aria-pressed="true">1배</button>
     </div>
   </div>
+  <p class="note povnote" id="povNote" hidden>휴대폰을 세로로 들고 눈높이(1.5m)에서 3m 앞 인원을 찍을 때의 어림 화면이에요. 끌면 인원 둘레를 돌고, 렌즈 화각은 폰마다 조금 달라요. 땅은 항공사진이라 가까이서 흐리고, 가까운 나무는 비쳐 보여요.</p>
   <div class="verdict" id="verdict"></div>
   <p class="wx" id="wx" aria-live="polite" hidden></p>
   <ul class="facts" id="facts"></ul>
@@ -223,7 +282,7 @@ document.querySelectorAll('[data-who]').forEach(b => b.addEventListener('click',
 document.querySelectorAll('[data-turn]').forEach(b => b.addEventListener('click', () => {
   const t = b.dataset.turn, s = cur || { az: 180 };
   face = t === 'sun' ? s.az : t === 'back' ? s.az + 180 : face + +t;
-  face = ((Math.round(face) % 360) + 360) % 360; layout(); update();
+  face = ((Math.round(face) % 360) + 360) % 360; layout(); if(povOn) povPlace(); update();
 }));
 
 function nameTag(text){
@@ -284,6 +343,7 @@ Promise.all([
   shadowLayer.receiveShadow = true; shadowLayer.raycast = () => {}; shadowLayer.renderOrder = 1;
   tm.parent.add(shadowLayer); shadowLayer.position.copy(tm.position); shadowLayer.quaternion.copy(tm.quaternion); shadowLayer.scale.copy(tm.scale);
   scene.add(g.scene);
+  try { bakeMap(places, shadowLayer); } catch(e){ console.warn('지도를 만들지 못했어요', e); }
   places.forEach(p => { const s = nameTag(p.n); s.position.set(p.tx, p.ty, p.tz); s.userData.name = p.n; tags.push(s); scene.add(s); });
   buildPlaces(); document.getElementById('loading').remove(); ready = true;
   pickFromQuery(); goPlace(); loadCast('jj'); loadTrees(); update();
@@ -346,14 +406,137 @@ function moveJJ(x, z, keepCam, y){
   const dx = x - jj.position.x, dy = yy - jj.position.y, dz = z - jj.position.z;
   jj.position.set(x, yy, z); layout(); treeNear();
   if(keepCam) cam.position.add(new THREE.Vector3(dx, dy, dz));
-  controls.target.set(x, yy + 1, z); update();
+  controls.target.set(x, yy + 1, z); mapMark(); update();
 }
+// ── 미니맵 ──
+const MAP = { x0: -500, x1: 240, z0: -350, z1: 620 }; // 22곳이 모두 들어가는 범위(m)
+const mapPct = (x, z) => [Math.max(0, Math.min(100, (x - MAP.x0) / (MAP.x1 - MAP.x0) * 100)), Math.max(0, Math.min(100, (z - MAP.z0) / (MAP.z1 - MAP.z0) * 100))];
+const miniEl = document.getElementById('mini'), sheetEl = document.getElementById('mapSheet'), mapBody = document.getElementById('mapBody');
+let mapChips = [];
+// 지금 쓰는 3D 모델을 바로 위에서 찍어 지도로 쓴다(북쪽이 위). 그림자·인원·해는 빼고 찍는다
+function bakeMap(places, shadowLayer){
+  const W = 1110, H = 1455, ortho = new THREE.OrthographicCamera(-370, 370, 485, -485, 1, 2000);
+  ortho.up.set(0, 0, -1); ortho.position.set((MAP.x0 + MAP.x1) / 2, 900, (MAP.z0 + MAP.z1) / 2); ortho.lookAt((MAP.x0 + MAP.x1) / 2, 0, (MAP.z0 + MAP.z1) / 2); ortho.updateMatrixWorld();
+  const hide = [sun, pin, ring, jj, shadowLayer]; hide.forEach(o => { o.visible = false; });
+  const cast = light.castShadow; light.castShadow = false; light.intensity = 2.4; light.color.set(0xffffff); light.position.set(-200, 900, 300); light.target.position.set(0, 0, 0); light.target.updateMatrixWorld();
+  amb.intensity = 1; groundMat.color.set(0xffffff); scene.background = new THREE.Color(0x5f7a4a);
+  renderer.setPixelRatio(1); renderer.setSize(W, H, false); renderer.render(scene, ortho);
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; cv.getContext('2d').drawImage(renderer.domElement, 0, 0);
+  const url = cv.toDataURL('image/jpeg', .82);
+  hide.forEach(o => { o.visible = true; }); light.castShadow = cast;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); resize();
+  document.getElementById('miniImg').src = url; document.getElementById('mapImg').src = url;
+  mapChips = places.map(p => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'map-chip'; b.textContent = p.n; b.setAttribute('aria-label', p.n + ' 앞으로 가기');
+    b.addEventListener('click', () => mapGo(p.n)); mapBody.append(b);
+    return { el: b, n: p.n, pct: mapPct(p.tx, p.tz) };
+  });
+  miniEl.hidden = false;
+  controls.addEventListener('change', mapMark);
+  new ResizeObserver(() => { if(!sheetEl.hidden) mapLayout(); }).observe(mapBody);
+}
+// 버튼은 건물 자리에 두되, 겹치면 서로 밀어내고 건물과 선으로 잇는다(결과는 항상 같다)
+function mapLayout(){
+  const W = mapBody.clientWidth, H = mapBody.clientHeight; if(!W || !H) return;
+  const c = mapChips.map(m => { const w = m.el.offsetWidth, h = m.el.offsetHeight, ax = m.pct[0] / 100 * W, ay = m.pct[1] / 100 * H; return { m, w, h, ax, ay, x: ax, y: ay }; });
+  const GAP = 3;
+  for(let it = 0; it < 400; it++){
+    for(let i = 0; i < c.length; i++) for(let j = i + 1; j < c.length; j++){
+      const a = c[i], b = c[j], ox = (a.w + b.w) / 2 + GAP - Math.abs(a.x - b.x), oy = (a.h + b.h) / 2 + GAP - Math.abs(a.y - b.y);
+      if(ox <= 0 || oy <= 0) continue;
+      if(oy <= ox){ const d = (a.y === b.y ? (i < j ? -1 : 1) : Math.sign(a.y - b.y)) * oy / 2; a.y += d; b.y -= d; }
+      else { const d = (a.x === b.x ? (i < j ? -1 : 1) : Math.sign(a.x - b.x)) * ox / 2; a.x += d; b.x -= d; }
+    }
+    c.forEach(k => { k.x = Math.max(k.w / 2 + 2, Math.min(W - k.w / 2 - 2, k.x)); k.y = Math.max(k.h / 2 + 2, Math.min(H - k.h / 2 - 2, k.y)); });
+  }
+  c.forEach(k => { k.m.el.style.left = (k.x - k.w / 2) + 'px'; k.m.el.style.top = (k.y - k.h / 2) + 'px'; });
+  document.getElementById('mapLines').innerHTML = c.map(k => '<line x1="' + k.ax + '" y1="' + k.ay + '" x2="' + k.x + '" y2="' + k.y + '" stroke="#fff" stroke-width="1.5"/><circle cx="' + k.ax + '" cy="' + k.ay + '" r="3" fill="#fff" stroke="#19181D"/>').join('');
+}
+function mapMark(){
+  if(!mapChips.length) return;
+  const [px, pz] = mapPct(jj.position.x, jj.position.z), v = controls.target.clone().sub(cam.position), deg = Math.atan2(v.x, -v.z) / R;
+  [['miniMe', 'miniCone'], ['mapMe', 'mapCone']].forEach(([a, b]) => { const me = document.getElementById(a), cn = document.getElementById(b); me.style.left = cn.style.left = px + '%'; me.style.top = cn.style.top = pz + '%'; cn.style.transform = 'rotate(' + deg + 'deg)'; });
+  const now = placeEl.value === 'pick' ? '' : placeEl.selectedOptions[0].text.replace(/ 앞$/, '');
+  mapChips.forEach(m => m.el.setAttribute('aria-current', m.n === now));
+}
+function mapOpen(){ sheetEl.hidden = false; miniEl.hidden = true; mapLayout(); mapMark(); camShift(); document.getElementById('mapClose').focus(); }
+function mapShut(){ sheetEl.hidden = true; miniEl.hidden = false; camShift(); miniEl.focus(); }
+// 넓은 화면에서 지도가 3D 왼쪽을 덮으면, 인원이 가리지 않게 남은 자리의 가운데로 민다
+function camShift(){
+  const W = canvas.clientWidth, H = canvas.clientHeight, side = !sheetEl.hidden && getComputedStyle(sheetEl).position !== 'fixed';
+  if(side) cam.setViewOffset(W, H, -sheetEl.offsetWidth / 2, 0, W, H); else cam.clearViewOffset();
+  dirty = true;
+}
+
+// ── 화살표: 지금 보는 방향 기준으로 2m씩(누르고 있으면 계속). 건물은 뚫고 가지 않는다 ──
+const STEP = 2; let walls = null, toastTimer = 0, padTimer = 0;
+function toast(t){ const el = document.getElementById('toast'); el.textContent = t; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 1500); }
+function step(rx, fw){
+  if(!ready) return;
+  walls = walls || solids.filter(m => !/^(MASS|TERRAIN)/.test(nodeOf(m)));
+  const f = controls.target.clone().sub(cam.position).setY(0).normalize(), r = new THREE.Vector3(-f.z, 0, f.x);
+  const d = f.multiplyScalar(fw).add(r.multiplyScalar(rx)).normalize(), p = jj.position;
+  const h = hitFirst(new THREE.Vector3(p.x, p.y + 1, p.z), d, walls);
+  if(h && h.distance < STEP + .5){ toast('건물이 막고 있어요'); return false; }
+  const x = p.x + d.x * STEP, z = p.z + d.z * STEP;
+  if(terrY(x, z) == null){ toast('캠퍼스 3D가 끝나는 곳이에요'); return false; }
+  placeEl.value = 'pick'; moveJJ(x, z, true);
+  return true;
+}
+function padStop(){ clearInterval(padTimer); padTimer = 0; }
+document.querySelectorAll('[data-move]').forEach(b => {
+  const [rx, fw] = b.dataset.move.split(',').map(Number);
+  b.addEventListener('pointerdown', e => { e.preventDefault(); padStop(); step(rx, fw); padTimer = setInterval(() => { if(step(rx, fw) === false) padStop(); }, 180); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => b.addEventListener(t, padStop));
+  b.addEventListener('click', e => { if(e.detail === 0) step(rx, fw); }); // 키보드로 누를 때
+});
+
+// ── 찍는 사람 눈: 눈높이 1.5m, 인원 앞 3m, 세로 9:16. 1배 세로 화각 72°, 0.5배 110°(35mm 환산 26mm·13mm의 16:9 긴 변, 어림) ──
+const EYE = 1.5, POV_DIST = 3;
+let povOn = false, lens = 72;
+function povPlace(){
+  const p = jj.position, d = vec(0, face, 1), y0 = p.y + 1;
+  // 인원과 찍는 사람 사이에 건물이 있으면 그 앞까지만 물러난다
+  walls = walls || solids.filter(m => !/^(MASS|TERRAIN)/.test(nodeOf(m)));
+  const h = hitFirst(new THREE.Vector3(p.x, y0, p.z), d, walls), dist = h ? Math.max(1.2, Math.min(POV_DIST, h.distance - .3)) : POV_DIST;
+  const x = p.x + d.x * dist, z = p.z + d.z * dist, g = standY(x, z);
+  cam.position.set(x, (g == null ? p.y : g) + EYE, z); controls.target.set(p.x, y0, p.z); dirty = true;
+}
+function povSet(on){
+  povOn = on;
+  document.querySelector('.stage').classList.toggle('pov', on);
+  const b = document.getElementById('povBtn'); b.setAttribute('aria-pressed', on);
+  document.getElementById('lensRow').hidden = !on; document.getElementById('povNote').hidden = !on;
+  [pin, ring].concat(tags).forEach(o => { o.visible = !on; });
+  cam.near = on ? .3 : 1; cam.fov = on ? lens : 45;
+  controls.minDistance = on ? 1.2 : 4; controls.maxDistance = on ? 60 : 700; controls.maxPolarAngle = on ? Math.PI / 2 + .35 : Math.PI / 2 - .03;
+  cam.updateProjectionMatrix();
+  if(!sheetEl.hidden) camShift();
+  if(on) povPlace();
+  else { const s = cur || { az: 180 }, v = vec(24, (s.az + 200) % 360, 13), p = jj.position; cam.position.set(p.x + v.x, p.y + v.y, p.z + v.z); controls.target.set(p.x, p.y + 1, p.z); }
+  update();
+}
+document.getElementById('povBtn').addEventListener('click', () => povSet(!povOn));
+document.querySelectorAll('[data-lens]').forEach(b => b.addEventListener('click', () => {
+  lens = +b.dataset.lens; document.querySelectorAll('[data-lens]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  cam.fov = lens; cam.updateProjectionMatrix(); dirty = true;
+}));
+function mapGo(name){
+  const o = [...placeEl.options].find(o => o.text === name + ' 앞'); if(!o) return;
+  placeEl.value = o.value; goPlace();
+  // 휴대폰은 지도가 화면을 다 덮으니 닫아서 3D를 보여 준다. 넓은 화면은 옆에 3D가 보이니 열어 둔다
+  if(getComputedStyle(sheetEl).position === 'fixed'){ mapShut(); canvas.scrollIntoView({ block: 'nearest' }); } else mapMark();
+}
+miniEl.addEventListener('click', mapOpen);
+document.getElementById('mapClose').addEventListener('click', mapShut);
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && !sheetEl.hidden) mapShut(); });
 function goPlace(){
   if(placeEl.value === 'pick') return;
   const [x, z] = placeEl.value.split(',').map(Number);
   moveJJ(x, z);
   const s = cur || { az: 180 }, v = vec(24, (s.az + 200) % 360, 13);
   cam.position.set(x + v.x, jj.position.y + v.y, z + v.z); dirty = true;
+  if(povOn) povPlace();
 }
 placeEl.addEventListener('change', goPlace);
 const ray = new THREE.Raycaster(); let down = null;
@@ -520,7 +703,7 @@ function update(){
 }
 dEl.addEventListener('change', () => { applyRange(); update(); });
 tEl.addEventListener('input', update);
-function resize(){ const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); dirty = true; }
+function resize(){ const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); cam.aspect = w / h; if(cam.view && cam.view.enabled) camShift(); cam.updateProjectionMatrix(); dirty = true; }
 new ResizeObserver(resize).observe(canvas); resize();
 cam.position.set(60, 60, 80);
 update();

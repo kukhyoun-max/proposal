@@ -7,7 +7,7 @@
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap">
 <style>
-/* 위: 장소·날짜·시간 / 가운데: 실제 캠퍼스 3D(제이제이가 서 있는 자리) / 아래: 그늘 여부 + 해·그림자 세 줄 */
+/* 화면 틀은 JJ 스튜디오 light3d 그대로. 3D 모델과 그늘 판정만 새 모델(도면 기반 건물 + 지형) */
 :root{
   --bg:#F2F1F6; --surface:#FFFFFF; --ink:#19181D; --ink-soft:#5F5C68; --line:#E2DFE8;
   --accent:#3D5FE0; --accent-soft:#EAF0FF; --sunny:#8A5A00; --sunny-bg:#FFF3D6; --shade:#3B4A6B; --shade-bg:#E6EBF5;
@@ -32,7 +32,7 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
 .stage{position:relative; border-radius:18px; overflow:hidden; border:1px solid var(--line); aspect-ratio:4/3; max-height:64vh; width:100%; background:#9cc4ec;}
 .stage canvas{display:block; width:100%; height:100%; touch-action:none;}
 .hint{position:absolute; right:10px; bottom:8px; font-size:12px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.7); pointer-events:none;}
-.loading{position:absolute; inset:0; display:grid; place-items:center; color:#fff; font-weight:700; text-shadow:0 1px 2px rgba(0,0,0,.5);}
+.loading{position:absolute; inset:0; display:grid; place-items:center; color:#fff; font-weight:700; text-shadow:0 1px 2px rgba(0,0,0,.5); text-align:center; padding:16px;}
 .verdict{border-radius:14px; padding:12px 14px; font-size:17px; font-weight:900;}
 .verdict.sun{background:var(--sunny-bg); color:var(--sunny);}
 .verdict.shade{background:var(--shade-bg); color:var(--shade);}
@@ -41,6 +41,7 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
 .facts small{color:var(--ink-soft); font-size:13px;}
 .note{font-size:12px; color:var(--ink-soft); margin:0;}
 .from{margin:-6px 0 0; font-size:14px; color:var(--ink-soft);}
+.from b{color:var(--ink);}
 .cast{display:flex; flex-direction:column; gap:8px;}
 .cast .row{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
 .cast .lbl{font-size:13px; font-weight:700; color:var(--ink-soft); width:32px;}
@@ -49,7 +50,6 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
 .chip[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); color:var(--accent);}
 .chip:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 .verdict ul{margin:6px 0 0; padding:0; list-style:none; font-size:14px; font-weight:700;}
-.from b{color:var(--ink);}
 </style>
 </head>
 <body>
@@ -84,13 +84,21 @@ input[type=range]{flex:1; min-width:0; accent-color:var(--accent); height:44px;}
   </div>
   <div class="verdict" id="verdict"></div>
   <ul class="facts" id="facts"></ul>
-  <p class="note">건물·항공사진: 국토교통부 브이월드(건물 높이, 없으면 층수 × 3.5m). 나무는 항공사진의 초록 무늬로 찾아 높이를 7·9·12m로 어림했어요. 해 위치는 전주대 위치로 계산했고 날씨·천막 같은 작은 구조물은 넣지 않았어요.</p>
+  <p class="note">건물과 땅 높낮이는 캠퍼스 3D 모델로 계산했어요. 나무는 항공사진의 초록 무늬로 찾아 높이를 7·9·12m로 어림했어요. 날씨와 천막 같은 임시 구조물은 넣지 않았어요.</p>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
-<script>
+<script type="importmap">{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+  "three-mesh-bvh":"https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.8.3/build/index.module.js"
+}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
+import {MeshBVH, acceleratedRaycast} from 'three-mesh-bvh';
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
+
 const R = Math.PI / 180, LAT = 35.8145, LON = 127.0905;
 function sunPos(ymd, min){
   const hh = String(Math.floor(min / 60)).padStart(2, '0'), mm = String(min % 60).padStart(2, '0');
@@ -105,78 +113,81 @@ function sunPos(ymd, min){
 }
 const DIRS = ['북', '북동', '동', '남동', '남', '남서', '서', '북서'];
 const dir = a => DIRS[Math.round(a / 45) % 8];
-// 북 = -z, 동 = +x, 위 = +y (건물 자료와 같은 기준)
+// 모델 좌표: 동 = +x, 위 = +y, 북 = -z (원점 EPSG:5186 E208112 N357423.6)
 const vec = (alt, az, r) => new THREE.Vector3(r * Math.cos(alt * R) * Math.sin(az * R), r * Math.sin(alt * R), -r * Math.cos(alt * R) * Math.cos(az * R));
 
 const canvas = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.shadowMap.autoUpdate = false;
 const scene = new THREE.Scene();
-const cam = new THREE.PerspectiveCamera(45, 4 / 3, 0.5, 3000);
-const controls = new THREE.OrbitControls(cam, canvas);
-controls.maxPolarAngle = Math.PI / 2 - 0.03; controls.minDistance = 4; controls.maxDistance = 600; controls.enableDamping = true;
+const cam = new THREE.PerspectiveCamera(45, 4 / 3, 1, 4000);
+const controls = new OrbitControls(cam, canvas);
+controls.maxPolarAngle = Math.PI / 2 - 0.03; controls.minDistance = 4; controls.maxDistance = 700; controls.enableDamping = true;
+let dirty = true; controls.addEventListener('change', () => { dirty = true; });
+const redraw = () => { renderer.shadowMap.needsUpdate = true; dirty = true; };
 
-// 땅: 바깥은 숲색, 캠퍼스 범위는 브이월드 항공사진(ground.jpg, 네 모서리는 ground.json)
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshLambertMaterial({ color: 0x5f7a4a }));
-ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
-// 항공사진은 파일로 두지 않고 브이월드에서 그때그때 받아 붙여요(줌 18, 10×13칸). 키는 이 사이트 주소용 브라우저 키
-const VW_KEY = '275D2298-054C-43DC-9540-2D559FC2C3B2';
-const GR = { z: 18, x0: 223610, x1: 223619, y0: 103100, y1: 103112, ext: { x0: -803.05, x1: 436.63, z0: -864.66, z1: 746.92 } };
-(function aerial(){
-  const nx = GR.x1 - GR.x0 + 1, ny = GR.y1 - GR.y0 + 1, cv = document.createElement('canvas');
-  cv.width = nx * 256; cv.height = ny * 256; const cx = cv.getContext('2d');
-  const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  const e = GR.ext, w = e.x1 - e.x0, d = e.z1 - e.z0;
-  const photo = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshLambertMaterial({ map: tex }));
-  photo.rotation.x = -Math.PI / 2; photo.position.set(e.x0 + w / 2, 0.02, e.z0 + d / 2); photo.receiveShadow = true;
-  cx.fillStyle = '#5f7a4a'; cx.fillRect(0, 0, cv.width, cv.height); scene.add(photo);
-  let left = nx * ny, timer = null;
-  for(let y = GR.y0; y <= GR.y1; y++) for(let x = GR.x0; x <= GR.x1; x++){
-    const im = new Image(); im.crossOrigin = 'anonymous';
-    const done = () => { if(--left === 0) tex.needsUpdate = true; else if(!timer) timer = setTimeout(() => { tex.needsUpdate = true; timer = null; }, 200); };
-    im.onload = () => { cx.drawImage(im, (x - GR.x0) * 256, (y - GR.y0) * 256); done(); };
-    im.onerror = done;
-    im.src = `https://api.vworld.kr/req/wmts/1.0.0/${VW_KEY}/Satellite/${GR.z}/${y}/${x}.jpeg`;
-  }
-})();
+// 모델 바깥(지형이 끝나는 곳)은 숲색
+const outer = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000), new THREE.MeshLambertMaterial({ color: 0x5f7a4a }));
+outer.rotation.x = -Math.PI / 2; outer.position.y = -26; scene.add(outer);
 
-const SUN_R = 260;
 const sun = new THREE.Mesh(new THREE.SphereGeometry(8, 24, 16), new THREE.MeshBasicMaterial({ color: 0xffc629 })); scene.add(sun);
-const light = new THREE.DirectionalLight(0xffffff, 1); light.castShadow = true;
-light.shadow.mapSize.set(4096, 4096); light.shadow.bias = -0.0005;
-Object.assign(light.shadow.camera, { left: -160, right: 160, top: 160, bottom: -160, near: 1, far: 900 });
+// 그림자 범위: 인원 둘레 ±400m. 해 쪽으로 900m까지 넣어 먼 언덕의 그림자도 그린다
+const light = new THREE.DirectionalLight(0xffffff, 3); light.castShadow = true;
+light.shadow.mapSize.set(4096, 4096); light.shadow.bias = -0.0004; light.shadow.normalBias = 0.4;
+Object.assign(light.shadow.camera, { left: -400, right: 400, top: 400, bottom: -400, near: 1, far: 1700 });
 scene.add(light); scene.add(light.target);
-const amb = new THREE.HemisphereLight(0xdfe9ff, 0x8a8f7a, 0.5); scene.add(amb);
+const amb = new THREE.HemisphereLight(0xdfe9ff, 0x8a8f7a, 1.5); scene.add(amb);
 
-// 촬영 인원: 제이제이·제이트·별이(블렌더 원본 → glb). 사람 대신 세우는 것이라 셋 다 키 1.7m로 맞춤
-// jj = 인원 묶음(그 자리·바라보는 방향). 모델 앞쪽은 +z(남쪽) → 방향 az(°, 북 0·동 90)이면 rotation.y = (180 - az)°
-const jj = new THREE.Group(); scene.add(jj);
-const ring = new THREE.Mesh(new THREE.RingGeometry(2.2, 2.6, 48), new THREE.MeshBasicMaterial({ color: 0x3d5fe0, transparent: true, opacity: .75, side: THREE.DoubleSide }));
-ring.rotation.x = -Math.PI / 2; ring.position.y = 0.05; scene.add(ring);
+// 촬영 인원(사람 대신 세우는 것이라 셋 다 키 1.7m). 모델 앞쪽 +z(남쪽) → 방향 az면 rotation.y = (180 - az)°
+const jj = new THREE.Group(); scene.add(jj); const outlines = [];
+const ring = new THREE.Mesh(new THREE.RingGeometry(2.25, 2.4, 64), new THREE.MeshBasicMaterial({ color: 0x3d5fe0, transparent: true, opacity: .95, side: THREE.DoubleSide, depthTest: false }));
+ring.rotation.x = -Math.PI / 2; ring.renderOrder = 7; scene.add(ring);
+// 위치 핀: 줌과 상관없이 같은 크기, 나무·건물에 가려도 보인다. 캐릭터는 실제 키(1.7m) 그대로 둔다(그림자 길이가 맞아야 해서)
+const pin = (() => {
+  const cv = document.createElement('canvas'); cv.width = 96; cv.height = 128; const x = cv.getContext('2d');
+  x.beginPath(); x.moveTo(48, 122); x.bezierCurveTo(30, 88, 8, 70, 8, 44); x.arc(48, 44, 40, Math.PI, 0); x.bezierCurveTo(88, 70, 66, 88, 48, 122); x.closePath();
+  x.fillStyle = '#3D5FE0'; x.fill(); x.lineWidth = 7; x.strokeStyle = '#fff'; x.stroke();
+  x.beginPath(); x.arc(48, 44, 16, 0, Math.PI * 2); x.fillStyle = '#fff'; x.fill();
+  const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, sizeAttenuation: false, depthTest: false, transparent: true }));
+  s.scale.set(0.054, 0.072, 1); s.center.set(0.5, 0); s.renderOrder = 10; s.raycast = () => {}; return s;
+})(); scene.add(pin);
 const CAST = { jj: { file: 'jj_basic.glb', name: '제이제이', on: true }, jt: { file: 'jt_basic.glb', name: '제이트', on: false }, by: { file: 'by_basic.glb', name: '별이', on: false } };
-let face = 180; // 처음엔 남쪽을 봐요
-const loader = new THREE.GLTFLoader();
+let face = 180;
+const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
+const loader = new GLTFLoader().setDRACOLoader(draco);
 function loadCast(k){
   const c = CAST[k]; if(c.obj || c.loading) return; c.loading = true;
   loader.load(c.file, g => {
     const m = g.scene, b0 = new THREE.Box3().setFromObject(m); m.scale.setScalar(1.7 / (b0.max.y - b0.min.y));
     const box = new THREE.Box3().setFromObject(m); m.position.y = -box.min.y;
-    m.traverse(o => { if(o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
+    m.traverse(o => { if(o.isMesh){ o.castShadow = true; o.receiveShadow = true; o.raycast = () => {};
+      // 그늘에서도 묻히지 않게 살짝 밝게, 링보다 나중에 그린다
+      o.material = o.material.clone(); o.material.transparent = true; o.renderOrder = 9;
+      if(o.material.emissive){ o.material.emissive.copy(o.material.color); o.material.emissiveMap = o.material.map; o.material.emissiveIntensity = 0.18; }
+      if(o.material.color.getHex() !== 0x000000) outlines.push(o); } }); // 눈·입 같은 검은 부품은 외곽선 제외
+    // 외곽선: 뒤집은 면을 2.5cm 부풀려 어두운 테두리(어떤 바닥에서도 형태가 보이게). 그림자·판정에는 안 쓴다
+    const k = m.scale.x; outlines.splice(0).forEach(o => {
+      const mat = new THREE.MeshBasicMaterial({ color: 0x141a2e, side: THREE.BackSide, transparent: true });
+      const push = (0.025 / k).toFixed(4);
+      mat.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+        transformed += normalize(normal) * ${push};`); };
+      const line = new THREE.Mesh(o.geometry, mat); line.raycast = () => {}; line.renderOrder = 8.5; line.castShadow = false; o.add(line);
+    });
     c.obj = new THREE.Group(); c.obj.add(m); jj.add(c.obj); c.loading = false; layout(); update();
   });
 }
-// 켜진 인원을 어깨 옆으로 1.6m 간격, 묶음 가운데 기준으로 한 줄
 function layout(){
   const on = Object.values(CAST).filter(c => c.on && c.obj);
   Object.values(CAST).forEach(c => { if(c.obj) c.obj.visible = c.on; });
   on.forEach((c, i) => c.obj.position.set((i - (on.length - 1) / 2) * 1.6, 0, 0));
-  jj.rotation.y = (180 - face) * R;
-  ring.position.set(jj.position.x, 0.05, jj.position.z);
+  jj.rotation.y = (180 - face) * R; jj.updateMatrixWorld(true);
+  // 경사지: 사람마다 발밑 높이에 맞춘다
+  on.forEach(c => { const p = c.obj.getWorldPosition(new THREE.Vector3()); const y = standY(p.x, p.z); if(y != null) c.obj.position.y = y - jj.position.y; });
+  ring.position.set(jj.position.x, jj.position.y + 0.08, jj.position.z); pin.position.set(jj.position.x, jj.position.y + 2.3, jj.position.z);
 }
-function castWorld(){ jj.updateMatrixWorld(true); return Object.values(CAST).filter(c => c.on && c.obj).map(c => ({ name: c.name, p: c.obj.getWorldPosition(new THREE.Vector3()) })); }
-loadCast('jj');
+const castWorld = () => { jj.updateMatrixWorld(true); return Object.values(CAST).filter(c => c.on && c.obj).map(c => ({ name: c.name, p: c.obj.getWorldPosition(new THREE.Vector3()) })); };
 document.querySelectorAll('[data-who]').forEach(b => b.addEventListener('click', () => {
   const k = b.dataset.who, c = CAST[k];
   if(c.on && Object.values(CAST).filter(x => x.on).length === 1) return; // 한 명은 남겨요
@@ -189,125 +200,104 @@ document.querySelectorAll('[data-turn]').forEach(b => b.addEventListener('click'
   face = ((Math.round(face) % 360) + 360) % 360; layout(); update();
 }));
 
-// 건물 그리기 도우미: 돌출 모양에서 지붕/벽 부분만 떼어 색을 칠함(나중에 한 덩어리로 합침)
-function part(g, start, count, color, windows){
-  const out = new THREE.BufferGeometry();
-  ['position', 'normal', 'uv'].forEach(k => { const a = g.attributes[k]; out.setAttribute(k, new THREE.BufferAttribute(a.array.slice(start * a.itemSize, (start + count) * a.itemSize), a.itemSize)); });
-  if(windows === 0){ const uv = out.attributes.uv.array; for(let i = 0; i < uv.length; i++) uv[i] = 0.05; } // 학교 밖 건물: 창문 없이 벽 색만
-  const c = new Float32Array(count * 3); for(let i = 0; i < count; i++) c.set([color.r, color.g, color.b], i * 3);
-  out.setAttribute('color', new THREE.BufferAttribute(c, 3));
-  return out;
-}
-// 벽 무늬: 가로 3m × 한 층 3.5m 마다 창 하나(지붕 쪽 uv는 벽 색 칸을 씀)
-function windowTex(){
-  const cv = document.createElement('canvas'); cv.width = cv.height = 64; const cx = cv.getContext('2d');
-  cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, 64, 64);
-  cx.fillStyle = '#5d6f82'; cx.fillRect(12, 16, 40, 30);
-  cx.fillStyle = '#8ea3b8'; cx.fillRect(12, 16, 40, 6);
-  const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1 / 3, 1 / 3.5); t.encoding = THREE.sRGBEncoding;
-  t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t;
-}
-// 건물 이름표: 화면에서 늘 같은 크기
 function nameTag(text){
   const cv = document.createElement('canvas'), cx = cv.getContext('2d'), fs = 40;
   cx.font = `700 ${fs}px "Noto Sans KR", sans-serif`; const w = Math.ceil(cx.measureText(text).width) + 28;
   cv.width = w; cv.height = fs + 22; cx.font = `700 ${fs}px "Noto Sans KR", sans-serif`;
   cx.fillStyle = 'rgba(25,24,29,.78)'; cx.beginPath(); cx.roundRect ? cx.roundRect(0, 0, w, cv.height, 14) : cx.rect(0, 0, w, cv.height); cx.fill();
   cx.fillStyle = '#fff'; cx.textBaseline = 'middle'; cx.fillText(text, 14, cv.height / 2 + 2);
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), sizeAttenuation: false }));
-  s.scale.set(0.04 * w / cv.height, 0.04, 1); s.center.set(0.5, 0); return s;
+  const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, sizeAttenuation: false, depthTest: false }));
+  s.scale.set(0.04 * w / cv.height, 0.04, 1); s.center.set(0.5, 0); s.renderOrder = 5; return s;
 }
 
-// 건물: 그리기용은 한 덩어리로 합치고, 그늘 판정은 평면 다각형 + 높이로 직접 계산
-let B = [], grid = new Map();
-const tags = []; // 건물 이름표(누르면 그 건물 앞으로)
-const GS = 20, key = (x, z) => Math.floor(x / GS) + ',' + Math.floor(z / GS);
-function inPoly(x, z, p){ let c = false; for(let i = 0, j = p.length - 1; i < p.length; j = i++){ const [xi, zi] = p[i], [xj, zj] = p[j]; if((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; }
-// 나무: 항공사진에서 뽑은 2m 칸(trees.json, 값 1·2·3 = 높이 7·9·12m, 잎 아래 2.5m는 빛이 지나감)
-let T = null;
-function treeH(x, z){
-  if(!T) return 0; const gx = Math.floor((x - T.x0) / T.cs), gz = Math.floor((z - T.z0) / T.cs);
-  if(gx < 0 || gz < 0 || gx >= T.w || gz >= T.h) return 0; return T.hm[T.c[gz * T.w + gx]];
-}
-function shadeAt(x, z, s){
+// ── 그늘 판정: 발 위 1m에서 해 쪽으로 실제 모델 면에 광선을 쏜다 + 나무 칸을 1m씩 걷는다 ──
+let groundMat = null; const solids = []; const tags = []; let PL = [], TR = null, T = null, ready = false;
+const NODE_KO = {};
+const nodeOf = o => { while(o && !/^(BLD|FAC|MASS|TERRAIN)/.test(o.name)) o = o.parent; return o ? o.name.replace(/_[0-9]+$/, '') : ''; };
+const rc = new THREE.Raycaster(); rc.firstHitOnly = true;
+function hitFirst(o, d, list = solids){ rc.set(o, d); rc.near = 0; rc.far = 3000; rc.firstHitOnly = true; let best = null; for(const m of list){ const h = rc.intersectObject(m, false)[0]; if(h && (!best || h.distance < best.distance)) best = h; } return best; }
+function terrY(x, z){ if(!TR) return null; const fx = (x - TR.x0) / TR.cs, fz = (z - TR.z0) / TR.cs, i = Math.floor(fx), j = Math.floor(fz); if(i < 0 || j < 0 || i >= TR.w - 1 || j >= TR.h - 1) return null; const a = TR.g[j * TR.w + i], b = TR.g[j * TR.w + i + 1], c = TR.g[(j + 1) * TR.w + i], d = TR.g[(j + 1) * TR.w + i + 1]; if(a === -32768 || b === -32768 || c === -32768 || d === -32768) return null; const u = fx - i, v = fz - j; return ((a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v) / 10; }
+const DOWN = new THREE.Vector3(0, -1, 0);
+// 발밑: 위에서 내려 첫 닿는 면. 지붕·반투명 매스 위면 땅 높이를 쓴다
+function standY(x, z){ const t = terrY(x, z); const h = hitFirst(new THREE.Vector3(x, 400, z), DOWN, solids.filter(m => !/^MASS/.test(nodeOf(m)))); if(!h) return t; return t != null && h.point.y - t > 8 ? t : h.point.y; }
+function treeH(x, z){ if(!T) return 0; const gx = Math.floor((x - T.x0) / T.cs), gz = Math.floor((z - T.z0) / T.cs); if(gx < 0 || gz < 0 || gx >= T.w || gz >= T.h) return 0; return T.hm[T.c[gz * T.w + gx]]; }
+function shadeAt(x, y, z, s){
   if(s.alt <= 0) return { night: true };
-  const d = vec(s.alt, s.az, 1), y0 = 1.0; // 제이제이 가슴 높이
-  for(let t = 1; t < 700; t += 1){
-    const px = x + d.x * t, pz = z + d.z * t, py = y0 + d.y * t;
-    if(py > 70) break;
-    if(py >= 2.5 && py < 12){ const th = treeH(px, pz); if(th > py) return { tree: true, by: '나무 (높이 약 ' + th + 'm)', dist: t }; }
-    const list = grid.get(key(px, pz)); if(!list) continue;
-    for(const b of list) if(b.h > py && inPoly(px, pz, b.p)) return { by: (b.n && !/^전주(대학교|비전대학)$/.test(b.n) ? b.n : "옆 건물") + " (높이 " + Math.round(b.h) + "m)", dist: t };
+  const d = vec(s.alt, s.az, 1), o = new THREE.Vector3(x, y + 1, z), h = hitFirst(o, d), maxT = h ? h.distance : 700;
+  // 나무가 건물보다 먼저 가리는지
+  for(let t = 1; t < maxT && t < 700; t += 1){
+    const px = x + d.x * t, pz = z + d.z * t, py = o.y + d.y * t, th = treeH(px, pz); if(!th) continue;
+    const g = terrY(px, pz); if(g == null) continue; if(py >= g + T.base && py < g + th) return { tree: true, by: '나무 (높이 약 ' + th + 'm)', dist: t };
   }
-  return null;
+  if(!h) return null;
+  const n = nodeOf(h.object);
+  return n === 'TERRAIN' ? { hill: true, by: '언덕', dist: h.distance } : { by: NODE_KO[n] || '옆 건물', dist: h.distance };
 }
-fetch('buildings.json').then(r => r.json()).then(data => {
-  B = data.b;
-  const roofs = [], walls = [], labels = [];
-  for(const b of B){
-    const sh = new THREE.Shape(b.p.map(([x, z]) => new THREE.Vector2(x, -z)));
-    const g = new THREE.ExtrudeGeometry(sh, { depth: b.h, bevelEnabled: false });
-    g.rotateX(-Math.PI / 2);
-    // 지붕 = 항공사진에서 뽑은 색, 벽 = 학교 건물은 지붕 색을 밝게 + 창문 줄, 학교 밖은 옅은 회색
-    const rc = new THREE.Color(b.c || (b.k ? '#cfc8bb' : '#d6d3cc'));
-    const wc = b.k ? rc.clone().lerp(new THREE.Color('#f1ece2'), 0.55) : new THREE.Color('#dedbd5');
-    const [cap, side] = g.groups;
-    roofs.push(part(g, cap.start, cap.count, rc)); walls.push(part(g, side.start, side.count, wc, b.k));
-    if(b.k && b.n && !/^(전주|\d+동$|기숙사$|변전실|기자재)/.test(b.n) && !labels.some(l => l.n === b.n)) labels.push({ n: b.n, b });
-    let mnx = 1e9, mnz = 1e9, mxx = -1e9, mxz = -1e9; b.p.forEach(([x, z]) => { mnx = Math.min(mnx, x); mxx = Math.max(mxx, x); mnz = Math.min(mnz, z); mxz = Math.max(mxz, z); });
-    for(let gx = Math.floor(mnx / GS); gx <= Math.floor(mxx / GS); gx++) for(let gz = Math.floor(mnz / GS); gz <= Math.floor(mxz / GS); gz++){
-      const k = gx + ',' + gz; if(!grid.has(k)) grid.set(k, []); grid.get(k).push(b);
-    }
-  }
-  const roofMesh = new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(roofs), new THREE.MeshLambertMaterial({ vertexColors: true }));
-  const wallMesh = new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(walls), new THREE.MeshLambertMaterial({ vertexColors: true, map: windowTex() }));
-  [roofMesh, wallMesh].forEach(m => { m.castShadow = m.receiveShadow = true; scene.add(m); });
-  labels.forEach(({ n, b }) => {
-    const cx = b.p.reduce((a, q) => a + q[0], 0) / b.p.length, cz = b.p.reduce((a, q) => a + q[1], 0) / b.p.length;
-    const s = nameTag(n); s.position.set(cx, b.h + 3, cz); s.userData.name = n; tags.push(s); scene.add(s);
-  });
-  buildPlaces(); document.getElementById('loading').remove();
-  pickFromQuery(); goPlace(); update();
-});
 
-fetch('trees.json').then(r => r.json()).then(d => {
+Promise.all([
+  new Promise((ok, no) => loader.load('campus_v3.glb', ok, undefined, no)),
+  fetch('places.json').then(r => r.json()), fetch('terrain.json').then(r => r.json()),
+]).then(([g, places, tr]) => {
+  const bin = atob(tr.b64), buf = new Uint8Array(bin.length); for(let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  TR = { ...tr, g: new Int16Array(buf.buffer) }; PL = places;
+  places.forEach(p => { NODE_KO[p.node] = p.n; });
+  g.scene.traverse(o => { if(!o.isMesh) return;
+    o.material.side = THREE.DoubleSide; o.geometry.boundsTree = new MeshBVH(o.geometry); o.castShadow = true; o.receiveShadow = true; solids.push(o);
+    if(o.material.map) o.material.map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    if(o.material.transparent) o.material.depthWrite = false;
+  });
+  // 바닥: 사진은 조명과 분리(사진 속 고정 그림자는 밝게 누름)하고, 움직이는 그림자는 진한 층으로 따로 얹는다
+  const tm = solids.find(o => nodeOf(o) === 'TERRAIN');
+  groundMat = new THREE.MeshBasicMaterial({ map: tm.material.map, side: THREE.DoubleSide });
+  groundMat.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+    float photoLuma = dot(diffuseColor.rgb, vec3(.2126, .7152, .0722));
+    diffuseColor.rgb = pow(mix(vec3(photoLuma), diffuseColor.rgb, .8), vec3(.62));`); };
+  tm.material = groundMat; tm.receiveShadow = false; tm.geometry.computeVertexNormals();
+  const shadowLayer = new THREE.Mesh(tm.geometry, new THREE.ShadowMaterial({ color: 0x0b1230, opacity: .62, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+  shadowLayer.receiveShadow = true; shadowLayer.raycast = () => {}; shadowLayer.renderOrder = 1;
+  tm.parent.add(shadowLayer); shadowLayer.position.copy(tm.position); shadowLayer.quaternion.copy(tm.quaternion); shadowLayer.scale.copy(tm.scale);
+  scene.add(g.scene);
+  places.forEach(p => { const s = nameTag(p.n); s.position.set(p.tx, p.ty, p.tz); s.userData.name = p.n; tags.push(s); scene.add(s); });
+  buildPlaces(); document.getElementById('loading').remove(); ready = true;
+  pickFromQuery(); goPlace(); loadCast('jj'); loadTrees(); update();
+}).catch(err => { console.error(err); document.getElementById('loading').textContent = '3D 모델을 받지 못했어요. 새로고침해 보세요.'; });
+
+function loadTrees(){ fetch('trees.json').then(r => r.json()).then(d => {
   const c = new Uint8Array(d.w * d.h); let i = 0; for(let k = 0; k < d.rle.length; k += 2){ c.fill(d.rle[k], i, i + d.rle[k + 1]); i += d.rle[k + 1]; }
-  T = { x0: d.x0, z0: d.z0, cs: d.cs, w: d.w, h: d.h, hm: d.hm, c };
-  // 그리기: 3×3칸(6m)마다 나무 칸이 있으면 잎 덩어리 하나(그 칸들 가운데, 가장 높은 값)
+  T = { x0: d.x0, z0: d.z0, cs: d.cs, w: d.w, h: d.h, hm: d.hm, base: d.base, c };
   const pts = [];
   for(let bz = 0; bz < d.h; bz += 3) for(let bx = 0; bx < d.w; bx += 3){
     let n = 0, sx = 0, sz = 0, mh = 0;
     for(let z = bz; z < Math.min(bz + 3, d.h); z++) for(let x = bx; x < Math.min(bx + 3, d.w); x++){ const v = c[z * d.w + x]; if(v){ n++; sx += x; sz += z; mh = Math.max(mh, d.hm[v]); } }
-    if(n >= 2) pts.push([d.x0 + (sx / n + .5) * d.cs, d.z0 + (sz / n + .5) * d.cs, mh, n]);
+    if(n < 2) continue; const x = d.x0 + (sx / n + .5) * d.cs, z = d.z0 + (sz / n + .5) * d.cs, g = terrY(x, z); if(g != null) pts.push([x, z, mh, n, g]);
   }
-  // 잎 덩어리 행렬·색을 미리 만들어 두고, 인원 둘레 25m 나무는 아주 옅게(ghost) 그려 인원을 가리지 않게(그림자는 그대로)
   const geo = new THREE.IcosahedronGeometry(1, 0), N = pts.length;
   const solid = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ flatShading: true }), N);
   const ghost = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ flatShading: true, transparent: true, opacity: .1, depthWrite: false }), N);
-  const mats = new Float32Array(N * 16), cols = new Float32Array(N * 3);
-  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), col = new THREE.Color();
-  pts.forEach(([x, z, h, n], k) => {
+  const mats = new Float32Array(N * 16), cols = new Float32Array(N * 3), m = new THREE.Matrix4(), q = new THREE.Quaternion(), col = new THREE.Color();
+  pts.forEach(([x, z, h, n, g], k) => {
     const r = n >= 6 ? 3.3 : 2.4, ry = (h - d.base) / 2 + .4;
     q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), (k * 2.399) % 6.28);
-    m.compose(new THREE.Vector3(x, d.base + ry - .2, z), q, new THREE.Vector3(r, ry, r)); m.toArray(mats, k * 16);
+    m.compose(new THREE.Vector3(x, g + d.base + ry - .2, z), q, new THREE.Vector3(r, ry, r)); m.toArray(mats, k * 16);
     col.setHSL(0.27 + (k % 7) * 0.008, 0.38, 0.24 + (k % 5) * 0.025).toArray(cols, k * 3);
   });
-  [solid, ghost].forEach(o => { o.setColorAt(0, col); o.castShadow = true; o.receiveShadow = o === solid; o.frustumCulled = false; scene.add(o); });
+  [solid, ghost].forEach(o => { o.setColorAt(0, col); o.castShadow = true; o.receiveShadow = o === solid; o.frustumCulled = false; o.raycast = () => {}; scene.add(o); });
   ghost.renderOrder = 2;
   trees = { pts, solid, ghost, mats, cols, at: null };
   if(treesHidden) [solid, ghost].forEach(o => { o.material.colorWrite = false; o.material.depthWrite = false; });
   treeNear(); update();
-});
+}); }
 let trees = null, treesHidden = false;
-// 나무 숨기기: 잎은 안 그리고 그림자는 남겨요(그늘 판정도 그대로)
 document.getElementById('treeBtn').addEventListener('click', e => {
   treesHidden = !treesHidden; const b = e.currentTarget;
   b.setAttribute('aria-pressed', treesHidden); b.textContent = treesHidden ? '나무 보이기' : '나무 숨기기';
   if(trees) [trees.solid, trees.ghost].forEach(o => { o.material.colorWrite = !treesHidden; o.material.depthWrite = !treesHidden && o === trees.solid; o.material.needsUpdate = true; });
+  redraw();
 });
 function treeNear(){
   if(!trees) return; const { pts, solid, ghost, mats, cols } = trees, c = jj.position;
-  if(trees.at && trees.at.distanceTo(c) < 1) return; trees.at = c.clone();
+  if(trees.at && Math.hypot(trees.at.x - c.x, trees.at.z - c.z) < 1) return; trees.at = c.clone();
   let a = 0, b = 0;
   pts.forEach((p, k) => {
     const near = Math.hypot(p[0] - c.x, p[1] - c.z) < 25, o = near ? ghost : solid, i = near ? b++ : a++;
@@ -317,50 +307,45 @@ function treeNear(){
   [solid, ghost].forEach(o => { o.instanceMatrix.needsUpdate = true; o.instanceColor.needsUpdate = true; });
 }
 
-// 장소: 건물 남쪽 입구 앞 12m (건물 가운데 x, 건물 가장 남쪽 + 12m)
+// 장소: 건물 남쪽 앞 12m에서 가장 가까운, 나무에서 8m 떨어진 야외(places.json). 자주 쓰는 7곳 먼저, 나머지 가나다순
 const PLACES = ['스타타워', '진리관', '자유관', '공학1관', '예술관', '천잠관', '대학본관'];
 const placeEl = document.getElementById('place');
 function buildPlaces(){
-  // 자주 쓰는 7곳 먼저, 그다음 이름 있는 학교 건물 가나다순
-  const more = [...new Set(B.filter(x => x.k && x.n && !/^(전주|\d+동$|기숙사$|변전실|기자재)/.test(x.n) && !PLACES.includes(x.n)).map(x => x.n))].sort((a, b) => a.localeCompare(b, 'ko'));
-  PLACES.concat(more).forEach(n => {
-    const b = B.filter(x => x.n === n).sort((a, c) => c.h - a.h)[0]; if(!b) return;
-    const cx = b.p.reduce((a, q) => a + q[0], 0) / b.p.length, mz = Math.max(...b.p.map(q => q[1]));
-    placeEl.add(new Option(n + ' 앞', cx + ',' + (mz + 12)));
-  });
+  const more = PL.map(p => p.n).filter(n => !PLACES.includes(n)).sort((a, b) => a.localeCompare(b, 'ko'));
+  PLACES.concat(more).forEach(n => { const p = PL.find(x => x.n === n); if(p) placeEl.add(new Option(n + ' 앞', p.x + ',' + p.z)); });
   placeEl.add(new Option('직접 고르기(땅 누르기)', 'pick'));
 }
-function moveJJ(x, z, keepCam){
-  const dx = x - jj.position.x, dz = z - jj.position.z;
-  jj.position.set(x, 0, z); layout(); treeNear();
-  if(keepCam){ cam.position.x += dx; cam.position.z += dz; }
-  controls.target.set(x, 1, z);
-  update();
+function moveJJ(x, z, keepCam, y){
+  const yy = y != null ? y : standY(x, z); if(yy == null) return;
+  const dx = x - jj.position.x, dy = yy - jj.position.y, dz = z - jj.position.z;
+  jj.position.set(x, yy, z); layout(); treeNear();
+  if(keepCam) cam.position.add(new THREE.Vector3(dx, dy, dz));
+  controls.target.set(x, yy + 1, z); update();
 }
 function goPlace(){
   if(placeEl.value === 'pick') return;
   const [x, z] = placeEl.value.split(',').map(Number);
   moveJJ(x, z);
-  const s = cur || { az: 180, alt: 30 }, v = vec(28, (s.az + 200) % 360, 16);
-  cam.position.set(x + v.x, v.y, z + v.z);
+  const s = cur || { az: 180 }, v = vec(24, (s.az + 200) % 360, 13);
+  cam.position.set(x + v.x, jj.position.y + v.y, z + v.z); dirty = true;
 }
 placeEl.addEventListener('change', goPlace);
-// 땅 누르기(끌기와 구분: 움직임 6px 안쪽만)
 const ray = new THREE.Raycaster(); let down = null;
 canvas.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
 canvas.addEventListener('pointerup', e => {
-  if(!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
+  if(!ready || !down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
   const r = canvas.getBoundingClientRect();
-  ray.setFromCamera({ x: (e.clientX - r.left) / r.width * 2 - 1, y: -(e.clientY - r.top) / r.height * 2 + 1 }, cam);
-  // 건물 이름표를 누르면 그 건물 앞으로
-  ray.camera = cam;
+  ray.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), cam);
   const tag = ray.intersectObjects(tags)[0];
-  if(tag){
-    const o = [...placeEl.options].find(o => o.text === tag.object.userData.name + ' 앞');
-    if(o){ placeEl.value = o.value; goPlace(); return; }
-  }
-  const hit = ray.intersectObject(ground)[0]; if(!hit) return;
-  placeEl.value = 'pick'; moveJJ(hit.point.x, hit.point.z, true);
+  const goName = n => { const o = [...placeEl.options].find(o => o.text === n + ' 앞'); if(o){ placeEl.value = o.value; goPlace(); return true; } return false; };
+  if(tag && goName(tag.object.userData.name)) return;
+  ray.firstHitOnly = true; let best = null; for(const m of solids){ const h = ray.intersectObject(m, false)[0]; if(h && (!best || h.distance < best.distance)) best = h; }
+  if(!best) return;
+  const n = nodeOf(best.object), t = terrY(best.point.x, best.point.z);
+  // 건물 벽·지붕을 누르면 그 건물 앞으로, 땅·계단·마당은 그 자리로
+  const isSurface = best.face && best.face.normal.y > .7 && (t == null || best.point.y - t <= 8) && !/^MASS/.test(n);
+  if(!isSurface){ if(NODE_KO[n]) goName(NODE_KO[n]); return; }
+  placeEl.value = 'pick'; moveJJ(best.point.x, best.point.z, true, best.point.y);
 });
 
 const sky = { day: new THREE.Color(0x9cc4ec), gold: new THREE.Color(0xf3b77a), dusk: new THREE.Color(0x4a5a8c), night: new THREE.Color(0x141a2e) };
@@ -378,37 +363,40 @@ dEl.value = /^\d{4}-\d{2}-\d{2}$/.test(Q.get('d') || '') ? Q.get('d') : new Date
     fe.innerHTML = '기획서 촬영 일정: <b>' + [Q.get('d'), [Q.get('t'), Q.get('t2')].filter(Boolean).join('~'), Q.get('p')].filter(Boolean).map(s => s.replace(/[<>&]/g, '')).join(' · ') + '</b>';
   }
 })();
-// 기획서 장소 글에 건물 이름이 있으면 그 앞으로
 function pickFromQuery(){
   const p = (Q.get('p') || '').replace(/\s/g, ''); if(!p) return;
   const o = [...placeEl.options].find(o => o.value !== 'pick' && p.includes(o.text.replace(/ 앞$/, '').replace(/\s/g, '')));
   if(o) placeEl.value = o.value;
 }
-// 잎이 지는 철: 11월 중순부터 3월까지는 나무 그늘이 옅어요
 function leafNote(){ const m = +(dEl.value || '').slice(5, 7), d = +(dEl.value || '').slice(8, 10); return (m === 11 && d >= 15) || m === 12 || m <= 3 ? ' 잎이 많이 진 때라 그늘이 옅을 수 있어요.' : ''; }
 let cur = null;
 function update(){
   const ymd = dEl.value || '2026-11-02', min = +tEl.value;
   tOut.textContent = String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
   const p = cur = sunPos(ymd, min), c = jj.position;
-  sun.position.copy(vec(Math.max(p.alt, -3), p.az, SUN_R)).add(new THREE.Vector3(c.x, 0, c.z)); sun.visible = p.alt > -1;
-  light.position.copy(vec(Math.max(p.alt, 0.5), p.az, 450)).add(new THREE.Vector3(c.x, 0, c.z));
-  light.target.position.set(c.x, 0, c.z);
+  sun.position.copy(vec(Math.max(p.alt, -3), p.az, 400)).add(c); sun.visible = p.alt > -1;
+  light.position.copy(vec(Math.max(p.alt, 0.5), p.az, 900)).add(c); light.target.position.copy(c); light.target.updateMatrixWorld();
   const k = Math.max(0, Math.min(1, p.alt / 25));
-  light.intensity = p.alt > 0 ? 0.35 + 0.75 * k : 0;
+  light.intensity = p.alt > 0 ? 1.9 + 1.5 * k : 0;
   light.color.setRGB(1, 0.72 + 0.28 * k, 0.45 + 0.55 * k);
-  amb.intensity = p.alt > 0 ? 0.45 : Math.max(0.12, 0.45 + p.alt / 20);
+  amb.intensity = p.alt > 0 ? 0.75 : Math.max(0.35, 0.75 + p.alt / 10);
+  if(groundMat){ const v = p.alt > 0 ? 0.82 + 0.18 * k : Math.max(0.25, 0.6 + p.alt / 15); groundMat.color.setRGB(v, v * (0.86 + 0.14 * k), v * (0.72 + 0.28 * k)); }
   scene.background = p.alt > 12 ? sky.day : p.alt > 0 ? sky.gold.clone().lerp(sky.day, p.alt / 12) : p.alt > -6 ? sky.dusk : sky.night;
   document.getElementById('faceOut').textContent = dir(face) + '쪽';
-  if(!B.length) return;
-  // 얼굴에 드는 빛: 바라보는 방향과 해 방향의 차이
+  redraw();
+  if(!ready) return;
   const diff = Math.abs(((face - p.az) % 360 + 540) % 360 - 180);
   const faceLight = diff <= 60 ? '얼굴에 해가 바로 들어요(순광, 눈부심 주의)' : diff >= 120 ? '해를 등져요(역광: 얼굴은 어둡고 머리 둘레가 빛나요)' : '얼굴 옆으로 해가 들어요(옆빛, 입체감)';
-  const who = castWorld(), res = who.map(w => ({ name: w.name, sh: shadeAt(w.p.x, w.p.z, p) }));
+  const who = castWorld(); if(!who.length) return;
+  const res = who.map(w => ({ name: w.name, sh: shadeAt(w.p.x, w.p.y, w.p.z, p) }));
   const shaded = res.filter(r => r.sh), many = res.length > 1;
-  const list = many ? `<ul>${res.map(r => `<li>${r.sh ? (r.sh.tree ? '🌳' : '🏢') : '☀️'} ${r.name}: ${r.sh ? '그늘' : '햇빛'}</li>`).join('')}</ul>` : '';
-  if(p.alt <= 0){ verdict.className = 'verdict shade'; verdict.innerHTML = '🌙 해가 진 시간이에요<small>그림자 없음 · 조명이 필요해요</small>'; }
-  else if(shaded.length === res.length && res.length){ const sh = shaded[0].sh; verdict.className = 'verdict shade'; verdict.innerHTML = sh.tree ? `🌳 ${many ? '모두 ' : ''}나무 그늘이에요<small>해 쪽 ${Math.round(sh.dist)}m 나무가 해를 가려요. 잎 사이로 빛이 새어 얼굴에 얼룩이 질 수 있으니 화면으로 한 번 확인하세요.${leafNote()}</small>` : `🏢 ${many ? '모두 ' : ''}그늘이에요 — ${sh.by} 그림자<small>해 쪽으로 ${Math.round(sh.dist)}m 떨어진 건물이 해를 가려요. 고르게 부드러운 빛이에요.</small>`; }
+  const icon = s => s.tree ? '🌳' : s.hill ? '⛰️' : '🏢';
+  const list = many ? `<ul>${res.map(r => `<li>${r.sh ? icon(r.sh) : '☀️'} ${r.name}: ${r.sh ? '그늘' : '햇빛'}</li>`).join('')}</ul>` : '';
+  if(p.alt <= 0){ verdict.className = 'verdict shade'; verdict.innerHTML = '🌙 해가 진 시간이에요<small>그림자 없음, 조명이 필요해요</small>'; }
+  else if(shaded.length === res.length){ const sh = shaded[0].sh; verdict.className = 'verdict shade'; verdict.innerHTML =
+    sh.tree ? `🌳 ${many ? '모두 ' : ''}나무 그늘이에요<small>해 쪽 ${Math.round(sh.dist)}m 나무가 해를 가려요. 잎 사이로 빛이 새어 얼굴에 얼룩이 질 수 있으니 화면으로 한 번 확인하세요.${leafNote()}</small>`
+    : sh.hill ? `⛰️ ${many ? '모두 ' : ''}언덕 그늘이에요<small>해 쪽으로 ${Math.round(sh.dist)}m 떨어진 언덕이 해를 가려요. 고르게 부드러운 빛이에요.</small>`
+    : `🏢 ${many ? '모두 ' : ''}그늘이에요: ${sh.by} 그림자<small>해 쪽으로 ${Math.round(sh.dist)}m 떨어진 건물이 해를 가려요. 고르게 부드러운 빛이에요.</small>`; }
   else if(shaded.length){ verdict.className = 'verdict shade'; verdict.innerHTML = `⛅ ${res.length}명 중 ${shaded.length}명만 그늘이에요<small>빛이 서로 달라요. 자리를 옮기거나 방향을 돌려 보세요.</small>${list}`; }
   else { verdict.className = 'verdict sun'; verdict.innerHTML = `☀️ ${many ? '모두 ' : ''}햇빛이 들어요<small>${faceLight}</small>`; }
   if(p.alt > 0){
@@ -420,10 +408,11 @@ function update(){
 }
 dEl.addEventListener('change', update);
 tEl.addEventListener('input', update);
-function resize(){ const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+function resize(){ const w = canvas.clientWidth, h = canvas.clientHeight; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); dirty = true; }
 new ResizeObserver(resize).observe(canvas); resize();
 cam.position.set(60, 60, 80);
-(function loop(){ controls.update(); renderer.render(scene, cam); requestAnimationFrame(loop); })();
+update();
+(function loop(){ controls.update(); if(dirty){ dirty = false; renderer.render(scene, cam); window.__frames = (window.__frames || 0) + 1; } requestAnimationFrame(loop); })();
 </script>
 </body>
 </html>

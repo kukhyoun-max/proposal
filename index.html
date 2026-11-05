@@ -599,8 +599,28 @@
   .mt-sum td .bad{color:#B23A3A; font-weight:700;} .mt-sum td .late{color:#9A5B00; font-weight:700;}
   .admin-topbar{gap:8px;} .admin-topbar button{white-space:nowrap;}
   #btnTheme{padding-left:8px; padding-right:8px; line-height:1;}
-  @media (max-width:520px){ .home-txt{display:none;} }
-  @media (max-width:340px){ .admin-topbar{padding-left:10px !important; padding-right:10px !important;} .admin-topbar button{padding:6px 6px !important; font-size:11.5px !important;} }
+  @media (max-width:520px){ .home-txt, .hide-m{display:none;} }
+  /* 내 성과: 실제 기록으로만 칭찬한다. 순위·감점·검수는 넣지 않는다 */
+  .my-hero{padding:18px; border-radius:16px; background:var(--purple-soft);}
+  .my-hero h3{margin:0 0 4px; font-size:20px; font-weight:900; letter-spacing:-.4px; line-height:1.35;}
+  .my-hero p{margin:0; font-size:14px; color:var(--ink-soft); line-height:1.5;}
+  .my-good{list-style:none; margin:14px 0 0; padding:0;}
+  .my-good li{display:flex; gap:9px; padding:8px 0; font-size:14.5px; font-weight:500; line-height:1.5;}
+  .my-good li + li{border-top:1px solid var(--line);}
+  .my-good li > i{flex:none; font-style:normal;}
+  .my-stats{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0 0;}
+  .my-stats.one{grid-template-columns:1fr;}
+  .my-stats > div{padding:12px 14px; border:1px solid var(--line); border-radius:14px;}
+  .my-stats h4{margin:0 0 4px; font-size:12.5px; font-weight:700; color:var(--ink-faint);}
+  .my-stats b{display:block; font-size:19px; font-weight:900; letter-spacing:-.4px; line-height:1.3;}
+  .my-all{margin-top:14px;}
+  .my-all > summary{padding:10px 0; font-size:14px; font-weight:700; cursor:pointer;}
+  .my-pick{display:flex; align-items:center; gap:8px; margin:0 0 12px; font-size:13px; color:var(--ink-faint);}
+  .my-pick[hidden]{display:none;}
+  .my-pick select{flex:1; min-width:0; min-height:40px; padding:6px 10px; border:1px solid var(--line-input); border-radius:10px; background:transparent; color:var(--ink); font:inherit; font-size:14px;}
+  .my-msg{padding:24px 4px; font-size:14px; line-height:1.6; color:var(--ink-soft); text-align:center;}
+  .my-msg button{display:block; margin:12px auto 0; min-height:40px; padding:0 16px; border:1px solid var(--line-input); border-radius:10px; background:transparent; color:var(--ink); font:inherit; font-size:14px; font-weight:700; cursor:pointer;}
+  @media (max-width:340px){ .admin-topbar{padding-left:10px !important; padding-right:10px !important;} .admin-topbar button{padding:6px 4px !important; font-size:11px !important;} .admin-topbar > div{gap:3px !important;} #pendingBadge{margin-left:2px !important; padding:1px 5px !important;} }
   @media (max-width:400px){ .admin-topbar{padding:10px 14px;} .admin-topbar button{padding:6px 9px; font-size:12px;} #btnHome{font-size:12px !important; text-align:left;} .admin-topbar > div{gap:5px !important;} }
   /* 장비별 보기 (2026-10-25): 날짜 블록 카드 · 다가오는/지난 구분 · 겹침 상대 표시 */
   .eqi-lab{display:block; font-size:13px; font-weight:700; color:var(--ink-soft); margin:10px 0 6px;}
@@ -1263,6 +1283,15 @@
 :root[data-theme="dark"] .pc-legend{color:var(--ink-faint)}
 :root[data-theme="dark"] .mt-sum td .bad{color:#DC9393}
 :root[data-theme="dark"] .mt-sum td .late{color:#F1C27E}
+:root[data-theme="dark"] .my-hero{background:var(--purple-soft)}
+:root[data-theme="dark"] .my-hero p{color:var(--ink-soft)}
+:root[data-theme="dark"] .my-good li + li{border-top:1px solid var(--line)}
+:root[data-theme="dark"] .my-stats > div{border:1px solid var(--line)}
+:root[data-theme="dark"] .my-stats h4{color:var(--ink-faint)}
+:root[data-theme="dark"] .my-pick{color:var(--ink-faint)}
+:root[data-theme="dark"] .my-pick select{border:1px solid var(--line-input);background:transparent;color:var(--ink)}
+:root[data-theme="dark"] .my-msg{color:var(--ink-soft)}
+:root[data-theme="dark"] .my-msg button{border:1px solid var(--line-input);background:transparent;color:var(--ink)}
 :root[data-theme="dark"] .eqi-lab{color:var(--ink-soft)}
 :root[data-theme="dark"] #eqItemSel{border-color:var(--line-input)}
 :root[data-theme="dark"] .eqi-sum span{background:var(--page-bg);color:var(--ink)}
@@ -1513,8 +1542,9 @@
   <button id="btnHome" aria-label="JJ 스튜디오 처음으로" style="background:none; border:none; color:#fff; font-size:13px; font-weight:700; padding:0; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;"><svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true" style="flex:none;"><rect x="4" y="17" width="40" height="27" rx="6" fill="#3D5FE0"/><g transform="rotate(-12 6 15)"><rect x="4" y="8" width="40" height="9" rx="3" fill="#FFC629"/><path d="M12 8 L16 8 L12 17 L8 17 Z M22 8 L26 8 L22 17 L18 17 Z M32 8 L36 8 L32 17 L28 17 Z" fill="#19181D"/></g><text x="24" y="38" text-anchor="middle" font-family="Noto Sans KR, sans-serif" font-weight="900" font-size="16" fill="#fff" letter-spacing="-1">JJ</text></svg><span class="home-txt">JJ 스튜디오</span></button>
   <div style="display:flex; gap:8px;">
     <button id="btnTheme" type="button" aria-label="어둡게 보기">🌙</button>
-    <button id="btnEquipPublic">일정·장비</button>
-    <button id="btnStatusToggle">기획서 현황</button>
+    <button id="btnMy" type="button">내 성과</button>
+    <button id="btnEquipPublic" aria-label="일정·장비">일정<span class="hide-m">·장비</span></button>
+    <button id="btnStatusToggle" aria-label="기획서 현황"><span class="hide-m">기획서 </span>현황</button>
     <button id="btnAdminToggle">관리자 검토 <span id="pendingBadge" style="display:none; background:#E24B4A; border-radius:10px; padding:1px 7px; margin-left:4px;">0</span></button>
   </div>
 </div>
@@ -2063,6 +2093,17 @@
       <div id="eqItemSum" class="eqi-sum"></div>
       <div id="eqItemList"></div>
     </div>
+  </div>
+</div>
+
+<div class="phone" id="myView" style="display:none;">
+  <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <h2 style="font-size:17px; font-weight:900; margin:0;">내 성과</h2>
+    <button class="reset-link" id="btnMyBack" type="button">← 돌아가기</button>
+  </div>
+  <div class="content" style="padding-top:0;">
+    <div class="my-pick" id="myPick" hidden><label for="myPickSel">미리 보기</label><select id="myPickSel"></select></div>
+    <div id="myContent"></div>
   </div>
 </div>
 
@@ -3814,7 +3855,7 @@ async function showView(viewId){
     if(!ok) return false;
     if(cur === 'meeting') mtDirty = false; else pcDirty = false;
   }
-  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView'), personal: document.getElementById('personalView'), absent: document.getElementById('absentView'), event: document.getElementById('eventView'), equip: document.getElementById('equipView'), score: document.getElementById('scoreView') };
+  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView'), personal: document.getElementById('personalView'), absent: document.getElementById('absentView'), event: document.getElementById('eventView'), equip: document.getElementById('equipView'), score: document.getElementById('scoreView'), my: document.getElementById('myView') };
   Object.keys(views).forEach(k=>{
     views[k].style.display = (k===viewId) ? (k==='form' ? 'flex' : 'block') : 'none';
   });
@@ -3888,7 +3929,7 @@ window.addEventListener('popstate', async e => {
     return;
   }
   // 홈 기록으로 돌아옴 → 홈 화면으로 (저장 안 한 입력 때문에 취소하면 기록을 되돌려 놓아요)
-  const from = ['admin','status','meeting','personal','absent','event','equip','score'].find(k => vis(k + 'View'));
+  const from = ['admin','status','meeting','personal','absent','event','equip','score','my'].find(k => vis(k + 'View'));
   if(!from) return;
   const ok = await jjGoHomeFromPop();
   if(!ok){ try{ history.pushState({ jj:from }, ''); }catch(err){} }
@@ -6940,6 +6981,72 @@ function jjRosterApply(r){
     $('jjhMineList').innerHTML = minePosts(d.posts) + mineReviews(d.reviews);
     openSheet('jjhSheetMine');
   }
+  /* ── 내 성과 (2026-11-05 담당자 「버튼을 누르면 내가 쌓은 성과를 보여주는 창」·「잘하고 있다고 최대한 말해주고」)
+     칭찬은 그 사람의 실제 기록에서 맞는 것만 고른다. 숫자가 낮으면 그 줄을 빼고, 다른 사람과 비교하지 않는다 ── */
+  const myShort = t => { const x = iaTitle(t); return x.length > 24 ? x.slice(0, 24) + '…' : x; };
+  function myPraise(d){
+    const posts = d.posts || [], now = new Date(), ymOf = dt => dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0');
+    const prevD = new Date(now.getFullYear(), now.getMonth() - 1, 1), ym = ymOf(now), pm = ymOf(prevD);
+    const inM = m => posts.filter(p => String(p.date || '').slice(0, 7) === m), sum = l => l.reduce((t, p) => t + (p.views || 0), 0);
+    const cur = inM(ym), prev = inM(pm), out = [];
+    if(prev.length && sum(prev) > 0 && sum(cur) >= sum(prev) * 2) out.push(['📈', `지난달보다 조회수가 ${Math.floor(sum(cur) / sum(prev))}배 늘었어요`]);
+    else if(prev.length && sum(cur) > sum(prev)) out.push(['📈', `지난달보다 조회수가 ${kv(sum(cur) - sum(prev))}회 늘었어요`]);
+    else if(prev.length && cur.length > prev.length) out.push(['📈', `지난달보다 콘텐츠를 ${cur.length - prev.length}개 더 함께했어요`]);
+    // 연속 활동: 이번 달이 비어 있으면 지난달부터 센다
+    let streak = 0, at = new Date(now.getFullYear(), now.getMonth() - (cur.length ? 0 : 1), 1);
+    while(inM(ymOf(at)).length){ streak++; at = new Date(at.getFullYear(), at.getMonth() - 1, 1); }
+    if(streak >= 2) out.push(['🔥', `${streak}개월 연속으로 콘텐츠를 만들고 있어요`]);
+    if(cur.length) out.push(['✨', `이번 달에도 벌써 ${cur.length}개를 함께했어요`]);
+    const best = posts.slice().sort((a, b) => (b.views || 0) - (a.views || 0))[0];
+    if(best && best.views > 0) out.push(['🏆', `내 최고 기록은 「${esc(myShort(best.title))}」 ${kv(best.views)}회예요`]);
+    const sh = posts.filter(p => p.shares > 0).sort((a, b) => b.shares - a.shares)[0];
+    if(sh) out.push(['🔁', `「${esc(myShort(sh.title))}」은 ${Number(sh.shares).toLocaleString()}번 공유됐어요`]);
+    const mile = [5000000, 1000000, 500000, 100000, 50000, 10000, 5000, 1000].find(n => (d.views || 0) >= n);
+    if(mile) out.push(['🎯', `누적 조회수 ${kv(mile)}회를 넘었어요`]);
+    const pf = [...new Set(posts.map(p => p.platform).filter(Boolean))];
+    if(pf.length >= 2) out.push(['🌐', `${pf.map(esc).join('·')}에서 사람들을 만나고 있어요`]);
+    return { lines: out.slice(0, 5), cur };
+  }
+  function myPaint(d){
+    const box = $('myContent');
+    if(!d || d.error){ box.innerHTML = '<div class="my-msg">기록을 불러오지 못했어요.<br>잠시 후 다시 열어 주세요.<button type="button" id="myRetry">다시 불러오기</button></div>'; $('myRetry').addEventListener('click', myOpen); return; }
+    if(d.pending){ box.innerHTML = `<div class="my-msg"><b>${esc(d.pending)}</b>(으)로 연결 요청을 보냈어요.<br>선생님이 확인하면 내 성과가 열려요 🙂</div>`; return; }
+    if(d.need){ box.innerHTML = '<div class="my-msg">아직 내 이름이 연결되지 않았어요.<br>처음 화면 「내 기록」에서 이름을 골라 주세요.<button type="button" id="myToName">이름 고르러 가기</button></div>';
+      $('myToName').addEventListener('click', () => { try { localStorage.removeItem(MINE_SKIP); } catch(e){} location.reload(); }); return; }
+    if(!d.count){ box.innerHTML = `<div class="my-hero"><h3>${esc(d.name)}님의 첫 콘텐츠를 기다리고 있어요 ✨</h3><p>콘텐츠가 올라가면 여기에 성과가 모여요.</p></div>`; return; }
+    const { lines, cur } = myPraise(d), curV = cur.reduce((t, p) => t + (p.views || 0), 0), mon = new Date().getMonth() + 1;
+    const top = (d.posts || []).slice().sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 3);
+    box.innerHTML = `<div class="my-hero"><h3>${esc(d.name)}님, 정말 잘하고 있어요 👏</h3><p>함께 만든 콘텐츠 ${d.count}개가 ${kv(d.views || 0)} 회 조회됐어요.</p></div>`
+      + (lines.length ? `<ul class="my-good">${lines.map(l => `<li><i>${l[0]}</i><span>${l[1]}</span></li>`).join('')}</ul>` : '')
+      + `<div class="my-stats${cur.length ? '' : ' one'}">${cur.length ? `<div><h4>${mon}월</h4><b>${cur.length}개</b>${kv(curV)}회</div>` : ''}<div><h4>전체(${md(d.since)}부터)</h4><b>${d.count}개</b>${kv(d.views || 0)}회</div></div>`
+      + `<div class="jjh-sec">많이 본 콘텐츠</div>${minePosts(top)}`
+      + `<details class="my-all"><summary>함께한 콘텐츠 전체 ${d.count}개</summary>${minePosts(d.posts || [])}</details>`
+      + `<p class="my-msg" style="padding:14px 0 0;font-size:12px;">조회수 ${esc(d.updated || '')} 기준 · 매일 밤 갱신</p>`;
+  }
+  async function myLoad(params){
+    $('myContent').innerHTML = '<div class="my-msg">불러오는 중…</div>';
+    let d = null; try { d = await api(params); } catch(e){ d = null; }
+    return d;
+  }
+  async function myOpen(){
+    const pick = $('myPick'), sel = $('myPickSel');
+    const d = await myLoad({ action:'mine' });
+    if(d && d.admin){
+      // 관리자는 자기 기록이 없어 홍보대사를 골라 미리 본다(전체 관리자만, 서버가 다시 확인)
+      if(!adminRole() || !adminRole().full){ pick.hidden = true; $('myContent').innerHTML = '<div class="my-msg">관리자 계정에는 내 성과가 없어요.</div>'; return; }
+      if(!(await adminLoginByAccount())){ pick.hidden = true; myPaint(null); return; }
+      if(!sel.options.length) sel.innerHTML = AMBASSADOR_ROSTER.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+      pick.hidden = false;
+      if(!sel.value){ $('myContent').innerHTML = '<div class="my-msg">명단을 불러오는 중이에요. 잠시 후 다시 열어 주세요.</div>'; return; }
+      myPaint(await myLoad({ action:'mine', as: sel.value, tk: adminToken() }));
+      return;
+    }
+    pick.hidden = true; myPaint(d);
+  }
+  $('myPickSel').addEventListener('change', async e => { myPaint(await myLoad({ action:'mine', as: e.target.value, tk: adminToken() })); });
+  $('btnMy').addEventListener('click', () => { showView('my'); myOpen(); });
+  $('btnMyBack').addEventListener('click', () => { showView('form'); });
+
   $('jjhMine').addEventListener('click', openMine);
   $('jjhMine').addEventListener('keydown', e => { if (e.key === 'Enter') openMine(); });
 

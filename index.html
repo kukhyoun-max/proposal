@@ -7033,6 +7033,12 @@ function jjRosterApply(r){
     let d = null; try { d = await api(params); } catch(e){ d = null; }
     return seq === mySeq ? d : MY_STALE;
   }
+  // 미리 보기: 고른 사람과 다른 기록이 오면 보여 주지 않는다
+  function myPreview(name, v){
+    if(v === MY_STALE) return;
+    if(v && v.name && v.name !== name){ $('myContent').innerHTML = `<div class="my-msg">${esc(name)}님의 기록을 불러오지 못했어요.<br>잠시 후 다시 골라 주세요.</div>`; return; }
+    myPaint(v);
+  }
   async function myOpen(){
     const pick = $('myPick'), sel = $('myPickSel');
     const d = await myLoad({ action:'mine' });
@@ -7044,13 +7050,12 @@ function jjRosterApply(r){
       if(!sel.options.length) sel.innerHTML = AMBASSADOR_ROSTER.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
       pick.hidden = false;
       if(!sel.value){ $('myContent').innerHTML = '<div class="my-msg">명단을 불러오는 중이에요. 잠시 후 다시 열어 주세요.</div>'; return; }
-      const v = await myLoad({ action:'mine', as: sel.value, tk: adminToken() });
-      if(v !== MY_STALE) myPaint(v);
+      myPreview(sel.value, await myLoad({ action:'mine', as: sel.value, tk: adminToken() }));
       return;
     }
     pick.hidden = true; myPaint(d);
   }
-  $('myPickSel').addEventListener('change', async e => { const v = await myLoad({ action:'mine', as: e.target.value, tk: adminToken() }); if(v !== MY_STALE) myPaint(v); });
+  $('myPickSel').addEventListener('change', async e => { const n = e.target.value; myPreview(n, await myLoad({ action:'mine', as: n, tk: adminToken() })); });
   $('btnMy').addEventListener('click', () => { showView('my'); myOpen(); });
   $('btnMyBack').addEventListener('click', () => { showView('form'); });
 

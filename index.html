@@ -93,7 +93,7 @@
     color:var(--purple); font-size:13px; font-weight:700; margin:22px 0 8px;
   }
   h2.heading{
-    font-size:25px; font-weight:900; line-height:1.35; margin:0 0 26px; letter-spacing:-0.3px;
+    font-size:25px; font-weight:700; line-height:1.35; margin:0 0 26px; letter-spacing:-0.3px;
   }
 
   .input-box{
@@ -287,11 +287,11 @@
   .overview-title{font-size:12.5px; color:var(--ink-soft); font-weight:700; margin:0 0 10px;}
   .overview-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
   .overview-card{background:var(--purple-soft); border-radius:12px; padding:14px 6px; text-align:center;}
-  .overview-num{display:block; font-size:22px; font-weight:900; color:var(--purple-dark); line-height:1;}
+  .overview-num{display:block; font-size:22px; font-weight:700; color:var(--purple-dark); line-height:1;}
   .overview-label{display:block; font-size:10.5px; color:var(--ink-soft); margin-top:6px; line-height:1.3;}
   .dl-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
   .dl-main{display:flex; flex-direction:column; gap:8px; background:var(--purple-soft); border-radius:12px; padding:14px;}
-  .dl-d{font-size:22px; font-weight:900; color:var(--purple-dark); line-height:1;}
+  .dl-d{font-size:22px; font-weight:700; color:var(--purple-dark); line-height:1;}
   .dl-main.urgent{background:#FCEAEA;} .dl-main.urgent .dl-d{color:#B23A3A;}
   .dl-txt b{display:block; font-size:13.5px; color:var(--ink);}
   .dl-txt small{display:block; font-size:12px; color:var(--ink-soft); margin-top:3px;}
@@ -598,20 +598,20 @@
   .pc-legend i{display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:3px; vertical-align:0;}
   .mt-sum td .bad{color:#B23A3A; font-weight:700;} .mt-sum td .late{color:#9A5B00; font-weight:700;}
   .admin-topbar{gap:8px;} .admin-topbar button{white-space:nowrap;}
-  #btnTheme{padding-left:8px; padding-right:8px; line-height:1;}
+  #btnTheme{padding-left:8px; padding-right:8px; line-height:1; display:inline-flex; align-items:center;}
   @media (max-width:520px){ .home-txt, .hide-m{display:none;} }
   /* 내 성과: 실제 기록으로만 칭찬한다. 순위·감점·검수는 넣지 않는다 */
   .my-hero{padding:18px; border-radius:16px; background:var(--purple-soft);}
-  .my-hero h3{margin:0 0 4px; font-size:20px; font-weight:900; letter-spacing:-.4px; line-height:1.35;}
+  .my-hero h3{margin:0 0 4px; font-size:20px; font-weight:700; letter-spacing:-.4px; line-height:1.35;}
   .my-hero p{margin:0; font-size:14px; color:var(--ink-soft); line-height:1.5;}
   .my-good{list-style:none; margin:14px 0 0; padding:0;}
   .my-good li{display:flex; gap:9px; padding:8px 0; font-size:14.5px; font-weight:500; line-height:1.5;}
   .my-good li + li{border-top:1px solid var(--line);}
-  .my-good li > i{flex:none; font-style:normal;}
+  .my-good li > i{flex:none; width:6px; height:6px; margin-top:.62em; border-radius:50%; background:var(--purple);}
   .my-stats{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0 0;}
   .my-stats > div{padding:12px 14px; border:1px solid var(--line); border-radius:14px;}
   .my-stats h4{margin:0 0 4px; font-size:12.5px; font-weight:700; color:var(--ink-faint);}
-  .my-stats b{display:block; font-size:19px; font-weight:900; letter-spacing:-.4px; line-height:1.3;}
+  .my-stats b{display:block; font-size:19px; font-weight:700; letter-spacing:-.4px; line-height:1.3;}
   .my-all{margin-top:14px;}
   .my-all > summary{padding:10px 0; font-size:14px; font-weight:700; cursor:pointer;}
   .my-pick{display:flex; align-items:center; gap:8px; margin:0 0 12px; font-size:13px; color:var(--ink-faint);}
@@ -627,12 +627,12 @@
   .eqi-sum{display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 4px;}
   .eqi-sum span{font-size:13px; font-weight:700; padding:5px 10px; border-radius:20px; background:var(--page-bg); color:var(--ink);}
   .eqi-sum .now{background:#E6F5E9; color:#1B7A38;} .eqi-sum .bad{background:#FCEAEA; color:#B23A3A;}
-  .eqi-h{font-size:14px; font-weight:900; margin:18px 0 8px;}
+  .eqi-h{font-size:14px; font-weight:700; margin:18px 0 8px;}
   .eqi-card{display:flex; gap:12px; align-items:stretch; padding:12px; margin-bottom:8px; border:1.5px solid var(--line); border-radius:12px; background:#fff;}
   .eqi-card.bad{border-color:#E4A3A3; background:#FFF8F8;}
   .eqi-card.past{opacity:.6;}
   .eqi-date{flex:none; width:58px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:9px; background:var(--purple-soft); color:var(--purple-dark); padding:6px 2px;}
-  .eqi-date b{font-size:18px; font-weight:900; line-height:1.15; letter-spacing:-.3px;}
+  .eqi-date b{font-size:18px; font-weight:700; line-height:1.15; letter-spacing:-.3px;}
   .eqi-date span{font-size:12px; font-weight:700;}
   .eqi-date.multi b{font-size:14px;}
   .eqi-card.bad .eqi-date{background:#FCEAEA; color:#B23A3A;}
@@ -649,7 +649,7 @@
   .eqi-past summary::-webkit-details-marker{display:none;}
   .eqi-past summary::after{content:' ›'; display:inline-block; transition:transform .15s;} .eqi-past[open] summary::after{transform:rotate(90deg);}
   .eqi-empty{font-size:14px; color:var(--ink-soft); background:var(--page-bg); border-radius:12px; padding:16px; text-align:center; margin-top:8px;}
-  #equipView .eq-ro-title{display:none; font-size:17px; font-weight:900; margin:0;}
+  #equipView .eq-ro-title{display:none; font-size:17px; font-weight:700; margin:0;}
   #equipView.ro .eq-ro-title{display:block;}
   #equipView.ro .mt-tabs, #equipView.ro #eqNew, #equipView.ro #eqForm, #equipView.ro [data-eq], #equipView.ro [data-bulk]{display:none !important;}
   .mt-tabs{overflow-x:auto; scrollbar-width:none;} .mt-tabs::-webkit-scrollbar{display:none;}
@@ -705,7 +705,7 @@
   .sc-rank{color:var(--ink-faint); font-size:12px; width:22px;}
   .sc-name{font-weight:700; white-space:nowrap;}
   .sc-plus{color:#1B7A38;} .sc-minus{color:#B23A3A;}
-  .sc-net{font-weight:900; font-size:14px;}
+  .sc-net{font-weight:700; font-size:14px;}
   .sc-pill{display:inline-block; font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:999px; margin-left:4px; vertical-align:1px;}
   .sc-pill.warn{background:#FFF1D6; color:#9A5B00;} .sc-pill.bad{background:#FDE4E4; color:#B23A3A;} .sc-pill.ok{background:#E3F4EA; color:#1F7A45;} .sc-pill.hold{background:#EEF0F3; color:#5B6470;}
   .sc-detail td{background:#FAFAFC; padding:10px 12px 12px; text-align:left;}
@@ -734,7 +734,7 @@
   .jjh-goal .l{flex:1;min-width:0}
   .jjh-goal .k{font-size:13px;font-weight:700;color:var(--purple)}
   .jjh-goal .s{font-size:16px;font-weight:600;color:#333D4B;margin-top:3px;line-height:1.4}
-  .jjh-goal .s b{color:var(--ink);font-weight:800}
+  .jjh-goal .s b{color:var(--ink);font-weight:700}
   .jjh-goal svg{flex:none;width:112px;height:52px}
   .jjh-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin:12px 0 0}
   .jjh-best{display:flex;align-items:flex-start;gap:12px;cursor:pointer}
@@ -742,7 +742,7 @@
   .jjh-mine .k{font-size:13px;font-weight:700;color:var(--purple);display:flex;align-items:center;gap:6px}
   .jjh-mine .k .go{margin-left:auto;color:var(--ink-faint);font-size:18px;line-height:1}
   .jjh-mine .nums{display:flex;gap:18px;margin-top:6px}
-  .jjh-mine .nums b{display:block;font-size:22px;font-weight:900;letter-spacing:-.5px}
+  .jjh-mine .nums b{display:block;font-size:22px;font-weight:700;letter-spacing:-.5px}
   .jjh-mine .nums small{font-size:12px;color:var(--ink-faint)}
   .jjh-mine .msg{font-size:14.5px;color:var(--ink-soft);margin-top:6px;line-height:1.5}
   .jjh-mine.pick{cursor:default}
@@ -755,7 +755,7 @@
   .jjh-mine .skip{border:0;background:none;color:var(--ink-faint);font:inherit;font-size:12.5px;text-decoration:underline;cursor:pointer;margin-left:auto}
   a.jjh-post{color:inherit;text-decoration:none}
   .jjh-mstat{display:flex;gap:26px;margin:4px 0 6px}
-  .jjh-mstat b{display:block;font-size:26px;font-weight:900;letter-spacing:-1px}
+  .jjh-mstat b{display:block;font-size:26px;font-weight:700;letter-spacing:-1px}
   .jjh-mstat small{font-size:12px;color:var(--ink-faint)}
   .jjh-mine .k .mo{color:var(--ink-faint);font-weight:500}
   .jjh-post .dt{flex:none;font-size:12px;color:var(--ink-faint);width:38px}
@@ -763,7 +763,7 @@
   .jjh-best .l{flex:1;min-width:0}
   .jjh-best .k{font-size:13px;font-weight:700;color:#8A6100;display:flex;align-items:center;gap:6px}
   .jjh-best .k .dt{color:var(--ink-faint);font-weight:500} .jjh-best .k .go{margin-left:auto;color:var(--ink-faint);font-size:18px;line-height:1}
-  .jjh-best .nm{font-size:19px;font-weight:900;margin-top:2px;display:flex;align-items:baseline;gap:8px}
+  .jjh-best .nm{font-size:19px;font-weight:700;margin-top:2px;display:flex;align-items:baseline;gap:8px}
   .jjh-best .nm .gn{font-size:15px;font-weight:700;color:#F04452}
   .jjh-best .now{margin-top:6px;font-size:13px;color:var(--ink-soft);background:#F5F8FF;border-radius:8px;padding:5px 9px;display:inline-block}
   .jjh-best .now b{color:var(--purple)} .jjh-best .now b.n1{color:var(--ink)}
@@ -784,7 +784,7 @@
   #panel1 .overview-wrap{margin-top:14px}
   #panel1 #ov_list{display:none}
   .jjh-row.go{cursor:pointer}
-  .jjh-sc h3{font-size:16px;font-weight:900;margin:0 0 10px}
+  .jjh-sc h3{font-size:16px;font-weight:700;margin:0 0 10px}
   .jjh-chips{display:flex;gap:5px;flex-wrap:nowrap;overflow-x:auto;margin:0 -16px 6px;padding:0 16px 2px;scrollbar-width:none}
   .jjh-chips::-webkit-scrollbar{display:none}
   .jjh-chips button{flex:none;white-space:nowrap;border:0;border-radius:99px;padding:0 11px;min-height:44px;background:#F2F4F6;font:inherit;font-size:13px;font-weight:700;color:#4E5968;cursor:pointer}
@@ -808,23 +808,23 @@
   .jjh-dim.on{display:block}
   .jjh-sheet{position:fixed;left:0;right:0;bottom:0;z-index:901;background:#fff;border-radius:22px 22px 0 0;padding:22px 20px calc(24px + env(safe-area-inset-bottom));max-width:430px;margin:0 auto;max-height:88vh;overflow:auto;transform:translateY(105%);transition:transform .25s ease}
   .jjh-sheet.on{transform:none}
-  .jjh-sheet h4{margin:0;font-size:19px;font-weight:900}
+  .jjh-sheet h4{margin:0;font-size:19px;font-weight:700}
   .jjh-sheet .sub{font-size:12.5px;color:var(--ink-faint);margin-top:2px}
   .jjh-sheet .act{display:block;width:100%;text-align:left;border:0;background:#F2F4F6;border-radius:12px;padding:14px 16px;margin-top:10px;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
   .jjh-sheet .act.red{color:#F04452}
-  .jjh-big{font-size:32px;font-weight:900;color:#F04452;margin:10px 0;letter-spacing:-1px}
+  .jjh-big{font-size:32px;font-weight:700;color:#F04452;margin:10px 0;letter-spacing:-1px}
   .jjh-bar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:#F2F4F6;gap:2px;margin-bottom:6px}
   .jjh-bar i{display:block;height:100%}
   .jjh-r{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #F2F4F6}
   .jjh-r .dot{width:8px;height:8px;border-radius:50%;flex:none}
   .jjh-r .l{flex:1;min-width:0;display:flex;flex-direction:column} .jjh-r .l b{font-size:15px} .jjh-r .l small{font-size:12.5px;color:var(--ink-faint);margin-top:1px}
-  .jjh-r .v{font-size:16px;font-weight:800;white-space:nowrap}
+  .jjh-r .v{font-size:16px;font-weight:700;white-space:nowrap}
   .jjh-r.tot{border:0} .jjh-r.tot .v{color:#F04452}
-  .jjh-sec{font-size:13.5px;font-weight:800;color:#333D4B;margin:16px 0 6px}
+  .jjh-sec{font-size:13.5px;font-weight:700;color:#333D4B;margin:16px 0 6px}
   .jjh-post{display:flex;align-items:center;gap:8px;padding:8px 0;font-size:14px}
   .jjh-post .pf{flex:none;font-size:11px;font-weight:700;color:var(--purple);background:var(--purple-soft);border-radius:6px;padding:2px 6px}
   .jjh-post .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .jjh-post .vw{flex:none;font-weight:800;color:#333D4B}
+  .jjh-post .vw{flex:none;font-weight:700;color:#333D4B}
   .jjh-note{font-size:12px;color:var(--ink-faint);margin:12px 0 0;line-height:1.5}
   .jjh-prize{display:inline-flex;gap:4px;margin:4px 0;padding:6px 12px;border-radius:99px;background:#FFF4DB;color:#8A5A00;font-size:13.5px;font-weight:700}
   .jjh-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
@@ -838,7 +838,7 @@
   @keyframes jjpuff{0%{opacity:.7;transform:translate(0,0) scale(.6)}100%{opacity:0;transform:translate(-14px,-4px) scale(1.3)}}
   @media (prefers-reduced-motion:reduce){.jj-run,.jj-puff{animation:none}}
   .sr-box{margin:0 0 14px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:#FFFCF2}
-  .sr-box h4{margin:0 0 4px;font-size:14px;font-weight:900}
+  .sr-box h4{margin:0 0 4px;font-size:14px;font-weight:700}
   .sr-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}
   .sr-row .t{flex:1;min-width:0} .sr-row small{display:block;color:var(--ink-faint);font-size:12px}
   .sr-more summary{list-style:none;cursor:pointer;padding:10px 0 2px;border-top:1px solid var(--line);color:var(--ink-faint);font-size:13px;font-weight:700;text-align:center}
@@ -1532,7 +1532,7 @@
 <body>
 <div id="jjGate" style="position:fixed; inset:0; z-index:9999; background:#F4F5F8; display:flex; align-items:center; justify-content:center; padding:16px;">
   <div style="background:#fff; border-radius:22px; padding:32px 24px; max-width:360px; width:100%; text-align:center; box-shadow:0 2px 14px rgba(0,0,0,.06);">
-    <h1 style="font-size:22px; font-weight:900; margin:0 0 6px;">JJ 스튜디오</h1>
+    <h1 style="font-size:22px; font-weight:700; margin:0 0 6px;">JJ 스튜디오</h1>
     <p id="jjGateMsg" style="font-size:14px; color:#4E5968; margin:0 0 22px; line-height:1.6;">홍보대사 공유 드라이브에 등록된<br>구글 계정으로 로그인해 주세요.</p>
     <a id="jjGateBtn" href="#" style="display:block; background:#1B64DA; color:#fff; text-decoration:none; font-weight:700; padding:15px; border-radius:14px; font-size:16px;">구글 계정으로 로그인</a>
     <p id="jjGateKakao" style="display:none; font-size:12.5px; color:#B23A3A; margin:14px 0 0; line-height:1.6;">카카오톡 안에서는 구글 로그인이 안 돼요.<br><a id="jjGateExt" href="#" style="color:#3182F6; font-weight:700;">기본 브라우저로 열기</a></p>
@@ -1543,7 +1543,7 @@
 <div class="admin-topbar">
   <button id="btnHome" aria-label="JJ 스튜디오 처음으로" style="background:none; border:none; color:#fff; font-size:13px; font-weight:700; padding:0; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;"><svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true" style="flex:none;"><rect x="4" y="17" width="40" height="27" rx="6" fill="#3D5FE0"/><g transform="rotate(-12 6 15)"><rect x="4" y="8" width="40" height="9" rx="3" fill="#FFC629"/><path d="M12 8 L16 8 L12 17 L8 17 Z M22 8 L26 8 L22 17 L18 17 Z M32 8 L36 8 L32 17 L28 17 Z" fill="#19181D"/></g><text x="24" y="38" text-anchor="middle" font-family="Noto Sans KR, sans-serif" font-weight="900" font-size="16" fill="#fff" letter-spacing="-1">JJ</text></svg><span class="home-txt">JJ 스튜디오</span></button>
   <div style="display:flex; gap:8px;">
-    <button id="btnTheme" type="button" aria-label="어둡게 보기">🌙</button>
+    <button id="btnTheme" type="button" aria-label="어둡게 보기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
     <button id="btnMy" type="button">내 성과</button>
     <button id="btnEquipPublic" aria-label="일정·장비">일정<span class="hide-m">·장비</span></button>
     <button id="btnStatusToggle" aria-label="기획서 현황"><span class="hide-m">기획서 </span>현황</button>
@@ -1553,7 +1553,7 @@
 
 <script>(function(){ // 어둡게 보기: 고른 적이 없으면 기기 설정을 따르고(2026-11-05 담당자), 고르면 그 설정 유지. 3D 화면(light3d)과 같이 쓴다
   var r = document.documentElement, b = document.getElementById('btnTheme'), m = matchMedia('(prefers-color-scheme: dark)');
-  function show(){ var d = r.dataset.theme === 'dark'; b.textContent = d ? '☀️' : '🌙'; b.setAttribute('aria-label', d ? '밝게 보기' : '어둡게 보기'); }
+  function show(){ var d = r.dataset.theme === 'dark'; b.innerHTML = d ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>'; b.setAttribute('aria-label', d ? '밝게 보기' : '어둡게 보기'); }
   b.addEventListener('click', function(){ var d = r.dataset.theme !== 'dark'; if(d) r.dataset.theme = 'dark'; else delete r.dataset.theme; try { localStorage.setItem('jj-theme', d ? 'dark' : 'light'); } catch(e){} show(); });
   m.addEventListener('change', function(){ var t = null; try { t = localStorage.getItem('jj-theme'); } catch(e){} if(t === 'dark' || t === 'light') return; if(m.matches) r.dataset.theme = 'dark'; else delete r.dataset.theme; show(); });
   show();
@@ -1569,18 +1569,18 @@
     <button class="reset-link test-link" id="btnTestMode" type="button" aria-pressed="false" hidden>테스트</button>
     <button class="reset-link" id="btnReset">처음으로</button>
   </div>
-  <p class="test-banner" id="testBanner" hidden>🧪 테스트 중 · 빈칸도 넘어가요 · 이 작성 화면의 제출·임시 저장만 막혀요(관리자 승인은 돼요)</p>
+  <p class="test-banner" id="testBanner" hidden>테스트 중 · 빈칸도 넘어가요 · 이 작성 화면의 제출·임시 저장만 막혀요(관리자 승인은 돼요)</p>
 
   <div class="content">
 
     <div class="step-panel" id="panel1">
       <div id="jjhHome">
         <button class="jjh-goal" id="jjhGoal" type="button" aria-label="공동목표 자세히 보기">
-          <div class="l"><div class="k">🏃 JJ 공동목표 ›</div><div class="s" id="jjhGoalText">불러오는 중…</div></div>
+          <div class="l"><div class="k">JJ 공동목표 ›</div><div class="s" id="jjhGoalText">불러오는 중…</div></div>
           <svg id="jjhMini" viewBox="0 0 112 52" aria-hidden="true"></svg>
         </button>
         <div class="jjh-card jjh-mine" id="jjhMine" role="button" tabindex="0" aria-label="내 콘텐츠 기록 보기">
-          <div class="k">📒 <span id="jjhMineMon">이번 달</span> 내 기록 <span class="go" id="jjhMineGo" style="display:none">›</span></div>
+          <div class="k"><span id="jjhMineMon">이번 달</span> 내 기록 <span class="go" id="jjhMineGo" style="display:none">›</span></div>
           <div id="jjhMineBody"><div class="msg">불러오는 중…</div></div>
         </div>
         <div class="jjh-card jjh-best wait" id="jjhBest" role="button" tabindex="0" aria-label="1등 근거 보기" style="display:none">
@@ -1602,7 +1602,7 @@
       </div>
       <div class="jjh-card jjh-plan" id="jjhPlanCard">
         <div id="jjhPlanProg"></div>
-        <div class="jjh-plan-h"><span class="lb">📝 기획서 쓰기</span></div>
+        <div class="jjh-plan-h"><span class="lb">기획서 쓰기</span></div>
         <h2 class="heading">팀장 이름을 골라주세요</h2>
         <div class="jjh-names" id="jjhNames"></div>
         <div class="input-box name-picker" id="nameBox" style="display:none;">
@@ -1734,9 +1734,9 @@
         <div class="field-sm"><label for="f_filmto">끝</label><select id="f_filmto"></select></div>
       </div>
       <p class="sg-wx" id="sunWx" aria-live="polite" hidden></p>
-      <a class="sun-3d" id="f_3d" href="light3d/" target="_blank" rel="noopener" style="margin:0 0 16px;">🏫 3D 캠퍼스에서 이 시간 그늘 확인하기</a>
+      <a class="sun-3d" id="f_3d" href="light3d/" target="_blank" rel="noopener" style="margin:0 0 16px;">3D 캠퍼스에서 이 시간 그늘 확인하기</a>
       <details class="lt-box">
-        <summary class="lt-title">☀️ 야외 촬영이면, 원하는 빛으로 시간 고르기 <span>선택</span></summary>
+        <summary class="lt-title">야외 촬영이면, 원하는 빛으로 시간 고르기 <span>선택</span></summary>
         <p class="lt-sub">날씨를 보고 찍기 좋은 시간을 알려 드려요.</p>
         <div class="lt-chips" id="ltChips">
           <button type="button" data-lt="sun">맑은 햇빛<small>파란 하늘·긴 그림자</small></button>
@@ -1796,7 +1796,7 @@
 
       <div id="finalDoc" style="border:1.5px solid var(--line); border-radius:16px; padding:22px; background:#fff;">
         <p style="font-size:12px; color:var(--purple); font-weight:700; letter-spacing:1px; margin:0 0 4px;" id="fd_category">콘텐츠 기획서</p>
-        <h3 style="font-size:20px; font-weight:900; margin:0 0 16px;" id="fd_title">-</h3>
+        <h3 style="font-size:20px; font-weight:700; margin:0 0 16px;" id="fd_title">-</h3>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:12.5px; margin-bottom:18px;">
           <div><span style="color:var(--ink-soft);">팀장</span><br><b id="fd_lead">-</b></div>
@@ -1905,7 +1905,7 @@
     <div id="mtList"></div>
     <button class="mt-save" id="mtSave">저장</button>
     <p class="save-status" id="mtStatus"></p>
-    <h3 style="font-size:14px; font-weight:900; margin:26px 0 0;">누적 현황 <span id="mtCount" style="font-size:12px; font-weight:400; color:var(--ink-faint);"></span></h3>
+    <h3 style="font-size:14px; font-weight:700; margin:26px 0 0;">누적 현황 <span id="mtCount" style="font-size:12px; font-weight:400; color:var(--ink-faint);"></span></h3>
     <div id="mtSummary"></div>
   </div>
 </div>
@@ -1934,7 +1934,7 @@
     <div class="pc-add" id="pcAdd"></div>
     <button class="mt-save" id="pcSave">저장</button>
     <p class="save-status" id="pcStatus"></p>
-    <h3 style="font-size:14px; font-weight:900; margin:26px 0 0;">누적 현황 <span id="pcCount" style="font-size:12px; font-weight:400; color:var(--ink-faint);"></span></h3>
+    <h3 style="font-size:14px; font-weight:700; margin:26px 0 0;">누적 현황 <span id="pcCount" style="font-size:12px; font-weight:400; color:var(--ink-faint);"></span></h3>
     <div id="pcSummary"></div>
   </div>
 </div>
@@ -2020,7 +2020,7 @@
       </div>
     </div>
     <div id="tkCards"></div>
-    <h3 style="font-size:14px; font-weight:900; margin:26px 0 0;" id="tkSumTitle">누적 감점</h3>
+    <h3 style="font-size:14px; font-weight:700; margin:26px 0 0;" id="tkSumTitle">누적 감점</h3>
     <div id="tkSummary"></div>
     </div>
 
@@ -2044,7 +2044,7 @@
       </div>
     </div>
     <div id="evList"></div>
-    <h3 style="font-size:14px; font-weight:900; margin:26px 0 0;">누적 행사 가점</h3>
+    <h3 style="font-size:14px; font-weight:700; margin:26px 0 0;">누적 행사 가점</h3>
     <div id="evSummary"></div>
     </div>
   </div>
@@ -2086,7 +2086,7 @@
       <div class="eq-month"><button id="eqPrev">◀</button><b id="eqMonthLabel"></b><button id="eqNext">▶</button></div>
       <div class="eq-grid" id="eqGrid"></div>
       <p class="eq-legend">막대 = 촬영일→영상 제출일 · <span class="eq-key" style="background:#D6336C;margin-left:0"></span>행사·요청사항·이벤트 · <span class="eq-key" style="background:#1E4FA0;margin-left:0"></span>촬영 예정<span class="eq-key" style="background:#D9822B"></span>제작 중<span class="eq-key" style="background:#C8372D"></span>제출 지남<span class="eq-key" style="background:#2E8B57"></span>제작 완료<span class="eq-key" style="background:#6A4BC4"></span>업로드<span class="eq-key" style="background:#495057"></span>학사 · ○팀 = 장비 빌린 팀 수 · 빨간 칸 = 장비 겹침</p>
-      <h3 id="eqDayTitle" style="font-size:14px; font-weight:900; margin:18px 0 0;"></h3>
+      <h3 id="eqDayTitle" style="font-size:14px; font-weight:700; margin:18px 0 0;"></h3>
       <div id="eqDayList"></div>
     </div>
     <div id="eqItemWrap" style="display:none;">
@@ -2100,7 +2100,7 @@
 
 <div class="phone" id="myView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
-    <h2 style="font-size:17px; font-weight:900; margin:0;">내 성과</h2>
+    <h2 style="font-size:17px; font-weight:700; margin:0;">내 성과</h2>
     <button class="reset-link" id="btnMyBack" type="button">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
@@ -2111,7 +2111,7 @@
 
 <div class="phone" id="statusView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
-    <h2 style="font-size:17px; font-weight:900; margin:0;" id="statusHeader">기획서 현황</h2>
+    <h2 style="font-size:17px; font-weight:700; margin:0;" id="statusHeader">기획서 현황</h2>
     <button class="reset-link" id="btnStatusBack">← 돌아가기</button>
   </div>
   <div class="content" id="statusContent" style="padding-top:0;">
@@ -2155,8 +2155,8 @@
 <div class="jjh-sheet" id="jjhSheetGoal" role="dialog" aria-label="공동목표">
   <h4>JJ 공동목표</h4>
   <div class="sub" id="jjhGoalMeta"></div>
-  <div style="display:flex;align-items:baseline;gap:6px;margin-top:10px;"><span style="font-size:32px;font-weight:900;letter-spacing:-1px;" id="jjhGoalCur"></span><span style="font-size:16px;font-weight:700;color:var(--ink-faint);">/ 500만</span></div>
-  <div class="jjh-prize">🍣 500만 달성 시 <b>홍보대사 전체 쿠우쿠우 회식</b></div>
+  <div style="display:flex;align-items:baseline;gap:6px;margin-top:10px;"><span style="font-size:32px;font-weight:700;letter-spacing:-1px;" id="jjhGoalCur"></span><span style="font-size:16px;font-weight:700;color:var(--ink-faint);">/ 500만</span></div>
+  <div class="jjh-prize">500만 달성 시 <b>홍보대사 전체 쿠우쿠우 회식</b></div>
   <div style="font-size:14px;font-weight:700;color:#F04452;" id="jjhGoalWeek"></div>
   <svg id="jjhChart" viewBox="0 0 360 220" style="width:100%;height:auto;margin-top:8px;" role="img" aria-label="누적 조회수 그래프"></svg>
   <div class="jjh-sec">보상 단계</div>
@@ -2179,7 +2179,7 @@
 </div>
 <div class="jjh-sheet" id="jjhSheetEv" role="dialog" aria-label="일정 메뉴">
   <h4 id="jjhEvTitle"></h4><div class="sub" id="jjhEvSub"></div>
-  <button class="act red" id="jjhEvDel" type="button">🗑️ 이 일정 삭제 <span style="float:right;font-size:12.5px;color:var(--ink-faint);font-weight:500;">관리자</span></button>
+  <button class="act red" id="jjhEvDel" type="button">이 일정 삭제 <span style="float:right;font-size:12.5px;color:var(--ink-faint);font-weight:500;">관리자</span></button>
   <button class="act" id="jjhEvClose" type="button">닫기</button>
 </div>
 
@@ -3205,7 +3205,7 @@ function renderPlanRows(){
       <label class="plan-lab-sm" for="plan_l${i}">촬영 장소</label>
       <div class="plan-loc">
         <input type="text" id="plan_l${i}" placeholder="예: 중앙도서관 1층" value="${esc(row.location||'')}">
-        <a class="sun-3d plan-3d" href="light3d/" target="_blank" rel="noopener" aria-label="장면 ${i+1} 장소를 3D로 보기">🏫 3D로 보기</a>
+        <a class="sun-3d plan-3d" href="light3d/" target="_blank" rel="noopener" aria-label="장면 ${i+1} 장소를 3D로 보기">3D로 보기</a>
       </div>
     `;
     // 장면 3D 버튼(2026-11-04): 장소 칸이 촬영 시간 버튼보다 뒤 단계라, 이 장면 장소를 여기서 넘겨요. 누르는 순간의 값으로 맞춰요
@@ -3382,7 +3382,7 @@ function renderFinalDoc(){
   set('fd_title', data.title); set('fd_lead', data.lead); set('fd_member', data.member);
   set('fd_filming', data.filming); set('fd_editing', data.editing); set('fd_extra', data.extra);
   set('fd_participants', data.participants ? data.participants+'명' : '');
-  document.getElementById('fd_summary').textContent = data.summary ? '💬 ' + data.summary : '';
+  document.getElementById('fd_summary').textContent = data.summary ? data.summary : '';
   document.getElementById('fd_url').textContent = data.url || '';
   document.getElementById('fd_meta').innerHTML = metaSummaryHTML(data);
   set('fd_filmdate', data.filmdate); set('fd_submitdate', data.submitdate);
@@ -3777,7 +3777,7 @@ async function submitForReview(){
       const leadName = (data.lead || '').trim();
       const count = rows.filter(r => (r['작성자(팀장)']||'').trim() === leadName).length;
       if(leadName && count > 0){
-        await showAlert(`${leadName}님 ${count}번째 영상이네요! 곧 쿠우쿠우에서 만나요 🍽️`);
+        await showAlert(`${leadName}님 ${count}번째 영상이에요. 곧 쿠우쿠우에서 만나요`);
       }
     }catch(countErr){
       console.error('submission count check failed:', countErr);
@@ -4036,7 +4036,7 @@ function renderStatusListView(items){
   let mine = lsGet(MINE_KEY); if(mine && !AMBASSADOR_ROSTER.includes(mine)) mine = '';
   const involves = (rec, n) => [rec.name, rec.lead, rec.member, rec.filming, rec.editing, rec.extra].some(v => parseNames(v || '').includes(n));
   const shown = stApply(items, 'status').filter(i => !mine || involves(i.rec, mine));
-  const mineBar = `<div class="mine-bar"><span>👤 내 기획서만</span><select id="stMine"><option value="">전체 보기</option>${AMBASSADOR_ROSTER.map(n => `<option value="${n}" ${n===mine?'selected':''}>${n}</option>`).join('')}</select></div>`;
+  const mineBar = `<div class="mine-bar"><span>내 기획서만</span><select id="stMine"><option value="">전체 보기</option>${AMBASSADOR_ROSTER.map(n => `<option value="${n}" ${n===mine?'selected':''}>${n}</option>`).join('')}</select></div>`;
   const cards = (shown.length ? '' : '<p style="font-size:12.5px;color:var(--ink-faint);">해당 조건의 기획서가 없어요.</p>') + shown.map(({key, rec})=>{
     const catLabel = (CATEGORIES.find(c=>c.id===rec.category)||{}).title || '-';
     return `
@@ -4119,8 +4119,8 @@ function renderStatusDetail(key, rec){
   const isAccepted = ['approved','filming','editing','completed','uploaded'].includes(editingRecord.status);
   const imageSection = isAccepted ? `
     <div id="statusDocCard">${buildDocCardHTML(editingRecord)}</div>
-    <button id="statusSaveImage" style="width:100%; margin:14px 0 8px; padding:16px; border-radius:12px; border:none; background:var(--purple); color:#fff; font-weight:700; font-size:15px; cursor:pointer;">📥 이미지로 다운로드</button>
-    <button id="statusCopyCredit" style="width:100%; margin:0 0 20px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14.5px; cursor:pointer;">📋 캡션 크레딧 복사</button>
+    <button id="statusSaveImage" style="width:100%; margin:14px 0 8px; padding:16px; border-radius:12px; border:none; background:var(--purple); color:#fff; font-weight:700; font-size:15px; cursor:pointer;">이미지로 다운로드</button>
+    <button id="statusCopyCredit" style="width:100%; margin:0 0 20px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14.5px; cursor:pointer;">캡션 크레딧 복사</button>
   ` : '';
 
   const canEdit = canEditPlan(editingRecord);
@@ -4134,7 +4134,7 @@ function renderStatusDetail(key, rec){
     stageSection = `<button class="save-edit-btn" id="stageBtn" style="margin-top:0; margin-bottom:20px;" data-next="completed">제작 완료 처리</button>`;
   }
 
-  const toggleEditHtml = !canEdit ? `<p class="req-hint" style="margin:0 0 16px;">이 기획서의 팀원과 관리자만 수정할 수 있어요${JJ_ME && !JJ_ME.name ? ' · 홈 「내 기록」에서 내 이름 연결이 승인돼야 해요' : ''}</p>` : `<button id="toggleEditBtn" style="width:100%; margin:0 0 16px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14px; cursor:pointer;">✏️ 수정하기</button>`;
+  const toggleEditHtml = !canEdit ? `<p class="req-hint" style="margin:0 0 16px;">이 기획서의 팀원과 관리자만 수정할 수 있어요${JJ_ME && !JJ_ME.name ? ' · 홈 「내 기록」에서 내 이름 연결이 승인돼야 해요' : ''}</p>` : `<button id="toggleEditBtn" style="width:100%; margin:0 0 16px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14px; cursor:pointer;">수정하기</button>`;
 
   el.innerHTML = `
     <button class="back-link" id="statusToList">← 목록으로</button>
@@ -4160,7 +4160,7 @@ function renderStatusDetail(key, rec){
       <div class="field-sm"><label>촬영 시작</label><select id="e_filmfrom"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
       <div class="field-sm"><label>촬영 종료</label><select id="e_filmto"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
     </div>
-    <a class="sun-3d" id="e_3d" href="light3d/" target="_blank" rel="noopener" style="margin:0 0 16px;">🏫 3D 캠퍼스에서 이 시간 그늘 확인하기</a>
+    <a class="sun-3d" id="e_3d" href="light3d/" target="_blank" rel="noopener" style="margin:0 0 16px;">3D 캠퍼스에서 이 시간 그늘 확인하기</a>
     <p class="section-title">주제·유형 · 기획 확인</p>
     <div id="e_meta"></div>
     <button class="save-edit-btn" id="saveEditBtn" style="margin-top:14px;">수정 저장</button>
@@ -4227,7 +4227,7 @@ function renderStatusDetail(key, rec){
   if(creditBtn){
     creditBtn.addEventListener('click', async ()=>{
       const text = buildCreditText(editingRecord);
-      try{ await navigator.clipboard.writeText(text); creditBtn.textContent = '복사됨! 캡션 맨 아래에 붙여 주세요'; setTimeout(()=>{ creditBtn.textContent = '📋 캡션 크레딧 복사'; }, 2500); }
+      try{ await navigator.clipboard.writeText(text); creditBtn.textContent = '복사했어요 · 캡션 맨 아래에 붙여 주세요'; setTimeout(()=>{ creditBtn.textContent = '캡션 크레딧 복사'; }, 2500); }
       catch(e){ showAlert('복사에 실패했어요. 아래 내용을 직접 복사해 주세요.\n\n' + text); }
     });
   }
@@ -4252,7 +4252,7 @@ function renderStatusDetail(key, rec){
       const wrap = document.getElementById('editFormWrap');
       const open = wrap.style.display !== 'none';
       wrap.style.display = open ? 'none' : 'block';
-      toggleEditBtn.textContent = open ? '✏️ 수정하기' : '접기';
+      toggleEditBtn.textContent = open ? '수정하기' : '접기';
     });
   }
 
@@ -4284,7 +4284,7 @@ function buildDocCardHTML(rec){
   return `
     <div style="border:1.5px solid var(--line); border-radius:16px; padding:22px; background:#fff;">
       <p style="font-size:11px; color:var(--purple); font-weight:700; letter-spacing:1px; margin:0 0 4px;">${esc(["콘텐츠 기획서", tagLine(rec) || catLabel].filter(Boolean).join(" · "))}</p>
-      <h3 style="font-size:20px; font-weight:900; margin:0 0 16px;">${esc(rec.title)||'-'}</h3>
+      <h3 style="font-size:20px; font-weight:700; margin:0 0 16px;">${esc(rec.title)||'-'}</h3>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:12.5px; margin-bottom:18px;">
         <div><span style="color:var(--ink-soft);">팀장</span><br><b>${esc(rec.lead)||'-'}</b></div>
         <div><span style="color:var(--ink-soft);">팀원</span><br><b>${esc(rec.member)||'-'}</b></div>
@@ -4293,7 +4293,7 @@ function buildDocCardHTML(rec){
         <div><span style="color:var(--ink-soft);">출연</span><br><b>${esc(rec.extra)||'-'}</b></div>
         <div><span style="color:var(--ink-soft);">참여 인원</span><br><b>${rec.participants? esc(rec.participants)+'명':'-'}</b></div>
       </div>
-      <p style="font-size:14px; font-weight:700; color:var(--ink); margin:0 0 4px;">${rec.summary ? '💬 ' + esc(rec.summary) : ''}</p>
+      <p style="font-size:14px; font-weight:700; color:var(--ink); margin:0 0 4px;">${rec.summary ? esc(rec.summary) : ''}</p>
       <p style="font-size:12px; color:var(--purple-dark); margin:0 0 18px; word-break:break-all;">${esc(rec.url)}</p>
       ${metaSummaryHTML(rec)}
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:12.5px; margin-bottom:14px; padding-top:14px; border-top:1px solid var(--line);">
@@ -4329,7 +4329,7 @@ function renderEditPlanRows(){
       <textarea placeholder="장면(씬) 설명, 대사 또는 연출 포인트를 적어주세요.">${esc(row.content||'')}</textarea>
       <div class="plan-loc">
         <input type="text" placeholder="장소" value="${esc(row.location||'')}">
-        <a class="sun-3d plan-3d" href="light3d/" target="_blank" rel="noopener" aria-label="장면 ${i+1} 장소를 3D로 보기">🏫 3D로 보기</a>
+        <a class="sun-3d plan-3d" href="light3d/" target="_blank" rel="noopener" aria-label="장면 ${i+1} 장소를 3D로 보기">3D로 보기</a>
       </div>
     `;
     div.querySelector('.plan-3d').addEventListener('click', e=>{ const v = id => (document.getElementById(id) || {}).value; e.currentTarget.href = light3dHref(v('e_filmdate'), v('e_filmfrom'), v('e_filmto'), [row]); });
@@ -4402,7 +4402,7 @@ async function saveEditedSubmission(){
     editingRecord.updatedAt = updatedAt;
     editDirty = false;
     renderStatusDetail(editingKey, editingRecord);
-    showToast(stillMiss.length && !['rejected','dropped','completed','uploaded'].includes(editingRecord.status) ? '✅ 저장했어요. 아직 비어 있어요: ' + stillMiss.join(' · ') : '✅ 수정 내용을 저장했어요');
+    showToast(stillMiss.length && !['rejected','dropped','completed','uploaded'].includes(editingRecord.status) ? '저장했어요 · 아직 비어 있어요: ' + stillMiss.join(' · ') : '수정 내용을 저장했어요');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }catch(e){
     showAlert('수정 저장에 실패했어요: ' + (e && e.message ? e.message : '알 수 없는 오류'));
@@ -4512,21 +4512,21 @@ function renderAdminList(items){
       actions = `<div class="sub-actions"><button class="btn-approve" data-approve="${esc(key)}">재검토 후 승인</button></div>`;
     }
     return `
-      ${dropN && idx === items.length - dropN ? `<p class="drop-head">⏸ 제작 중단 ${dropN}건</p>` : ''}
+      ${dropN && idx === items.length - dropN ? `<p class="drop-head">제작 중단 ${dropN}건</p>` : ''}
       <div class="sub-card${rec.status==='dropped' ? ' is-dropped' : ''}" data-key="${esc(key)}">
         <div class="sub-card-top">
           <span class="status-pill ${esc(rec.status)}">${esc(STATUS_LABELS[rec.status]||rec.status)}</span>
-          <span style="display:flex; gap:12px;"><button class="toggle-detail" data-edit="${esc(key)}">✏️ 수정</button><button class="toggle-detail" data-toggle="${esc(key)}">자세히 보기</button><button class="toggle-detail" data-del="${esc(key)}" style="color:#DC2626;">삭제</button></span>
+          <span style="display:flex; gap:12px;"><button class="toggle-detail" data-edit="${esc(key)}">수정</button><button class="toggle-detail" data-toggle="${esc(key)}">자세히 보기</button><button class="toggle-detail" data-del="${esc(key)}" style="color:#DC2626;">삭제</button></span>
         </div>
         <p class="sub-title">${esc(rec.title||'(제목 없음)')}</p>
         <p class="sub-meta">${nb(rec.name)}${esc(rec.name||'-')} · ${esc(rec.tag || catLabel)} · ${esc(when)}</p>
         ${rec.status === 'pending' ? `<div class="ia-box" data-ia="${esc(key)}" hidden></div>` : ''}
         <div class="sub-detail" id="detail-${esc(key)}" style="display:none; white-space:normal; padding:0; border:none; margin:10px 0 0;">${buildDocCardHTML(rec)}</div>
         ${actions}
-        ${['filming','editing','completed','uploaded'].includes(rec.status) ? `<div class="st-force rv-row" data-rv="${esc(key)}"><span>🔎 검수 <b class="rv-last" style="font-weight:600;">-</b></span><span style="display:flex;gap:10px;"><button type="button" class="toggle-detail" data-rvset="수정요청">수정요청</button><button type="button" class="toggle-detail" data-rvset="통과">통과</button></span></div>` : ''}
-        ${rec.uploadedAt ? `<a class="up-link" ${/^https?:/.test(rec.uploadUrl) ? `href="${esc(safeUrl(rec.uploadUrl))}" target="_blank" rel="noopener"` : ''}>📺 ${mtFmt(rec.uploadedAt)} 업로드${/^https?:/.test(rec.uploadUrl) ? ' · 게시물 보기' : ''}</a>` : ''}
+        ${['filming','editing','completed','uploaded'].includes(rec.status) ? `<div class="st-force rv-row" data-rv="${esc(key)}"><span>검수 <b class="rv-last" style="font-weight:600;">-</b></span><span style="display:flex;gap:10px;"><button type="button" class="toggle-detail" data-rvset="수정요청">수정요청</button><button type="button" class="toggle-detail" data-rvset="통과">통과</button></span></div>` : ''}
+        ${rec.uploadedAt ? `<a class="up-link" ${/^https?:/.test(rec.uploadUrl) ? `href="${esc(safeUrl(rec.uploadUrl))}" target="_blank" rel="noopener"` : ''}>${mtFmt(rec.uploadedAt)} 업로드${/^https?:/.test(rec.uploadUrl) ? ' · 게시물 보기' : ''}</a>` : ''}
         ${['completed','uploaded'].includes(rec.status) ? `<div class="st-force" style="border-top:none; margin-top:8px; padding-top:0;"><span>제작 완료일 <small>(지연 감점 기준)</small></span><input type="date" data-done="${esc(key)}" value="${esc(doneYmd(rec.completedAt))}" style="font-size:12px; padding:5px 8px; border-radius:8px; border:1px solid #D9D9E0;"></div>` : ''}
-        ${['approved','filming','editing','completed','uploaded','dropped'].includes(rec.status) ? `<div class="st-force"><span>${rec.locked ? '🔒 관리자 지정' : ({completed:'✅ 제작 완료 (관리자 처리)', uploaded:'📺 게시물이 올라와 자동 처리', dropped:'⏸ 제작 중단 · 불참·장비 집계에서 빠짐'}[rec.status] || '⏱ 촬영일 기준 자동')}</span>
+        ${['approved','filming','editing','completed','uploaded','dropped'].includes(rec.status) ? `<div class="st-force"><span>${rec.locked ? '관리자 지정' : ({completed:'제작 완료 (관리자 처리)', uploaded:'게시물이 올라와 자동 처리', dropped:'제작 중단 · 불참·장비 집계에서 빠짐'}[rec.status] || '⏱ 촬영일 기준 자동')}</span>
           <select data-force="${esc(key)}"><option value="">상태 직접 변경</option>${rec.locked ? '<option value="auto">자동으로 되돌리기</option>' : ''}<option value="approved">승인됨 · 촬영 예정</option><option value="filming">촬영 중</option><option value="editing">편집 중</option><option value="completed">제작 완료</option><option value="uploaded">업로드 완료</option><option value="dropped">제작 중단</option></select></div>` : ''}
       </div>
     `;
@@ -4624,7 +4624,7 @@ function iaHtml(id){
   const it = (IA_DATA.items || {})[id], ask = (IA_DATA.ask || {})[id];
   const e = it && it.exp;
   let h = '';
-  if(!e) h += `<div class="ia-sec"><h4>📊 예상 성과</h4><span class="ia-few">아직 계산 전이에요. PC가 켜져 있으면 5~10분 안에 나와요.</span></div>`;
+  if(!e) h += `<div class="ia-sec"><h4>예상 성과</h4><span class="ia-few">아직 계산 전이에요. PC가 켜져 있으면 5~10분 안에 나와요.</span></div>`;
   else {
     // 채널을 열로 놓은 표. 숫자 옆 건수, 5건 미만은 *(표본 적음). 설명은 표 아래 두 줄로 모은다
     const slots = e.slots || [], cnt = st => `<small>${st.n}건${st.n < 5 ? '*' : ''}</small>`;
@@ -4637,24 +4637,24 @@ function iaHtml(id){
       + row('범위', s => { const b = s.base || {}; return `${iaNum(b.p10)}~${iaNum(b.p90)}`; });
     if(slots.some(s => s.sim)) rows += row('비슷한 글', s => s.sim ? `${iaNum(s.sim.med)} ${cnt(s.sim)}` : '-');
     if(slots.some(typeOf)) rows += row('같은 유형', s => typeOf(s) ? `${iaNum(s.type.med)} ${cnt(s.type)}` : '-');
-    h += `<div class="ia-sec"><h4>📊 예상 성과 <small>· 참고용 · 데이터 ${esc(e.data || '')}</small></h4><table>${rows}</tbody></table>`
+    h += `<div class="ia-sec"><h4>예상 성과 <small>· 참고용 · 데이터 ${esc(e.data || '')}</small></h4><table>${rows}</tbody></table>`
       + `<p class="ia-foot">보통·범위: 최근 6개월 ${who}${slots.some(typeOf) ? ' · 같은 유형: 1년' : ''} · *표본 적음<br>과거 분포예요. 영상 완성도는 못 봐요.</p></div>`;
     const sim = e.similar, rec = e.recentArea;
     if(sim || rec){
       // 한 줄: 날짜 채널 제목(넘치면 …) 조회수. 제목은 | · # 앞까지만 보여 주고 전체는 title에
       const li = x => { const t = iaTitle(x.n); return `<li><i>${esc(String(x.d).slice(5).replace('-','/'))} ${esc(iaChan(x))}</i>${x.u ? `<a class="t" title="${esc(x.n)}" href="${esc(safeUrl(x.u))}" target="_blank" rel="noopener">${esc(t)}</a>` : `<span class="t" title="${esc(x.n)}">${esc(t)}</span>`}${x.v != null ? `<b>${iaNum(x.v)}</b>` : ''}</li>`; };
-      h += `<div class="ia-sec"><h4>🔗 관련 정보</h4>`;
+      h += `<div class="ia-sec"><h4>관련 정보</h4>`;
       if(sim) h += `<div class="ia-sub">비슷한 게시물 <small>${esc(sim.by)}로 찾음, ${sim.n}건 중 최근</small></div><ul>${sim.list.map(li).join('')}</ul>`;
       if(rec) h += `<div class="ia-sub">최근 60일 같은 경험영역</div><ul>${rec.map(li).join('')}</ul>`;
       h += `</div>`;
     }
   }
   const waiting = ask && !(it && it.sugAt >= ask);
-  h += `<div class="ia-sec"><h4>💡 제안</h4>`;
+  h += `<div class="ia-sec"><h4>제안</h4>`;
   if(it && it.sug && !waiting) h += `<div class="ia-sug">${iaSug(it.sug)}</div>`;
   if(it && it.sugErr && !waiting) h += `<div class="ia-few">제안을 만들지 못했어요: ${esc(it.sugErr)}</div>`;
   h += waiting ? `<span class="ia-few">요청했어요. PC가 켜져 있으면 5~10분 안에 나와요(이 화면은 1분마다 다시 확인).</span>`
-    : `<button type="button" class="ia-ask" data-ia-ask="${esc(id)}">${it && it.sug ? '↻ 제안 다시 받기' : '💡 제안 받기'}</button>`;
+    : `<button type="button" class="ia-ask" data-ia-ask="${esc(id)}">${it && it.sug ? '↻ 제안 다시 받기' : '제안 받기'}</button>`;
   return h + `</div>`;
 }
 function iaPaint(root){
@@ -4662,7 +4662,7 @@ function iaPaint(root){
     const id = box.dataset.ia, it = (IA_DATA.items || {})[id];
     // 예상 성과가 나온 기획서는 접어 두고 누르면 펼친다. 다시 그려도(1분마다 확인) 펼친 상태 유지
     if(it && it.exp){
-      box.innerHTML = `<details class="ia-fold"${IA_OPEN[id] ? ' open' : ''}><summary>📊 예상 성과·관련 정보·제안</summary>${iaHtml(id)}</details>`;
+      box.innerHTML = `<details class="ia-fold"${IA_OPEN[id] ? ' open' : ''}><summary>예상 성과·관련 정보·제안</summary>${iaHtml(id)}</details>`;
       box.firstElementChild.addEventListener('toggle', e => { IA_OPEN[id] = e.target.open; });
     } else box.innerHTML = iaHtml(id);
     box.hidden = false;
@@ -5257,7 +5257,7 @@ function mtRenderList(){
   const missN = MEETING_ROSTER.filter(n => !mtState[n]).length;
   const list = mtOnlyMissing ? MEETING_ROSTER.filter(n => !mtState[n]) : MEETING_ROSTER;
   el.innerHTML = `<div class="miss-bar"><button class="miss-btn ${mtOnlyMissing?'on':''}" id="mtMissBtn">${mtOnlyMissing ? '전체 보기' : '미입력만 보기 (' + missN + ')'}</button></div>`
-    + (mtOnlyMissing && !list.length ? '<div class="miss-empty">모두 입력했어요 👍</div>' : '') + list.map(n => `
+    + (mtOnlyMissing && !list.length ? '<div class="miss-empty">모두 입력했어요</div>' : '') + list.map(n => `
     <div class="mt-row">
       <span class="mt-name">${nb(n)}${n}</span>
       <div class="mt-btns">${MT_STATUSES.map(st => `<button data-name="${n}" data-st="${st}" class="${mtState[n]===st?'on':''}">${st}</button>`).join('')}</div>
@@ -5333,7 +5333,7 @@ async function mtSave(){
     await new Promise(r => setTimeout(r, 1200));
     mtDirty = false;
     await mtLoad();
-    showToast('✅ 출결을 저장했어요');
+    showToast('출결을 저장했어요');
     document.getElementById('mtStatus').textContent = date + ' 출결을 저장했어요.' + (missing.length ? ` (미입력 ${missing.length}명: ${missing.join(', ')})` : '');
   }catch(e){
     showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류'));
@@ -5418,7 +5418,7 @@ function pcRenderList(){
   const missN = pcNames().filter(isMiss).length;
   const list = pcOnlyMissing ? pcNames().filter(isMiss) : pcNames();
   el.innerHTML = `<div class="miss-bar"><button class="miss-btn ${pcOnlyMissing?'on':''}" id="pcMissBtn">${pcOnlyMissing ? '전체 보기' : '미입력만 보기 (' + missN + ')'}</button></div>`
-    + (pcOnlyMissing && !list.length ? '<div class="miss-empty">모두 입력했어요 👍</div>' : '') + list.map(n => {
+    + (pcOnlyMissing && !list.length ? '<div class="miss-empty">모두 입력했어요</div>' : '') + list.map(n => {
     const s = pcState[n] || {};
     const pts = pcPts(s);
     const seg = key => `<div class="seg">${PC_OPTS.map(v => `<button data-n="${n}" data-k="${key}" data-v="${v}" class="${s[key]===v?'on':''}">${v}</button>`).join('')}</div>`;
@@ -5505,7 +5505,7 @@ async function pcSave(){
     });
     await new Promise(r => setTimeout(r, 1200));
     await pcLoad();
-    showToast('✅ 제출 현황을 저장했어요');
+    showToast('제출 현황을 저장했어요');
     document.getElementById('pcStatus').textContent = mtFmt(pcWeek) + ' 제출 현황을 저장했어요.' + (missing.length ? ` (기획서 미입력 ${missing.length}명: ${missing.join(', ')})` : '');
   }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
   btn.disabled = false; btn.textContent = '저장';
@@ -5827,7 +5827,7 @@ async function tkSave(){
     document.getElementById('tkForm').style.display = 'none';
     await tkLoad();
     const left = tgList.length - records.length;
-    showToast('✅ 저장했어요' + (form ? ' · 응답 시트로 자동 체크했어요' : (tkEditing && left > 0 ? ` (미입력 ${left}명)` : '')));
+    showToast('저장했어요' + (form ? ' · 응답 시트로 자동 체크했어요' : (tkEditing && left > 0 ? ` (미입력 ${left}명)` : '')));
   }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
   btn.disabled = false; btn.textContent = '저장';
 }
@@ -6835,8 +6835,8 @@ function jjRosterApply(r){
     const DAYS = Math.round((end - start) / 864e5), day = Math.max(0, g.series.length - 1);
     const left = Math.max(1, DAYS - day), remain = Math.max(0, 5000000 - g.cur);
     $('jjhGoalText').innerHTML = remain > 0
-      ? `500만 되면 <b>🍣 쿠우쿠우!</b><br><b>${man(remain)}</b> 남음 · 하루 <b>${man(remain / left)}</b>씩`
-      : `🎉 <b>500만 달성!</b> 쿠우쿠우 회식 확정<br>다음 목표 <b>700만</b>`;
+      ? `500만 되면 <b>쿠우쿠우</b><br><b>${man(remain)}</b> 남음 · 하루 <b>${man(remain / left)}</b>씩`
+      : `<b>500만 달성</b> 쿠우쿠우 회식 확정<br>다음 목표 <b>700만</b>`;
     const s = $('jjhMini'); s.innerHTML = '';
     const W = 112, H = 52, MAX = 5200000, x = d => 4 + (W - 18) * d / DAYS, y = v => H - 6 - (H - 14) * Math.min(v, MAX) / MAX;
     el('line', { x1:4, x2:W - 14, y1:y(5000000), y2:y(5000000), stroke:'#B0B8C1', 'stroke-width':.8, 'stroke-dasharray':'2 3' }, s);
@@ -6885,7 +6885,7 @@ function jjRosterApply(r){
     $('jjhBestDt').textContent = md(w.from) + '~' + md(w.to) + (w.provisional ? ' · 집계 중' : '');   // 화요일 밤 계산 때 확정
     const nw = w.now || { lead:0, daysLeft:0 }, dl = nw.daysLeft > 0 ? '집계 마감 D-' + nw.daysLeft : '오늘 밤 집계 마감';
     const nowEl = $('jjhBestNow'); nowEl.style.display = '';
-    nowEl.innerHTML = nw.lead > 0 ? `이번 주 1위 <b class="n1">${esc((nw.names || []).join(' · '))}</b> <b>+${esc(nw.lead)}점</b> · ${esc(dl)}` : `이번 주는 아직 1위가 없어요 · <b>먼저 올리면 1등!</b>`;
+    nowEl.innerHTML = nw.lead > 0 ? `이번 주 1위 <b class="n1">${esc((nw.names || []).join(' · '))}</b> <b>+${esc(nw.lead)}점</b> · ${esc(dl)}` : `이번 주는 아직 1위가 없어요 · <b>먼저 올리면 1등</b>`;
     if (!w.ready || !w.top.length){
       box.classList.add('wait'); $('jjhCupN').textContent = ''; $('jjhBestGo').style.display = 'none';
       $('jjhBestName').textContent = w.ready ? '지난주는 1등이 없어요' : '첫 1등은 다음 주 월요일 공개'; return;
@@ -6902,9 +6902,9 @@ function jjRosterApply(r){
     $('jjhWhyPeriod').textContent = md(w.from) + ' ~ ' + md(w.to) + ' 주간 활동 점수';
     $('jjhWhyBig').textContent = f1(x.gain);
     const items = [
-      { c:'#3182F6', t:'📈 콘텐츠 조회수', v:y.content, d:`그 주에 올린 콘텐츠 ${x.postCount || 0}개` },
-      { c:'#11A35A', t:'📤 업로드', v:y.upload, d:`팀콘 업로드 ${y.nUpload || 0}건 × 1점` },
-      { c:'#F08C00', t:'🤝 행사·의전 참여', v:y.event, d:`${y.nEvent || 0}회 참여` },
+      { c:'#3182F6', t:'콘텐츠 조회수', v:y.content, d:`그 주에 올린 콘텐츠 ${x.postCount || 0}개` },
+      { c:'#11A35A', t:'업로드', v:y.upload, d:`팀콘 업로드 ${y.nUpload || 0}건 × 1점` },
+      { c:'#F08C00', t:'행사·의전 참여', v:y.event, d:`${y.nEvent || 0}회 참여` },
     ].filter(i => i.v);
     const pos = items.reduce((t, i) => t + Math.max(0, i.v), 0) || 1;
     $('jjhWhyBar').innerHTML = items.filter(i => i.v > 0).map(i => `<i style="width:${i.v / pos * 100}%;background:${i.c}"></i>`).join('');
@@ -6927,7 +6927,7 @@ function jjRosterApply(r){
     const body = $('jjhMineBody'), card = $('jjhMine');
     if (d.pending){
       MINE = null; card.classList.add('pick'); $('jjhMineGo').style.display = 'none';
-      body.innerHTML = `<div class="msg"><b>${esc(d.pending)}</b>(으)로 연결 요청을 보냈어요.<br>선생님이 확인하면 내 기록이 열려요 🙂</div>`;
+      body.innerHTML = `<div class="msg"><b>${esc(d.pending)}</b>(으)로 연결 요청을 보냈어요.<br>선생님이 확인하면 내 기록이 열려요</div>`;
       return;
     }
     if (d.need === 'name'){
@@ -6953,7 +6953,7 @@ function jjRosterApply(r){
     $('jjhMineGo').style.display = d.count ? '' : 'none';
     body.innerHTML = mon.posts.length
       ? `<div class="nums"><div><b>${mon.posts.length}개</b><small>올린 콘텐츠</small></div><div><b>${kv(mon.views)}회</b><small>조회수</small></div></div>`
-      : `<div class="msg">${esc(d.name)}님의 ${mon.label} 첫 콘텐츠를 기다리고 있어요 ✨</div>`;
+      : `<div class="msg">${esc(d.name)}님의 ${mon.label} 첫 콘텐츠를 기다리고 있어요</div>`;
   }
   function mineMonth(d){
     const now = new Date(), ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
@@ -6967,17 +6967,17 @@ function jjRosterApply(r){
     return /^https?:\/\//.test(p.url) ? `<a class="jjh-post" href="${esc(safeUrl(p.url))}" target="_blank" rel="noopener">${inner}</a>` : `<div class="jjh-post">${inner}</div>`;
   }).join('');
   // 내 기획서 검수 결과 (2026-10-30, 자동매칭 「검수」 탭의 기획서별 마지막 기록)
-  const mineReviews = list => (list && list.length) ? '<div style="margin:18px 0 6px;font-weight:700;font-size:14px;">🔎 내 기획서 검수</div>' + list.map(r => `<div class="jjh-post"><span class="dt">${r.at ? md(r.at) : ''}</span><span class="pf">${esc(r.round)}차</span><span class="t">${esc(r.title)}${r.note && r.result === '수정요청' ? `<small style="display:block;font-size:11.5px;color:var(--ink-soft);">${esc(r.note)}</small>` : ''}</span><span class="vw" style="color:${r.result === '통과' ? '#1B7A38' : r.result === '수정요청' ? '#B23A3A' : 'var(--ink-soft)'}">${esc(r.result)}</span></div>`).join('') : '';
+  const mineReviews = list => (list && list.length) ? '<div style="margin:18px 0 6px;font-weight:700;font-size:14px;">내 기획서 검수</div>' + list.map(r => `<div class="jjh-post"><span class="dt">${r.at ? md(r.at) : ''}</span><span class="pf">${esc(r.round)}차</span><span class="t">${esc(r.title)}${r.note && r.result === '수정요청' ? `<small style="display:block;font-size:11.5px;color:var(--ink-soft);">${esc(r.note)}</small>` : ''}</span><span class="vw" style="color:${r.result === '통과' ? '#1B7A38' : r.result === '수정요청' ? '#B23A3A' : 'var(--ink-soft)'}">${esc(r.result)}</span></div>`).join('') : '';
   function openMine(){
     const d = MINE; if (!d || !d.count) return;
     const mon = mineMonth(d);
     $('jjhMineName').textContent = d.name;
     $('jjhMineMeta').textContent = '조회수 ' + d.updated + ' 기준 · 매일 밤 갱신';
-    $('jjhMineMonH').textContent = '📅 ' + mon.label + ' 기록';
+    $('jjhMineMonH').textContent = mon.label + ' 기록';
     $('jjhMineMonCnt').textContent = mon.posts.length + '개';
     $('jjhMineMonViews').textContent = kv(mon.views) + '회';
     $('jjhMineMonList').innerHTML = mon.posts.length ? minePosts(mon.posts) : `<div class="jjh-empty">${mon.label}에는 아직 올라간 콘텐츠가 없어요</div>`;
-    $('jjhMineAllH').textContent = '🏁 누적 기록 (' + md(d.since) + '부터)';
+    $('jjhMineAllH').textContent = '누적 기록 (' + md(d.since) + '부터)';
     $('jjhMineCnt').textContent = d.count + '개';
     $('jjhMineViews').textContent = kv(d.views) + '회';
     $('jjhMineList').innerHTML = minePosts(d.posts) + mineReviews(d.reviews);
@@ -7012,14 +7012,14 @@ function jjRosterApply(r){
   function myPaint(d){
     const box = $('myContent');
     if(!d || d.error){ box.innerHTML = '<div class="my-msg">기록을 불러오지 못했어요.<br>잠시 후 다시 열어 주세요.<button type="button" id="myRetry">다시 불러오기</button></div>'; $('myRetry').addEventListener('click', myOpen); return; }
-    if(d.pending){ box.innerHTML = `<div class="my-msg"><b>${esc(d.pending)}</b>(으)로 연결 요청을 보냈어요.<br>선생님이 확인하면 내 성과가 열려요 🙂</div>`; return; }
+    if(d.pending){ box.innerHTML = `<div class="my-msg"><b>${esc(d.pending)}</b>(으)로 연결 요청을 보냈어요.<br>선생님이 확인하면 내 성과가 열려요</div>`; return; }
     if(d.need){ box.innerHTML = '<div class="my-msg">아직 내 이름이 연결되지 않았어요.<br>처음 화면 「내 기록」에서 이름을 골라 주세요.<button type="button" id="myToName">이름 고르러 가기</button></div>';
       $('myToName').addEventListener('click', () => { try { localStorage.removeItem(MINE_SKIP); } catch(e){} location.reload(); }); return; }
-    if(!d.count){ box.innerHTML = `<div class="my-hero"><h3>${esc(d.name)}님의 첫 콘텐츠를 기다리고 있어요 ✨</h3><p>콘텐츠가 올라가면 여기에 성과가 모여요.</p></div>`; return; }
+    if(!d.count){ box.innerHTML = `<div class="my-hero"><h3>${esc(d.name)}님의 첫 콘텐츠를 기다리고 있어요</h3><p>콘텐츠가 올라가면 여기에 성과가 모여요.</p></div>`; return; }
     const { lines, cur } = myPraise(d), curV = cur.reduce((t, p) => t + (p.views || 0), 0), mon = new Date().getMonth() + 1;
     const top = (d.posts || []).slice().sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 3);
-    box.innerHTML = `<div class="my-hero"><h3>${esc(d.name)}님, 정말 잘하고 있어요 👏</h3><p>함께 만든 콘텐츠 ${d.count}개가 ${kv(d.views || 0)} 회 조회됐어요.</p></div>`
-      + (lines.length ? `<ul class="my-good">${lines.map(l => `<li><i>${l[0]}</i><span>${l[1]}</span></li>`).join('')}</ul>` : '')
+    box.innerHTML = `<div class="my-hero"><h3>${esc(d.name)}님, 잘하고 있어요</h3><p>함께 만든 콘텐츠 ${d.count}개가 ${kv(d.views || 0)} 회 조회됐어요.</p></div>`
+      + (lines.length ? `<ul class="my-good">${lines.map(l => `<li><i aria-hidden="true"></i><span>${l[1]}</span></li>`).join('')}</ul>` : '')
       + (cur.length ? `<div class="my-stats"><div><h4>${mon}월</h4><b>${cur.length}개</b>${kv(curV)}회</div><div><h4>전체(${md(d.since)}부터)</h4><b>${d.count}개</b>${kv(d.views || 0)}회</div></div>` : '')
       + `<div class="jjh-sec">많이 본 콘텐츠</div>${minePosts(top)}`
       + (d.count > 3 ? `<details class="my-all"><summary>함께한 콘텐츠 전체 ${d.count}개</summary>${minePosts(d.posts || [])}</details>` : '')
@@ -7082,7 +7082,8 @@ function jjRosterApply(r){
   // 종류별 색: 진한 색(c)은 태그·왼쪽 띠·필터 버튼, 연한 색(bg)은 아이콘 바탕. 의전/행사 분홍은 일정·장비 달력 막대와 같은 색
   // 학사(제작 캘린더의 「[학사]」 일정, 2026-10-18~)는 회색: 읽기 전용이라 ⋯ 메뉴·기획서 열기 없음
   // 제작은 촬영일·제출일을 따로(2026-10-30 담당자 「촬영은 (촬영), 제출은 (제출), 색상도 다르게」): 촬영 파랑 · 제출 초록(구글 캘린더 일정 색과 같은 계열)
-  const CAL = { make:{ n:'제작', e:'🎬', c:'#1E6FE8', bg:'#DCE9FF' }, shoot:{ n:'촬영', e:'🎬', c:'#1E6FE8', bg:'#DCE9FF' }, submit:{ n:'제출', e:'📦', c:'#2E8B57', bg:'#DDF3E6' }, duty:{ n:'의전/행사', e:'🤝', c:'#D6336C', bg:'#FCE4EC' }, sns:{ n:'업로드', e:'📤', c:'#E8590C', bg:'#FFE5D1' }, hong:{ n:'업로드', e:'📤', c:'#E8590C', bg:'#FFE5D1' }, acad:{ n:'학사', e:'🎓', c:'#495057', bg:'#E9ECEF' } };
+  const CAL_I = {video:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10.5 6-3.5v10l-6-3.5"/></svg>', box:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/></svg>', users:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', upload:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>', book:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>'};
+  const CAL = { make:{ n:'제작', e:CAL_I.video, c:'#1E6FE8', bg:'#DCE9FF' }, shoot:{ n:'촬영', e:CAL_I.video, c:'#1E6FE8', bg:'#DCE9FF' }, submit:{ n:'제출', e:CAL_I.box, c:'#2E8B57', bg:'#DDF3E6' }, duty:{ n:'의전/행사', e:CAL_I.users, c:'#D6336C', bg:'#FCE4EC' }, sns:{ n:'업로드', e:CAL_I.upload, c:'#E8590C', bg:'#FFE5D1' }, hong:{ n:'업로드', e:CAL_I.upload, c:'#E8590C', bg:'#FFE5D1' }, acad:{ n:'학사', e:CAL_I.book, c:'#495057', bg:'#E9ECEF' } };
   let EVENTS = [], scFilter = 'all', target = null;
   $('jjhScChips').innerHTML = [['all', '전체'], ['make', '제작'], ['duty', '의전/행사'], ['up', '업로드'], ['acad', '학사']].map(([k, t]) => `<button type="button" data-k="${k}" class="${k === 'all' ? 'on' : ''}"${k === 'all' ? '' : ` style="--cc:${CAL[k === 'up' ? 'sns' : k].c}"`}>${t}</button>`).join('');
   $('jjhScChips').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; scFilter = b.dataset.k;
@@ -7114,7 +7115,7 @@ function jjRosterApply(r){
       const when = e.step === 'shoot' ? (e.pair ? '제출 ' + md(e.pair) : '촬영일') : e.step === 'submit' ? (e.pair ? '촬영 ' + md(e.pair) : '제출일') :
         e.time ? e.time : (e.end && e.end !== e.start ? md(e.start) + '~' + md(e.end) : '종일');
       const ro = e.calKey === 'acad';
-      html += `<div class="jjh-row${ro ? '' : ' go'}" data-i="${EVENTS.indexOf(e)}" style="--cc:${c.c}"><span class="ico" style="background:${c.bg}">${c.e}</span><div class="t"><span class="one"><span class="tag" style="background:${c.c};color:#fff">${c.n}</span>${esc(scTitle(e.title, e.calKey))}</span><small>${e.dup ? '<span class="dup">중복</span>' : ''}${esc(when)}</small></div>${ro ? '' : `<button type="button" class="more" data-i="${EVENTS.indexOf(e)}" aria-label="일정 메뉴">⋯</button>`}</div>`;
+      html += `<div class="jjh-row${ro ? '' : ' go'}" data-i="${EVENTS.indexOf(e)}" style="--cc:${c.c}"><span class="ico" style="background:${c.bg};color:${c.c}">${c.e}</span><div class="t"><span class="one"><span class="tag" style="background:${c.c};color:#fff">${c.n}</span>${esc(scTitle(e.title, e.calKey))}</span><small>${e.dup ? '<span class="dup">중복</span>' : ''}${esc(when)}</small></div>${ro ? '' : `<button type="button" class="more" data-i="${EVENTS.indexOf(e)}" aria-label="일정 메뉴">⋯</button>`}</div>`;
     });
     $('jjhScList').innerHTML = html;
   }

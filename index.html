@@ -341,6 +341,11 @@
   .st-filter button.on{background:var(--ink); color:#fff; border-color:var(--ink);}
   /* 기획서 분석(2026-11-05): 승인 대기 카드 맨 위, 담당자 계정만 */
   .ia-box{margin:10px 0 4px; padding:12px 14px; border-radius:12px; background:#F6F7FB; border:1px solid var(--line, #E7E4EC); font-size:12.5px; line-height:1.55; color:var(--ink);}
+  .ia-fold > summary{display:flex; align-items:center; gap:6px; min-height:32px; list-style:none; font-size:13px; font-weight:700; cursor:pointer;}
+  .ia-fold > summary::-webkit-details-marker{display:none;}
+  .ia-fold > summary::after{content:'펼치기'; margin-left:auto; font-size:12px; font-weight:400; color:var(--ink-faint);}
+  .ia-fold[open] > summary::after{content:'접기';}
+  .ia-fold[open] > summary{margin-bottom:8px;}
   .ia-box h4{margin:0 0 6px; font-size:12.5px; font-weight:700;}
   .ia-box h4 small{font-weight:400; color:var(--ink-faint);}
   .ia-box .ia-sec + .ia-sec{margin-top:10px; padding-top:10px; border-top:1px dashed var(--line, #E7E4EC);}
@@ -821,6 +826,7 @@
   .sr-more summary::-webkit-details-marker{display:none}
   .sr-more[open] summary{display:none}
   .sr-row button{flex:none;border:0;border-radius:10px;padding:8px 12px;background:var(--purple);color:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+  .sr-row button.sr-del{background:transparent;color:#B23A3A;padding:8px 6px}
   /* 기획서 단계: 못 넘어가는 이유 안내 · 접근성 (2026-10-22) */
   .cta{cursor:pointer;}
   .step-panel > .heading:first-child{margin-top:22px;}
@@ -956,12 +962,13 @@
 :root[data-theme="dark"] .circle{border:1.5px solid var(--line);color:var(--ink-faint)}
 :root[data-theme="dark"] .circle.done{background:var(--purple-soft);border-color:var(--purple-soft);color:var(--purple)}
 :root[data-theme="dark"] .circle.current{background:#4763E4;border-color:var(--purple);color:#fff}
-:root[data-theme="dark"] .reset-link{color:var(--ink-soft)}
-:root[data-theme="dark"] .prev-btn{color:var(--ink)}
+:root[data-theme="dark"] .reset-link{color:var(--ink-soft);background:none;border:none}
+:root[data-theme="dark"] .prev-btn{background:none;border:none;color:var(--ink)}
+:root[data-theme="dark"] .prev-btn svg{fill:none;stroke:currentColor}
 :root[data-theme="dark"] .prev-btn:focus-visible{outline:2px solid var(--purple)}
 :root[data-theme="dark"] .test-link[aria-pressed="true"]{color:#F1C07E}
 :root[data-theme="dark"] .test-banner{background:#534522;color:#F1C07E}
-:root[data-theme="dark"] .progress-seg{background:#33313C}
+:root[data-theme="dark"] .progress-seg{background:#33313C;border:none}
 :root[data-theme="dark"] .progress-seg.done{background:#4763E4}
 :root[data-theme="dark"] .progress-seg.current{background:#4763E4}
 :root[data-theme="dark"] .progress-label{color:var(--ink-faint)}
@@ -969,7 +976,7 @@
 :root[data-theme="dark"] .input-box{border:1.5px solid var(--line)}
 :root[data-theme="dark"] .input-box.focused{border-color:var(--purple-line)}
 :root[data-theme="dark"] .input-box label{color:var(--ink-soft)}
-:root[data-theme="dark"] .input-box input{color:var(--ink)}
+:root[data-theme="dark"] .input-box input{border:none;outline:none;color:var(--ink);background:transparent}
 :root[data-theme="dark"] .input-box input::placeholder{color:var(--ink-faint)}
 :root[data-theme="dark"] .card{border:1.5px solid var(--line)}
 :root[data-theme="dark"] .card.selected{border-color:var(--purple);background:var(--purple-soft)}
@@ -978,7 +985,7 @@
 :root[data-theme="dark"] .hint-caption{color:var(--ink-faint)}
 :root[data-theme="dark"] .pick-label{color:var(--ink)}
 :root[data-theme="dark"] .pick-label span{color:var(--ink-faint)}
-:root[data-theme="dark"] .pick{border:1.5px solid var(--line);color:var(--ink)}
+:root[data-theme="dark"] .pick{border:1.5px solid var(--line);background:transparent;color:var(--ink)}
 :root[data-theme="dark"] .pick small{color:var(--ink-faint)}
 :root[data-theme="dark"] .pick.on{border-color:var(--purple);background:var(--purple-soft);color:var(--purple-dark)}
 :root[data-theme="dark"] .pick-desc{color:var(--ink-faint)}
@@ -987,11 +994,11 @@
 :root[data-theme="dark"] .area-desc p.faint{color:var(--ink-faint)}
 :root[data-theme="dark"] .kind-more summary{color:var(--ink-soft)}
 :root[data-theme="dark"] .kind-help{color:var(--ink-soft)}
-:root[data-theme="dark"] .kind-q{color:var(--ink)}
+:root[data-theme="dark"] .kind-q{border:0;background:none;color:var(--ink)}
 :root[data-theme="dark"] .kind-q b{color:var(--purple-dark)}
 :root[data-theme="dark"] .kind-q:focus-visible{outline:2px solid var(--purple)}
 :root[data-theme="dark"] .meta-warn{color:#F1A07E}
-:root[data-theme="dark"] .meta-note input{border:1.5px solid var(--line-input);color:var(--ink)}
+:root[data-theme="dark"] .meta-note input{border:1.5px solid var(--line-input);color:var(--ink);background:transparent;outline:none}
 :root[data-theme="dark"] .meta-note input:focus{border-color:var(--purple-line)}
 :root[data-theme="dark"] .meta-note p{color:var(--ink-faint)}
 :root[data-theme="dark"] .meta-box{border:1.5px solid var(--line)}
@@ -1009,11 +1016,11 @@
 :root[data-theme="dark"] .cov-foot{color:var(--ink-faint)}
 :root[data-theme="dark"] .section-title{color:var(--purple-dark);border-bottom:1.5px solid var(--purple-soft)}
 :root[data-theme="dark"] .series-pop{background:#1E1D24;border:1.5px solid var(--line)}
-:root[data-theme="dark"] .series-pop button{color:var(--ink)}
+:root[data-theme="dark"] .series-pop button{border:0;background:none;color:var(--ink)}
 :root[data-theme="dark"] .series-pop button:active,:root[data-theme="dark"] .series-pop button.on{background:var(--purple-soft);color:var(--purple-dark)}
 :root[data-theme="dark"] .series-pop p{color:var(--ink-faint)}
 :root[data-theme="dark"] .field-sm label{color:var(--ink-soft)}
-:root[data-theme="dark"] .field-sm input,:root[data-theme="dark"] .field-sm textarea,:root[data-theme="dark"] .field-sm select{border:1.5px solid var(--line-input);color:var(--ink)}
+:root[data-theme="dark"] .field-sm input,:root[data-theme="dark"] .field-sm textarea,:root[data-theme="dark"] .field-sm select{border:1.5px solid var(--line-input);color:var(--ink);outline:none}
 :root[data-theme="dark"] .field-sm input:focus,:root[data-theme="dark"] .field-sm textarea:focus{border-color:var(--purple-line)}
 :root[data-theme="dark"] .req-hint{color:var(--ink-faint)}
 :root[data-theme="dark"] .lt-box{border:1px solid var(--line);background:#1E1D24}
@@ -1031,7 +1038,7 @@
 :root[data-theme="dark"] .lt-row.pick{outline:2px solid var(--purple)}
 :root[data-theme="dark"] .lt-row .lt-when b{color:var(--ink)}
 :root[data-theme="dark"] .lt-row .lt-when span{color:var(--ink-soft)}
-:root[data-theme="dark"] .lt-row button{background:#4763E4;color:#fff}
+:root[data-theme="dark"] .lt-row button{border:0;background:#4763E4;color:#fff}
 :root[data-theme="dark"] .lt-note{color:var(--ink-soft)}
 :root[data-theme="dark"] .sun-box{border-top:1px solid var(--line)}
 :root[data-theme="dark"] .sun-box h3{color:var(--ink)}
@@ -1050,11 +1057,11 @@
 :root[data-theme="dark"] .title-guide .title-guide-head{color:var(--ink)}
 :root[data-theme="dark"] .plan-row{border:1.5px solid var(--line)}
 :root[data-theme="dark"] .plan-row .plan-num{color:var(--purple)}
-:root[data-theme="dark"] .plan-row textarea{border:1px solid var(--line-input);background:#1E1D24}
+:root[data-theme="dark"] .plan-row textarea{border:1px solid var(--line-input);outline:none;background:#1E1D24}
 :root[data-theme="dark"] .plan-row textarea:focus{border-color:var(--purple-line)}
 :root[data-theme="dark"] .plan-row input{border:1px solid var(--line-input)}
-:root[data-theme="dark"] .plan-row .plan-del{color:var(--ink-faint)}
-:root[data-theme="dark"] .add-plan{border:1.5px dashed var(--line);color:var(--purple)}
+:root[data-theme="dark"] .plan-row .plan-del{background:none;border:none;color:var(--ink-faint)}
+:root[data-theme="dark"] .add-plan{border:1.5px dashed var(--line);background:none;color:var(--purple)}
 :root[data-theme="dark"] .bottom-bar{background:#1E1D24;border-top:1px solid var(--line)}
 :root[data-theme="dark"] .cta{border:1.5px solid var(--purple);background:#1E1D24;color:var(--purple)}
 :root[data-theme="dark"] .cta.active{background:#4763E4;color:#fff}
@@ -1062,7 +1069,7 @@
 :root[data-theme="dark"] .save-status{color:var(--ink-faint)}
 :root[data-theme="dark"] .admin-topbar{background:#33313C}
 :root[data-theme="dark"] .admin-topbar span{color:#fff}
-:root[data-theme="dark"] .admin-topbar button{border:1px solid rgba(255,255,255,0.35);color:#fff}
+:root[data-theme="dark"] .admin-topbar button{background:none;border:1px solid rgba(255,255,255,0.35);color:#fff}
 :root[data-theme="dark"] .overview-title{color:var(--ink-soft)}
 :root[data-theme="dark"] .overview-card{background:var(--purple-soft)}
 :root[data-theme="dark"] .overview-num{color:var(--purple-dark)}
@@ -1074,6 +1081,7 @@
 :root[data-theme="dark"] .dl-txt b{color:var(--ink)}
 :root[data-theme="dark"] .dl-txt small{color:var(--ink-soft)}
 :root[data-theme="dark"] .dl-row{border-bottom:1px solid var(--line)}
+:root[data-theme="dark"] .dl-row:last-child{border-bottom:none}
 :root[data-theme="dark"] .dl-tag{background:#19223E;color:var(--purple-dark)}
 :root[data-theme="dark"] .dl-tag.sub{background:#534022;color:#F1C27E}
 :root[data-theme="dark"] .dl-date{color:var(--ink)}
@@ -1093,6 +1101,7 @@
 :root[data-theme="dark"] .qa-box input{background:#1E1D24}
 :root[data-theme="dark"] .qa-roles{border:1px solid var(--line);background:#1E1D24}
 :root[data-theme="dark"] .qa-row{border-bottom:1px solid #414862}
+:root[data-theme="dark"] .qa-row:last-child{border-bottom:none}
 :root[data-theme="dark"] .qa-row.on b{color:var(--purple)}
 :root[data-theme="dark"] .qa-row button{border:1px solid #434960;background:#1E1D24;color:var(--ink-soft)}
 :root[data-theme="dark"] .qa-row button.on{background:#4763E4;border-color:var(--purple);color:#fff}
@@ -1104,12 +1113,14 @@
 :root[data-theme="dark"] .st-filter button{border:1px solid #434960;background:#1E1D24;color:var(--ink-soft)}
 :root[data-theme="dark"] .st-filter button.on{background:#33313C;color:#fff;border-color:var(--ink)}
 :root[data-theme="dark"] .ia-box{background:#1B213C;border:1px solid var(--line, #4E4360);color:var(--ink)}
+:root[data-theme="dark"] .ia-fold > summary::after{color:var(--ink-faint)}
 :root[data-theme="dark"] .ia-box h4 small{color:var(--ink-faint)}
 :root[data-theme="dark"] .ia-box .ia-sec + .ia-sec{border-top:1px dashed var(--line, #4E4360)}
 :root[data-theme="dark"] .ia-box tr > :first-child{color:var(--ink-faint)}
 :root[data-theme="dark"] .ia-box small{color:var(--ink-faint)}
 :root[data-theme="dark"] .ia-box .ia-foot{color:var(--ink-faint)}
 :root[data-theme="dark"] .ia-box li > i{color:var(--ink-faint)}
+:root[data-theme="dark"] .ia-box a{color:inherit}
 :root[data-theme="dark"] .ia-box .ia-few{color:var(--ink-faint)}
 :root[data-theme="dark"] .ia-sug .ia-verdict{background:var(--surface, #1E1D24);border:1px solid var(--line, #4E4360)}
 :root[data-theme="dark"] .ia-pill.ok{background:#193E20;color:#88E7A5}
@@ -1119,20 +1130,22 @@
 :root[data-theme="dark"] .ia-box button.ia-ask{border:1px solid #3A3844;background:#1E1D24}
 :root[data-theme="dark"] .st-force{border-top:1px dashed var(--line, #3A3844);color:var(--ink-faint)}
 :root[data-theme="dark"] .st-force select{border:1px solid #3A3844;background:#1E1D24;color:var(--ink)}
+:root[data-theme="dark"] .sub-card .sub-actions button,:root[data-theme="dark"] .qa-box .sub-actions button{border:none}
 :root[data-theme="dark"] .btn-approve{background:#4763E4;color:#fff}
 :root[data-theme="dark"] .btn-reject{background:#1E1D24;color:#DC9393;border:1.5px solid #723131 !important}
-:root[data-theme="dark"] .toggle-detail{color:var(--purple)}
-:root[data-theme="dark"] .back-link{color:var(--purple)}
-:root[data-theme="dark"] .save-edit-btn{background:#4763E4;color:#fff}
+:root[data-theme="dark"] .toggle-detail{background:none;border:none;color:var(--purple)}
+:root[data-theme="dark"] .back-link{background:none;border:none;color:var(--purple)}
+:root[data-theme="dark"] .save-edit-btn{border:none;background:#4763E4;color:#fff}
 :root[data-theme="dark"] .status-info-box{background:var(--purple-soft)}
 :root[data-theme="dark"] .status-info-box p{color:var(--ink-soft)}
+:root[data-theme="dark"] #confirmModal,:root[data-theme="dark"] #promptModal{background:rgba(25,24,29,0.5)}
 :root[data-theme="dark"] #confirmModal .modal-box,:root[data-theme="dark"] #promptModal .modal-box{background:#1E1D24}
 :root[data-theme="dark"] .modal-box p{color:var(--ink)}
 :root[data-theme="dark"] .modal-box input{border:1.5px solid var(--line);color:var(--ink)}
 :root[data-theme="dark"] .modal-cancel{border:1.5px solid var(--line);background:#1E1D24;color:var(--ink-soft)}
-:root[data-theme="dark"] .modal-ok{background:#4763E4;color:#fff}
+:root[data-theme="dark"] .modal-ok{border:none;background:#4763E4;color:#fff}
 :root[data-theme="dark"] .equip-group{border:1.5px solid var(--line)}
-:root[data-theme="dark"] .equip-group-header{background:#212136}
+:root[data-theme="dark"] .equip-group-header{background:#212136;border:none}
 :root[data-theme="dark"] .equip-count{color:var(--ink-faint)}
 :root[data-theme="dark"] .equip-chevron{color:var(--ink-faint)}
 :root[data-theme="dark"] .equip-chevron.open{color:var(--purple)}
@@ -1145,7 +1158,7 @@
 :root[data-theme="dark"] .equip-item.booked-tag{color:#DC9393}
 :root[data-theme="dark"] .equip-loading{color:var(--ink-faint)}
 :root[data-theme="dark"] .chip{background:var(--purple-soft);color:var(--purple-dark)}
-:root[data-theme="dark"] .chip button{color:var(--purple-dark)}
+:root[data-theme="dark"] .chip button{background:none;border:none;color:var(--purple-dark)}
 :root[data-theme="dark"] .suggest-list{background:#1E1D24;border:1.5px solid var(--line)}
 :root[data-theme="dark"] .suggest-item:hover{background:var(--purple-soft)}
 :root[data-theme="dark"] .suggest-empty{color:var(--ink-faint)}
@@ -1163,7 +1176,7 @@
 :root[data-theme="dark"] .mt-btns button.on[data-st="지연제출"]{background:#534022;border-color:#725931;color:#F1C27E}
 :root[data-theme="dark"] .mt-btns button.on[data-st="미제출"]{background:#3E1919;border-color:#723131;color:#DC9393}
 :root[data-theme="dark"] .mt-tools span{color:var(--ink-faint)}
-:root[data-theme="dark"] .mt-save{background:#4763E4;color:#fff}
+:root[data-theme="dark"] .mt-save{border:none;background:#4763E4;color:#fff}
 :root[data-theme="dark"] .mt-save:disabled{background:#4A4855}
 :root[data-theme="dark"] .mt-sum th{color:var(--ink-soft);border-bottom:1.5px solid var(--line)}
 :root[data-theme="dark"] .mt-sum td{border-bottom:1px solid var(--line)}
@@ -1178,14 +1191,15 @@
 :root[data-theme="dark"] .mt-week.part small{color:#F1C27E}
 :root[data-theme="dark"] .ab-card{border:1.5px solid var(--line)}
 :root[data-theme="dark"] .ab-row{border-top:1px solid var(--line)}
+:root[data-theme="dark"] .ab-row:first-of-type{border-top:none}
 :root[data-theme="dark"] .ab-who small{color:var(--ink-soft)}
 :root[data-theme="dark"] .ab-pill.no{background:#3E1919;color:#DC9393}
 :root[data-theme="dark"] .ab-pill.ok{background:#193E20;color:#8AE5A6}
 :root[data-theme="dark"] .ab-btn{border:1.5px solid var(--line);background:#1E1D24;color:var(--ink-soft)}
 :root[data-theme="dark"] .ab-btn.go{border-color:var(--purple);color:var(--purple)}
-:root[data-theme="dark"] .pc-x{color:var(--ink-faint)}
+:root[data-theme="dark"] .pc-x{border:none;background:none;color:var(--ink-faint)}
 :root[data-theme="dark"] .eq-seg{background:var(--page-bg)}
-:root[data-theme="dark"] .eq-seg button{color:var(--ink-faint)}
+:root[data-theme="dark"] .eq-seg button{border:none;background:none;color:var(--ink-faint)}
 :root[data-theme="dark"] .eq-seg button.on{background:#1E1D24;color:var(--ink)}
 :root[data-theme="dark"] .eq-month button{border:1.5px solid var(--line);background:#1E1D24;color:var(--ink-soft)}
 :root[data-theme="dark"] .eq-dow{color:var(--ink-faint)}
@@ -1221,6 +1235,7 @@
 :root[data-theme="dark"] .eq-team-head small{color:var(--ink-soft)}
 :root[data-theme="dark"] .eq-chev{color:var(--ink-faint)}
 :root[data-theme="dark"] .eq-team-body{border-top:1px solid var(--line)}
+:root[data-theme="dark"] .eq-team-body .eq-row:last-of-type{border-bottom:none}
 :root[data-theme="dark"] .eq-select,:root[data-theme="dark"] .ev-form select{border:1.5px solid var(--line);background:#1E1D24;color:var(--ink)}
 :root[data-theme="dark"] .ev-card{border:1.5px solid var(--line);background:#1E1D24}
 :root[data-theme="dark"] .ev-card .ev-meta{color:var(--ink-soft)}
@@ -1233,14 +1248,15 @@
 :root[data-theme="dark"] .mt-off{border:1.5px solid #723131;background:#1E1D24;color:#DC9393}
 :root[data-theme="dark"] .mt-cancelled{background:var(--page-bg);color:var(--ink-soft)}
 :root[data-theme="dark"] .mt-tabs{background:var(--page-bg)}
-:root[data-theme="dark"] .mt-tabs button{color:var(--ink-faint)}
+:root[data-theme="dark"] .mt-tabs button{border:none;background:none;color:var(--ink-faint)}
 :root[data-theme="dark"] .mt-tabs button.on{background:#1E1D24;color:var(--ink)}
 :root[data-theme="dark"] .pc-row{border-bottom:1px solid var(--line)}
 :root[data-theme="dark"] .pc-name small{color:var(--ink-faint)}
 :root[data-theme="dark"] .pc-name small.neg{color:#DC9393}
 :root[data-theme="dark"] .pc-lab{color:var(--ink-soft)}
 :root[data-theme="dark"] .seg{border:1.5px solid var(--line)}
-:root[data-theme="dark"] .seg button{border-left:1.5px solid var(--line);background:#1E1D24;color:var(--ink-faint)}
+:root[data-theme="dark"] .seg button{border:none;border-left:1.5px solid var(--line);background:#1E1D24;color:var(--ink-faint)}
+:root[data-theme="dark"] .seg button:first-child{border-left:none}
 :root[data-theme="dark"] .seg button.on[data-v="제출"]{background:#193E20;color:#8AE5A6}
 :root[data-theme="dark"] .seg button.on[data-v="지각"]{background:#534022;color:#F1C27E}
 :root[data-theme="dark"] .seg button.on[data-v="미제출"]{background:#3E1919;color:#DC9393}
@@ -1298,12 +1314,13 @@
 :root[data-theme="dark"] .sc-why-d{color:var(--ink-soft)}
 :root[data-theme="dark"] .sc-why-k{background:#242A33;color:#C4C2CC}
 :root[data-theme="dark"] .sc-seg{background:#232333}
-:root[data-theme="dark"] .sc-seg button{color:var(--ink-soft)}
+:root[data-theme="dark"] .sc-seg button{border:none;background:none;color:var(--ink-soft)}
 :root[data-theme="dark"] .sc-seg button.on{background:#1E1D24;color:var(--ink)}
 :root[data-theme="dark"] .sc-months button{border:1.5px solid var(--line);background:#1E1D24;color:var(--ink-soft)}
 :root[data-theme="dark"] .sc-months button.on{border-color:var(--ink);color:var(--ink)}
-:root[data-theme="dark"] .sc-toggle{color:var(--ink-soft)}
-:root[data-theme="dark"] .jjh-goal{background:linear-gradient(180deg,#19243E,#1E1D24)}
+:root[data-theme="dark"] .sc-toggle{color:var(--ink-soft);background:none;border:none}
+:root[data-theme="dark"] .hb{background:center/contain no-repeat}
+:root[data-theme="dark"] .jjh-goal{background:linear-gradient(180deg,#19243E,#1E1D24);border:0}
 :root[data-theme="dark"] .jjh-goal .k{color:var(--purple)}
 :root[data-theme="dark"] .jjh-goal .s{color:#AAB5C5}
 :root[data-theme="dark"] .jjh-goal .s b{color:var(--ink)}
@@ -1314,8 +1331,9 @@
 :root[data-theme="dark"] .jjh-mine .msg{color:var(--ink-soft)}
 :root[data-theme="dark"] .jjh-mine .pk button{border:1px solid var(--line);background:#1E1D24}
 :root[data-theme="dark"] .jjh-mine .pk button.on{background:#4763E4;border-color:var(--purple);color:#fff}
-:root[data-theme="dark"] .jjh-mine .ok{background:#4763E4;color:#fff}
-:root[data-theme="dark"] .jjh-mine .skip{color:var(--ink-faint)}
+:root[data-theme="dark"] .jjh-mine .ok{border:0;background:#4763E4;color:#fff}
+:root[data-theme="dark"] .jjh-mine .skip{border:0;background:none;color:var(--ink-faint)}
+:root[data-theme="dark"] a.jjh-post{color:inherit}
 :root[data-theme="dark"] .jjh-mstat small{color:var(--ink-faint)}
 :root[data-theme="dark"] .jjh-mine .k .mo{color:var(--ink-faint)}
 :root[data-theme="dark"] .jjh-post .dt{color:var(--ink-faint)}
@@ -1332,7 +1350,7 @@
 :root[data-theme="dark"] .jjh-names button{border:1.5px solid #3A3844;background:#1E1D24;color:#AAB5C5}
 :root[data-theme="dark"] .jjh-names button.champ{background:#534422;border-color:#F5C451;color:#F1C97E}
 :root[data-theme="dark"] .jjh-names button.on{background:#4763E4;border-color:var(--purple);color:#fff}
-:root[data-theme="dark"] .jjh-chips button{background:#232B33;color:#ADB6C2}
+:root[data-theme="dark"] .jjh-chips button{border:0;background:#232B33;color:#ADB6C2}
 :root[data-theme="dark"] .jjh-chips button.on{background:#33313C;color:#fff}
 :root[data-theme="dark"] .jjh-chips button[style]::before{background:var(--cc)}
 :root[data-theme="dark"] .jjh-chips button.on[style]{background:var(--cc)}
@@ -1341,16 +1359,18 @@
 :root[data-theme="dark"] .jjh-sc .jjh-row::before{background:var(--cc,transparent)}
 :root[data-theme="dark"] .jjh-row .t small{color:var(--ink-faint)}
 :root[data-theme="dark"] .jjh-row .dup{color:#fff;background:#F04452}
-:root[data-theme="dark"] .jjh-row .more{color:var(--ink-faint)}
+:root[data-theme="dark"] .jjh-row .more{border:0;background:none;color:var(--ink-faint)}
 :root[data-theme="dark"] .jjh-empty{color:var(--ink-faint)}
+:root[data-theme="dark"] .jjh-dim{background:rgba(0,0,0,.4)}
 :root[data-theme="dark"] .jjh-sheet{background:#1E1D24}
 :root[data-theme="dark"] .jjh-sheet .sub{color:var(--ink-faint)}
-:root[data-theme="dark"] .jjh-sheet .act{background:#232B33}
+:root[data-theme="dark"] .jjh-sheet .act{border:0;background:#232B33}
 :root[data-theme="dark"] .jjh-sheet .act.red{color:#F17E88}
 :root[data-theme="dark"] .jjh-big{color:#F17E88}
 :root[data-theme="dark"] .jjh-bar{background:#232B33}
 :root[data-theme="dark"] .jjh-r{border-bottom:1px solid #435260}
 :root[data-theme="dark"] .jjh-r .l small{color:var(--ink-faint)}
+:root[data-theme="dark"] .jjh-r.tot{border:0}
 :root[data-theme="dark"] .jjh-r.tot .v{color:#F17E88}
 :root[data-theme="dark"] .jjh-sec{color:#AAB5C5}
 :root[data-theme="dark"] .jjh-post .pf{color:var(--purple);background:var(--purple-soft)}
@@ -1364,14 +1384,15 @@
 :root[data-theme="dark"] .sr-row{border-top:1px solid var(--line)}
 :root[data-theme="dark"] .sr-row small{color:var(--ink-faint)}
 :root[data-theme="dark"] .sr-more summary{border-top:1px solid var(--line);color:var(--ink-faint)}
-:root[data-theme="dark"] .sr-row button{background:#4763E4;color:#fff}
+:root[data-theme="dark"] .sr-row button{border:0;background:#4763E4;color:#fff}
+:root[data-theme="dark"] .sr-row button.sr-del{background:transparent;color:#DC9393}
 :root[data-theme="dark"] .cta-why{color:#F1A07E}
 :root[data-theme="dark"] .need-fix{outline:2px solid #F7B13B !important}
 :root[data-theme="dark"] details.title-guide{background:#212136}
 :root[data-theme="dark"] details.title-guide summary{color:var(--ink-soft)}
 :root[data-theme="dark"] details.title-guide summary::after{color:var(--ink-faint)}
 :root[data-theme="dark"] details.title-guide[open] summary{color:var(--ink)}
-:root[data-theme="dark"] #f_member[readonly],:root[data-theme="dark"] #f_participants[readonly]{color:var(--ink) !important}
+:root[data-theme="dark"] #f_member[readonly],:root[data-theme="dark"] #f_participants[readonly]{border-color:transparent;background:transparent !important;color:var(--ink) !important}
 :root[data-theme="dark"] button:focus-visible,:root[data-theme="dark"] [role="button"]:focus-visible,:root[data-theme="dark"] summary:focus-visible,:root[data-theme="dark"] a:focus-visible{outline:2px solid var(--purple)}
 :root[data-theme="dark"] input:focus-visible,:root[data-theme="dark"] select:focus-visible,:root[data-theme="dark"] textarea:focus-visible{outline:2px solid var(--purple-line)}
 :root[data-theme="dark"] .lab-note{color:var(--ink-soft)}
@@ -1382,13 +1403,13 @@
 :root[data-theme="dark"] .field-sm .url-none input{accent-color:var(--purple)}
 :root[data-theme="dark"] .plan-row label.plan-lab{color:var(--ink)}
 :root[data-theme="dark"] .plan-row label.plan-lab-sm{color:var(--ink-soft)}
-:root[data-theme="dark"] .submit-main{background:#4763E4;color:#fff}
+:root[data-theme="dark"] .submit-main{border:none;background:#4763E4;color:#fff}
 :root[data-theme="dark"] .sub-btns button{border:1.5px solid var(--line-input);background:#1E1D24;color:var(--ink-soft)}
 :root[data-theme="dark"] .spin{border:2.5px solid rgba(255,255,255,.45);border-top-color:#3A3844}
 :root[data-theme="dark"] #submitStatus.st-wait{color:var(--ink-soft)}
 :root[data-theme="dark"] #submitStatus.st-ok{background:#193E24;border:1.5px solid #58DA80;color:#88E7A5}
 :root[data-theme="dark"] #submitStatus.st-err{background:#3E1919;border:1.5px solid #CD6565;color:#E28D8D}
-:root[data-theme="dark"] #submitStatus button{background:#14632C;color:#fff}
+:root[data-theme="dark"] #submitStatus button{border:none;background:#14632C;color:#fff}
 :root[data-theme="dark"] .draft-banner{border:1.5px solid var(--purple-line);background:var(--purple-soft);color:var(--ink)}
 :root[data-theme="dark"] .draft-banner b{color:var(--purple-dark)}
 :root[data-theme="dark"] .draft-banner button{border:1.5px solid var(--purple);background:#1E1D24;color:var(--purple)}
@@ -1398,23 +1419,31 @@
 :root[data-theme="dark"] .progress-label{color:var(--ink-soft)}
 :root[data-theme="dark"] .progress-label b{color:var(--purple-dark)}
 :root[data-theme="dark"] .sec{border-top:1px solid #484360}
+:root[data-theme="dark"] .hint-caption + .sec{border-top:0}
 :root[data-theme="dark"] .step-panel .pick-label,:root[data-theme="dark"] .step-panel .field-sm > label:not(.url-none){color:var(--ink)}
 :root[data-theme="dark"] .step-panel .pick-label span,:root[data-theme="dark"] .step-panel .field-sm > label .lab-note,:root[data-theme="dark"] .step-panel .field-sm > label > span{color:var(--ink-faint) !important}
 :root[data-theme="dark"] .pick{border:1.5px solid #3A3844;background:#1E1D24;color:var(--ink)}
 :root[data-theme="dark"] .pick.on{border-color:var(--purple);background:#4763E4;color:#fff}
+:root[data-theme="dark"] .pick.on::before{background:currentColor}
 :root[data-theme="dark"] .pick.on small{color:rgba(255,255,255,.88)}
+:root[data-theme="dark"] .sr-only{border:0}
 :root[data-theme="dark"] .day-pick .pick small{color:var(--ink-soft)}
+:root[data-theme="dark"] .day-pick .pick.on small{color:inherit}
 :root[data-theme="dark"] .roster-pick .pick small{color:var(--ink-soft)}
+:root[data-theme="dark"] .roster-pick .pick.on small{color:inherit}
 :root[data-theme="dark"] .area-desc p{background:#262136}
+:root[data-theme="dark"] .area-desc p.faint{background:none}
 :root[data-theme="dark"] .kind-more summary{color:var(--purple-dark)}
 :root[data-theme="dark"] .kind-lock{background:#252136;border:1.5px solid #4C465E}
-:root[data-theme="dark"] .kind-lock svg{stroke:var(--ink-soft)}
+:root[data-theme="dark"] .kind-lock svg{fill:none;stroke:var(--ink-soft)}
 :root[data-theme="dark"] .kind-lock b{color:var(--ink)}
 :root[data-theme="dark"] .kind-lock span{color:var(--ink-soft)}
+:root[data-theme="dark"] .one-line{background:none;border:0}
 :root[data-theme="dark"] .ex-list li{color:var(--ink-soft);background:#262136}
 :root[data-theme="dark"] .ex-list li.ok b{background:#225331;color:#88E7A5}
 :root[data-theme="dark"] .ex-list li.no b{background:#3E2519;color:#F09B7F}
 :root[data-theme="dark"] .ex-list li small{color:var(--ink-faint)}
+:root[data-theme="dark"] details.title-guide{border:0;background:none}
 :root[data-theme="dark"] details.title-guide summary{color:var(--purple-dark)}
 :root[data-theme="dark"] details.title-guide[open] summary{color:var(--purple-dark)}
 :root[data-theme="dark"] details.title-guide[open]{background:#262136}
@@ -4521,7 +4550,7 @@ async function rvBind(root){
 
 /* ── 기획서 분석 (2026-11-05 담당자 「기획서 올리면 … 승인할 때 기획서 상단에 예상 성과치랑 관련된 정보, 제안 내용」·「버튼 누를 때만」·「나만 볼 수 있게」) ──
    자동매칭 GET insightList(담당자 계정 + 관리자 출입증만, 아니면 auth → 칸을 숨김). 숫자는 PC _도구/scripts/기획서분석이 5분마다 만들고, 제안은 POST insightAsk 뒤 PC가 claude로 만듦 */
-let IA_DATA = null, IA_TIMER = 0;
+let IA_DATA = null, IA_TIMER = 0; const IA_OPEN = {};
 function iaNum(v){ if(v == null || isNaN(v)) return '-'; return v >= 10000 ? (v/10000).toFixed(1).replace(/\.0$/,'') + '만' : Math.round(v).toLocaleString(); }
 function iaSug(t){   // 「**항목:** 내용」과 「- 줄」을 항목별로 나눈다. 판단은 배지, 문장은 한 줄씩. 형식이 달라도 글자는 그대로 보인다
   const inl = x => esc(x).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'), secs = []; let cur = null;
@@ -4585,7 +4614,15 @@ function iaHtml(id){
   return h + `</div>`;
 }
 function iaPaint(root){
-  root.querySelectorAll('[data-ia]').forEach(box => { box.innerHTML = iaHtml(box.dataset.ia); box.hidden = false; });
+  root.querySelectorAll('[data-ia]').forEach(box => {
+    const id = box.dataset.ia, it = (IA_DATA.items || {})[id];
+    // 예상 성과가 나온 기획서는 접어 두고 누르면 펼친다. 다시 그려도(1분마다 확인) 펼친 상태 유지
+    if(it && it.exp){
+      box.innerHTML = `<details class="ia-fold"${IA_OPEN[id] ? ' open' : ''}><summary>📊 예상 성과·관련 정보·제안</summary>${iaHtml(id)}</details>`;
+      box.firstElementChild.addEventListener('toggle', e => { IA_OPEN[id] = e.target.open; });
+    } else box.innerHTML = iaHtml(id);
+    box.hidden = false;
+  });
   root.querySelectorAll('[data-ia-ask]').forEach(btn => btn.addEventListener('click', async () => {
     btn.disabled = true;
     try{
@@ -7038,20 +7075,33 @@ function jjRosterApply(r){
       const seriesOf = t => String(t || '').split(/\s[-–—|ㅣ]\s|\||ㅣ/)[0].replace(/\s*[(（][^)）]*[)）]\s*/g, ' ').replace(/\s*\d+\s*화\s*$/, '').trim();
       const reg = (window.JJH_SERIES || []).flatMap(s => [s, ...(SR_ALIAS[s] || [])]).map(nz).filter(x => x.length >= 2);
       const isReg = t => { const a = nz(t); return reg.some(x => a.includes(x)); };
-      const seen = {};
+      const seen = {}, off = ((r && r.dismissed) || []).map(nz);   // 담당자가 삭제한 후보는 다시 추천하지 않음(시트 「제외」)
+      const canDel = !!(r && Array.isArray(r.dismissed));   // 서버가 seriesDismiss를 아는 판일 때만 삭제 버튼
       const uniq = ((r && r.pending) || [])
         .map(p => Object.assign({}, p, { full: p.title, title: seriesOf(p.title) || p.title }))
-        .filter(p => !isReg(p.full) && !SR_SKIP.includes(nz(p.title)) && !SR_ONEOFF.test(p.full))
+        .filter(p => !isReg(p.full) && !SR_SKIP.includes(nz(p.title)) && !off.includes(nz(p.title)) && !SR_ONEOFF.test(p.full))
         .filter(p => { const k = nz(p.title); if (seen[k]) return false; seen[k] = 1; return true; })
         .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
       if (!uniq.length){ box.innerHTML = ''; return; }
-      const row = p => `<div class="sr-row"><div class="t"><b>${esc(p.title)}</b><small>${esc(p.lead)} 팀장 · ${esc(STATUS_LABELS[p.status] || p.status)}${p.date ? ' · ' + esc(p.date) : ''}</small></div><button type="button" data-id="${esc(p.planId)}" data-t="${esc(p.title)}">정규 편성</button></div>`;
+      const row = p => `<div class="sr-row"><div class="t"><b>${esc(p.title)}</b><small>${esc(p.lead)} 팀장 · ${esc(STATUS_LABELS[p.status] || p.status)}${p.date ? ' · ' + esc(p.date) : ''}</small></div>${canDel ? `<button type="button" class="sr-del" data-del="${esc(p.planId)}" data-t="${esc(p.title)}">삭제</button>` : ''}<button type="button" data-id="${esc(p.planId)}" data-t="${esc(p.title)}">정규 편성</button></div>`;
       const SHOW = 3, head = uniq.slice(0, SHOW), rest = uniq.slice(SHOW);
       box.innerHTML = `<div class="sr-box"><h4>신규 콘텐츠 · 정규 편성 <span style="color:var(--ink-faint);font-weight:700;">${uniq.length}</span></h4><p class="req-hint" style="margin:0 0 4px;">이미 편성된 시리즈는 빠져 있어요 · 최신순</p>` +
         head.map(row).join('') +
         (rest.length ? `<details class="sr-more"><summary>지난 기획서 ${rest.length}개 더보기</summary>${rest.map(row).join('')}</details>` : '') + '</div>';
     } catch (e){ box.innerHTML = ''; }
   }
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('#srPending button[data-del]'); if (!b) return;
+    if (!adminRole() || !adminRole().full){ showAlert('후보 삭제는 관리자 계정만 할 수 있어요.'); return; }
+    if (!(await adminLoginByAccount())) return;
+    if (!(await showConfirm('「' + b.dataset.t + '」을(를) 정규 편성 후보에서 삭제할까요?\n기획서는 그대로 남고, 이 콘텐츠는 다시 추천하지 않아요.'))) return;
+    b.disabled = true; b.textContent = '삭제 중…';
+    try {
+      const r = await post({ action:'seriesDismiss', pin:'-', planId:b.dataset.del, name:b.dataset.t });
+      if (r.ok){ showToast('후보에서 삭제했어요 · 다시 추천하지 않아요'); loadPending(); }
+      else { showAlert(r.error === 'regular' ? '이미 정규 편성된 콘텐츠예요.' : '삭제하지 못했어요: ' + r.error); b.disabled = false; b.textContent = '삭제'; }
+    } catch (err){ showAlert('삭제하지 못했어요. 잠시 후 다시 시도해 주세요.'); b.disabled = false; b.textContent = '삭제'; }
+  });
   document.addEventListener('click', async e => {
     const b = e.target.closest('#srPending button[data-id]'); if (!b) return;
     if (!adminRole() || !adminRole().full){ showAlert('정규 편성은 관리자 계정만 할 수 있어요.'); return; }

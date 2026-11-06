@@ -508,6 +508,14 @@
   @media (max-width:380px){ .mt-tabs button{font-size:11.5px; padding:8px 2px;} }
   .mt-tabs button{flex:1 1 auto; min-width:0; padding:8px 4px; font-size:12.5px; letter-spacing:-0.3px; white-space:nowrap;}
   .pc-add{margin-top:12px;} .pc-add .ev-chips button{font-size:12.5px;}
+  .pc-plan-btn{display:inline; padding:0; border:0; background:none; color:inherit; font:inherit; cursor:pointer; white-space:nowrap;}
+  .pc-plan-btn span{text-decoration:underline; text-decoration-color:var(--ink-faint); text-underline-offset:3px;}
+  .pc-plan-btn[aria-expanded="true"] span{color:var(--purple); text-decoration-color:var(--purple);}
+  .pc-plan{padding:10px 0 12px; border-bottom:1px solid var(--line); font-size:13px; line-height:1.5; color:var(--ink);}
+  .pc-plan-title{font-weight:700; overflow-wrap:anywhere; margin-bottom:4px;}
+  .pc-plan a{color:var(--ink-soft);}
+  .pc-plan span{color:var(--ink-faint); font-size:12px;}
+  .pc-plan-hint{font-size:12px; color:var(--ink-faint); margin:0 0 4px;}
   .pp-open{display:inline-flex; align-items:center; gap:6px; margin:0 0 12px;}
   .pp-open svg{width:14px; height:14px; flex:none;}
   #ppModal{display:none; position:fixed; inset:0; background:rgba(25,24,29,0.5); align-items:center; justify-content:center; z-index:900; padding:16px;}
@@ -1233,6 +1241,13 @@
 :root[data-theme="dark"] .ab-pill.ok{background:#193E20;color:#8AE5A6}
 :root[data-theme="dark"] .ab-btn{border:1.5px solid var(--line);background:#1E1D24;color:var(--ink-soft)}
 :root[data-theme="dark"] .ab-btn.go{border-color:var(--purple);color:var(--purple)}
+:root[data-theme="dark"] .pc-plan-btn{border:0;background:none;color:inherit}
+:root[data-theme="dark"] .pc-plan-btn span{text-decoration-color:var(--ink-faint)}
+:root[data-theme="dark"] .pc-plan-btn[aria-expanded="true"] span{color:var(--purple);text-decoration-color:var(--purple)}
+:root[data-theme="dark"] .pc-plan{border-bottom:1px solid var(--line);color:var(--ink)}
+:root[data-theme="dark"] .pc-plan a{color:var(--ink-soft)}
+:root[data-theme="dark"] .pc-plan span{color:var(--ink-faint)}
+:root[data-theme="dark"] .pc-plan-hint{color:var(--ink-faint)}
 :root[data-theme="dark"] #ppModal{background:rgba(25,24,29,0.5)}
 :root[data-theme="dark"] #ppModal .modal-box{background:#1E1D24}
 :root[data-theme="dark"] #ppModal h3{color:var(--ink)}
@@ -5449,6 +5464,17 @@ function pcRenderWeeks(){
   document.getElementById('pcCycle').textContent = pcWeek ? `기획서 ${mtFmt(pcWeek)} 16시 마감 · 콘텐츠 ${mtFmt(pcContentDue(pcWeek))} 자정 마감` : '';
 }
 
+// 이름을 누르면 그 회차 갠콘 기획이 펼쳐짐 (2026-11-06). 못 읽어도 제출 체크 화면은 그대로
+let pcPlans = {}, pcPlanOpen = new Set();
+async function pcLoadPlans(week){
+  try{
+    const r = await attendJsonpRaw({ action:'pcPlanList', week, tk: adminToken() });
+    if(pcLoadedWeek !== week || !r || !r.ok) return;
+    pcPlans = {};
+    (r.rows || []).forEach(x => { pcPlans[x.name] = x; });
+    pcRenderList();
+  }catch(e){}
+}
 function pcRenderList(){
   const el = document.getElementById('pcList');
   document.getElementById('pcCancel').textContent = pcCancelled ? '휴회 취소' : '이번 회차 휴회';
@@ -5463,19 +5489,24 @@ function pcRenderList(){
   const isMiss = n => !(pcState[n] && pcState[n].plan && pcState[n].content);
   const missN = pcNames().filter(isMiss).length;
   const list = pcOnlyMissing ? pcNames().filter(isMiss) : pcNames();
-  el.innerHTML = `<div class="miss-bar"><button class="miss-btn ${pcOnlyMissing?'on':''}" id="pcMissBtn">${pcOnlyMissing ? '전체 보기' : '미입력만 보기 (' + missN + ')'}</button></div>`
+  el.innerHTML = (Object.keys(pcPlans).length ? '<p class="pc-plan-hint">밑줄 친 이름을 누르면 기획이 펼쳐져요</p>' : '') + `<div class="miss-bar"><button class="miss-btn ${pcOnlyMissing?'on':''}" id="pcMissBtn">${pcOnlyMissing ? '전체 보기' : '미입력만 보기 (' + missN + ')'}</button></div>`
     + (pcOnlyMissing && !list.length ? '<div class="miss-empty">모두 입력했어요</div>' : '') + list.map(n => {
     const s = pcState[n] || {};
     const pts = pcPts(s);
     const seg = key => `<div class="seg">${PC_OPTS.map(v => `<button data-n="${n}" data-k="${key}" data-v="${v}" class="${s[key]===v?'on':''}">${v}</button>`).join('')}</div>`;
+    const plan = pcPlans[n];
+    const open = plan && pcPlanOpen.has(n);
+    const planUrl = plan ? safeUrl(plan.link) : '';
+    const planBox = open ? `<div class="pc-plan"><div class="pc-plan-title">${esc(plan.title)}</div>${planUrl ? `<a href="${esc(planUrl)}" target="_blank" rel="noopener">참고 릴스 열기</a>` : '<span>참고 릴스 없음</span>'}</div>` : '';
     return `<div class="pc-row">
-      <div class="pc-name">${nb(n)}${n}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : '콘텐츠 입력 전'))}</small></div>
+      <div class="pc-name">${plan ? `<button type="button" class="pc-plan-btn" data-plan="${esc(n)}" aria-expanded="${open ? 'true' : 'false'}">${nb(n)}<span>${n}</span></button>` : nb(n) + n}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : '콘텐츠 입력 전'))}</small></div>
       <div class="pc-lines">
         <div class="pc-line"><span class="pc-lab">기획서</span>${seg('plan')}</div>
         <div class="pc-line"><span class="pc-lab">콘텐츠</span>${seg('content')}</div>
       </div>
-    </div>`;
+    </div>${planBox}`;
   }).join('');
+  el.querySelectorAll('.pc-plan-btn').forEach(b => b.addEventListener('click', ()=>{ const n = b.dataset.plan; if(pcPlanOpen.has(n)) pcPlanOpen.delete(n); else pcPlanOpen.add(n); pcRenderList(); }));
   document.getElementById('pcMissBtn').addEventListener('click', ()=>{ pcOnlyMissing = !pcOnlyMissing; pcRenderList(); });
   el.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', ()=>{
     const s = pcState[b.dataset.n] || (pcState[b.dataset.n] = {});
@@ -5514,6 +5545,7 @@ async function pcLoad(){
   pcDirty = false; pcLoadedWeek = pcWeek;
   document.getElementById('pcStatus').textContent = '';
   pcState = {}; pcExtra = new Set(); pcCancelled = false;
+  pcPlans = {}; pcPlanOpen = new Set(); pcLoadPlans(pcWeek);
   const week = pcWeek, params = { action:'personalList', week };
   const apply = (res, fresh) => {
     if(pcLoadedWeek !== week) return;
@@ -5690,6 +5722,7 @@ async function ppSave(){
     if(miss.length){ showAlert('저장되지 않은 줄이 있어요: ' + miss.map(e => e.name).join(', ')); ppRender(); return; }
     const n = s.entries.length, w = s.week;
     ppClose();
+    if(pcLoadedWeek === w) pcLoadPlans(w);
     showToast(`${mtFmt(w)} 회차 ${n}명을 저장했어요`);
   }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); ppRender(); }
 }

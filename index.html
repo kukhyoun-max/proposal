@@ -1609,11 +1609,11 @@
           <div class="l"><div class="k">JJ 공동목표 ›</div><div class="s" id="jjhGoalText">불러오는 중…</div></div>
           <svg id="jjhMini" viewBox="0 0 112 52" aria-hidden="true"></svg>
         </button>
-        <div class="jjh-card jjh-mine" id="jjhMine" role="button" tabindex="0" aria-label="내 콘텐츠 기록 보기">
+        <div class="jjh-card jjh-mine" id="jjhMine" role="group" aria-label="내 이름 연결" style="display:none">
           <div class="k"><span id="jjhMineMon">이번 달</span> 내 기록 <span class="go" id="jjhMineGo" style="display:none">›</span></div>
           <div id="jjhMineBody"><div class="msg">불러오는 중…</div></div>
         </div>
-        <div class="jjh-card jjh-best wait" id="jjhBest" role="button" tabindex="0" aria-label="1등 근거 보기" style="display:none">
+        <div class="jjh-card jjh-best wait" id="jjhBest" role="button" tabindex="0" aria-label="1등 근거 보기">
           <svg class="cup" viewBox="8 8 68 80" aria-hidden="true">
             <defs><linearGradient id="jjhGc" x1="0" x2="1"><stop offset="0" stop-color="#FFC93C"/><stop offset=".5" stop-color="#FFE38A"/><stop offset="1" stop-color="#F5A800"/></linearGradient>
             <linearGradient id="jjhGb" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#4E5968"/><stop offset="1" stop-color="#333D4B"/></linearGradient></defs>
@@ -7108,9 +7108,11 @@ function jjRosterApply(r){
   let MINE = null;
   const MINE_SKIP = 'jjMineSkip_v1';
   function showBest(){ $('jjhMine').style.display = 'none'; $('jjhBest').style.display = ''; }
+  // 2026-11-06 담당자 「메인에서 내기록은 빼」: 연결된 사람은 1등 카드만. 이름 연결이 안 된 사람에겐 연결 입구로 남김(「내 성과」도 이 연결로 열림)
   function renderMine(d){
-    if (!d || d.error || d.admin){ showBest(); return; }
+    if (!d || d.error || d.admin || (!d.pending && d.need !== 'name')){ showBest(); return; }
     const body = $('jjhMineBody'), card = $('jjhMine');
+    card.style.display = ''; $('jjhBest').style.display = 'none';
     if (d.pending){
       MINE = null; card.classList.add('pick'); $('jjhMineGo').style.display = 'none';
       body.innerHTML = `<div class="msg"><b>${esc(d.pending)}</b>(으)로 연결 요청을 보냈어요.<br>선생님이 확인하면 내 기록이 열려요</div>`;
@@ -7131,15 +7133,7 @@ function jjRosterApply(r){
         try { const r = await post({ action:'claimName', name: pick }); if (r && r.error){ alert(r.error); ok.disabled = false; ok.textContent = pick + '(으)로 요청'; return; } renderMine(r); }
         catch(err){ alert('연결하지 못했어요. 잠시 후 다시 해주세요.'); ok.disabled = false; ok.textContent = pick + '(으)로 요청'; } });
       body.querySelector('.skip').addEventListener('click', e => { e.stopPropagation(); try{ localStorage.setItem(MINE_SKIP, '1'); }catch(_){} showBest(); });
-      return;
     }
-    MINE = d; card.classList.remove('pick');
-    const mon = mineMonth(d);
-    $('jjhMineMon').textContent = mon.label;
-    $('jjhMineGo').style.display = d.count ? '' : 'none';
-    body.innerHTML = mon.posts.length
-      ? `<div class="nums"><div><b>${mon.posts.length}개</b><small>올린 콘텐츠</small></div><div><b>${kv(mon.views)}회</b><small>조회수</small></div></div>`
-      : `<div class="msg">${esc(d.name)}님의 ${mon.label} 첫 콘텐츠를 기다리고 있어요</div>`;
   }
   function mineMonth(d){
     const now = new Date(), ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');

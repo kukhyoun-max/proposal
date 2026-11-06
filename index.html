@@ -508,14 +508,19 @@
   @media (max-width:380px){ .mt-tabs button{font-size:11.5px; padding:8px 2px;} }
   .mt-tabs button{flex:1 1 auto; min-width:0; padding:8px 4px; font-size:12.5px; letter-spacing:-0.3px; white-space:nowrap;}
   .pc-add{margin-top:12px;} .pc-add .ev-chips button{font-size:12.5px;}
-  .pc-plan-btn{display:inline; padding:0; border:0; background:none; color:inherit; font:inherit; cursor:pointer; white-space:nowrap;}
-  .pc-plan-btn span{text-decoration:underline; text-decoration-color:var(--ink-faint); text-underline-offset:3px;}
-  .pc-plan-btn[aria-expanded="true"] span{color:var(--purple); text-decoration-color:var(--purple);}
-  .pc-plan{padding:10px 0 12px; border-bottom:1px solid var(--line); font-size:13px; line-height:1.5; color:var(--ink);}
-  .pc-plan-title{font-weight:700; overflow-wrap:anywhere; margin-bottom:4px;}
-  .pc-plan a{color:var(--ink-soft);}
-  .pc-plan span{color:var(--ink-faint); font-size:12px;}
-  .pc-plan-hint{font-size:12px; color:var(--ink-faint); margin:0 0 4px;}
+  .pc-plan-more{display:inline-flex; align-items:center; gap:2px; margin-top:4px; padding:2px 0; border:0; background:none; font:inherit; font-size:12px; font-weight:700; color:var(--purple); cursor:pointer;}
+  .pc-plan-more svg{width:12px; height:12px; transition:transform .15s ease;}
+  .pc-plan-more[aria-expanded="true"] svg{transform:rotate(180deg);}
+  .pc-plan-more:focus-visible{outline:2px solid var(--purple); outline-offset:2px; border-radius:4px;}
+  .pc-row.open{border-bottom:0; padding-bottom:8px;}
+  .pc-plan{padding:0 0 12px 98px; border-bottom:1px solid var(--line);}
+  .pc-plan-box{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-radius:9px; background:var(--purple-soft);}
+  .pc-plan-title{font-size:13.5px; font-weight:700; line-height:1.5; color:var(--ink); overflow-wrap:anywhere; min-width:0;}
+  .pc-plan-link{flex:none; display:inline-flex; align-items:center; gap:4px; padding:6px 10px; border:1.5px solid var(--line); border-radius:8px; background:#fff; font-size:12px; font-weight:700; color:var(--ink-soft); text-decoration:none; white-space:nowrap;}
+  .pc-plan-link svg{width:13px; height:13px;}
+  .pc-plan-link:hover{color:var(--purple); border-color:var(--purple-line);}
+  .pc-plan-none{flex:none; font-size:12px; color:var(--ink-soft);}
+  @media (max-width:480px){ .pc-plan{padding-left:0;} }
   .pp-open{display:inline-flex; align-items:center; gap:6px; margin:0 0 12px;}
   .pp-open svg{width:14px; height:14px; flex:none;}
   #ppModal{display:none; position:fixed; inset:0; background:rgba(25,24,29,0.5); align-items:center; justify-content:center; z-index:900; padding:16px;}
@@ -1241,13 +1246,15 @@
 :root[data-theme="dark"] .ab-pill.ok{background:#193E20;color:#8AE5A6}
 :root[data-theme="dark"] .ab-btn{border:1.5px solid var(--line);background:#1E1D24;color:var(--ink-soft)}
 :root[data-theme="dark"] .ab-btn.go{border-color:var(--purple);color:var(--purple)}
-:root[data-theme="dark"] .pc-plan-btn{border:0;background:none;color:inherit}
-:root[data-theme="dark"] .pc-plan-btn span{text-decoration-color:var(--ink-faint)}
-:root[data-theme="dark"] .pc-plan-btn[aria-expanded="true"] span{color:var(--purple);text-decoration-color:var(--purple)}
-:root[data-theme="dark"] .pc-plan{border-bottom:1px solid var(--line);color:var(--ink)}
-:root[data-theme="dark"] .pc-plan a{color:var(--ink-soft)}
-:root[data-theme="dark"] .pc-plan span{color:var(--ink-faint)}
-:root[data-theme="dark"] .pc-plan-hint{color:var(--ink-faint)}
+:root[data-theme="dark"] .pc-plan-more{border:0;background:none;color:var(--purple)}
+:root[data-theme="dark"] .pc-plan-more:focus-visible{outline:2px solid var(--purple)}
+:root[data-theme="dark"] .pc-row.open{border-bottom:0}
+:root[data-theme="dark"] .pc-plan{border-bottom:1px solid var(--line)}
+:root[data-theme="dark"] .pc-plan-box{background:var(--purple-soft)}
+:root[data-theme="dark"] .pc-plan-title{color:var(--ink)}
+:root[data-theme="dark"] .pc-plan-link{border:1.5px solid var(--line);background:#1E1D24;color:var(--ink-soft)}
+:root[data-theme="dark"] .pc-plan-link:hover{color:var(--purple);border-color:var(--purple-line)}
+:root[data-theme="dark"] .pc-plan-none{color:var(--ink-soft)}
 :root[data-theme="dark"] #ppModal{background:rgba(25,24,29,0.5)}
 :root[data-theme="dark"] #ppModal .modal-box{background:#1E1D24}
 :root[data-theme="dark"] #ppModal h3{color:var(--ink)}
@@ -5489,7 +5496,7 @@ function pcRenderList(){
   const isMiss = n => !(pcState[n] && pcState[n].plan && pcState[n].content);
   const missN = pcNames().filter(isMiss).length;
   const list = pcOnlyMissing ? pcNames().filter(isMiss) : pcNames();
-  el.innerHTML = (Object.keys(pcPlans).length ? '<p class="pc-plan-hint">밑줄 친 이름을 누르면 기획이 펼쳐져요</p>' : '') + `<div class="miss-bar"><button class="miss-btn ${pcOnlyMissing?'on':''}" id="pcMissBtn">${pcOnlyMissing ? '전체 보기' : '미입력만 보기 (' + missN + ')'}</button></div>`
+  el.innerHTML = `<div class="miss-bar"><button class="miss-btn ${pcOnlyMissing?'on':''}" id="pcMissBtn">${pcOnlyMissing ? '전체 보기' : '미입력만 보기 (' + missN + ')'}</button></div>`
     + (pcOnlyMissing && !list.length ? '<div class="miss-empty">모두 입력했어요</div>' : '') + list.map(n => {
     const s = pcState[n] || {};
     const pts = pcPts(s);
@@ -5497,16 +5504,17 @@ function pcRenderList(){
     const plan = pcPlans[n];
     const open = plan && pcPlanOpen.has(n);
     const planUrl = plan ? safeUrl(plan.link) : '';
-    const planBox = open ? `<div class="pc-plan"><div class="pc-plan-title">${esc(plan.title)}</div>${planUrl ? `<a href="${esc(planUrl)}" target="_blank" rel="noopener">참고 릴스 열기</a>` : '<span>참고 릴스 없음</span>'}</div>` : '';
-    return `<div class="pc-row">
-      <div class="pc-name">${plan ? `<button type="button" class="pc-plan-btn" data-plan="${esc(n)}" aria-expanded="${open ? 'true' : 'false'}">${nb(n)}<span>${n}</span></button>` : nb(n) + n}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : '콘텐츠 입력 전'))}</small></div>
+    const planBox = open ? `<div class="pc-plan"><div class="pc-plan-box"><div class="pc-plan-title">${esc(plan.title)}</div>${planUrl ? `<a class="pc-plan-link" href="${esc(planUrl)}" target="_blank" rel="noopener">참고 릴스<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>` : '<span class="pc-plan-none">참고 릴스 없음</span>'}</div></div>` : '';
+    const planMore = plan ? `<button type="button" class="pc-plan-more" data-plan="${esc(n)}" aria-expanded="${open ? 'true' : 'false'}">기획<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>` : '';
+    return `<div class="pc-row${open ? ' open' : ''}">
+      <div class="pc-name">${nb(n)}${n}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : '콘텐츠 입력 전'))}</small>${planMore}</div>
       <div class="pc-lines">
         <div class="pc-line"><span class="pc-lab">기획서</span>${seg('plan')}</div>
         <div class="pc-line"><span class="pc-lab">콘텐츠</span>${seg('content')}</div>
       </div>
     </div>${planBox}`;
   }).join('');
-  el.querySelectorAll('.pc-plan-btn').forEach(b => b.addEventListener('click', ()=>{ const n = b.dataset.plan; if(pcPlanOpen.has(n)) pcPlanOpen.delete(n); else pcPlanOpen.add(n); pcRenderList(); }));
+  el.querySelectorAll('.pc-plan-more').forEach(b => b.addEventListener('click', ()=>{ const n = b.dataset.plan; if(pcPlanOpen.has(n)) pcPlanOpen.delete(n); else pcPlanOpen.add(n); pcRenderList(); }));
   document.getElementById('pcMissBtn').addEventListener('click', ()=>{ pcOnlyMissing = !pcOnlyMissing; pcRenderList(); });
   el.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', ()=>{
     const s = pcState[b.dataset.n] || (pcState[b.dataset.n] = {});

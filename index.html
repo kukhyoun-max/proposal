@@ -4937,30 +4937,40 @@ async function generateAndUploadImage(rec){
   }
 }
 
+// 승인은 화면에 바로 반영하고, 서버 일(시트·드라이브 폴더·캘린더·완성본 이미지)은 뒤에서 해요 (2026-11-08)
+// 예전엔 서버 처리 → 목록 다시 받기 → 이미지 만들어 올리기가 다 끝나야 알림창이 떠서 10초 넘게 걸렸어요.
+// 실패하거나 드라이브·캘린더 자동화에 문제가 있을 때만 알림창을 띄워요.
+const approvingIds = new Set();
 async function approveSubmission(key){
-  try{
-    const result = await sheetUpdate(key, { [COL.status]:'approved', [COL.reviewedAt]: new Date().toISOString() });
-    if(!result || result.ok === false) throw new Error((result && result.error) ? result.error : '시트 응답 실패');
-    loadSubmissions(); refreshPendingBadge(); refreshOverview();
-
-    let imageError = null;
-    let row = null;
+  if(approvingIds.has(key)) return;   // 두 번 눌러 폴더가 두 개 생기지 않게
+  approvingIds.add(key);
+  const reviewedAt = new Date().toISOString();
+  const optimistic = planMem ? planMem.map(r => r['ID'] === key ? Object.assign({}, r, { [COL.status]:'approved', [COL.reviewedAt]: reviewedAt }) : r) : null;
+  const job = sheetUpdate(key, { [COL.status]:'approved', [COL.reviewedAt]: reviewedAt });   // sheetPost가 먼저 목록 캐시를 비워요
+  if(optimistic){ planMem = optimistic; planMemAt = Date.now(); }
+  let row = optimistic ? optimistic.find(r => r['ID'] === key) : null;
+  try{ loadSubmissions(); refreshPendingBadge(); refreshOverview(); }catch(e){}
+  showToast('승인했어요 · 폴더·캘린더는 뒤에서 만들어요');
+  (async () => {
+    let result;
+    try{ result = await job; }catch(e){ result = { ok:false, error: e && e.message }; }
+    planInvalidate(); planRevalidate('');   // 서버 기준으로 다시 받아 화면 갱신
+    if(!result || result.ok === false){
+      approvingIds.delete(key);
+      showAlert('승인 처리에 실패했어요: ' + ((result && result.error) || '시트 응답 실패') + '\n목록을 다시 불러왔어요. 한 번 더 눌러 주세요.');
+      return;
+    }
+    const probs = [result.driveError && ('드라이브: ' + result.driveError), result.calendarError && ('캘린더: ' + result.calendarError)].filter(Boolean);
+    if(probs.length) showAlert('승인은 됐지만 일부 자동화에서 문제가 났어요:\n' + probs.join('\n') + '\n\n앱스 스크립트에서 권한 승인(authorizeDriveAccess 실행)이 필요할 수 있어요.');
     try{
-      const rows = await sheetGetAll();
-      row = rows.find(r=>r['ID']===key);
+      if(!row){ const rows = await sheetGetAll(); row = (rows || []).find(r => r['ID'] === key); }
       if(row) await generateAndUploadImage(mapRowToRecord(row));
     }catch(imgErr){
       console.error('auto image upload failed:', imgErr);
-      imageError = imgErr;
+      showToast('완성본 이미지는 만들지 못했어요 (승인은 됐어요)');
     }
-
-    const autoErrorText = row ? (row['자동화오류'] || '') : '';
-    if(autoErrorText){
-      await showAlert('승인은 됐지만 일부 자동화에서 문제가 났어요:\n' + autoErrorText + '\n\n앱스 스크립트에서 권한 승인(authorizeDriveAccess 실행)이 필요할 수 있어요.');
-    }else{
-      await showAlert('승인 완료! 시트 업데이트, 드라이브 폴더+초안 문서, 캘린더 일정, 완성본 이미지까지 전부 자동으로 만들어졌어요.' + (imageError ? '\n(다만 이미지 생성 중 문제가 있었을 수 있어요, 확인해주세요.)' : ''));
-    }
-  }catch(e){ showAlert('승인 처리에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+    approvingIds.delete(key);
+  })();
 }
 
 async function rejectSubmission(key){

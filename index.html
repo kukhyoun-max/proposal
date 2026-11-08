@@ -5361,7 +5361,26 @@ function attendPrefetch(){
 // 앱을 열 때 시트의 기획서 상태도 촬영일 기준으로 맞춰둬요 (화면은 이미 자동 상태로 보여요)
 // 바뀐 게 있어도 저장된 목록은 지우지 않고, 뒤에서 새 목록을 받아 화면만 갱신해요 (다음에 열 때도 바로 뜨게)
 setTimeout(()=>{ try{ attendJsonpRaw({ action:'planAuto' }).then(r => { if(r && r.changed){ planMemAt = 0; planRevalidate(JSON.stringify(planMem)); } }).catch(()=>{}); }catch(e){} }, 2000);
+// 처음 화면 묶음(2026-11-08 담당자 「가장 속도를 느리게 하는 게 뭐야」 → 「지금 해」): 서버 한 번 부르는 데 1.3~1.8초라
+// 첫 화면이 따로 부르던 8개를 GET boot 한 번으로 받는다. 각 항목은 처음 한 번만 묶음 답을 쓰고(1분 안), 그 뒤엔 예전처럼 따로 부른다.
+// 묶음이 실패하거나 그 항목이 오류면 따로 부른다(예전 서버에서도 그대로 동작)
+const BOOT_KEYS = ['roster', 'whoami', 'mine', 'weeklyTop', 'goal', 'seriesList', 'topViews', 'schedule'];
+let jjBoot = null, jjBootAt = 0;
+const jjBootUsed = {};
+function jjBootGet(){
+  if(!jjBoot){ jjBootAt = Date.now(); jjBoot = attendJsonpCall({ action:'boot' }).then(r => (r && r.ok && r.data) ? r.data : null).catch(() => null); }
+  return jjBoot;
+}
 function attendJsonpRaw(params){
+  const a = params && params.action, ks = Object.keys(params || {});
+  const plain = BOOT_KEYS.includes(a) && ks.every(k => k === 'action' || (a === 'schedule' && k === 'days' && Number(params.days) === 14));
+  if(plain && !jjBootUsed[a] && memberToken() && (!jjBoot || Date.now() - jjBootAt < 60000)){
+    jjBootUsed[a] = 1;
+    return jjBootGet().then(d => (d && d[a] !== undefined && !(d[a] && d[a].error)) ? d[a] : attendJsonpCall(params));
+  }
+  return attendJsonpCall(params);
+}
+function attendJsonpCall(params){
   return new Promise((resolve, reject)=>{
     const cbName = 'mt_' + Date.now() + '_' + Math.floor(Math.random()*100000);
     const script = document.createElement('script');

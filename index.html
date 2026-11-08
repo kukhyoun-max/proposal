@@ -5216,6 +5216,16 @@ const ATT_LS = 'attCache_v1:';
 function attCacheGet(params){ try{ const c = JSON.parse(localStorage.getItem(ATT_LS + JSON.stringify(params)) || 'null'); return c && Date.now() - c.t < 14 * 864e5 ? c.r : null; }catch(e){ return null; } }
 function attCacheSet(params, r){ try{ localStorage.setItem(ATT_LS + JSON.stringify(params), JSON.stringify({ t: Date.now(), r })); }catch(e){} }
 function attCacheClear(){ try{ Object.keys(localStorage).forEach(k => { if(k.indexOf(ATT_LS) === 0) localStorage.removeItem(k); }); }catch(e){} }
+// 저장본 먼저 보여주고(fresh=false) 서버 응답이 오면 다시 그려요(fresh=true). 저장본이 있으면 서버 실패는 조용히 넘겨요.
+async function attSwr(params, apply){
+  const cached = attCacheGet(params);
+  if(cached){ try{ apply(cached, false); }catch(e){} }
+  try{
+    const res = await attendJsonp(params);
+    if(res && res.error) throw new Error(res.error);
+    apply(res, true);
+  }catch(e){ if(!cached) throw e; }
+}
 function attendJsonp(params){
   const key = JSON.stringify(params);
   const hit = attendCache.get(key);
@@ -5230,7 +5240,8 @@ function attendJsonp(params){
   // 기획서 제출·승인(APPS_SCRIPT_URL)도 장비 대여를 바꾸니 같이 비워요. 저장이 끝난 뒤에도 한 번 더 비워 그 사이에 받은 옛 목록이 남지 않게 해요.
   // 읽기만 하는 POST(관리자 로그인, 연결 요청 목록)는 비우지 않아요. 관리자 창을 열 때마다 미리 받은 탭 목록이 지워져 다시 받느라 느렸어요.
   const READ_ONLY = ['adminLogin', 'linkList'];
-  const bust = () => { attendCache.clear(); attCacheClear(); };
+  // 2026-11-08: 브라우저 저장본(attCache)은 지우지 않아요. 화면은 저장본을 먼저 보여주고 바로 최신으로 바꿔요(저장 뒤 탭마다 2~3초 빈 화면이던 것).
+  const bust = () => { attendCache.clear(); };
   // 저장 실패가 보이게(2026-10-30): 자동매칭으로 no-cors로 보내던 저장은 no-cors를 빼고(text/plain POST라 그대로 단순 요청, 리다이렉트 따라감) 응답을 읽는다.
   // 서버가 { ok:false, error }로 답하거나 연결이 안 되면 오류(jjSave)로 거절 → 기다리는 쪽은 자기 catch에서, 기다리지 않는 쪽은 아래 unhandledrejection에서 알림
   const check = act => async res => {
@@ -5810,15 +5821,13 @@ function abRender(){
   el.querySelectorAll('.ab-btn').forEach(b => b.addEventListener('click', ()=>abToggle(Number(b.dataset.i), b)));
 }
 async function abLoad(){
-  document.getElementById('abInfo').textContent = '불러오는 중...';
-  try{
-    const res = await attendJsonp({ action:'absentList' });
-    if(res && res.error) throw new Error(res.error);
+  if(!attCacheGet({ action:'absentList' })) document.getElementById('abInfo').textContent = '불러오는 중...';
+  try{ await attSwr({ action:'absentList' }, res => {
     abItems = res.items || [];
     const n = abItems.filter(x => x.status !== '면제').length, m = abItems.length - n;
     document.getElementById('abInfo').textContent = `불참 ${n} · 면제 ${m}` + (res.updated ? ` (계산 ${res.updated})` : '');
     abRender();
-  }catch(e){ document.getElementById('abInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류'); }
+  }); }catch(e){ document.getElementById('abInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류'); }
 }
 async function abToggle(i, btn){
   const it = abItems[i];
@@ -5844,14 +5853,12 @@ document.getElementById('btnAbsentBack').addEventListener('click', ()=>{ showVie
 let evEvents = [], evSummaryData = {}, evEditing = null, evSel = new Set();
 async function evLoad(){
   tkLoad();
-  document.getElementById('evInfo').textContent = '불러오는 중...';
-  try{
-    const res = await attendJsonp({ action:'eventList' });
-    if(res && res.error) throw new Error(res.error);
+  if(!attCacheGet({ action:'eventList' })) document.getElementById('evInfo').textContent = '불러오는 중...';
+  try{ await attSwr({ action:'eventList' }, res => {
     evEvents = res.events || []; evSummaryData = res.summary || {};
     document.getElementById('evInfo').textContent = `행사 ${evEvents.length}건`;
     evRender();
-  }catch(e){ document.getElementById('evInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류'); }
+  }); }catch(e){ document.getElementById('evInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류'); }
 }
 function evRender(){
   const el = document.getElementById('evList');
@@ -5946,13 +5953,11 @@ function evSetKind(k){
 }
 document.querySelectorAll('#evSeg button').forEach(b => b.addEventListener('click', () => evSetKind(b.dataset.k)));
 async function tkLoad(){
-  document.getElementById('tkInfo').textContent = '불러오는 중...';
-  try{
-    const res = await attendJsonp({ action:'taskList' });
-    if(res && res.error) throw new Error(res.error);
+  if(!attCacheGet({ action:'taskList' })) document.getElementById('tkInfo').textContent = '불러오는 중...';
+  try{ await attSwr({ action:'taskList' }, res => {
     tkTasks = res.tasks || [];
     tkRender();
-  }catch(e){ document.getElementById('tkInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류'); }
+  }); }catch(e){ document.getElementById('tkInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류'); }
 }
 // 항목 대상: '전원'이면 현재 명단 전체, 아니면 고른 이름만
 const tkTargetsOf = t => !t || t.targets === '전원' || !Array.isArray(t.targets) ? MEETING_ROSTER.slice() : MEETING_ROSTER.filter(n => t.targets.includes(n)).concat(t.targets.filter(n => !MEETING_ROSTER.includes(n)));

@@ -7286,6 +7286,8 @@ function jjRosterApply(r){
       body.querySelector('.skip').addEventListener('click', e => { e.stopPropagation(); try{ localStorage.setItem(MINE_SKIP, '1'); }catch(_){} showBest(); });
     }
   }
+  // 시작일이 올해가 아니면 연도까지(2026-11-08 「내 성과」 전체 기간: 2025.6.6부터)
+  const mineSince = s => { s = String(s || ''); return s.slice(0, 4) && s.slice(0, 4) !== String(new Date().getFullYear()) ? s.slice(0, 4) + '.' + Number(s.slice(5, 7)) + '.' + Number(s.slice(8, 10)) : md(s); };
   function mineMonth(d){
     const now = new Date(), ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
     const posts = (d.posts || []).filter(p => String(p.date || '').slice(0, 7) === ym);
@@ -7308,7 +7310,7 @@ function jjRosterApply(r){
     $('jjhMineMonCnt').textContent = mon.posts.length + '개';
     $('jjhMineMonViews').textContent = kv(mon.views) + '회';
     $('jjhMineMonList').innerHTML = mon.posts.length ? minePosts(mon.posts) : `<div class="jjh-empty">${mon.label}에는 아직 올라간 콘텐츠가 없어요</div>`;
-    $('jjhMineAllH').textContent = '누적 기록 (' + md(d.since) + '부터)';
+    $('jjhMineAllH').textContent = '누적 기록 (' + mineSince(d.since) + '부터)';
     $('jjhMineCnt').textContent = d.count + '개';
     $('jjhMineViews').textContent = kv(d.views) + '회';
     $('jjhMineList').innerHTML = minePosts(d.posts) + mineReviews(d.reviews);
@@ -7351,7 +7353,7 @@ function jjRosterApply(r){
     const top = (d.posts || []).slice().sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 3);
     box.innerHTML = `<div class="my-hero"><h3>${esc(d.name)}님, 잘하고 있어요</h3><p>함께 만든 콘텐츠 ${d.count}개가 ${kv(d.views || 0)} 회 조회됐어요.</p></div>`
       + (lines.length ? `<ul class="my-good">${lines.map(l => `<li><i aria-hidden="true"></i><span>${l[1]}</span></li>`).join('')}</ul>` : '')
-      + (cur.length ? `<div class="my-stats"><div><h4>${mon}월</h4><b>${cur.length}개</b>${kv(curV)}회</div><div><h4>전체(${md(d.since)}부터)</h4><b>${d.count}개</b>${kv(d.views || 0)}회</div></div>` : '')
+      + (cur.length ? `<div class="my-stats"><div><h4>${mon}월</h4><b>${cur.length}개</b>${kv(curV)}회</div><div><h4>전체(${mineSince(d.since)}부터)</h4><b>${d.count}개</b>${kv(d.views || 0)}회</div></div>` : '')
       + `<div class="jjh-sec">많이 본 콘텐츠</div>${minePosts(top)}`
       + (d.count > 3 ? `<details class="my-all"><summary>함께한 콘텐츠 전체 ${d.count}개</summary>${minePosts(d.posts || [])}</details>` : '')
       + `<p class="my-msg" style="padding:14px 0 0;font-size:12px;">조회수는 매일 밤 갱신돼요</p>`;
@@ -7403,30 +7405,40 @@ function jjRosterApply(r){
 
   /* ── 활동 가이드 보기 (2026-11-08): 교육 자료 장 그림을 서버(GET guide, 로그인·명단 확인)에서 한 장씩 받아 보여 준다.
      그림은 공개 저장소에 두지 않는다. 보는 사람 이름을 화면 전체에 옅게 깔고, 끌기·길게 눌러 저장을 막는다 ── */
-  const GD = { n: 1, total: 0, name: '', imgs: {}, seq: 0 };
+  const GD = { n: 1, total: 0, name: '', imgs: {}, seq: 0, wait: {} };
   function gdMark(name){
     const t = esc('내부용 · ' + name);
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="260" height="150"><text x="130" y="80" text-anchor="middle" transform="rotate(-20 130 75)" font-family="Pretendard, sans-serif" font-size="15" font-weight="600" fill="#000" fill-opacity="0.13">${t}</text></svg>`;
     $('gdMark').style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
   }
+  // 한 번에 3장씩 받는다(담당자 「불러오는데 한 세월」, 2026-11-08). 같은 묶음을 두 번 부르지 않게 기다리는 요청을 나눠 씀
+  function gdBatch(n){
+    const b = Math.floor((n - 1) / 3) * 3 + 1;
+    if(!GD.wait[b]) GD.wait[b] = api({ action: 'guide', n: b, m: 3 }).then(d => {
+      if(!(d && d.ok && (d.imgs || d.img))) { delete GD.wait[b]; throw d || {}; }
+      (d.imgs || [d.img]).forEach((s, i) => { GD.imgs[d.n + i] = 'data:image/jpeg;base64,' + s; });
+      GD.total = d.total || GD.total; if(d.name && d.name !== GD.name){ GD.name = d.name; gdMark(d.name); }
+    }, e => { delete GD.wait[b]; throw e; });
+    return GD.wait[b];
+  }
   async function gdGet(n){
     if(GD.imgs[n]) return GD.imgs[n];
-    const d = await api({ action: 'guide', n });
-    if(d && d.ok && d.img){ GD.imgs[n] = 'data:image/jpeg;base64,' + d.img; GD.total = d.total || GD.total; if(d.name && d.name !== GD.name){ GD.name = d.name; gdMark(d.name); } return GD.imgs[n]; }
-    throw d || {};
+    await gdBatch(n);
+    if(GD.imgs[n]) return GD.imgs[n];
+    throw {};
   }
   async function gdShow(n){
     const seq = ++GD.seq;
     GD.n = n;
     $('gdNum').textContent = GD.total ? `${n} / ${GD.total}` : '- / -';
     $('gdPrev').disabled = n <= 1; $('gdNext').disabled = !!GD.total && n >= GD.total;
-    $('gdLoad').textContent = '불러오는 중…'; $('gdLoad').style.display = 'flex';
+    $('gdLoad').textContent = GD.total ? '불러오는 중…' : '불러오는 중… 처음 열 때는 몇 초 걸려요'; $('gdLoad').style.display = 'flex';
     try {
       const src = await gdGet(n);
       if(seq !== GD.seq) return;
       $('gdImg').src = src; $('gdLoad').style.display = 'none';
       $('gdNum').textContent = `${n} / ${GD.total}`; $('gdNext').disabled = n >= GD.total;
-      if(n < GD.total) gdGet(n + 1).catch(() => {});   // 다음 장 미리 받기
+      if(n + 3 <= GD.total) gdGet(n + 3).catch(() => {});   // 다음 묶음 미리 받기
     } catch(e){
       if(seq !== GD.seq) return;
       $('gdImg').removeAttribute('src');

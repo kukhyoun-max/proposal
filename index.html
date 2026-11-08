@@ -661,6 +661,17 @@
   .my-pick button:focus-visible{outline:2px solid var(--purple); outline-offset:2px;}
   .my-msg{padding:24px 4px; font-size:14px; line-height:1.6; color:var(--ink-soft); text-align:center;}
   .my-msg button{display:block; margin:12px auto 0; min-height:40px; padding:0 16px; border:1px solid var(--line-input); border-radius:10px; background:transparent; color:var(--ink); font:inherit; font-size:14px; font-weight:700; cursor:pointer;}
+  /* 활동 가이드 보기(2026-11-08 담당자 「기획서 프로그램에서 누르면 볼 수만 있게」): 그림은 서버가 로그인한 홍보대사에게만 보냄, 보는 사람 이름을 옅게 깔기 */
+  .gd-stage{position:relative; width:100%; aspect-ratio:16/9; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#fff; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
+  .gd-stage img{display:block; width:100%; height:100%; object-fit:contain; pointer-events:none;}
+  .gd-mark{position:absolute; inset:0; pointer-events:auto; background-repeat:repeat; background-size:260px 150px;}
+  .gd-load{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--ink-soft);}
+  .gd-nav{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px;}
+  .gd-nav button{min-width:96px; min-height:44px; border:1px solid var(--line-input); border-radius:12px; background:transparent; color:var(--ink); font:inherit; font-size:15px; font-weight:700; cursor:pointer;}
+  .gd-nav button:disabled{opacity:.35; cursor:default;}
+  .gd-nav span{font-size:14px; font-weight:700; color:var(--ink-soft);}
+  @media (max-width:520px){ .gd-mark{background-size:150px 86px;} }
+  .gd-note{margin:12px 0 0; font-size:12.5px; line-height:1.6; color:var(--ink-faint); text-align:center;}
   @media (max-width:340px){ .admin-topbar{padding-left:10px !important; padding-right:10px !important;} .admin-topbar button{padding:6px 4px !important; font-size:11px !important;} .admin-topbar > div{gap:3px !important;} #pendingBadge{margin-left:2px !important; padding:1px 5px !important;} }
   @media (max-width:400px){ .admin-topbar{padding:10px 14px;} .admin-topbar button{padding:6px 9px; font-size:12px;} #btnHome{font-size:12px !important; text-align:left;} .admin-topbar > div{gap:5px !important;} }
   /* 장비별 보기 (2026-10-25): 날짜 블록 카드 · 다가오는/지난 구분 · 겹침 상대 표시 */
@@ -1608,6 +1619,7 @@
   <button id="btnHome" aria-label="JJ 스튜디오 처음으로" style="background:none; border:none; color:#fff; font-size:13px; font-weight:700; padding:0; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;"><svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true" style="flex:none;"><rect x="4" y="17" width="40" height="27" rx="6" fill="#3D5FE0"/><g transform="rotate(-12 6 15)"><rect x="4" y="8" width="40" height="9" rx="3" fill="#FFC629"/><path d="M12 8 L16 8 L12 17 L8 17 Z M22 8 L26 8 L22 17 L18 17 Z M32 8 L36 8 L32 17 L28 17 Z" fill="#19181D"/></g><text x="24" y="38" text-anchor="middle" font-family="Noto Sans KR, sans-serif" font-weight="900" font-size="16" fill="#fff" letter-spacing="-1">JJ</text></svg><span class="home-txt">JJ 스튜디오</span></button>
   <div style="display:flex; gap:8px;">
     <button id="btnTheme" type="button" aria-label="어둡게 보기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+    <button id="btnGuide" type="button">가이드</button>
     <button id="btnMy" type="button">내 성과</button>
     <button id="btnEquipPublic" aria-label="일정·장비">일정<span class="hide-m">·장비</span></button>
     <button id="btnStatusToggle" aria-label="기획서 현황"><span class="hide-m">기획서 </span>현황</button>
@@ -2171,6 +2183,18 @@
   <div class="content" style="padding-top:0;">
     <div class="my-pick" id="myPick" role="group" aria-label="볼 홍보대사 고르기" hidden></div>
     <div id="myContent"></div>
+  </div>
+</div>
+
+<div class="phone" id="guideView" style="display:none;">
+  <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <h2 style="font-size:17px; font-weight:700; margin:0;">활동 가이드</h2>
+    <button class="reset-link" id="btnGuideBack" type="button">← 돌아가기</button>
+  </div>
+  <div class="content" style="padding-top:0;">
+    <div class="gd-stage" id="gdStage"><img id="gdImg" alt="" draggable="false"><div class="gd-mark" id="gdMark"></div><div class="gd-load" id="gdLoad">불러오는 중…</div></div>
+    <div class="gd-nav"><button type="button" id="gdPrev">‹ 이전</button><span id="gdNum">- / -</span><button type="button" id="gdNext">다음 ›</button></div>
+    <p class="gd-note">홍보대사 내부용이에요. 캡처·외부 공유는 하지 말아 주세요.</p>
   </div>
 </div>
 
@@ -3986,7 +4010,7 @@ async function showView(viewId){
     if(!ok) return false;
     if(cur === 'meeting') mtDirty = false; else pcDirty = false;
   }
-  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView'), personal: document.getElementById('personalView'), absent: document.getElementById('absentView'), event: document.getElementById('eventView'), equip: document.getElementById('equipView'), score: document.getElementById('scoreView'), my: document.getElementById('myView') };
+  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView'), personal: document.getElementById('personalView'), absent: document.getElementById('absentView'), event: document.getElementById('eventView'), equip: document.getElementById('equipView'), score: document.getElementById('scoreView'), my: document.getElementById('myView'), guide: document.getElementById('guideView') };
   Object.keys(views).forEach(k=>{
     views[k].style.display = (k===viewId) ? (k==='form' ? 'flex' : 'block') : 'none';
   });
@@ -7376,6 +7400,49 @@ function jjRosterApply(r){
   $('myPick').addEventListener('click', e => { const b = e.target.closest('button[data-n]'); if(b) myShow(b.dataset.n); });
   $('btnMy').addEventListener('click', () => { showView('my'); myOpen(); });
   $('btnMyBack').addEventListener('click', () => { showView('form'); });
+
+  /* ── 활동 가이드 보기 (2026-11-08): 교육 자료 장 그림을 서버(GET guide, 로그인·명단 확인)에서 한 장씩 받아 보여 준다.
+     그림은 공개 저장소에 두지 않는다. 보는 사람 이름을 화면 전체에 옅게 깔고, 끌기·길게 눌러 저장을 막는다 ── */
+  const GD = { n: 1, total: 0, name: '', imgs: {}, seq: 0 };
+  function gdMark(name){
+    const t = esc('내부용 · ' + name);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="260" height="150"><text x="130" y="80" text-anchor="middle" transform="rotate(-20 130 75)" font-family="Pretendard, sans-serif" font-size="15" font-weight="600" fill="#000" fill-opacity="0.13">${t}</text></svg>`;
+    $('gdMark').style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+  }
+  async function gdGet(n){
+    if(GD.imgs[n]) return GD.imgs[n];
+    const d = await api({ action: 'guide', n });
+    if(d && d.ok && d.img){ GD.imgs[n] = 'data:image/jpeg;base64,' + d.img; GD.total = d.total || GD.total; if(d.name && d.name !== GD.name){ GD.name = d.name; gdMark(d.name); } return GD.imgs[n]; }
+    throw d || {};
+  }
+  async function gdShow(n){
+    const seq = ++GD.seq;
+    GD.n = n;
+    $('gdNum').textContent = GD.total ? `${n} / ${GD.total}` : '- / -';
+    $('gdPrev').disabled = n <= 1; $('gdNext').disabled = !!GD.total && n >= GD.total;
+    $('gdLoad').textContent = '불러오는 중…'; $('gdLoad').style.display = 'flex';
+    try {
+      const src = await gdGet(n);
+      if(seq !== GD.seq) return;
+      $('gdImg').src = src; $('gdLoad').style.display = 'none';
+      $('gdNum').textContent = `${n} / ${GD.total}`; $('gdNext').disabled = n >= GD.total;
+      if(n < GD.total) gdGet(n + 1).catch(() => {});   // 다음 장 미리 받기
+    } catch(e){
+      if(seq !== GD.seq) return;
+      $('gdImg').removeAttribute('src');
+      $('gdLoad').textContent = e && e.need ? '이름이 연결된 홍보대사만 볼 수 있어요. 처음 화면 「내 기록」에서 이름을 연결해 주세요.' : '불러오지 못했어요. 잠시 후 다시 열어 주세요.';
+    }
+  }
+  $('btnGuide').addEventListener('click', () => { showView('guide'); gdShow(GD.n || 1); });
+  $('btnGuideBack').addEventListener('click', () => { showView('form'); });
+  $('gdPrev').addEventListener('click', () => { if(GD.n > 1) gdShow(GD.n - 1); });
+  $('gdNext').addEventListener('click', () => { if(!GD.total || GD.n < GD.total) gdShow(GD.n + 1); });
+  $('gdStage').addEventListener('contextmenu', e => e.preventDefault());
+  $('gdStage').addEventListener('dragstart', e => e.preventDefault());
+  let gdX = null;
+  $('gdStage').addEventListener('touchstart', e => { gdX = e.touches[0].clientX; }, { passive: true });
+  $('gdStage').addEventListener('touchend', e => { if(gdX === null) return; const dx = e.changedTouches[0].clientX - gdX; gdX = null; if(Math.abs(dx) > 40) $(dx < 0 ? 'gdNext' : 'gdPrev').click(); });
+  document.addEventListener('keydown', e => { if($('guideView').style.display === 'none') return; if(e.key === 'ArrowRight') $('gdNext').click(); else if(e.key === 'ArrowLeft') $('gdPrev').click(); });
 
   $('jjhMine').addEventListener('click', openMine);
   $('jjhMine').addEventListener('keydown', e => { if (e.key === 'Enter') openMine(); });

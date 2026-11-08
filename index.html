@@ -175,6 +175,11 @@
   input[type="date"]{-webkit-appearance:none; appearance:none; min-width:0; max-width:100%; box-sizing:border-box; text-align:left;}
   .field-sm input[type="date"]{display:block;}
   input[type="date"]::-webkit-date-and-time-value{text-align:left; margin:0;}
+  /* 아이폰(WebKit)은 위 규칙에도 날짜 칸 최소 너비를 지켜 옆 칸을 덮음(2026-11-08 담당자 캡처 2번째) → 테두리는 바깥 상자가 그리고 넘치는 부분은 잘라냄 */
+  .date-box{display:block; width:100%; min-width:0; overflow:hidden; border:1.5px solid var(--line-input); border-radius:10px;}
+  .ev-form .date-box{border-color:var(--line);}
+  .date-box:focus-within{border-color:var(--purple-line);}
+  .date-box > input[type="date"]{display:block; width:100%; margin:0; min-height:41px; border:0 !important; border-radius:0 !important; outline:none;}
   .field-sm{margin-bottom:10px;}
   .series-field{position:relative;}
   .series-pop{display:none; position:absolute; left:0; right:0; top:100%; margin-top:6px; z-index:50; background:#fff; border:1.5px solid var(--line); border-radius:14px; box-shadow:0 10px 28px rgba(0,0,0,.12); padding:6px; max-height:300px; overflow:auto;}
@@ -1918,8 +1923,8 @@
       <div class="field-sm"><label>콘텐츠 제목</label><input type="text" id="qaTitle" list="seriesList" placeholder="예: 체험왕 | 양궁부편  또는  전주대 벚꽃 명소" autocomplete="off">
         <p class="req-hint">시리즈면 ‘시리즈명 | 회차’, 1회성이면 제목만. 캡션 크레딧 🎬 줄과 똑같이 써주세요.</p></div>
       <div class="qa-grid">
-        <div class="field-sm"><label>촬영일</label><input type="date" id="qaFilmDate"></div>
-        <div class="field-sm"><label>편집 마감(제출일)</label><input type="date" id="qaSubmitDate"></div>
+        <div class="field-sm"><label>촬영일</label><span class="date-box"><input type="date" id="qaFilmDate"></span></div>
+        <div class="field-sm"><label>편집 마감(제출일)</label><span class="date-box"><input type="date" id="qaSubmitDate"></span></div>
         <div class="field-sm"><label>촬영 시작</label><select id="qaFrom"></select></div>
         <div class="field-sm"><label>촬영 종료</label><select id="qaTo"></select></div>
       </div>
@@ -2126,8 +2131,8 @@
       <b id="eqFormTitle" style="font-size:14px;">대여 추가</b>
       <label>장비</label><select id="eqLabel"></select>
       <div class="grid2">
-        <div><label>시작일</label><input type="date" id="eqStart"></div>
-        <div><label>종료일</label><input type="date" id="eqEnd"></div>
+        <div><label>시작일</label><span class="date-box"><input type="date" id="eqStart"></span></div>
+        <div><label>종료일</label><span class="date-box"><input type="date" id="eqEnd"></span></div>
       </div>
       <div class="grid2">
         <div><label>시작 시간 <span style="color:var(--ink-faint);">(비우면 종일)</span></label><input type="time" id="eqFrom" step="1800"></div>
@@ -4252,8 +4257,8 @@ function renderStatusDetail(key, rec){
     <div id="editFormWrap" style="display:none; margin-bottom:24px;">
     <p class="section-title" style="margin-top:0;">제작 일정</p>
     <div class="grid2">
-      <div class="field-sm"><label>촬영일</label><input type="date" id="e_filmdate" value="${esc(editingRecord.filmdate||'')}"></div>
-      <div class="field-sm"><label>제출일</label><input type="date" id="e_submitdate" value="${esc(editingRecord.submitdate||'')}"></div>
+      <div class="field-sm"><label>촬영일</label><span class="date-box"><input type="date" id="e_filmdate" value="${esc(editingRecord.filmdate||'')}"></span></div>
+      <div class="field-sm"><label>제출일</label><span class="date-box"><input type="date" id="e_submitdate" value="${esc(editingRecord.submitdate||'')}"></span></div>
     </div>
     <div class="grid2">
       <div class="field-sm"><label>촬영 시작</label><select id="e_filmfrom"><option value="">종일/미정</option>${FILM_TIMES.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>

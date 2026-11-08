@@ -2289,6 +2289,31 @@ function showToast(msg){
   t.textContent = msg; t.classList.add('show');
   clearTimeout(showToast._t); showToast._t = setTimeout(()=> t.classList.remove('show'), 2200);
 }
+// 저장은 뒤에서 (2026-11-08 담당자 「승인 버튼 누르면 알림창 뜨는 게 너무 느림」 → A안)
+// 화면은 바로 바꾸고 서버 일은 뒤에서 해요. 실패할 때만 알림창. 뒤에서 저장 중이면 창을 닫을 때 한 번 물어요.
+let bgSaving = 0;
+function bgSave(label, job){
+  bgSaving++;
+  return Promise.resolve().then(job).then(() => true, e => {
+    showAlert(label + '에 실패했어요: ' + (e && e.message ? e.message : '오류') + '\n최신 기록으로 다시 불러올게요. 확인 후 한 번 더 해 주세요.');
+    return false;
+  }).finally(() => { bgSaving--; });
+}
+const bgSleep = ms => new Promise(r => setTimeout(r, ms));
+window.addEventListener('beforeunload', e => { if(bgSaving > 0){ e.preventDefault(); e.returnValue = ''; } });
+// 기획서 한 건 고치기: 목록 캐시에 먼저 반영하고(화면 즉시), 서버 저장(+이어서 할 일 more)은 뒤에서, 끝나면 서버 기준으로 다시 받아요
+function planUpdateBg(key, fields, label, more){
+  const snap = planMem;
+  const first = sheetUpdate(key, fields);   // sheetPost가 목록 캐시를 비워요
+  if(snap){ planMem = snap.map(r => r['ID'] === key ? Object.assign({}, r, fields) : r); planMemAt = Date.now(); }
+  return bgSave(label, async () => {
+    const r = await first;
+    if(!r || r.ok === false) throw new Error((r && r.error) || '시트 응답 실패');
+    if(more) await more(r);
+  }).finally(() => { planInvalidate(); planRevalidate(''); });
+}
+// 저장 뒤 다시 불러올 때 옛 저장본이 먼저 보이지 않게 그 화면 저장본만 지워요
+function attCacheDrop(params){ try{ localStorage.removeItem(ATT_LS + JSON.stringify(params)); }catch(e){} }
 // 저장하지 않은 입력 감지 (회의 출결 · 개인콘텐츠 · 기획서 수정)
 let mtDirty = false, pcDirty = false, editDirty = false;
 window.addEventListener('beforeunload', e => { if(mtDirty || pcDirty || editDirty){ e.preventDefault(); e.returnValue = ''; } });
@@ -4452,18 +4477,20 @@ async function saveEditedSubmission(){
     [COL.submitdate]: editingRecord.submitdate, [COL.equipment]: editingRecord.equipment,
     [COL.planText]: planArrayToText(editingRecord.plan), [COL.updatedAt]: updatedAt
   };
-  try{
-    const result = await sheetUpdate(editingKey, fields);
-    if(!result || result.ok === false) throw new Error((result && result.error) || '시트 응답 실패');
+  {
+    const key = editingKey;
     const by = adminToken() ? 'admin' : 'team';   // 관리자 로그인 상태면 어디서 고쳐도 '관리자' (서버도 출입증으로 다시 확인)
-    await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ action:'planEditor', planId: editingKey, by }) });
-    editingRecord.updatedBy = by === 'admin' ? '관리자' : '팀';
-    planInvalidate();
-    if(tf !== eTimeOrig.from || tt !== eTimeOrig.to){
+    const timeChanged = tf !== eTimeOrig.from || tt !== eTimeOrig.to;
+    planUpdateBg(key, fields, '수정 저장', async () => {
       await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body: JSON.stringify({ action:'planTime', planId: editingKey, from: tf, to: tt }) });
-    }
+        body: JSON.stringify({ action:'planEditor', planId: key, by }) });
+      if(timeChanged){
+        await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body: JSON.stringify({ action:'planTime', planId: key, from: tf, to: tt }) });
+      }
+    });
+    eTimeOrig = { from: tf, to: tt };
+    editingRecord.updatedBy = by === 'admin' ? '관리자' : '팀';
     if((editingRecord.format||'') !== eTagOrig.format || (editingRecord.tag||'') !== eTagOrig.tag){
       planTagSave(editingKey, editingRecord.format, editingRecord.tag);
       eTagOrig = { format: editingRecord.format||'', tag: editingRecord.tag||'' };
@@ -4478,9 +4505,6 @@ async function saveEditedSubmission(){
     renderStatusDetail(editingKey, editingRecord);
     showToast(stillMiss.length && !['rejected','dropped','completed','uploaded'].includes(editingRecord.status) ? '저장했어요 · 아직 비어 있어요: ' + stillMiss.join(' · ') : '수정 내용을 저장했어요');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }catch(e){
-    showAlert('수정 저장에 실패했어요: ' + (e && e.message ? e.message : '알 수 없는 오류'));
-    btn.disabled = false; btn.textContent = '수정 저장';
   }
 }
 
@@ -4865,15 +4889,10 @@ function doneYmd(v){
 // 제작 완료일 수정 → 저장 후 종합점수(제출 지연 감점) 다시 계산
 async function saveDoneDate(key, ymd, inp){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return;
-  inp.disabled = true;
-  try{
-    const r = await sheetUpdate(key, { [COL.completedAt]: ymd });
-    if(!r || r.ok === false) throw new Error((r && r.error) || '시트 응답 실패');
-    await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'recalc' }) });
-    planInvalidate();
-    inp.style.borderColor = '#1B7A38';
-  }catch(e){ showAlert('완료일 저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
-  inp.disabled = false;
+  inp.style.borderColor = '#1B7A38';
+  showToast('완료일을 저장했어요');
+  planUpdateBg(key, { [COL.completedAt]: ymd }, '완료일 저장', () =>
+    fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'recalc' }) }));
 }
 async function forceStatus(key, value, sel){
   if(!value) return;
@@ -4892,22 +4911,21 @@ async function forceStatus(key, value, sel){
     up = { upAt: d.trim(), upUrl: u.trim() };
   }
   sel.disabled = true;
-  try{
+  if(value !== 'auto' && planMem){ planMem = planMem.map(r => r['ID'] === key ? Object.assign({}, r, { [COL.status]: value }) : r); planMemAt = Date.now(); loadSubmissions(); refreshOverview(); }
+  showToast('상태를 바꿨어요');
+  bgSave('상태 변경', async () => {
     await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify(value === 'auto' ? { action:'planStatus', planId:key, lock:false } : { action:'planStatus', planId:key, status:value, lock:true, ...up }) });
-    await new Promise(r => setTimeout(r, 1500));
-    planInvalidate(); loadSubmissions(); refreshOverview();
-  }catch(e){ showAlert('상태 변경에 실패했어요: ' + (e && e.message ? e.message : '오류')); sel.disabled = false; }
+    await bgSleep(1500);
+  }).finally(() => { sel.disabled = false; planInvalidate(); planRevalidate(''); });
 }
 async function setSubmissionStatus(key, status, onDone){
-  try{
-    const fields = { [COL.status]: status };
-    const atKey = COL[status+'At'];
-    if(atKey) fields[atKey] = new Date().toISOString();
-    const result = await sheetUpdate(key, fields);
-    if(!result || result.ok === false) throw new Error((result && result.error) ? result.error : '시트 응답 실패');
-    if(onDone){ onDone(); } else { loadSubmissions(); refreshPendingBadge(); refreshOverview(); }
-  }catch(e){ showAlert('상태 변경에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+  const fields = { [COL.status]: status };
+  const atKey = COL[status+'At'];
+  if(atKey) fields[atKey] = new Date().toISOString();
+  planUpdateBg(key, fields, '상태 변경');
+  if(onDone){ onDone(); } else { loadSubmissions(); refreshPendingBadge(); refreshOverview(); }
+  showToast('상태를 바꿨어요');
 }
 
 async function generateAndUploadImage(rec){
@@ -4977,11 +4995,9 @@ async function rejectSubmission(key){
   const reasonInput = await showPrompt('반려 사유를 입력해주세요 (선택, 비워두면 그냥 반려돼요)');
   if(reasonInput === null) return;
   const reason = reasonInput || '';
-  try{
-    const result = await sheetUpdate(key, { [COL.status]:'rejected', [COL.reviewedAt]: new Date().toISOString(), [COL.rejectReason]: reason });
-    if(!result || result.ok === false) throw new Error((result && result.error) || '시트 응답 실패');
-    loadSubmissions(); refreshPendingBadge(); refreshOverview();
-  }catch(e){ showAlert('반려 처리에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+  planUpdateBg(key, { [COL.status]:'rejected', [COL.reviewedAt]: new Date().toISOString(), [COL.rejectReason]: reason }, '반려 처리');
+  loadSubmissions(); refreshPendingBadge(); refreshOverview();
+  showToast('반려했어요');
 }
 
 document.getElementById('btnReset').addEventListener('click', async ()=>{
@@ -5419,20 +5435,19 @@ async function mtSave(){
   const missing = MEETING_ROSTER.filter(n => !mtState[n]);
   const btn = document.getElementById('mtSave');
   btn.disabled = true; btn.textContent = '저장 중...';
-  try{
-    await fetch(ATTEND_URL, {
-      method:'POST', mode:'no-cors',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ action:'meetingSave', date, records: entered.map(n => ({ name:n, status:mtState[n] })) })
-    });
-    await new Promise(r => setTimeout(r, 1200));
-    mtDirty = false;
-    await mtLoad();
-    showToast('출결을 저장했어요');
-    document.getElementById('mtStatus').textContent = date + ' 출결을 저장했어요.' + (missing.length ? ` (미입력 ${missing.length}명: ${missing.join(', ')})` : '');
-  }catch(e){
-    showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류'));
-  }
+  const records = entered.map(n => ({ name:n, status:mtState[n] }));
+  mtDirty = false;
+  showToast('출결을 저장했어요');
+  document.getElementById('mtStatus').textContent = date + ' 출결을 저장했어요.' + (missing.length ? ` (미입력 ${missing.length}명: ${missing.join(', ')})` : '');
+  bgSave('출결 저장', async () => {
+    await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action:'meetingSave', date, records }) });
+    await bgSleep(1200);
+  }).then(ok => {
+    attCacheDrop({ action:'meetingList', date });
+    if(!ok){ mtDirty = true; return; }
+    if(!mtDirty && document.getElementById('mtDate').value === date) mtLoad();   // 합계 등 서버 계산값 갱신
+  });
   btn.disabled = false; btn.textContent = '저장';
 }
 
@@ -5610,17 +5625,19 @@ async function pcSave(){
   const missing = pcNames().filter(n => !(pcState[n] && pcState[n].plan));
   const btn = document.getElementById('pcSave');
   btn.disabled = true; btn.textContent = '저장 중...';
-  try{
-    await fetch(ATTEND_URL, {
-      method:'POST', mode:'no-cors',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({ action:'personalSave', week: pcWeek, records: entered.map(n => ({ name:n, plan:pcState[n].plan, content:pcState[n].content || '' })) })
-    });
-    await new Promise(r => setTimeout(r, 1200));
-    await pcLoad();
-    showToast('제출 현황을 저장했어요');
-    document.getElementById('pcStatus').textContent = mtFmt(pcWeek) + ' 제출 현황을 저장했어요.' + (missing.length ? ` (기획서 미입력 ${missing.length}명: ${missing.join(', ')})` : '');
-  }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+  const week = pcWeek, records = entered.map(n => ({ name:n, plan:pcState[n].plan, content:pcState[n].content || '' }));
+  pcDirty = false;
+  showToast('제출 현황을 저장했어요');
+  document.getElementById('pcStatus').textContent = mtFmt(week) + ' 제출 현황을 저장했어요.' + (missing.length ? ` (기획서 미입력 ${missing.length}명: ${missing.join(', ')})` : '');
+  bgSave('제출 현황 저장', async () => {
+    await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action:'personalSave', week, records }) });
+    await bgSleep(1200);
+  }).then(ok => {
+    attCacheDrop({ action:'personalList', week });
+    if(!ok){ pcDirty = true; return; }
+    if(!pcDirty && pcWeek === week) pcLoad();
+  });
   btn.disabled = false; btn.textContent = '저장';
 }
 
@@ -5849,13 +5866,15 @@ async function abToggle(i, btn){
     reason = String(reason).trim();
     if(!reason){ showAlert('사유를 입력해야 면제돼요.'); return; }
   }
-  btn.disabled = true; btn.textContent = '저장 중...';
-  try{
+  const prev = { status: it.status, reason: it.reason };
+  it.status = on ? '면제' : '불참'; it.reason = on ? reason : '';
+  abRender();
+  showToast(on ? '면제로 바꿨어요' : '면제를 풀었어요');
+  bgSave('면제 저장', async () => {
     await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({ action:'exemptSave', planId: it.planId, title: it.title, name: it.name, reason, on }) });
-    await new Promise(r => setTimeout(r, 1500));
-    await abLoad();
-  }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); btn.disabled = false; }
+    await bgSleep(1500);
+  }).then(ok => { if(!ok){ it.status = prev.status; it.reason = prev.reason; } attCacheDrop({ action:'absentList' }); abLoad(); });
 }
 document.getElementById('btnAbsentBack').addEventListener('click', ()=>{ showView('form'); });
 
@@ -5917,24 +5936,22 @@ async function evSave(){
   if(!evSel.size){ showAlert('참여자를 한 명 이상 선택해 주세요.'); return; }
   if(!evEditing && evEvents.some(e => e.date === date && e.title === title)){ showAlert('같은 날짜에 같은 이름의 행사가 이미 있어요. 목록에서 눌러 수정해 주세요.'); return; }
   const btn = document.getElementById('evSave');
-  btn.disabled = true; btn.textContent = '저장 중...';
-  try{
-    await evPost({ action:'eventSave', date, title, points, names: MEETING_ROSTER.filter(n => evSel.has(n)),
-      orig: evEditing ? { date: evEditing.date, title: evEditing.title } : null });
-    document.getElementById('evForm').style.display = 'none';
-    await evLoad();
-  }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
-  btn.disabled = false; btn.textContent = '저장';
+  const body = { action:'eventSave', date, title, points, names: MEETING_ROSTER.filter(n => evSel.has(n)),
+    orig: evEditing ? { date: evEditing.date, title: evEditing.title } : null };
+  document.getElementById('evForm').style.display = 'none';
+  document.getElementById('evInfo').textContent = '저장 중… 목록이 곧 바뀌어요';
+  showToast('행사를 저장했어요');
+  bgSave('행사 저장', () => evPost(body)).then(() => { attCacheDrop({ action:'eventList' }); attCacheDrop({ action:'taskList' }); evLoad(); });
 }
 async function evRemove(){
   if(!evEditing) return;
   const ok = await showConfirm(`'${evEditing.title}' 행사를 삭제할까요? 참여자 가점도 함께 빠져요.`);
   if(!ok) return;
-  try{
-    await evPost({ action:'eventDelete', date: evEditing.date, title: evEditing.title });
-    document.getElementById('evForm').style.display = 'none';
-    await evLoad();
-  }catch(e){ showAlert('삭제에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+  const gone = evEditing;
+  evEvents = evEvents.filter(e => e !== gone); evRender();
+  document.getElementById('evForm').style.display = 'none';
+  showToast('행사를 삭제했어요');
+  bgSave('행사 삭제', () => evPost({ action:'eventDelete', date: gone.date, title: gone.title })).then(() => { attCacheDrop({ action:'eventList' }); attCacheDrop({ action:'taskList' }); evLoad(); });
 }
 document.getElementById('evNew').addEventListener('click', ()=>evOpen(null));
 document.getElementById('evAll').addEventListener('click', ()=>{ evSel = evSel.size === MEETING_ROSTER.length ? new Set() : new Set(MEETING_ROSTER); evChips(); });
@@ -6067,27 +6084,24 @@ async function tkSave(){
   const tgList = MEETING_ROSTER.filter(n => tkTg.has(n)).concat([...tkTg].filter(n => !MEETING_ROSTER.includes(n)));
   const records = tgList.filter(n => tkState[n]).map(n => ({ name:n, status:tkState[n] }));
   const btn = document.getElementById('tkSave');
-  btn.disabled = true; btn.textContent = '저장 중...';
-  try{
-    await evPost({ action:'taskSave', kind: tkEditing ? (tkEditing.kind || tkKind) : tkKind, date, title, targets: all ? '전원' : tgList,
-      points: { '제출': pDone, '지연제출': -pLate, '미제출': -pMiss }, records, form,
-      orig: tkEditing ? { date: tkEditing.date, title: tkEditing.title } : null });
-    document.getElementById('tkForm').style.display = 'none';
-    await tkLoad();
-    const left = tgList.length - records.length;
-    showToast('저장했어요' + (form ? ' · 응답 시트로 자동 체크했어요' : (tkEditing && left > 0 ? ` (미입력 ${left}명)` : '')));
-  }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
-  btn.disabled = false; btn.textContent = '저장';
+  const body = { action:'taskSave', kind: tkEditing ? (tkEditing.kind || tkKind) : tkKind, date, title, targets: all ? '전원' : tgList,
+    points: { '제출': pDone, '지연제출': -pLate, '미제출': -pMiss }, records, form,
+    orig: tkEditing ? { date: tkEditing.date, title: tkEditing.title } : null };
+  const left = tgList.length - records.length;
+  document.getElementById('tkForm').style.display = 'none';
+  document.getElementById('tkInfo').textContent = '저장 중… 목록이 곧 바뀌어요';
+  showToast('저장했어요' + (form ? ' · 응답 시트 자동 체크는 곧 반영돼요' : (tkEditing && left > 0 ? ` (미입력 ${left}명)` : '')));
+  bgSave('제출 체크 저장', () => evPost(body)).then(() => { attCacheDrop({ action:'taskList' }); tkLoad(); });
 }
 async function tkRemove(){
   if(!tkEditing) return;
   const ok = await showConfirm(`'${tkEditing.title}'을(를) 삭제할까요? 이 항목의 감점도 함께 빠져요.`);
   if(!ok) return;
-  try{
-    await evPost({ action:'taskDelete', date: tkEditing.date, title: tkEditing.title });
-    document.getElementById('tkForm').style.display = 'none';
-    await tkLoad();
-  }catch(e){ showAlert('삭제에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+  const gone = tkEditing;
+  tkTasks = tkTasks.filter(t => t !== gone); tkRender();
+  document.getElementById('tkForm').style.display = 'none';
+  showToast('삭제했어요');
+  bgSave('삭제', () => evPost({ action:'taskDelete', date: gone.date, title: gone.title })).then(() => { attCacheDrop({ action:'taskList' }); tkLoad(); });
 }
 document.getElementById('tkNew').addEventListener('click', ()=>tkOpen(null));
 document.getElementById('tkSave').addEventListener('click', tkSave);
@@ -6542,47 +6556,40 @@ async function eqSaveForm(){
     const ids = new Set(eqBulk.map(x => x.id));
     const clashes = eqBulk.filter(b => eqItems.some(x => !ids.has(x.id) && Number(x.label) === Number(b.label) && (()=>{ const [a0, a1] = eqSpan({ start, end, from, to }), [b0, b1] = eqSpan(x); return a0 < b1 && b0 < a1; })()));
     if(clashes.length && !(await showConfirm(`${clashes.map(c => '#' + c.label).join(', ')} 장비가 다른 대여와 겹쳐요. 그래도 저장할까요?`))) return;
-    const btn = document.getElementById('eqSave'); btn.disabled = true; btn.textContent = '저장 중...';
-    try{
-      await eqPost({ action:'equipSaveMany', items: eqBulk.map(x => ({ id: x.id, planId: x.planId || '', label: x.label, name: x.name || eqItemName(x.label).replace(/ #\d+$/, ''),
-        start, end, from, to, who: g('eqWho'), memo: g('eqMemo') || x.memo || '' })) });
-      document.getElementById('eqForm').style.display = 'none';
-      eqDay = start; eqMonth = start.slice(0, 7);
-      await eqLoad();
-    }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
-    btn.disabled = false; btn.textContent = '저장';
+    const body = { action:'equipSaveMany', items: eqBulk.map(x => ({ id: x.id, planId: x.planId || '', label: x.label, name: x.name || eqItemName(x.label).replace(/ #\d+$/, ''),
+      start, end, from, to, who: g('eqWho'), memo: g('eqMemo') || x.memo || '' })) };
+    document.getElementById('eqForm').style.display = 'none';
+    eqDay = start; eqMonth = start.slice(0, 7);
+    showToast('대여를 저장했어요 · 달력은 곧 바뀌어요');
+    bgSave('대여 저장', () => eqPost(body)).then(() => eqLoad());
     return;
   }
   const cand = { id: it ? it.id : '_new', label, start, end, from, to };
   const clash = eqItems.filter(x => x.id !== cand.id && Number(x.label) === label).find(x => { const [a0, a1] = eqSpan(cand), [b0, b1] = eqSpan(x); return a0 < b1 && b0 < a1; });
   if(clash && !(await showConfirm(`${eqItemName(label)}이(가) ${clash.who || '다른 대여'} (${mtFmt(clash.start)} ${eqTimeText(clash)})와 겹쳐요. 그래도 저장할까요?`))) return;
-  const btn = document.getElementById('eqSave'); btn.disabled = true; btn.textContent = '저장 중...';
-  try{
-    await eqPost({ action:'equipSave', id: it ? it.id : '', planId: it ? it.planId || '' : '', label, name: eqItemName(label).replace(/ #\d+$/, ''),
-      start, end, from, to, who: g('eqWho'), memo: g('eqMemo') });
-    document.getElementById('eqForm').style.display = 'none';
-    if(eqMode === 'cal'){ eqDay = start; eqMonth = start.slice(0, 7); }
-    await eqLoad();
-  }catch(e){ showAlert('저장에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
-  btn.disabled = false; btn.textContent = '저장';
+  const body = { action:'equipSave', id: it ? it.id : '', planId: it ? it.planId || '' : '', label, name: eqItemName(label).replace(/ #\d+$/, ''),
+    start, end, from, to, who: g('eqWho'), memo: g('eqMemo') };
+  document.getElementById('eqForm').style.display = 'none';
+  if(eqMode === 'cal'){ eqDay = start; eqMonth = start.slice(0, 7); }
+  showToast('대여를 저장했어요 · 달력은 곧 바뀌어요');
+  bgSave('대여 저장', () => eqPost(body)).then(() => eqLoad());
 }
 async function eqRemove(){
   const it = eqEditing; if(!it) return;
   if(eqBulk){
     if(!(await showConfirm(`이 팀의 장비 ${eqBulk.length}개 대여를 달력에서 모두 뺄까요? 기획서 내용은 그대로예요.`))) return;
-    try{
-      await eqPost({ action:'equipDeleteMany', items: eqBulk.map(x => ({ id: x.id, planId: x.planId || '', label: x.label, name: x.name || '' })) });
-      document.getElementById('eqForm').style.display = 'none';
-      await eqLoad();
-    }catch(e){ showAlert('삭제에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+    const body = { action:'equipDeleteMany', items: eqBulk.map(x => ({ id: x.id, planId: x.planId || '', label: x.label, name: x.name || '' })) };
+    const ids = new Set(eqBulk.map(x => x.id));
+    eqItems = eqItems.filter(x => !ids.has(x.id)); document.getElementById('eqForm').style.display = 'none'; eqRender();
+    showToast('대여를 뺐어요');
+    bgSave('대여 빼기', () => eqPost(body)).then(() => eqLoad());
     return;
   }
   if(!(await showConfirm(`${eqItemName(it.label)} 대여(${mtFmt(it.start)})를 ${it.planId ? '달력에서 뺄까요? 기획서 내용은 그대로예요.' : '삭제할까요?'}`))) return;
-  try{
-    await eqPost({ action:'equipDelete', id: it.id, planId: it.planId || '', label: it.label, name: it.name || '' });
-    document.getElementById('eqForm').style.display = 'none';
-    await eqLoad();
-  }catch(e){ showAlert('삭제에 실패했어요: ' + (e && e.message ? e.message : '오류')); }
+  const body = { action:'equipDelete', id: it.id, planId: it.planId || '', label: it.label, name: it.name || '' };
+  eqItems = eqItems.filter(x => x.id !== it.id); document.getElementById('eqForm').style.display = 'none'; eqRender();
+  showToast(it.planId ? '달력에서 뺐어요' : '삭제했어요');
+  bgSave('대여 삭제', () => eqPost(body)).then(() => eqLoad());
 }
 document.getElementById('eqNew').addEventListener('click', ()=>eqOpen(null));
 document.getElementById('eqSave').addEventListener('click', eqSaveForm);

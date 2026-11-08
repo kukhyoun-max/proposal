@@ -169,7 +169,12 @@
     font-size:14px; font-weight:700; color:var(--purple-dark); margin:26px 0 10px; padding-bottom:6px;
     border-bottom:1.5px solid var(--purple-soft);
   }
-  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .grid2{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px;}
+  .grid2 > *{min-width:0;}
+  /* iOS Safari: 날짜 칸이 고유 너비로 칸 밖까지 늘어나 옆 칸과 겹치는 것 막기(2026-11-08) */
+  input[type="date"]{-webkit-appearance:none; appearance:none; min-width:0; max-width:100%; box-sizing:border-box; text-align:left;}
+  .field-sm input[type="date"]{display:block;}
+  input[type="date"]::-webkit-date-and-time-value{text-align:left; margin:0;}
   .field-sm{margin-bottom:10px;}
   .series-field{position:relative;}
   .series-pop{display:none; position:absolute; left:0; right:0; top:100%; margin-top:6px; z-index:50; background:#fff; border:1.5px solid var(--line); border-radius:14px; box-shadow:0 10px 28px rgba(0,0,0,.12); padding:6px; max-height:300px; overflow:auto;}

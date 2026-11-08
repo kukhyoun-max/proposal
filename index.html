@@ -2297,12 +2297,35 @@ function showToast(msg){
 // 저장은 뒤에서 (2026-11-08 담당자 「승인 버튼 누르면 알림창 뜨는 게 너무 느림」 → A안)
 // 화면은 바로 바꾸고 서버 일은 뒤에서 해요. 실패할 때만 알림창. 뒤에서 저장 중이면 창을 닫을 때 한 번 물어요.
 let bgSaving = 0;
-function bgSave(label, job){
+// 아이폰에서 서버는 저장을 끝냈는데 응답만 못 받아 「서버에 연결하지 못했어요」가 뜬 적이 있어요(2026-11-08 출결, 시트엔 20:46:25에 들어감).
+// 그래서 응답을 못 받았을 때는 verify(서버 기록 다시 읽기)로 실제로 들어갔는지 먼저 확인하고, 들어갔으면 조용히 넘어가요.
+const bgNetFail = e => !!(e && /서버에 연결하지 못했어요|서버 응답을 읽지 못했어요|Load failed|Failed to fetch|NetworkError/i.test(e.message || ''));
+function bgSave(label, job, verify){
   bgSaving++;
-  return Promise.resolve().then(job).then(() => true, e => {
+  return Promise.resolve().then(job).then(() => true, async e => {
+    if(bgNetFail(e)){
+      if(verify){
+        for(const wait of [1500, 4000]){
+          await bgSleep(wait);
+          try{ if(await verify()) return true; }catch(x){}
+        }
+        showAlert('「' + label + '」이 서버에 들어갔는지 확인되지 않았어요.\n최신 기록으로 다시 불러올게요. 빠진 게 있으면 한 번 더 해 주세요.');
+        return false;
+      }
+      showAlert('서버 응답을 받지 못했어요. 「' + label + '」은 들어갔을 수 있어요.\n최신 기록으로 다시 불러올게요. 반영됐는지 확인해 주세요.');
+      return false;
+    }
     showAlert(label + '에 실패했어요: ' + (e && e.message ? e.message : '오류') + '\n최신 기록으로 다시 불러올게요. 확인 후 한 번 더 해 주세요.');
     return false;
   }).finally(() => { bgSaving--; });
+}
+// 기획서 상태 확인: 서버 목록을 새로 받아 그 기획서 상태가 바라는 값인지 (승인은 촬영일에 따라 촬영 중 등으로 바로 넘어갈 수 있어 「대기·반려가 아님」으로 봄)
+async function planStatusIs(key, status){
+  planInvalidate();
+  const row = ((await planFetch()) || []).find(r => r['ID'] === key);
+  if(!row) return false;
+  const now = String(row[COL.status] || '');
+  return status === 'approved' ? !['pending', 'rejected', ''].includes(now) : now === status;
 }
 const bgSleep = ms => new Promise(r => setTimeout(r, ms));
 window.addEventListener('beforeunload', e => { if(bgSaving > 0){ e.preventDefault(); e.returnValue = ''; } });
@@ -2311,11 +2334,13 @@ function planUpdateBg(key, fields, label, more){
   const snap = planMem;
   const first = sheetUpdate(key, fields);   // sheetPost가 목록 캐시를 비워요
   if(snap){ planMem = snap.map(r => r['ID'] === key ? Object.assign({}, r, fields) : r); planMemAt = Date.now(); }
+  let sheetDone = false;
   return bgSave(label, async () => {
     const r = await first;
     if(!r || r.ok === false) throw new Error((r && r.error) || '시트 응답 실패');
+    sheetDone = true;
     if(more) await more(r);
-  }).finally(() => { planInvalidate(); planRevalidate(''); });
+  }, fields[COL.status] ? async () => sheetDone || await planStatusIs(key, fields[COL.status]) : null).finally(() => { planInvalidate(); planRevalidate(''); });
 }
 // 저장 뒤 다시 불러올 때 옛 저장본이 먼저 보이지 않게 그 화면 저장본만 지워요
 function attCacheDrop(params){ try{ localStorage.removeItem(ATT_LS + JSON.stringify(params)); }catch(e){} }
@@ -4978,6 +5003,10 @@ async function approveSubmission(key){
     let result;
     try{ result = await job; }catch(e){ result = { ok:false, error: e && e.message }; }
     planInvalidate(); planRevalidate('');   // 서버 기준으로 다시 받아 화면 갱신
+    if(result && result.ok === false && bgNetFail({ message: result.error })){
+      for(const wait of [1500, 4000]){ await bgSleep(wait); try{ if(await planStatusIs(key, 'approved')){ result = { ok:true }; break; } }catch(x){} }
+      planRevalidate('');
+    }
     if(!result || result.ok === false){
       approvingIds.delete(key);
       showAlert('승인 처리에 실패했어요: ' + ((result && result.error) || '시트 응답 실패') + '\n목록을 다시 불러왔어요. 한 번 더 눌러 주세요.');
@@ -5448,6 +5477,10 @@ async function mtSave(){
     await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({ action:'meetingSave', date, records }) });
     await bgSleep(1200);
+  }, async () => {
+    const r = await attendJsonpRaw({ action:'meetingList', date });
+    const got = {}; ((r && r.records) || []).forEach(x => { got[x.name] = x.status; });
+    return records.every(x => got[x.name] === x.status);
   }).then(ok => {
     attCacheDrop({ action:'meetingList', date });
     if(!ok){ mtDirty = true; return; }
@@ -5638,6 +5671,10 @@ async function pcSave(){
     await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({ action:'personalSave', week, records }) });
     await bgSleep(1200);
+  }, async () => {
+    const r = await attendJsonpRaw({ action:'personalList', week });
+    const got = {}; ((r && r.records) || []).forEach(x => { got[x.name] = x; });
+    return records.every(x => got[x.name] && got[x.name].plan === x.plan && String(got[x.name].content || '') === String(x.content || ''));
   }).then(ok => {
     attCacheDrop({ action:'personalList', week });
     if(!ok){ pcDirty = true; return; }
@@ -5879,6 +5916,10 @@ async function abToggle(i, btn){
     await fetch(ATTEND_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({ action:'exemptSave', planId: it.planId, title: it.title, name: it.name, reason, on }) });
     await bgSleep(1500);
+  }, async () => {
+    const r = await attendJsonpRaw({ action:'absentList' });
+    const x = ((r && r.items) || []).find(y => y.planId === it.planId && y.name === it.name);
+    return !!x && (x.status === '면제') === on;
   }).then(ok => { if(!ok){ it.status = prev.status; it.reason = prev.reason; } attCacheDrop({ action:'absentList' }); abLoad(); });
 }
 document.getElementById('btnAbsentBack').addEventListener('click', ()=>{ showView('form'); });
@@ -5946,7 +5987,10 @@ async function evSave(){
   document.getElementById('evForm').style.display = 'none';
   document.getElementById('evInfo').textContent = '저장 중… 목록이 곧 바뀌어요';
   showToast('행사를 저장했어요');
-  bgSave('행사 저장', () => evPost(body)).then(() => { attCacheDrop({ action:'eventList' }); attCacheDrop({ action:'taskList' }); evLoad(); });
+  bgSave('행사 저장', () => evPost(body), async () => {
+    const r = await attendJsonpRaw({ action:'eventList' });
+    return ((r && r.events) || []).some(e => e.date === body.date && e.title === body.title);
+  }).then(() => { attCacheDrop({ action:'eventList' }); attCacheDrop({ action:'taskList' }); evLoad(); });
 }
 async function evRemove(){
   if(!evEditing) return;
@@ -5956,7 +6000,10 @@ async function evRemove(){
   evEvents = evEvents.filter(e => e !== gone); evRender();
   document.getElementById('evForm').style.display = 'none';
   showToast('행사를 삭제했어요');
-  bgSave('행사 삭제', () => evPost({ action:'eventDelete', date: gone.date, title: gone.title })).then(() => { attCacheDrop({ action:'eventList' }); attCacheDrop({ action:'taskList' }); evLoad(); });
+  bgSave('행사 삭제', () => evPost({ action:'eventDelete', date: gone.date, title: gone.title }), async () => {
+    const r = await attendJsonpRaw({ action:'eventList' });
+    return !!(r && r.events) && !r.events.some(e => e.date === gone.date && e.title === gone.title);
+  }).then(() => { attCacheDrop({ action:'eventList' }); attCacheDrop({ action:'taskList' }); evLoad(); });
 }
 document.getElementById('evNew').addEventListener('click', ()=>evOpen(null));
 document.getElementById('evAll').addEventListener('click', ()=>{ evSel = evSel.size === MEETING_ROSTER.length ? new Set() : new Set(MEETING_ROSTER); evChips(); });
@@ -6096,7 +6143,10 @@ async function tkSave(){
   document.getElementById('tkForm').style.display = 'none';
   document.getElementById('tkInfo').textContent = '저장 중… 목록이 곧 바뀌어요';
   showToast('저장했어요' + (form ? ' · 응답 시트 자동 체크는 곧 반영돼요' : (tkEditing && left > 0 ? ` (미입력 ${left}명)` : '')));
-  bgSave('제출 체크 저장', () => evPost(body)).then(() => { attCacheDrop({ action:'taskList' }); tkLoad(); });
+  bgSave('제출 체크 저장', () => evPost(body), async () => {
+    const r = await attendJsonpRaw({ action:'taskList' });
+    return ((r && r.tasks) || []).some(t => t.date === body.date && t.title === body.title);
+  }).then(() => { attCacheDrop({ action:'taskList' }); tkLoad(); });
 }
 async function tkRemove(){
   if(!tkEditing) return;
@@ -6106,7 +6156,10 @@ async function tkRemove(){
   tkTasks = tkTasks.filter(t => t !== gone); tkRender();
   document.getElementById('tkForm').style.display = 'none';
   showToast('삭제했어요');
-  bgSave('삭제', () => evPost({ action:'taskDelete', date: gone.date, title: gone.title })).then(() => { attCacheDrop({ action:'taskList' }); tkLoad(); });
+  bgSave('삭제', () => evPost({ action:'taskDelete', date: gone.date, title: gone.title }), async () => {
+    const r = await attendJsonpRaw({ action:'taskList' });
+    return !!(r && r.tasks) && !r.tasks.some(t => t.date === gone.date && t.title === gone.title);
+  }).then(() => { attCacheDrop({ action:'taskList' }); tkLoad(); });
 }
 document.getElementById('tkNew').addEventListener('click', ()=>tkOpen(null));
 document.getElementById('tkSave').addEventListener('click', tkSave);

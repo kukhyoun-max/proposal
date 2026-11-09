@@ -661,17 +661,39 @@
   .my-pick button:focus-visible{outline:2px solid var(--purple); outline-offset:2px;}
   .my-msg{padding:24px 4px; font-size:14px; line-height:1.6; color:var(--ink-soft); text-align:center;}
   .my-msg button{display:block; margin:12px auto 0; min-height:40px; padding:0 16px; border:1px solid var(--line-input); border-radius:10px; background:transparent; color:var(--ink); font:inherit; font-size:14px; font-weight:700; cursor:pointer;}
-  /* 활동 가이드 보기(2026-11-08 담당자 「기획서 프로그램에서 누르면 볼 수만 있게」): 그림은 서버가 로그인한 홍보대사에게만 보냄, 보는 사람 이름을 옅게 깔기 */
-  .gd-stage{position:relative; width:100%; aspect-ratio:16/9; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#fff; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
-  .gd-stage img{display:block; width:100%; height:100%; object-fit:contain; pointer-events:none;}
-  .gd-mark{position:absolute; inset:0; pointer-events:auto; background-repeat:repeat; background-size:260px 150px;}
-  .gd-load{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--ink-soft);}
-  .gd-nav{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px;}
-  .gd-nav button{min-width:96px; min-height:44px; border:1px solid var(--line-input); border-radius:12px; background:transparent; color:var(--ink); font:inherit; font-size:15px; font-weight:700; cursor:pointer;}
-  .gd-nav button:disabled{opacity:.35; cursor:default;}
-  .gd-nav span{font-size:14px; font-weight:700; color:var(--ink-soft);}
-  @media (max-width:520px){ .gd-mark{background-size:150px 86px;} }
-  .gd-note{margin:12px 0 0; font-size:12.5px; line-height:1.6; color:var(--ink-faint); text-align:center;}
+  /* 활동 가이드 보기(2026-11-08 담당자 「기획서 프로그램에서 누르면 볼 수만 있게」, 2026-11-09 「슬라이드 빼고 텍스트만」): 글은 서버가 로그인한 홍보대사에게만 보냄, 보는 사람 이름을 옅게 깔기 */
+  .gd-q{display:block; width:100%; box-sizing:border-box; min-height:46px; padding:0 14px; border:1px solid var(--line-input); border-radius:12px; background:transparent; color:var(--ink); font:inherit; font-size:16px;}
+  .gd-q:focus-visible{outline:2px solid var(--purple); outline-offset:1px;}
+  .gd-hits{margin-top:8px; border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+  .gd-hits button{display:block; width:100%; padding:11px 14px; border:0; border-top:1px solid var(--line); background:transparent; color:var(--ink); font:inherit; font-size:14px; line-height:1.5; text-align:left; cursor:pointer;}
+  .gd-hits button:first-child{border-top:0;}
+  .gd-hits button small{display:block; font-size:12px; color:var(--ink-faint);}
+  .gd-hits mark{background:rgba(61,95,224,.2); color:inherit; border-radius:3px;}
+  .gd-hits p{margin:0; padding:12px 14px; font-size:13.5px; color:var(--ink-soft);}
+  .gd-toc{display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 4px;}
+  .gd-toc button{min-height:44px; padding:0 12px; border:1px solid var(--line-input); border-radius:20px; background:transparent; color:var(--ink); font:inherit; font-size:13.5px; cursor:pointer;}
+  .gd-doc{position:relative; margin-top:8px; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
+  .gd-mark{position:absolute; inset:0; pointer-events:none; background-repeat:repeat; background-size:260px 150px; z-index:1;}
+  .gd-load{padding:40px 8px; font-size:14px; line-height:1.6; color:var(--ink-soft); text-align:center;}
+  .gd-body{font-size:15px; line-height:1.75; color:var(--ink); word-break:keep-all; overflow-wrap:anywhere;}
+  .gd-body h2{font-size:19px; font-weight:800; margin:34px 0 10px; padding-top:14px; border-top:1px solid var(--line); scroll-margin-top:16px;}
+  .gd-body h3{font-size:16px; font-weight:700; margin:24px 0 8px; scroll-margin-top:16px;}
+  .gd-body p{margin:0 0 12px;}
+  .gd-body ul,.gd-body ol{margin:0 0 12px; padding-left:22px;}
+  .gd-body li{margin:0 0 6px;}
+  .gd-body li p{margin:0;}
+  .gd-body code{font-size:.9em; padding:1px 5px; border-radius:5px; background:rgba(127,127,127,.15);}
+  .gd-body a{color:var(--purple-dark); text-decoration:underline; text-underline-offset:2px;}
+  .gd-tbl{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 0 14px; border:1px solid var(--line); border-radius:10px;}
+  .gd-body table{border-collapse:collapse; width:100%; font-size:13.5px; line-height:1.55;}
+  .gd-body th,.gd-body td{padding:8px 10px; border-top:1px solid var(--line); text-align:left; vertical-align:top;}
+  .gd-body thead th{border-top:0; font-weight:700; background:rgba(127,127,127,.08);}
+  .gd-body td p,.gd-body th p{margin:0;}
+  .gd-flash{animation:gdFlash 1.8s ease-out;}
+  @keyframes gdFlash{0%,40%{background:rgba(61,95,224,.2);} 100%{background:transparent;}}
+  .gd-top{position:fixed; right:16px; bottom:20px; z-index:20; min-width:48px; min-height:48px; border:1px solid var(--line-input); border-radius:24px; background:var(--surface, #fff); color:var(--ink); font:inherit; font-size:14px; font-weight:700; box-shadow:0 2px 10px rgba(0,0,0,.12); cursor:pointer;}
+  @media (max-width:520px){ .gd-mark{background-size:150px 86px;} .gd-body table{font-size:13px;} .gd-body th,.gd-body td{padding:8px 7px;} }
+  .gd-note{margin:20px 0 0; font-size:12.5px; line-height:1.6; color:var(--ink-faint); text-align:center;}
   @media (max-width:340px){ .admin-topbar{padding-left:10px !important; padding-right:10px !important;} .admin-topbar button{padding:6px 4px !important; font-size:11px !important;} .admin-topbar > div{gap:3px !important;} #pendingBadge{margin-left:2px !important; padding:1px 5px !important;} }
   @media (max-width:400px){ .admin-topbar{padding:10px 14px;} .admin-topbar button{padding:6px 9px; font-size:12px;} #btnHome{font-size:12px !important; text-align:left;} .admin-topbar > div{gap:5px !important;} }
   /* 장비별 보기 (2026-10-25): 날짜 블록 카드 · 다가오는/지난 구분 · 겹침 상대 표시 */
@@ -2194,9 +2216,12 @@
     <button class="reset-link" id="btnGuideBack" type="button">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
-    <div class="gd-stage" id="gdStage"><img id="gdImg" alt="" draggable="false"><div class="gd-mark" id="gdMark"></div><div class="gd-load" id="gdLoad">불러오는 중…</div></div>
-    <div class="gd-nav"><button type="button" id="gdPrev">‹ 이전</button><span id="gdNum">- / -</span><button type="button" id="gdNext">다음 ›</button></div>
-    <p class="gd-note">홍보대사 내부용이에요. 캡처·외부 공유는 하지 말아 주세요.</p>
+    <input class="gd-q" id="gdQ" type="search" placeholder="찾을 말 (예: 불참, 자막, 4일)" aria-label="가이드에서 찾기" autocomplete="off" disabled>
+    <div class="gd-hits" id="gdHits" hidden></div>
+    <nav class="gd-toc" id="gdToc" aria-label="목차"></nav>
+    <div class="gd-doc" id="gdDoc"><div class="gd-mark" id="gdMark"></div><div class="gd-body" id="gdBody"></div><div class="gd-load" id="gdLoad">불러오는 중…</div></div>
+    <p class="gd-note" id="gdNote">홍보대사 내부용이에요. 캡처·외부 공유는 하지 말아 주세요.</p>
+    <button class="gd-top" id="gdTop" type="button" aria-label="맨 위로" hidden>↑</button>
   </div>
 </div>
 
@@ -7426,58 +7451,101 @@ function jjRosterApply(r){
   $('btnMy').addEventListener('click', () => { showView('my'); myOpen(); });
   $('btnMyBack').addEventListener('click', () => { showView('form'); });
 
-  /* ── 활동 가이드 보기 (2026-11-08): 교육 자료 장 그림을 서버(GET guide, 로그인·명단 확인)에서 한 장씩 받아 보여 준다.
-     그림은 공개 저장소에 두지 않는다. 보는 사람 이름을 화면 전체에 옅게 깔고, 끌기·길게 눌러 저장을 막는다 ── */
-  const GD = { n: 1, total: 0, name: '', imgs: {}, seq: 0, wait: {} };
+  /* ── 활동 가이드 보기 (2026-11-08, 2026-11-09 담당자 「슬라이드 빼고 텍스트만」): 가이드 글(Claude 문서 「활동 가이드」 → guide.html)을
+     서버(GET guide, 로그인·명단 확인)에서 받아 보여 준다. 글은 공개 저장소에 두지 않는다.
+     목차(장)·찾기·맨 위로. 보는 사람 이름을 옅게 깔고, 길게 눌러 고르기·복사를 막는다 ── */
+  const GD = { loaded: false, wait: null, name: '', blocks: [] };
   function gdMark(name){
     const t = esc('내부용 · ' + name);
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="260" height="150"><text x="130" y="80" text-anchor="middle" transform="rotate(-20 130 75)" font-family="Pretendard, sans-serif" font-size="15" font-weight="600" fill="#000" fill-opacity="0.13">${t}</text></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="260" height="150"><text x="130" y="80" text-anchor="middle" transform="rotate(-20 130 75)" font-family="Pretendard, sans-serif" font-size="15" font-weight="600" fill="#888" fill-opacity="0.16">${t}</text></svg>`;
     $('gdMark').style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
   }
-  // 한 번에 3장씩 받는다(담당자 「불러오는데 한 세월」, 2026-11-08). 같은 묶음을 두 번 부르지 않게 기다리는 요청을 나눠 씀
-  function gdBatch(n){
-    const b = Math.floor((n - 1) / 3) * 3 + 1;
-    if(!GD.wait[b]) GD.wait[b] = api({ action: 'guide', n: b, m: 3 }).then(d => {
-      if(!(d && d.ok && (d.imgs || d.img))) { delete GD.wait[b]; throw d || {}; }
-      (d.imgs || [d.img]).forEach((s, i) => { GD.imgs[d.n + i] = 'data:image/jpeg;base64,' + s; });
-      GD.total = d.total || GD.total; if(d.name && d.name !== GD.name){ GD.name = d.name; gdMark(d.name); }
-    }, e => { delete GD.wait[b]; throw e; });
-    return GD.wait[b];
+  // 서버 글도 허용한 태그·속성만 남겨 넣는다(정리는 guide_text.py가 먼저 하지만 한 번 더)
+  const GD_TAGS = new Set(['H2','H3','H4','P','UL','OL','LI','TABLE','THEAD','TBODY','TR','TH','TD','STRONG','B','EM','I','CODE','A','BR','BLOCKQUOTE','HR','DIV']);
+  const GD_DROP = /^(SCRIPT|STYLE|IFRAME|OBJECT|EMBED|SVG|IMG|VIDEO|AUDIO|FORM|INPUT|BUTTON|TEMPLATE)$/;
+  function gdSafe(html){
+    const src = new DOMParser().parseFromString('<body>' + html + '</body>', 'text/html').body;
+    const walk = (from, to) => {
+      for(const n of Array.from(from.childNodes)){
+        if(n.nodeType === 3){ to.appendChild(document.createTextNode(n.nodeValue)); continue; }
+        if(n.nodeType !== 1) continue;
+        if(!GD_TAGS.has(n.tagName)){ if(!GD_DROP.test(n.tagName)) walk(n, to); continue; }
+        const el = document.createElement(n.tagName.toLowerCase());
+        const id = n.getAttribute('id'); if(id && /^g\d+$/.test(id)) el.id = id;
+        if(n.tagName === 'DIV' && n.getAttribute('class') === 'gd-tbl') el.className = 'gd-tbl';
+        if(n.tagName === 'A'){ const h = n.getAttribute('href') || ''; if(/^https?:\/\//.test(h)){ el.href = h; el.target = '_blank'; el.rel = 'noopener'; } }
+        walk(n, el); to.appendChild(el);
+      }
+    };
+    const frag = document.createDocumentFragment(); walk(src, frag); return frag;
   }
-  async function gdGet(n){
-    if(GD.imgs[n]) return GD.imgs[n];
-    await gdBatch(n);
-    if(GD.imgs[n]) return GD.imgs[n];
-    throw {};
+  function gdRender(d){
+    const body = $('gdBody'); body.textContent = ''; body.appendChild(gdSafe(d.html || ''));
+    // 목차: 장(h2)만
+    const toc = $('gdToc'); toc.textContent = '';
+    body.querySelectorAll('h2').forEach(h => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = h.textContent.trim(); b.dataset.to = h.id; toc.appendChild(b);
+    });
+    // 찾기용: 글 덩어리마다 속한 장·절 이름
+    GD.blocks = []; let h2 = '', h3 = '';
+    body.querySelectorAll('h2, h3, p, li, tr').forEach(el => {
+      if(el.tagName === 'H2'){ h2 = el.textContent.trim(); h3 = ''; return; }
+      if(el.tagName === 'H3') h3 = el.textContent.trim();
+      if(el.tagName === 'P' && el.closest('li, td, th')) return;   // li·표 칸 안의 p는 바깥 덩어리로 찾음
+      GD.blocks.push({ el, where: h3 && el.tagName !== 'H3' ? h2 + ' › ' + h3 : h2, text: (el.tagName === 'TR' ? Array.from(el.cells).map(c => c.textContent.trim()).join(' · ') : el.textContent).replace(/\s+/g, ' ').trim() });
+    });
+    if(d.updated) $('gdNote').textContent = d.updated + ' 기준 · 홍보대사 내부용이에요. 캡처·외부 공유는 하지 말아 주세요.';
+    $('gdQ').disabled = false;
   }
-  async function gdShow(n){
-    const seq = ++GD.seq;
-    GD.n = n;
-    $('gdNum').textContent = GD.total ? `${n} / ${GD.total}` : '- / -';
-    $('gdPrev').disabled = n <= 1; $('gdNext').disabled = !!GD.total && n >= GD.total;
-    $('gdLoad').textContent = GD.total ? '불러오는 중…' : '불러오는 중… 처음 열 때는 몇 초 걸려요'; $('gdLoad').style.display = 'flex';
-    try {
-      const src = await gdGet(n);
-      if(seq !== GD.seq) return;
-      $('gdImg').src = src; $('gdLoad').style.display = 'none';
-      $('gdNum').textContent = `${n} / ${GD.total}`; $('gdNext').disabled = n >= GD.total;
-      if(n + 3 <= GD.total) gdGet(n + 3).catch(() => {});   // 다음 묶음 미리 받기
-    } catch(e){
-      if(seq !== GD.seq) return;
-      $('gdImg').removeAttribute('src');
+  function gdLoad(){
+    if(GD.loaded) return Promise.resolve();
+    if(!GD.wait) GD.wait = api({ action: 'guide' }).then(d => {
+      if(!(d && d.ok && d.html)) throw d || {};
+      if(d.name && d.name !== GD.name){ GD.name = d.name; gdMark(d.name); }
+      gdRender(d); GD.loaded = true;
+    }).finally(() => { GD.wait = null; });
+    return GD.wait;
+  }
+  async function gdOpen(){
+    if(GD.loaded) return;
+    $('gdLoad').style.display = ''; $('gdLoad').textContent = '불러오는 중…';
+    try { await gdLoad(); $('gdLoad').style.display = 'none'; }
+    catch(e){
       $('gdLoad').textContent = e && e.need ? '이름이 연결된 홍보대사만 볼 수 있어요. 처음 화면 「내 기록」에서 이름을 연결해 주세요.' : '불러오지 못했어요. 잠시 후 다시 열어 주세요.';
     }
   }
-  $('btnGuide').addEventListener('click', () => { showView('guide'); gdShow(GD.n || 1); });
+  function gdGo(el, flash){
+    el.scrollIntoView({ behavior: 'smooth', block: flash ? 'center' : 'start' });
+    if(flash){ el.classList.remove('gd-flash'); void el.offsetWidth; el.classList.add('gd-flash'); }
+  }
+  function gdFind(){
+    const q = $('gdQ').value.trim(), box = $('gdHits');
+    if(q.length < 2){ box.hidden = true; box.textContent = ''; return; }
+    const low = q.toLowerCase();
+    const hits = GD.blocks.filter(b => b.text.toLowerCase().includes(low)).slice(0, 30);
+    box.textContent = ''; box.hidden = false;
+    if(!hits.length){ const p = document.createElement('p'); p.textContent = '「' + q + '」이(가) 들어간 곳이 없어요.'; box.appendChild(p); return; }
+    hits.forEach(h => {
+      const i = h.text.toLowerCase().indexOf(low), a = Math.max(0, i - 24), z = i + q.length + 50;
+      const snip = (a > 0 ? '…' : '') + h.text.slice(a, z) + (z < h.text.length ? '…' : '');
+      const j = snip.toLowerCase().indexOf(low);
+      const b = document.createElement('button'); b.type = 'button';
+      b.innerHTML = '<small>' + esc(h.where) + '</small>' + esc(snip.slice(0, j)) + '<mark>' + esc(snip.slice(j, j + q.length)) + '</mark>' + esc(snip.slice(j + q.length));
+      b.addEventListener('click', () => gdGo(h.el, true));
+      box.appendChild(b);
+    });
+  }
+  $('btnGuide').addEventListener('click', () => { showView('guide'); gdOpen(); });
   $('btnGuideBack').addEventListener('click', () => { showView('form'); });
-  $('gdPrev').addEventListener('click', () => { if(GD.n > 1) gdShow(GD.n - 1); });
-  $('gdNext').addEventListener('click', () => { if(!GD.total || GD.n < GD.total) gdShow(GD.n + 1); });
-  $('gdStage').addEventListener('contextmenu', e => e.preventDefault());
-  $('gdStage').addEventListener('dragstart', e => e.preventDefault());
-  let gdX = null;
-  $('gdStage').addEventListener('touchstart', e => { gdX = e.touches[0].clientX; }, { passive: true });
-  $('gdStage').addEventListener('touchend', e => { if(gdX === null) return; const dx = e.changedTouches[0].clientX - gdX; gdX = null; if(Math.abs(dx) > 40) $(dx < 0 ? 'gdNext' : 'gdPrev').click(); });
-  document.addEventListener('keydown', e => { if($('guideView').style.display === 'none') return; if(e.key === 'ArrowRight') $('gdNext').click(); else if(e.key === 'ArrowLeft') $('gdPrev').click(); });
+  $('gdToc').addEventListener('click', e => { const b = e.target.closest('button[data-to]'); if(b){ const h = document.getElementById(b.dataset.to); if(h) gdGo(h, false); } });
+  let gdT = null;
+  $('gdQ').addEventListener('input', () => { clearTimeout(gdT); gdT = setTimeout(gdFind, 200); });
+  $('gdQ').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); const b = $('gdHits').querySelector('button'); if(b) b.click(); } });
+  $('gdTop').addEventListener('click', () => { $('guideView').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  window.addEventListener('scroll', () => { $('gdTop').hidden = $('guideView').style.display === 'none' || window.scrollY < 600; }, { passive: true });
+  $('gdDoc').addEventListener('contextmenu', e => e.preventDefault());
+  $('gdDoc').addEventListener('copy', e => e.preventDefault());
+  $('gdDoc').addEventListener('dragstart', e => e.preventDefault());
 
   $('jjhMine').addEventListener('click', openMine);
   $('jjhMine').addEventListener('keydown', e => { if (e.key === 'Enter') openMine(); });

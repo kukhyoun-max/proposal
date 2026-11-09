@@ -520,6 +520,8 @@
   .pc-add{margin-top:12px;} .pc-add .ev-chips button{font-size:12.5px;}
   .pc-plan-more{display:inline-flex; align-items:center; gap:2px; margin-top:4px; padding:2px 0; border:0; background:none; font:inherit; font-size:12px; font-weight:700; color:var(--purple); cursor:pointer;}
   .pc-plan-more svg{width:12px; height:12px; transition:transform .15s ease;}
+  .pc-btns{display:flex; flex-wrap:wrap; column-gap:10px;}
+  a.pc-plan-more{text-decoration:none;}
   .pc-plan-more[aria-expanded="true"] svg{transform:rotate(180deg);}
   .pc-plan-more:focus-visible{outline:2px solid var(--purple); outline-offset:2px; border-radius:4px;}
   .pc-row.open{border-bottom:0; padding-bottom:8px;}
@@ -5624,13 +5626,16 @@ function pcRenderWeeks(){
 }
 
 // 이름을 누르면 그 회차 갠콘 기획이 펼쳐짐 (2026-11-06). 못 읽어도 제출 체크 화면은 그대로
-let pcPlans = {}, pcPlanOpen = new Set();
+// 갠콘 [제출 완료] 회차 폴더 → 이름 옆 「제출 폴더」 버튼 (2026-11-09, 서버가 매시간 확인한 폴더 ID)
+let pcPlans = {}, pcPlanOpen = new Set(), pcDone = {};
 async function pcLoadPlans(week){
   try{
     const r = await attendJsonpRaw({ action:'pcPlanList', week, tk: adminToken() });
     if(pcLoadedWeek !== week || !r || !r.ok) return;
     pcPlans = {};
     (r.rows || []).forEach(x => { pcPlans[x.name] = x; });
+    pcDone = {};
+    Object.entries(r.done || {}).forEach(([n, id]) => { if(/^[\w-]{10,}$/.test(String(id))) pcDone[n] = String(id); });
     pcRenderList();
   }catch(e){}
 }
@@ -5658,8 +5663,9 @@ function pcRenderList(){
     const planUrl = plan ? safeUrl(plan.link) : '';
     const planBox = open ? `<div class="pc-plan"><div class="pc-plan-box"><div class="pc-plan-title">${esc(plan.title)}</div>${planUrl ? `<a class="pc-plan-link" href="${esc(planUrl)}" target="_blank" rel="noopener">참고 릴스<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>` : '<span class="pc-plan-none">참고 릴스 없음</span>'}</div></div>` : '';
     const planMore = plan ? `<button type="button" class="pc-plan-more" data-plan="${esc(n)}" aria-expanded="${open ? 'true' : 'false'}">기획<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>` : '';
+    const folderBtn = pcDone[n] ? `<a class="pc-plan-more pc-folder" href="https://drive.google.com/drive/folders/${encodeURIComponent(pcDone[n])}" target="_blank" rel="noopener" title="갠콘 제출 폴더 열기">제출 폴더<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>` : '';
     return `<div class="pc-row${open ? ' open' : ''}">
-      <div class="pc-name">${nb(n)}${n}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : '콘텐츠 입력 전'))}</small>${planMore}</div>
+      <div class="pc-name">${nb(n)}${n}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : '콘텐츠 입력 전'))}</small>${planMore || folderBtn ? `<span class="pc-btns">${planMore}${folderBtn}</span>` : ''}</div>
       <div class="pc-lines">
         <div class="pc-line"><span class="pc-lab">기획서</span>${seg('plan')}</div>
         <div class="pc-line"><span class="pc-lab">콘텐츠</span>${seg('content')}</div>
@@ -5705,7 +5711,7 @@ async function pcLoad(){
   pcDirty = false; pcLoadedWeek = pcWeek;
   document.getElementById('pcStatus').textContent = '';
   pcState = {}; pcExtra = new Set(); pcCancelled = false;
-  pcPlans = {}; pcPlanOpen = new Set(); pcLoadPlans(pcWeek);
+  pcPlans = {}; pcPlanOpen = new Set(); pcDone = {}; pcLoadPlans(pcWeek);
   const week = pcWeek, params = { action:'personalList', week };
   const apply = (res, fresh) => {
     if(pcLoadedWeek !== week) return;

@@ -799,6 +799,37 @@
   .sc-why-k{display:inline-block; font-size:10.5px; padding:1px 5px; border-radius:4px; background:#EEF0F3; color:#5B6470; margin-right:2px;}
   .sc-seg{display:flex; gap:4px; background:#F2F2F6; padding:4px; border-radius:12px; margin:0 0 12px;}
   .sc-seg button{flex:1; border:none; background:none; padding:8px 0; border-radius:9px; font-size:13px; font-weight:700; color:var(--ink-soft); cursor:pointer;}
+  /* 홍보대사 시간표: 빈 시간 찾기 (관리자, 2026-11-10) */
+  .tt-range{display:flex; align-items:center; gap:6px; margin:0 0 12px; flex-wrap:wrap;}
+  .tt-range label{font-size:12.5px; font-weight:700; color:var(--ink-soft);}
+  .tt-range select{padding:9px 10px; border:1.5px solid var(--line-input); border-radius:10px; font-size:14px; color:var(--ink); background:#fff; font-family:inherit;}
+  .tt-range span{color:var(--ink-faint); font-weight:700;}
+  .tt-sum{border:1.5px solid var(--line); border-radius:14px; padding:14px; margin:0 0 14px; background:#fff;}
+  .tt-sum h4{margin:0 0 10px; font-size:14px; font-weight:800;}
+  .tt-sum h4 b{color:#1F7A45;}
+  .tt-group{margin:0 0 10px;}
+  .tt-group:last-child{margin-bottom:0;}
+  .tt-group p{margin:0 0 6px; font-size:12px; font-weight:700; color:var(--ink-soft);}
+  .tt-pills{display:flex; flex-wrap:wrap; gap:6px;}
+  .tt-pill{font-size:13px; font-weight:700; padding:6px 10px; border-radius:999px; background:#E6F4EA; color:#1F7A45; border:1px solid #9FD3B1;}
+  .tt-pill.q::after{content:" ?"; color:#B14A16;}
+  .tt-busy{font-size:12.5px; line-height:1.55; color:var(--ink); margin:0; padding:0; list-style:none;}
+  .tt-busy li{padding:3px 0; border-top:1px solid var(--line);}
+  .tt-busy li:first-child{border-top:none;}
+  .tt-busy b{display:inline-block; min-width:48px;}
+  .tt-busy small{color:var(--ink-faint);}
+  .tt-q{color:#B14A16; font-weight:700;}
+  .tt-miss{font-size:12.5px; color:var(--ink-soft); margin:0;}
+  .tt-tl{border:1.5px solid var(--line); border-radius:14px; padding:10px 12px 12px; background:#fff;}
+  .tt-row{display:flex; align-items:center; gap:8px; height:28px;}
+  .tt-row .nm{width:48px; flex:none; font-size:12px; font-weight:700; color:var(--ink); white-space:nowrap; overflow:hidden;}
+  .tt-row.free .nm{color:#1F7A45;}
+  .tt-track{position:relative; flex:1; height:20px; background:var(--page-bg); border-radius:5px; overflow:hidden;}
+  .tt-blk{position:absolute; top:2px; bottom:2px; background:var(--purple-soft); border:1px solid var(--purple-line); border-radius:4px;}
+  .tt-blk.q{border-style:dashed; border-color:#B14A16;}
+  .tt-band{position:absolute; top:0; bottom:0; background:rgba(255,198,41,.28); border-left:2px solid var(--gold-dark); border-right:2px solid var(--gold-dark); pointer-events:none;}
+  .tt-ticks{position:relative; height:16px; margin-left:56px; font-size:12px; color:var(--ink-faint);}
+  .tt-ticks span{position:absolute; transform:translateX(-50%);}
   .sc-seg button.on{background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.08);}
   .sc-months{display:flex; gap:6px; overflow-x:auto; margin:0 0 10px; padding-bottom:2px;}
   .sc-months button{flex:none; font-size:12.5px; padding:6px 12px; border-radius:999px; border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer;}
@@ -1469,6 +1500,28 @@
 :root[data-theme="dark"] .sc-why-k{background:#242A33;color:#C4C2CC}
 :root[data-theme="dark"] .sc-seg{background:#232333}
 :root[data-theme="dark"] .sc-seg button{border:none;background:none;color:var(--ink-soft)}
+:root[data-theme="dark"] .tt-range label{color:var(--ink-soft)}
+:root[data-theme="dark"] .tt-range select{border:1.5px solid var(--line-input);color:var(--ink);background:#1E1D24}
+:root[data-theme="dark"] .tt-range span{color:var(--ink-faint)}
+:root[data-theme="dark"] .tt-sum{border:1.5px solid var(--line);background:#1E1D24}
+:root[data-theme="dark"] .tt-sum h4 b{color:#8DE2B1}
+:root[data-theme="dark"] .tt-group p{color:var(--ink-soft)}
+:root[data-theme="dark"] .tt-pill{background:#245131;color:#8DE2B1;border:1px solid #337048}
+:root[data-theme="dark"] .tt-pill.q::after{color:#EFA580}
+:root[data-theme="dark"] .tt-busy{color:var(--ink)}
+:root[data-theme="dark"] .tt-busy li{border-top:1px solid var(--line)}
+:root[data-theme="dark"] .tt-busy li:first-child{border-top:none}
+:root[data-theme="dark"] .tt-busy small{color:var(--ink-faint)}
+:root[data-theme="dark"] .tt-q{color:#EFA580}
+:root[data-theme="dark"] .tt-miss{color:var(--ink-soft)}
+:root[data-theme="dark"] .tt-tl{border:1.5px solid var(--line);background:#1E1D24}
+:root[data-theme="dark"] .tt-row .nm{color:var(--ink)}
+:root[data-theme="dark"] .tt-row.free .nm{color:#8DE2B1}
+:root[data-theme="dark"] .tt-track{background:var(--page-bg)}
+:root[data-theme="dark"] .tt-blk{background:var(--purple-soft);border:1px solid var(--purple-line)}
+:root[data-theme="dark"] .tt-blk.q{border-color:#E87F4A}
+:root[data-theme="dark"] .tt-band{background:rgba(255,198,41,.28);border-left:2px solid var(--gold-dark);border-right:2px solid var(--gold-dark)}
+:root[data-theme="dark"] .tt-ticks{color:var(--ink-faint)}
 :root[data-theme="dark"] .sc-seg button.on{background:#1E1D24;color:var(--ink)}
 :root[data-theme="dark"] .sc-months button{border:1.5px solid var(--line);background:#1E1D24;color:var(--ink-soft)}
 :root[data-theme="dark"] .sc-months button.on{border-color:var(--ink);color:var(--ink)}
@@ -2086,6 +2139,22 @@
   </div>
 </div>
 
+<div class="phone" id="ttView" style="display:none;">
+  <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button></div>
+    <button class="reset-link" id="btnTtBack">← 돌아가기</button>
+  </div>
+  <div class="content" style="padding-top:0;">
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;">요일과 시간을 고르면 그 시간에 수업이 없는 홍보대사를 보여 줘요. 촬영·행사 투입할 사람 찾을 때 쓰세요. 시간표는 각자 보낸 사진을 옮긴 거라 틀릴 수 있으니, 부르기 전에 본인에게 한 번 확인해 주세요.</p>
+    <div class="sc-seg" id="ttDays"></div>
+    <div class="tt-range">
+      <label for="ttFrom">시간</label><select id="ttFrom"></select><span>~</span><select id="ttTo"></select>
+    </div>
+    <div id="ttOut"><p style="font-size:12.5px; color:var(--ink-faint);">불러오는 중...</p></div>
+    <p style="font-size:12px; color:var(--ink-faint); margin:12px 0 0;" id="ttFoot"></p>
+  </div>
+</div>
+
 <div class="phone" id="scoreView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
     <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button><button class="on">점수표</button></div>
@@ -2495,7 +2564,7 @@ function adminSession(){
 }
 function adminToken(){ const o = adminSession(); return o ? o.token : ''; }
 function adminLogout(){ try{ sessionStorage.removeItem(ADMIN_TK_KEY); }catch(e){} }
-const TAB_KEYS = { '기획서 관리':'admin', '회의':'meeting', '개인콘텐츠':'personal', '행사':'event', '불참':'absent', '장비':'equip', '일정·장비':'equip', '점수표':'score' };
+const TAB_KEYS = { '기획서 관리':'admin', '회의':'meeting', '개인콘텐츠':'personal', '행사':'event', '불참':'absent', '장비':'equip', '일정·장비':'equip', '점수표':'score', '시간표':'tt' };
 let allowedTabs = null;
 function applyTabAccess(){
   document.querySelectorAll('.mt-tabs').forEach(bar => {
@@ -2513,6 +2582,7 @@ function openTab(k){
   else if(k === 'event'){ showView('event'); evLoad(); }
   else if(k === 'equip'){ eqShow(false); }
   else if(k === 'score'){ showView('score'); scLoad(); }
+  else if(k === 'tt'){ showView('tt'); ttLoad(); }
   else { showView('meeting'); const input = document.getElementById('mtDate'); if(!input.value) input.value = mtMonday(mtYmd(new Date())); mtLoad(); }
 }
 // ───── 홍보대사 멤버 로그인 (구글 계정 · 공유 드라이브 멤버만) ─────
@@ -4067,7 +4137,7 @@ async function showView(viewId){
     if(!ok) return false;
     if(cur === 'meeting') mtDirty = false; else pcDirty = false;
   }
-  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView'), personal: document.getElementById('personalView'), absent: document.getElementById('absentView'), event: document.getElementById('eventView'), equip: document.getElementById('equipView'), score: document.getElementById('scoreView'), my: document.getElementById('myView'), guide: document.getElementById('guideView') };
+  const views = { form: document.getElementById('formView'), admin: document.getElementById('adminView'), status: document.getElementById('statusView'), meeting: document.getElementById('meetingView'), personal: document.getElementById('personalView'), absent: document.getElementById('absentView'), event: document.getElementById('eventView'), equip: document.getElementById('equipView'), score: document.getElementById('scoreView'), tt: document.getElementById('ttView'), my: document.getElementById('myView'), guide: document.getElementById('guideView') };
   Object.keys(views).forEach(k=>{
     views[k].style.display = (k===viewId) ? (k==='form' ? 'flex' : 'block') : 'none';
   });
@@ -4141,7 +4211,7 @@ window.addEventListener('popstate', async e => {
     return;
   }
   // 홈 기록으로 돌아옴 → 홈 화면으로 (저장 안 한 입력 때문에 취소하면 기록을 되돌려 놓아요)
-  const from = ['admin','status','meeting','personal','absent','event','equip','score','my'].find(k => vis(k + 'View'));
+  const from = ['admin','status','meeting','personal','absent','event','equip','score','tt','my'].find(k => vis(k + 'View'));
   if(!from) return;
   const ok = await jjGoHomeFromPop();
   if(!ok){ try{ history.pushState({ jj:from }, ''); }catch(err){} }
@@ -5977,6 +6047,9 @@ document.querySelectorAll('.mt-tabs').forEach(bar => {
   if(bar.closest('#equipView') || bar.querySelector('[data-go="equip"]')) return;
   const nb = document.createElement('button'); nb.dataset.go = 'equip'; nb.textContent = '일정·장비'; bar.appendChild(nb);
 });
+document.querySelectorAll('.mt-tabs').forEach(bar => {
+  const tb = document.createElement('button'); tb.dataset.go = 'tt'; tb.textContent = '시간표'; if(bar.closest('#ttView')) tb.className = 'on'; bar.appendChild(tb);
+});
 document.querySelectorAll('.mt-tabs button[data-go]').forEach(b => b.addEventListener('click', ()=>{
   if(b.dataset.go === 'admin'){ showView('admin'); loadSubmissions(); }
   else if(b.dataset.go === 'equip'){ eqShow(false); }
@@ -5984,8 +6057,77 @@ document.querySelectorAll('.mt-tabs button[data-go]').forEach(b => b.addEventLis
   else if(b.dataset.go === 'personal'){ showView('personal'); pcLoad(); }
   else if(b.dataset.go === 'absent'){ showView('absent'); abLoad(); }
   else if(b.dataset.go === 'event'){ showView('event'); evLoad(); }
+  else if(b.dataset.go === 'tt'){ showView('tt'); ttLoad(); }
   else { showView('meeting'); const input = document.getElementById('mtDate'); if(!input.value) input.value = mtMonday(mtYmd(new Date())); mtLoad(); }
 }));
+
+/* ───────── 홍보대사 시간표: 빈 시간 찾기 (관리자, 2026-11-10) ─────────
+   서버 timetable(관리자 출입증) → 비공개 시트의 시간표 중 현재 명단만. 고른 시간과 조금이라도 겹치면 「수업 있음」 */
+const TT = { data:null, day:'', from:'13:00', to:'15:00', ready:false };
+const TT_WD = ['월','화','수','목','금'];
+const TT_S = 8*60, TT_E = 21*60;
+function ttMin(t){ const a = String(t).split(':'); return Number(a[0])*60 + Number(a[1]||0); }
+function ttStr(m){ return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'); }
+function ttInit(){
+  if(TT.ready) return; TT.ready = true;
+  const wd = new Date().getDay(); TT.day = (wd >= 1 && wd <= 5) ? TT_WD[wd-1] : '월';
+  const opts = []; for(let m = TT_S; m <= TT_E; m += 30) opts.push(`<option>${ttStr(m)}</option>`);
+  const f = document.getElementById('ttFrom'), t = document.getElementById('ttTo');
+  f.innerHTML = opts.join(''); t.innerHTML = opts.join(''); f.value = TT.from; t.value = TT.to;
+  f.addEventListener('change', () => { TT.from = f.value; if(ttMin(TT.to) <= ttMin(TT.from)){ TT.to = ttStr(Math.min(ttMin(TT.from)+60, TT_E)); t.value = TT.to; } ttRender(); });
+  t.addEventListener('change', () => { TT.to = t.value; if(ttMin(TT.to) <= ttMin(TT.from)){ TT.from = ttStr(Math.max(ttMin(TT.to)-60, TT_S)); f.value = TT.from; } ttRender(); });
+  document.getElementById('ttDays').addEventListener('click', e => { const b = e.target.closest('button[data-d]'); if(!b) return; TT.day = b.dataset.d; ttRender(); });
+}
+async function ttLoad(force){
+  ttInit();
+  ttDaysRender();
+  if(TT.data && !force){ ttRender(); return; }
+  const out = document.getElementById('ttOut');
+  out.innerHTML = '<p style="font-size:12.5px; color:var(--ink-faint);">불러오는 중...</p>';
+  try{
+    const r = await attendJsonpCall({ action:'timetable', tk: adminToken() });
+    if(!r || !r.ok){
+      out.innerHTML = `<p style="font-size:12.5px; color:var(--ink-soft);">${r && r.error === 'auth' ? '관리자 로그인이 필요해요. 관리자 버튼으로 다시 들어와 주세요.' : '시간표를 불러오지 못했어요: ' + esc((r && r.error) || '오류')}</p>`;
+      return;
+    }
+    TT.data = r; ttRender();
+  }catch(e){ out.innerHTML = `<p style="font-size:12.5px; color:var(--ink-soft);">시간표를 불러오지 못했어요: ${esc(e && e.message ? e.message : '오류')}</p>`; }
+}
+function ttDaysRender(){
+  document.getElementById('ttDays').innerHTML = TT_WD.map(d => `<button type="button" data-d="${d}" class="${d === TT.day ? 'on' : ''}">${d}</button>`).join('');
+}
+function ttRender(){
+  ttDaysRender();
+  const D = TT.data; if(!D) return;
+  const a = ttMin(TT.from), b = ttMin(TT.to);
+  const rows = D.people.map(p => {
+    const day = p.items.filter(x => x.d === TT.day).sort((x, y) => ttMin(x.s) - ttMin(y.s));
+    const hit = day.filter(x => ttMin(x.s) < b && ttMin(x.e) > a);
+    return { name: p.name, day, hit, q: day.some(x => x.q) };
+  });
+  const free = rows.filter(r => !r.hit.length), busy = rows.filter(r => r.hit.length);
+  const pill = r => `<span class="tt-pill${r.q ? ' q' : ''}">${esc(r.name)}</span>`;
+  const busyLi = r => `<li><b>${esc(r.name)}</b> ${r.hit.map(x => `${esc(x.c || '일정')} <small>${x.s}–${x.e}</small>${x.q ? ' <span class="tt-q">확인 필요</span>' : ''}`).join(', ')}</li>`;
+  let h = `<div class="tt-sum"><h4>${TT.day}요일 ${TT.from}–${TT.to} · 가능 <b>${free.length}명</b> · 수업 있음 ${busy.length}명</h4>`;
+  h += `<div class="tt-group"><p>가능 (이 시간에 수업 없음)</p><div class="tt-pills">${free.length ? free.map(pill).join('') : '<span class="tt-miss">없어요</span>'}</div></div>`;
+  if(busy.length) h += `<div class="tt-group"><p>수업 있음</p><ul class="tt-busy">${busy.map(busyLi).join('')}</ul></div>`;
+  if(free.some(r => r.q)) h += `<div class="tt-group"><p class="tt-miss" style="font-weight:400;">이름 옆 <span class="tt-q">?</span>는 그날 시간표에 확인이 필요한 칸이 있다는 뜻이에요.</p></div>`;
+  if(D.missing && D.missing.length) h += `<div class="tt-group"><p class="tt-miss" style="font-weight:400;">시간표 없음: <b>${D.missing.map(esc).join(', ')}</b> — 시트에 넣으면 5분 안에 보여요.</p></div>`;
+  h += '</div>';
+  // 그날 하루 막대 (가능한 사람 먼저)
+  const pct = m => ((Math.min(Math.max(m, TT_S), TT_E) - TT_S) / (TT_E - TT_S) * 100).toFixed(2);
+  h += '<div class="tt-tl"><div class="tt-ticks">' + [9,12,15,18].map(t => `<span style="left:${pct(t*60)}%">${t}시</span>`).join('') + '</div>';
+  free.concat(busy).forEach(r => {
+    h += `<div class="tt-row${r.hit.length ? '' : ' free'}"><span class="nm">${esc(r.name)}</span><div class="tt-track">`;
+    r.day.forEach(x => { const l = pct(ttMin(x.s)), w = (pct(ttMin(x.e)) - l).toFixed(2);
+      h += `<span class="tt-blk${x.q ? ' q' : ''}" style="left:${l}%; width:${w}%;" title="${esc((x.c || '일정') + ' ' + x.s + '–' + x.e + (x.r ? ' · ' + x.r : '') + (x.q ? ' · 확인 필요' : ''))}"></span>`; });
+    h += `<span class="tt-band" style="left:${pct(a)}%; width:${(pct(b) - pct(a)).toFixed(2)}%;"></span></div></div>`;
+  });
+  h += '</div>';
+  document.getElementById('ttOut').innerHTML = h;
+  document.getElementById('ttFoot').innerHTML = `시간표 ${esc(D.updated || '')} 기준 · <a href="${esc(D.sheet || '#')}" target="_blank" rel="noopener" style="color:var(--purple);">시간표 시트 고치기</a> (사람 추가·수정은 시트에 줄만 넣으면 돼요)`;
+}
+document.getElementById('btnTtBack').addEventListener('click', ()=>{ showView('form'); });
 
 /* ───────── 팀콘 불참 확인 / 면제 ───────── */
 let abItems = [];

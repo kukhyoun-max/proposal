@@ -338,6 +338,7 @@
   .qa-row button.on{background:var(--purple); border-color:var(--purple); color:#fff;}
   .drop-head{font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:22px 0 8px;}
   .sub-card.is-dropped{opacity:.6;}
+  .delay-txt{font-size:12px; font-weight:700; color:#DC2626; white-space:nowrap;}
   .up-link{display:inline-block; margin-top:6px; font-size:12px; color:#5B3FB0; font-weight:700; text-decoration:none;}
   .status-pill.rejected{background:#FCEAEA; color:#B23A3A;}
   .sub-card .sub-title{font-size:15px; font-weight:700; margin:2px 0 4px;}
@@ -1112,6 +1113,10 @@
 :root[data-theme="dark"] .cov-chip.none{background:#272333;color:var(--ink-soft)}
 :root[data-theme="dark"] .cov-foot{color:var(--ink-faint)}
 :root[data-theme="dark"] .section-title{color:var(--purple-dark);border-bottom:1.5px solid var(--purple-soft)}
+:root[data-theme="dark"] .date-box{border:1.5px solid var(--line-input)}
+:root[data-theme="dark"] .ev-form .date-box{border-color:var(--line)}
+:root[data-theme="dark"] .date-box:focus-within{border-color:var(--purple-line)}
+:root[data-theme="dark"] .date-box > input[type="date"]{border:0 !important;outline:none}
 :root[data-theme="dark"] .series-pop{background:#1E1D24;border:1.5px solid var(--line)}
 :root[data-theme="dark"] .series-pop button{border:0;background:none;color:var(--ink)}
 :root[data-theme="dark"] .series-pop button:active,:root[data-theme="dark"] .series-pop button.on{background:var(--purple-soft);color:var(--purple-dark)}
@@ -1203,6 +1208,7 @@
 :root[data-theme="dark"] .qa-row button{border:1px solid #434960;background:#1E1D24;color:var(--ink-soft)}
 :root[data-theme="dark"] .qa-row button.on{background:#4763E4;border-color:var(--purple);color:#fff}
 :root[data-theme="dark"] .drop-head{color:var(--ink-soft)}
+:root[data-theme="dark"] .delay-txt{color:#EB8484}
 :root[data-theme="dark"] .up-link{color:#A796D9}
 :root[data-theme="dark"] .status-pill.rejected{background:#3E1919;color:#DC9393}
 :root[data-theme="dark"] .sub-card .sub-meta{color:var(--ink-soft)}
@@ -1392,6 +1398,25 @@
 :root[data-theme="dark"] .my-pick button:focus-visible{outline:2px solid var(--purple)}
 :root[data-theme="dark"] .my-msg{color:var(--ink-soft)}
 :root[data-theme="dark"] .my-msg button{border:1px solid var(--line-input);background:transparent;color:var(--ink)}
+:root[data-theme="dark"] .gd-q{border:1px solid var(--line-input);background:transparent;color:var(--ink)}
+:root[data-theme="dark"] .gd-q:focus-visible{outline:2px solid var(--purple)}
+:root[data-theme="dark"] .gd-hits{border:1px solid var(--line)}
+:root[data-theme="dark"] .gd-hits button{border:0;border-top:1px solid var(--line);background:transparent;color:var(--ink)}
+:root[data-theme="dark"] .gd-hits button:first-child{border-top:0}
+:root[data-theme="dark"] .gd-hits button small{color:var(--ink-faint)}
+:root[data-theme="dark"] .gd-hits mark{background:rgba(61,95,224,.2);color:inherit}
+:root[data-theme="dark"] .gd-hits p{color:var(--ink-soft)}
+:root[data-theme="dark"] .gd-toc button{border:1px solid var(--line-input);background:transparent;color:var(--ink)}
+:root[data-theme="dark"] .gd-load{color:var(--ink-soft)}
+:root[data-theme="dark"] .gd-body{color:var(--ink)}
+:root[data-theme="dark"] .gd-body h2{border-top:1px solid var(--line)}
+:root[data-theme="dark"] .gd-body code{background:rgba(127,127,127,.15)}
+:root[data-theme="dark"] .gd-body a{color:var(--purple-dark)}
+:root[data-theme="dark"] .gd-tbl{border:1px solid var(--line)}
+:root[data-theme="dark"] .gd-body th,:root[data-theme="dark"] .gd-body td{border-top:1px solid var(--line)}
+:root[data-theme="dark"] .gd-body thead th{border-top:0;background:rgba(127,127,127,.08)}
+:root[data-theme="dark"] .gd-top{border:1px solid var(--line-input);background:var(--surface, #1E1D24);color:var(--ink)}
+:root[data-theme="dark"] .gd-note{color:var(--ink-faint)}
 :root[data-theme="dark"] .eqi-lab{color:var(--ink-soft)}
 :root[data-theme="dark"] #eqItemSel{border-color:var(--line-input)}
 :root[data-theme="dark"] .eqi-sum span{background:var(--page-bg);color:var(--ink)}
@@ -1620,6 +1645,7 @@
 :root[data-theme="dark"] [fill="#6B6873"]{fill:#C4C2CC}
 :root[data-theme="dark"] [stroke="#19181D"]{stroke:#6A6774}
 :root[data-theme="dark"] [stroke="#B8860F"]{stroke:#F0BC42}
+:root[data-theme="dark"] [fill="#888"]{fill:#A9A6B3}
 :root[data-theme="dark"] [style*="color: rgb(194, 65, 12)"]{color:#FFA47A !important}
 :root[data-theme="dark"] [style*="color: rgb(178, 58, 58)"]{color:#F0A0A0 !important}
 :root[data-theme="dark"] [style*="border-color: rgb(27, 122, 56)"]{border-color:#5FBF7D !important}
@@ -4698,7 +4724,7 @@ function renderAdminList(items){
       ${dropN && idx === items.length - dropN ? `<p class="drop-head">제작 중단 ${dropN}건</p>` : ''}
       <div class="sub-card${rec.status==='dropped' ? ' is-dropped' : ''}" data-key="${esc(key)}">
         <div class="sub-card-top">
-          <span class="status-pill ${esc(rec.status)}">${esc(STATUS_LABELS[rec.status]||rec.status)}</span>
+          <span style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span class="status-pill ${esc(rec.status)}">${esc(STATUS_LABELS[rec.status]||rec.status)}</span>${delayBadge(rec)}</span>
           <span style="display:flex; gap:12px;"><button class="toggle-detail" data-edit="${esc(key)}">수정</button><button class="toggle-detail" data-toggle="${esc(key)}">자세히 보기</button><button class="toggle-detail" data-del="${esc(key)}" style="color:#DC2626;">삭제</button></span>
         </div>
         <p class="sub-title">${esc(rec.title||'(제목 없음)')}</p>
@@ -4965,6 +4991,20 @@ document.getElementById('qaSave').addEventListener('click', async () => {
   btn.disabled = false; btn.textContent = '등록하고 바로 승인';
 });
 
+// 팀콘 제출 지연 (서버 amDelayWrite_와 같은 기준, 2026-11-10): 영상 제출일 다음 날부터 제작 완료일(없으면 오늘)까지 하루 -1
+const DELAY_SINCE = '2026-09-30';
+const DELAY_RESET = { 'S1786269514838dfal': '2026-10-07', 'S17893582920221vgv': '2026-10-07' };   // 서버 AM_DELAY_RESET과 같게
+function delayBadge(rec){
+  if(!['approved','filming','editing','completed','uploaded'].includes(rec.status) || !rec.submitdate) return '';
+  let done = doneYmd(rec.completedAt);
+  if(!done && ['completed','uploaded'].includes(rec.status)) done = rec.uploadedAt || rec.submitdate;
+  const end = done || mtYmd(new Date());
+  const start = [rec.submitdate, DELAY_SINCE, DELAY_RESET[rec.id] || ''].sort().pop();
+  const n = ymd => Math.round(new Date(ymd + 'T00:00:00Z').getTime() / 864e5);
+  const days = n(end) - n(start);
+  if(!(days > 0)) return '';
+  return `<span class="delay-txt">${done ? days + '일 지연 제출' : days + '일째 지연 중'} (-${days})</span>`;
+}
 function doneYmd(v){
   if(!v) return '';
   const s = String(v);

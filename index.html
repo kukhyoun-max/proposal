@@ -824,6 +824,14 @@
   .tt-range select{flex:1; min-height:44px; padding:0 10px; border:1.5px solid var(--line-input); border-radius:10px; font-size:16px; color:var(--ink); background:#fff; font-family:inherit;}
   .tt-range span{color:var(--ink-faint); font-weight:700;}
   .tt-range[hidden]{display:none;}
+  .tt-label{font-size:13px; font-weight:800; color:var(--ink); margin:0 0 6px;}
+  .tt-days button.we b{color:#C2410C;}
+  .tt-days button.on.we b{color:#fff;}
+  .tt-sv{margin:10px 0 0; font-size:13px; line-height:1.55; color:var(--ink-soft);}
+  .tt-sv b{color:var(--ink);}
+  .tt-tag{display:inline-block; font-size:12px; font-weight:700; padding:1px 7px; border-radius:6px; margin-left:4px; background:var(--purple-soft); color:var(--purple-dark);}
+  .tt-tag.no{background:#FBEFE7; color:#9A3412;}
+  .tt-chart{margin-top:14px;}
   .tt-res{border:1.5px solid var(--line); border-radius:14px; background:#fff; overflow:hidden;}
   .tt-res > h4{margin:0; padding:14px 14px 4px; font-size:13px; font-weight:700; color:var(--ink-soft);}
   .tt-res > h4 b{display:block; font-size:22px; font-weight:800; color:var(--ink); letter-spacing:-.3px;}
@@ -1556,6 +1564,13 @@
 :root[data-theme="dark"] .tt-presets button.on{border-color:var(--purple);color:var(--purple);background:var(--purple-soft)}
 :root[data-theme="dark"] .tt-range select{border:1.5px solid var(--line-input);color:var(--ink);background:#1E1D24}
 :root[data-theme="dark"] .tt-range span{color:var(--ink-faint)}
+:root[data-theme="dark"] .tt-label{color:var(--ink)}
+:root[data-theme="dark"] .tt-days button.we b{color:#F1A07E}
+:root[data-theme="dark"] .tt-days button.on.we b{color:#fff}
+:root[data-theme="dark"] .tt-sv{color:var(--ink-soft)}
+:root[data-theme="dark"] .tt-sv b{color:var(--ink)}
+:root[data-theme="dark"] .tt-tag{background:var(--purple-soft);color:var(--purple-dark)}
+:root[data-theme="dark"] .tt-tag.no{background:#3E2819;color:#F09B7F}
 :root[data-theme="dark"] .tt-res{border:1.5px solid var(--line);background:#1E1D24}
 :root[data-theme="dark"] .tt-res > h4{color:var(--ink-soft)}
 :root[data-theme="dark"] .tt-res > h4 b{color:var(--ink)}
@@ -2210,19 +2225,21 @@
     <button class="reset-link" id="btnTtBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
+    <p class="tt-label">요일</p>
     <div class="tt-days" id="ttDays" role="group" aria-label="요일"></div>
+    <p class="tt-label">시간 직접 입력</p>
+    <div class="tt-range" id="ttRange">
+      <select id="ttFrom" aria-label="시작"></select><span>~</span><select id="ttTo" aria-label="끝"></select>
+    </div>
+    <div class="tt-presets" id="ttPresets" role="group" aria-label="빠른 고르기"></div>
+    <button type="button" class="tt-go" id="ttGo">찾기</button>
+    <div id="ttOut"><p class="tt-none">불러오는 중...</p></div>
     <div class="tt-chart">
       <h4 id="ttChartTitle">언제 많이 비나요?</h4>
-      <p>막대가 높을수록 비는 사람이 많아요. 막대를 누르면 그 시간을 골라요.</p>
+      <p>시간표 기준, 막대가 높을수록 비는 사람이 많아요. 막대를 누르면 그 1시간으로 바로 찾아요.</p>
       <div class="tt-bars" id="ttBars"></div>
       <div class="tt-axis" id="ttAxis"></div>
     </div>
-    <div class="tt-presets" id="ttPresets" role="group" aria-label="시간"></div>
-    <div class="tt-range" id="ttRange" hidden>
-      <select id="ttFrom" aria-label="시작"></select><span>~</span><select id="ttTo" aria-label="끝"></select>
-    </div>
-    <button type="button" class="tt-go" id="ttGo">찾기</button>
-    <div id="ttOut"><p class="tt-none">불러오는 중...</p></div>
     <p class="tt-foot" id="ttFoot"></p>
   </div>
 </div>
@@ -6133,39 +6150,40 @@ document.querySelectorAll('.mt-tabs button[data-go]').forEach(b => b.addEventLis
   else { showView('meeting'); const input = document.getElementById('mtDate'); if(!input.value) input.value = mtMonday(mtYmd(new Date())); mtLoad(); }
 }));
 
-/* ───────── 홍보대사 시간표: 빈 시간 찾기 (관리자, 2026-11-10 · 11-11 다시 짬) ─────────
-   서버 timetable(관리자 출입증) → 비공개 시트의 시간표 중 현재 명단만.
-   고른 시간 전체가 비면 「전부 가능」, 30분 이상 비는 틈이 있으면 「일부 가능」, 아니면 「안 돼요」 */
-const TT = { data:null, day:'', from:'13:00', to:'15:00', ready:false, custom:false, applied:'' };
-const TT_WD = ['월','화','수','목','금'];
+/* ───────── 홍보대사 시간표: 빈 시간 찾기 (관리자, 2026-11-10 · 11-11 다시 짬 · 설문 반영) ─────────
+   서버 timetable(관리자 출입증) → 비공개 시트의 수업 시간표 + 설문 v6 「촬영할 수 있는 시간대」(동의한 사람), 현재 명단만.
+   수업 기준: 고른 시간 전체가 비면 「전부 가능」, 30분 이상 비는 틈이 있으면 「일부 가능」, 아니면 「안 돼요」.
+   설문(오전 ~12시 · 오후 12~18시 · 저녁 18시~)은 사람마다 「설문 ○ / 설문 ✕」로 덧붙인다. 「찾기」를 눌러야 결과가 나온다 */
+const TT = { data:null, day:'', from:'13:00', to:'15:00', ready:false, applied:'' };
+const TT_WD = ['월','화','수','목','금','토','일'];
 const TT_S = 8*60, TT_E = 21*60;
 const TT_PRESETS = [['오전','09:00','12:00'],['점심','12:00','13:00'],['1~3시','13:00','15:00'],['3~6시','15:00','18:00'],['저녁','18:00','21:00']];
 function ttMin(t){ const a = String(t).split(':'); return Number(a[0])*60 + Number(a[1]||0); }
 function ttStr(m){ return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'); }
 function ttHm(t){ const m = ttMin(t); return (m % 60) ? Math.floor(m/60) + ':' + String(m%60).padStart(2,'0') : Math.floor(m/60) + '시'; }
-function ttNextDate(i){ const d = new Date(); d.setHours(0,0,0,0); const want = i + 1; d.setDate(d.getDate() + ((want - d.getDay() + 7) % 7)); return (d.getMonth()+1) + '/' + d.getDate(); }
+function ttNextDate(i){ const d = new Date(); d.setHours(0,0,0,0); const want = (i + 1) % 7; d.setDate(d.getDate() + ((want - d.getDay() + 7) % 7)); return (d.getMonth()+1) + '/' + d.getDate(); }
+// 고른 시간에 걸친 설문 칸(오전·오후·저녁)
+function ttSlots(a, b){ return [['오전',0,12*60],['오후',12*60,18*60],['저녁',18*60,24*60]].filter(x => a < x[2] && b > x[1]).map(x => x[0]); }
+// 설문: 'yes'(걸친 칸 모두 가능) · 'part' · 'no' · ''(설문 없음)
+function ttSurveyOk(name, day, a, b){
+  const sv = TT.data && TT.data.survey && TT.data.survey[name];
+  if(!sv) return '';
+  const need = ttSlots(a, b).map(x => day + ' ' + x), have = need.filter(x => sv.slots.includes(x));
+  return have.length === need.length ? 'yes' : have.length ? 'part' : 'no';
+}
+function ttSearch(){ if(!TT.data) return; TT.applied = TT.day + TT.from + TT.to; ttRender(); const r = document.querySelector('#ttOut .tt-res'); if(r){ r.classList.add('flash'); r.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start' }); } }
 function ttInit(){
   if(TT.ready) return; TT.ready = true;
-  const wd = new Date().getDay(); TT.day = (wd >= 1 && wd <= 5) ? TT_WD[wd-1] : '월';
+  const wd = new Date().getDay(); TT.day = TT_WD[(wd + 6) % 7];
   const opts = []; for(let m = TT_S; m <= TT_E; m += 30) opts.push(`<option>${ttStr(m)}</option>`);
   const f = document.getElementById('ttFrom'), t = document.getElementById('ttTo');
   f.innerHTML = opts.join(''); t.innerHTML = opts.join('');
   f.addEventListener('change', () => { TT.from = f.value; if(ttMin(TT.to) <= ttMin(TT.from)) TT.to = ttStr(Math.min(ttMin(TT.from)+60, TT_E)); ttRender(); });
   t.addEventListener('change', () => { TT.to = t.value; if(ttMin(TT.to) <= ttMin(TT.from)) TT.from = ttStr(Math.max(ttMin(TT.to)-60, TT_S)); ttRender(); });
   document.getElementById('ttDays').addEventListener('click', e => { const b = e.target.closest('button[data-d]'); if(!b) return; TT.day = b.dataset.d; ttRender(); });
-  document.getElementById('ttPresets').addEventListener('click', e => {
-    const b = e.target.closest('button'); if(!b) return;
-    if(b.dataset.p === 'custom'){ TT.custom = !TT.custom; }
-    else { const p = TT_PRESETS[Number(b.dataset.p)]; TT.from = p[1]; TT.to = p[2]; TT.custom = false; }
-    ttRender();
-  });
-  document.getElementById('ttGo').addEventListener('click', () => {
-    if(!TT.data) return;
-    TT.applied = TT.day + TT.from + TT.to; ttRender();
-    const r = document.querySelector('#ttOut .tt-res');
-    if(r){ r.classList.add('flash'); r.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start' }); }
-  });
-  document.getElementById('ttBars').addEventListener('click', e => { const b = e.target.closest('button[data-h]'); if(!b) return; const h = Number(b.dataset.h); TT.from = ttStr(h*60); TT.to = ttStr(Math.min(h*60+60, TT_E)); TT.custom = false; ttRender(); });
+  document.getElementById('ttPresets').addEventListener('click', e => { const b = e.target.closest('button[data-p]'); if(!b) return; const p = TT_PRESETS[Number(b.dataset.p)]; TT.from = p[1]; TT.to = p[2]; ttRender(); });
+  document.getElementById('ttGo').addEventListener('click', ttSearch);
+  document.getElementById('ttBars').addEventListener('click', e => { const b = e.target.closest('button[data-h]'); if(!b) return; const h = Number(b.dataset.h); TT.from = ttStr(h*60); TT.to = ttStr(Math.min(h*60+60, TT_E)); ttSearch(); });
 }
 async function ttLoad(force){
   ttInit();
@@ -6191,24 +6209,20 @@ function ttGaps(items, a, b){
   return gaps;
 }
 function ttControls(){
-  document.getElementById('ttDays').innerHTML = TT_WD.map((d, i) => `<button type="button" data-d="${d}" class="${d === TT.day ? 'on' : ''}" aria-pressed="${d === TT.day}"><b>${d}</b><small>${ttNextDate(i)}</small></button>`).join('');
-  const pi = TT_PRESETS.findIndex(p => p[1] === TT.from && p[2] === TT.to);
-  document.getElementById('ttPresets').innerHTML = TT_PRESETS.map((p, i) => `<button type="button" data-p="${i}" class="${!TT.custom && i === pi ? 'on' : ''}">${p[0]}</button>`).join('')
-    + `<button type="button" data-p="custom" class="${TT.custom || pi < 0 ? 'on' : ''}">${pi < 0 && !TT.custom ? ttHm(TT.from) + '~' + ttHm(TT.to) : '직접'}</button>`;
-  document.getElementById('ttRange').hidden = !TT.custom;
+  document.getElementById('ttDays').innerHTML = TT_WD.map((d, i) => `<button type="button" data-d="${d}" class="${d === TT.day ? 'on' : ''}${i >= 5 ? ' we' : ''}" aria-pressed="${d === TT.day}"><b>${d}</b><small>${ttNextDate(i)}</small></button>`).join('');
+  document.getElementById('ttPresets').innerHTML = TT_PRESETS.map((p, i) => `<button type="button" data-p="${i}" class="${p[1] === TT.from && p[2] === TT.to ? 'on' : ''}">${p[0]}</button>`).join('');
   document.getElementById('ttFrom').value = TT.from; document.getElementById('ttTo').value = TT.to;
 }
 function ttRender(){
   ttControls();
   const D = TT.data; if(!D) return;
-  const a = ttMin(TT.from), b = ttMin(TT.to);
+  const a = ttMin(TT.from), b = ttMin(TT.to), di = TT_WD.indexOf(TT.day);
   const rows = D.people.map(p => {
     const day = p.items.filter(x => x.d === TT.day).sort((x, y) => ttMin(x.s) - ttMin(y.s));
     const hit = day.filter(x => ttMin(x.s) < b && ttMin(x.e) > a);
     const gaps = hit.length ? ttGaps(hit, a, b) : [];
-    return { name: p.name, day, hit, gaps, q: day.some(x => x.q) };
+    return { name: p.name, day, hit, gaps, q: day.some(x => x.q), sv: ttSurveyOk(p.name, TT.day, a, b) };
   });
-  const all = rows.filter(r => !r.hit.length), part = rows.filter(r => r.hit.length && r.gaps.length), no = rows.filter(r => r.hit.length && !r.gaps.length);
   // 시간대별 막대 (30분마다 수업 없는 사람 수, 1시간씩 누름)
   const total = rows.length || 1;
   let bars = '';
@@ -6220,17 +6234,29 @@ function ttRender(){
   document.getElementById('ttBars').innerHTML = bars;
   document.getElementById('ttAxis').innerHTML = Array.from({length: (TT_E - TT_S)/60}, (_, i) => `<span>${(TT_S/60 + i) % 3 === 0 ? (TT_S/60 + i) : ''}</span>`).join('');
   document.getElementById('ttChartTitle').textContent = `${TT.day}요일, 언제 많이 비나요?`;
-  document.getElementById('ttGo').textContent = `${TT.day} ${ttNextDate(TT_WD.indexOf(TT.day))} ${ttHm(TT.from)}~${ttHm(TT.to)} 찾기`;
-  document.getElementById('ttFoot').innerHTML = `각자 보낸 시간표 사진을 옮긴 거라 틀릴 수 있어요. 부르기 전에 본인에게 확인해 주세요.<br>${esc(D.updated || '')} 기준 · <a href="${esc(D.sheet || '#')}" target="_blank" rel="noopener">시간표 시트 고치기</a>`;
+  document.getElementById('ttGo').textContent = `${TT.day} ${ttNextDate(di)} ${ttHm(TT.from)}~${ttHm(TT.to)} 찾기`;
+  const svN = Object.keys(D.survey || {}).length;
+  document.getElementById('ttFoot').innerHTML = `수업 시간표는 각자 보낸 사진을 옮긴 거고, 설문은 10월 홍보대사 설문의 「촬영할 수 있는 시간대」(오전·오후·저녁, ${svN}명)예요. 틀릴 수 있으니 부르기 전에 본인에게 확인해 주세요.<br>${esc(D.updated || '')} 기준 · <a href="${esc(D.sheet || '#')}" target="_blank" rel="noopener">시간표 시트 고치기</a>`;
   if(TT.applied !== TT.day + TT.from + TT.to){ document.getElementById('ttOut').innerHTML = '<p class="tt-wait">요일과 시간을 고르고 위 버튼을 누르면<br>가능한 사람이 나와요.</p>'; return; }
-  // 결과
+  const all = rows.filter(r => !r.hit.length), part = rows.filter(r => r.hit.length && r.gaps.length), no = rows.filter(r => r.hit.length && !r.gaps.length);
+  const svTag = v => v === 'yes' ? '<span class="tt-tag">설문 ○</span>' : v === 'no' ? '<span class="tt-tag no">설문 ✕</span>' : v === 'part' ? '<span class="tt-tag">설문 일부</span>' : '';
   const nm = r => `<span class="tt-name">${esc(r.name)}${r.q ? '<span class="tt-qm" title="그날 시간표에 확인이 필요한 칸이 있어요">?</span>' : ''}</span>`;
   const why = r => r.hit.map(x => `${esc(x.c || '일정')} ${ttHm(x.s)}~${ttHm(x.e)}${x.q ? ' <span class="tt-q">확인 필요</span>' : ''}`).join(', ');
-  let h = `<div class="tt-res"><h4>${TT.day} ${ttNextDate(TT_WD.indexOf(TT.day))} <b>${ttHm(TT.from)} ~ ${ttHm(TT.to)}</b></h4>`;
-  h += `<div class="tt-sec"><h5><span class="tt-dot"></span>전부 가능 <em>${all.length}명</em></h5>${all.length ? `<div class="tt-names">${all.map(nm).join('')}</div>` : '<p class="tt-none">이 시간 내내 비는 사람이 없어요. 시간을 줄이거나 막대가 높은 곳을 눌러 보세요.</p>'}</div>`;
-  if(part.length) h += `<div class="tt-sec"><h5><span class="tt-dot part"></span>일부 가능 <em>${part.length}명</em></h5><ul class="tt-lines">${part.map(r => `<li><b>${esc(r.name)}</b><span>${r.gaps.map(g => ttHm(ttStr(g[0])) + '~' + ttHm(ttStr(g[1]))).join(', ')} 비어요</span></li>`).join('')}</ul></div>`;
+  const svNote = list => {
+    const noL = list.filter(r => r.sv === 'no').map(r => esc(r.name)), noneL = list.filter(r => !r.sv).map(r => esc(r.name));
+    let t = '';
+    if(noL.length) t += `설문에선 이 시간 촬영이 어렵다고 함: <b>${noL.join(', ')}</b>`;
+    if(noneL.length) t += (t ? '<br>' : '') + `설문 응답 없음: ${noneL.join(', ')}`;
+    return t ? `<p class="tt-sv">${t}</p>` : '';
+  };
+  let h = `<div class="tt-res"><h4>${TT.day} ${ttNextDate(di)} <b>${ttHm(TT.from)} ~ ${ttHm(TT.to)}</b></h4>`;
+  h += `<div class="tt-sec"><h5><span class="tt-dot"></span>전부 가능 <em>${all.length}명</em></h5>${all.length ? `<div class="tt-names">${all.map(nm).join('')}</div>${svNote(all)}` : '<p class="tt-none">이 시간 내내 비는 사람이 없어요. 시간을 줄이거나 아래 막대가 높은 곳을 눌러 보세요.</p>'}</div>`;
+  if(part.length) h += `<div class="tt-sec"><h5><span class="tt-dot part"></span>일부 가능 <em>${part.length}명</em></h5><ul class="tt-lines">${part.map(r => `<li><b>${esc(r.name)}</b><span>${r.gaps.map(g => ttHm(ttStr(g[0])) + '~' + ttHm(ttStr(g[1]))).join(', ')} 비어요${svTag(r.sv)}</span></li>`).join('')}</ul></div>`;
   if(no.length) h += `<div class="tt-sec"><details><summary><h5><span class="tt-dot no"></span>안 돼요 <em>${no.length}명</em></h5></summary><ul class="tt-lines">${no.map(r => `<li><b>${esc(r.name)}</b><span>${why(r)}</span></li>`).join('')}</ul></details></div>`;
-  if(D.missing && D.missing.length) h += `<div class="tt-sec"><p class="tt-none">시간표 없음: <b>${D.missing.map(esc).join(', ')}</b> · 시트에 넣으면 5분 안에 보여요</p></div>`;
+  if(D.missing && D.missing.length){
+    const ms = D.missing.map(n => ({ name: n, sv: ttSurveyOk(n, TT.day, a, b) }));
+    h += `<div class="tt-sec"><h5><span class="tt-dot no"></span>수업 시간표 없음 <em>${ms.length}명</em></h5><ul class="tt-lines">${ms.map(r => `<li><b>${esc(r.name)}</b><span>${r.sv === 'yes' ? '설문상 이 시간 촬영 가능' : r.sv === 'part' ? '설문상 일부 가능' : r.sv === 'no' ? '설문상 이 시간 어려움' : '설문 응답도 없음'}</span></li>`).join('')}</ul><p class="tt-sv">수업 시간표는 시트에 넣으면 5분 안에 반영돼요.</p></div>`;
+  }
   h += '</div>';
   // 사람별 하루 (접어 둠)
   const pct = m => ((Math.min(Math.max(m, TT_S), TT_E) - TT_S) / (TT_E - TT_S) * 100).toFixed(2);
@@ -6242,7 +6268,7 @@ function ttRender(){
   });
   tl += '</div>';
   const wasOpen = !!document.querySelector('#ttOut .tt-more[open]');
-  h += `<details class="tt-more"${wasOpen ? ' open' : ''}><summary>사람별 ${TT.day}요일 일정 보기</summary>${tl}</details>`;
+  h += `<details class="tt-more"${wasOpen ? ' open' : ''}><summary>사람별 ${TT.day}요일 수업 보기</summary>${tl}</details>`;
   document.getElementById('ttOut').innerHTML = h;
 }
 document.getElementById('btnTtBack').addEventListener('click', ()=>{ showView('form'); });

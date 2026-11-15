@@ -1205,6 +1205,29 @@
   .ld-text b{font-size:14.5px; color:var(--ink);}
   .mc-select{width:100%; min-height:44px; margin-top:10px; padding:0 12px; border-radius:12px; border:1px solid var(--line-input); background:var(--surface, #fff); color:var(--ink); font:inherit; font-size:15px;}
   .ev-plan{border-style:dashed;}
+  /* 행사 장소 (2026-11-16 담당자 「행사 장소 설정하면 행사 장소 내에서만 출첵」) */
+  .ev-place{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:4px;}
+  .ev-place-t{flex:1 1 100%; min-width:0; font-size:13.5px; color:var(--ink-soft);}
+  .ev-place-t b{color:var(--ink);}
+  .evm{position:fixed; inset:0; z-index:9000; display:flex; flex-direction:column; background:var(--page-bg, #F7F7FA); padding:env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);}
+  .evm[hidden]{display:none;}
+  .evm-top{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px 10px; font-size:16px;}
+  .evm-x{min-height:40px; padding:0 14px; border-radius:10px; border:1px solid var(--line-input); background:transparent; color:var(--ink); font:inherit; font-size:14px; cursor:pointer;}
+  .evm-name{padding:0 16px 10px;}
+  .evm-name input{width:100%; box-sizing:border-box; min-height:44px; padding:0 12px; border-radius:12px; border:1px solid var(--line-input); background:var(--surface, #fff); color:var(--ink); font:inherit; font-size:15px;}
+  .evm-mapwrap{position:relative; flex:1 1 auto; min-height:240px;}
+  .evm-map{position:absolute; inset:0; background:#DDE3EA;}
+  .evm-layer{position:absolute; top:10px; right:10px; z-index:500; min-height:36px; padding:0 12px; border-radius:10px; border:0; background:rgb(255 255 255); color:rgb(25 24 29); font:inherit; font-size:13px; font-weight:700; box-shadow:0 1px 4px rgb(0 0 0 / .25); cursor:pointer;}
+  .evm-hint{position:absolute; left:50%; bottom:12px; transform:translateX(-50%); z-index:500; margin:0; max-width:calc(100% - 32px); padding:8px 12px; border-radius:10px; background:rgb(25 24 29 / .82); color:rgb(255 255 255); font-size:13px; line-height:1.4; text-align:center; pointer-events:none;}
+  .evm-bot{display:flex; flex-direction:column; gap:10px; padding:12px 16px 14px; border-top:1px solid var(--line);}
+  .evm-r{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink-soft);}
+  .evm-r span{margin-right:4px;}
+  .evm-r button{flex:1; min-height:40px; border-radius:10px; border:1px solid var(--line-input); background:transparent; color:var(--ink); font:inherit; font-size:14px; cursor:pointer;}
+  .evm-r button[aria-checked="true"]{background:var(--purple); border-color:var(--purple); color:#fff; font-weight:700;}
+  .evm-acts{display:flex; gap:8px;}
+  .evm-me{flex:0 0 auto; min-height:48px; padding:0 14px; border-radius:12px; border:1px solid var(--line-input); background:transparent; color:var(--ink); font:inherit; font-size:14px; cursor:pointer;}
+  .evm-ok{flex:1; min-height:48px; border-radius:12px; border:0; background:var(--purple); color:#fff; font:inherit; font-size:15px; font-weight:800; cursor:pointer;}
+  .evm-ok:disabled{opacity:.45; cursor:default;}
   .ev-miss{color:#B23A3A;}
   .mt-auto{font-size:11px; font-weight:700; color:var(--ink-soft); white-space:nowrap;}
   .mc-card button.mc-main{background:var(--purple); border-color:var(--purple); color:#fff;}
@@ -1849,6 +1872,20 @@
 :root[data-theme="dark"] .ld-text{color:var(--ink-soft)}
 :root[data-theme="dark"] .ld-text b{color:var(--ink)}
 :root[data-theme="dark"] .mc-select{border:1px solid var(--line-input);background:var(--surface, #1E1D24);color:var(--ink)}
+:root[data-theme="dark"] .ev-place-t{color:var(--ink-soft)}
+:root[data-theme="dark"] .ev-place-t b{color:var(--ink)}
+:root[data-theme="dark"] .evm{background:var(--page-bg, #212135)}
+:root[data-theme="dark"] .evm-x{border:1px solid var(--line-input);background:transparent;color:var(--ink)}
+:root[data-theme="dark"] .evm-name input{border:1px solid var(--line-input);background:var(--surface, #1E1D24);color:var(--ink)}
+:root[data-theme="dark"] .evm-map{background:#2D3A49}
+:root[data-theme="dark"] .evm-layer{border:0;background:rgb(255 255 255);color:rgb(25 24 29)}
+:root[data-theme="dark"] .evm-hint{background:rgb(25 24 29 / .82);color:rgb(255 255 255)}
+:root[data-theme="dark"] .evm-bot{border-top:1px solid var(--line)}
+:root[data-theme="dark"] .evm-r{color:var(--ink-soft)}
+:root[data-theme="dark"] .evm-r button{border:1px solid var(--line-input);background:transparent;color:var(--ink)}
+:root[data-theme="dark"] .evm-r button[aria-checked="true"]{background:#4763E4;border-color:var(--purple);color:#fff}
+:root[data-theme="dark"] .evm-me{border:1px solid var(--line-input);background:transparent;color:var(--ink)}
+:root[data-theme="dark"] .evm-ok{border:0;background:#4763E4;color:#fff}
 :root[data-theme="dark"] .ev-miss{color:#DC9393}
 :root[data-theme="dark"] .mt-auto{color:var(--ink-soft)}
 :root[data-theme="dark"] .mc-card button.mc-main{background:#4763E4;border-color:var(--purple);color:#fff}
@@ -2442,6 +2479,8 @@
       <label>날짜</label><input type="date" id="evDate">
       <label for="evTime">집합 시간 <small style="font-weight:400; color:var(--ink-faint);">이때까지 오면 출석, 30분 안은 지각(가점 절반), 그 뒤는 출석 안 됨</small></label><input type="time" id="evTime">
       <label>행사명</label><input type="text" id="evTitle" placeholder="예) 입시박람회 부스 운영">
+      <label>행사 장소 <small style="font-weight:400; color:var(--ink-faint);">정해 두면 그 장소 원 안에서만 출석돼요. 비워 두면 출석을 켠 휴대폰 위치 80m</small></label>
+      <div class="ev-place"><span id="evPlaceText" class="ev-place-t">정하지 않음</span><button type="button" class="mt-quick" id="evPlacePick">지도에서 정하기</button><button type="button" class="mt-quick" id="evPlaceClear" hidden>지우기</button></div>
       <label>1인당 가점</label><input type="number" id="evPoints" step="0.5" min="0.5" max="20" value="2">
       <label for="evLeader">출석 리더 <small style="font-weight:400; color:var(--ink-faint);">내가 없을 때 행사 날 이 사람이 출석을 받아요</small></label>
       <select id="evLeader" class="mc-select" style="margin-top:4px;"><option value="">없음 (내가 직접)</option></select>
@@ -2581,6 +2620,20 @@
 </div>
 
 
+<div class="evm" id="evMap" role="dialog" aria-modal="true" aria-label="행사 장소 정하기" hidden>
+  <div class="evm-top">
+    <b>행사 장소 정하기</b>
+    <button type="button" class="evm-x" id="evMapClose" aria-label="닫기">닫기</button>
+  </div>
+  <div class="evm-name"><input type="text" id="evMapName" maxlength="40" placeholder="장소 이름 (예: 대운동장, 스타센터 앞)"></div>
+  <div class="evm-mapwrap"><div id="evMapBox" class="evm-map"></div><button type="button" class="evm-layer" id="evMapLayer">위성</button><p class="evm-hint" id="evMapHint">지도를 눌러 행사 장소를 찍어 주세요</p></div>
+  <div class="evm-bot">
+    <div class="evm-r" role="radiogroup" aria-label="출석되는 반경"><span>반경</span>
+      <button type="button" data-r="50">50m</button><button type="button" data-r="80">80m</button><button type="button" data-r="150">150m</button><button type="button" data-r="300">300m</button>
+    </div>
+    <div class="evm-acts"><button type="button" class="evm-me" id="evMapMe">지금 내 위치로</button><button type="button" class="evm-ok" id="evMapOk" disabled>이 장소로 정하기</button></div>
+  </div>
+</div>
 <div class="jjh-dim" id="jjhDim"></div>
 <div class="jjh-sheet" id="jjhSheetWhy" role="dialog" aria-label="1등 근거">
   <h4><span id="jjhWhyName"></span>님이 1등인 이유</h4>
@@ -4708,7 +4761,8 @@ async function mcRun(force, st){
       try{ localStorage.setItem(MC_EV_LS, evKey); }catch(e){}
       mcShow('출석 시간이 지났어요', `집합 시간 ${j.time}에서 30분(${j.limit})이 지나 참여로 들어가지 않아요. 사정이 있으면 관리자에게 말해 주세요.`, false, 'off');
     } else if(j && j.error === 'far'){
-      mcShow(what + ' 장소와 멀어요', `출석을 연 곳에서 약 ${j.dist}m 떨어진 곳으로 잡혔어요. ${doMeet ? '홍보대사실 안에서' : '행사장에서'} 다시 눌러 주세요. 계속 안 되면 관리자에게 말해 주세요.`, true, 'far', j.dist);
+      if(j.place) mcShow(what + ' 장소와 멀어요', `${j.place}에서 약 ${j.dist}m 떨어진 곳으로 잡혔어요. 반경 ${j.r}m 안에 들어가서 다시 눌러 주세요. 계속 안 되면 관리자에게 말해 주세요.`, true, 'far', Math.round(j.dist * 80 / (j.r || 80)));
+      else mcShow(what + ' 장소와 멀어요', `출석을 연 곳에서 약 ${j.dist}m 떨어진 곳으로 잡혔어요. ${doMeet ? '홍보대사실 안에서' : '행사장에서'} 다시 눌러 주세요. 계속 안 되면 관리자에게 말해 주세요.`, true, 'far', j.dist);
     } else if(j && j.error === 'acc'){
       mcShow('위치가 정확하지 않아요', `위치 오차가 약 ${j.acc}m예요. 와이파이를 켜고 다시 눌러 주세요.`, true, 'fuzzy');
     } else {
@@ -4732,7 +4786,7 @@ async function leadHomeLoad(){
     try{ const l = await attendJsonpCall({ action:'eventList' }); plans = (l && l.plans) || []; }catch(e){}
   }
   const today = mtYmd(new Date()), items = ((r && r.items) || []).map(x => Object.assign({ mine: true }, x));
-  plans.filter(x => x.date === today && x.time && !items.some(i => i.title === x.title)).forEach(x => items.push({ title: x.title, points: x.points, time: x.time, admin: true }));
+  plans.filter(x => x.date === today && x.time && !items.some(i => i.title === x.title)).forEach(x => items.push({ title: x.title, points: x.points, time: x.time, place: x.place || null, admin: true }));
   const open = r && r.open && r.open.open ? r.open : null;
   if(full && open && open.date === today && !items.some(i => i.title === open.title)) items.push({ title: open.title, points: open.points, time: open.time, admin: true });
   leadLast = { items, open };
@@ -4746,7 +4800,7 @@ function leadRender(r, msg, msgTitle){
   el.innerHTML = items.map(it => {
     const on = !!(open && open.title === it.title), late = it.time && evHM() > it.time;
     const sub = on ? `${esc(open.until)}까지 받는 중 · 지금 ${esc(open.n || 0)}명 들어왔어요`
-      : `집합 ${esc(it.time || '')}${late ? ` · 지금 오는 사람은 지각(${esc(evPlus30(it.time))}까지)` : ''} · 행사장에서 누르면 이 휴대폰 위치 80m 안만 출석돼요`;
+      : `집합 ${esc(it.time || '')}${late ? ` · 지금 오는 사람은 지각(${esc(evPlus30(it.time))}까지)` : ''} · ${it.place ? `${esc(it.place.name)} 반경 ${esc(it.place.r)}m 안에서만 출석돼요` : '행사장에서 누르면 이 휴대폰 위치 80m 안만 출석돼요'}`;
     return `<div class="ldb-row${on ? ' on' : ''}">
       <div class="ldb-head"><span class="ldb-dot" aria-hidden="true"></span><div class="ldb-txt">
         <span class="ldb-k">${on ? '행사 출석 받는 중' : (it.mine ? '오늘 내가 출석 리더' : '오늘 행사 출석')}</span>
@@ -4765,10 +4819,12 @@ function leadRender(r, msg, msgTitle){
         if(!j || !j.ok) throw new Error((j && j.error) || '');
         return leadHomeLoad();
       }
-      b.textContent = '위치 확인 중…';
-      let c;
-      try{ c = await mcPos(); }catch(err){ leadRender(r, mcPosErr(err), title); return; }
-      const j = await mcPost({ action:'eventOpen', title, points: it.points, time: it.time, lat: c.latitude, lng: c.longitude, acc: c.accuracy });
+      let c = null;
+      if(!it.place){ // 장소를 정해 둔 행사는 어디서든 켬(기준점 = 그 장소)
+        b.textContent = '위치 확인 중…';
+        try{ c = await mcPos(); }catch(err){ leadRender(r, mcPosErr(err), title); return; }
+      }
+      const j = await mcPost(Object.assign({ action:'eventOpen', title, points: it.points, time: it.time }, it.place ? {} : { lat: c.latitude, lng: c.longitude, acc: c.accuracy }));
       if(j && j.error === 'acc'){ leadRender(r, `위치 오차가 약 ${j.acc}m라 시작하지 못했어요. 와이파이를 켜고 다시 눌러 주세요.`, title); return; }
       if(!j || !j.ok) throw new Error((j && j.error) || '');
       await leadHomeLoad();
@@ -6739,7 +6795,7 @@ function evRender(){
   const plansOnly = evPlans.filter(x => !evEvents.some(e => e.date === x.date && e.title === x.title));
   el.innerHTML = (plansOnly.length || evEvents.length) ? plansOnly.map((x, i) => `<div class="ev-card ev-plan" data-p="${i}">
       <span class="ev-pts">+${esc(x.points)}점</span><b>${abEsc(x.title)}</b>
-      <div class="ev-meta">${esc(x.date.slice(5).replace('-','/'))} · 예정${x.time ? ' · 집합 ' + esc(x.time) : ''} · 지원 ${(x.applicants || []).length}명${x.leader ? ' · 리더 ' + abEsc(x.leader) : ''}</div>
+      <div class="ev-meta">${esc(x.date.slice(5).replace('-','/'))} · 예정${x.time ? ' · 집합 ' + esc(x.time) : ''}${x.place ? ' · 📍' + abEsc(x.place.name) + ' ' + esc(x.place.r) + 'm' : ''} · 지원 ${(x.applicants || []).length}명${x.leader ? ' · 리더 ' + abEsc(x.leader) : ''}</div>
       ${evMissing({ date: x.date, title: x.title, names: [] }).length ? `<div class="ev-meta ev-miss">불참 후보: ${evMissing({ date: x.date, title: x.title, names: [] }).map(abEsc).join(', ')}</div>` : ''}
     </div>`).join('') + evEvents.map((ev, i) => { const pl = evPlanOf(ev.date, ev.title), au = ev.auto || [], lt = ev.late || [], miss = evMissing(ev); return `<div class="ev-card" data-i="${i}">
       <span class="ev-pts">+${esc(ev.points)}점</span><b>${abEsc(ev.title)}</b>
@@ -6761,6 +6817,78 @@ function evChips(){
   document.getElementById('evCount').textContent = `(${evSel.size}명)`;
   document.getElementById('evAll').textContent = evSel.size === MEETING_ROSTER.length ? '전체 해제' : '전체 선택';
 }
+// 행사 장소: evPlace = {name, lat, lng, r} | null. 지도는 처음 열 때만 Leaflet을 불러요
+let evPlace = null, evMapObj = null, evMapPin = null, evMapRing = null, evMapTmp = null, evMapSat = false, evMapTiles = null;
+function evPlaceShow(){
+  const t = document.getElementById('evPlaceText');
+  t.innerHTML = evPlace ? `<b>${esc(evPlace.name)}</b> · 반경 ${esc(evPlace.r)}m 안에서만 출석` : '정하지 않음';
+  document.getElementById('evPlaceClear').hidden = !evPlace;
+  document.getElementById('evPlacePick').textContent = evPlace ? '지도에서 바꾸기' : '지도에서 정하기';
+  const info = document.getElementById('evCheckInfo');
+  if(info && !document.getElementById('evCheckBtn').disabled) info.textContent = evPlace ? `${evPlace.name} 반경 ${evPlace.r}m 안만 참여로 들어가요. 어디서든 켤 수 있어요 (2시간)` : '행사 당일, 행사장에서 누르면 이 휴대폰 위치에서 80m 안만 참여로 들어가요 (2시간)';
+}
+function evLeafletLoad(){
+  if(window.L) return Promise.resolve();
+  return new Promise((ok, no) => {
+    const c = document.createElement('link'); c.rel = 'stylesheet'; c.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(c);
+    const j = document.createElement('script'); j.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; j.onload = ok; j.onerror = () => no(new Error('map')); document.head.appendChild(j);
+  });
+}
+function evMapSetTiles(){
+  if(evMapTiles) evMapObj.removeLayer(evMapTiles);
+  evMapTiles = evMapSat
+    ? L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Esri' })
+    : L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
+  evMapTiles.addTo(evMapObj);
+  document.getElementById('evMapLayer').textContent = evMapSat ? '지도' : '위성';
+}
+function evMapDraw(){
+  const t = evMapTmp, ok = document.getElementById('evMapOk');
+  document.querySelectorAll('#evMap .evm-r button').forEach(b => b.setAttribute('aria-checked', String(Number(b.dataset.r) === t.r)));
+  ok.disabled = !(t.lat && t.lng);
+  document.getElementById('evMapHint').textContent = t.lat ? `원 안(반경 ${t.r}m)에서만 출석돼요. 핀을 끌거나 다른 곳을 눌러 옮길 수 있어요` : '지도를 눌러 행사 장소를 찍어 주세요';
+  if(!evMapObj || !t.lat) return;
+  const ll = [t.lat, t.lng];
+  if(!evMapPin){
+    evMapPin = L.marker(ll, { draggable: true }).addTo(evMapObj);
+    evMapPin.on('dragend', () => { const p = evMapPin.getLatLng(); t.lat = p.lat; t.lng = p.lng; evMapDraw(); });
+    evMapRing = L.circle(ll, { radius: t.r, color: '#3D5FE0', weight: 2, fillOpacity: .15 }).addTo(evMapObj);
+  } else { evMapPin.setLatLng(ll); evMapRing.setLatLng(ll); evMapRing.setRadius(t.r); }
+}
+async function evMapOpen(){
+  evMapTmp = evPlace ? Object.assign({}, evPlace) : { name: '', lat: 0, lng: 0, r: 80 };
+  document.getElementById('evMapName').value = evMapTmp.name || '';
+  const box = document.getElementById('evMap'); box.hidden = false; document.body.style.overflow = 'hidden';
+  try{ await evLeafletLoad(); }catch(e){ document.getElementById('evMapHint').textContent = '지도를 불러오지 못했어요. 인터넷 연결을 확인하거나 「지금 내 위치로」를 눌러 주세요.'; evMapDraw(); return; }
+  if(!evMapObj){
+    evMapObj = L.map('evMapBox', { zoomControl: true }).setView([35.8118, 127.0902], 17); // 전주대 캠퍼스
+    evMapSetTiles();
+    evMapObj.on('click', e => { evMapTmp.lat = e.latlng.lat; evMapTmp.lng = e.latlng.lng; evMapDraw(); });
+  }
+  if(evMapPin){ evMapObj.removeLayer(evMapPin); evMapObj.removeLayer(evMapRing); evMapPin = evMapRing = null; }
+  setTimeout(() => { evMapObj.invalidateSize(); if(evMapTmp.lat) evMapObj.setView([evMapTmp.lat, evMapTmp.lng], 17); evMapDraw(); }, 60);
+}
+function evMapClose(){ document.getElementById('evMap').hidden = true; document.body.style.overflow = ''; }
+document.getElementById('evPlacePick').addEventListener('click', evMapOpen);
+document.getElementById('evPlaceClear').addEventListener('click', () => { evPlace = null; evPlaceShow(); });
+document.getElementById('evMapClose').addEventListener('click', evMapClose);
+document.getElementById('evMapLayer').addEventListener('click', () => { if(!evMapObj) return; evMapSat = !evMapSat; evMapSetTiles(); });
+document.querySelectorAll('#evMap .evm-r button').forEach(b => b.addEventListener('click', () => { evMapTmp.r = Number(b.dataset.r); evMapDraw(); }));
+document.getElementById('evMapMe').addEventListener('click', async () => {
+  const b = document.getElementById('evMapMe'); b.disabled = true; b.textContent = '위치 확인 중…';
+  try{
+    const c = await mcPos();
+    evMapTmp.lat = c.latitude; evMapTmp.lng = c.longitude;
+    if(evMapObj) evMapObj.setView([c.latitude, c.longitude], 18);
+    evMapDraw();
+  }catch(err){ document.getElementById('evMapHint').textContent = mcPosErr(err); }
+  finally{ b.disabled = false; b.textContent = '지금 내 위치로'; }
+});
+document.getElementById('evMapOk').addEventListener('click', () => {
+  const t = evMapTmp; if(!t.lat) return;
+  evPlace = { name: document.getElementById('evMapName').value.trim() || '행사 장소', lat: Math.round(t.lat * 1e6) / 1e6, lng: Math.round(t.lng * 1e6) / 1e6, r: t.r };
+  evPlaceShow(); evMapClose();
+});
 function evOpen(ev){
   evEditing = ev || null;
   evSel = new Set(ev ? ev.names : []);
@@ -6771,6 +6899,8 @@ function evOpen(ev){
   document.getElementById('evDelete').style.display = ev && !ev.planOnly ? '' : 'none';
   const pl = ev ? evPlanOf(ev.date, ev.title) : null, ls = document.getElementById('evLeader');
   document.getElementById('evTime').value = pl && pl.time ? pl.time : '';
+  evPlace = pl && pl.place ? Object.assign({}, pl.place) : null;
+  evPlaceShow();
   ls.innerHTML = '<option value="">없음 (내가 직접)</option>' + MEETING_ROSTER.map(n => `<option>${esc(n)}</option>`).join('');
   ls.value = pl ? pl.leader : '';
   evWhoSync();
@@ -6804,11 +6934,11 @@ async function evSave(){
   const orig = body.orig;
   bgSave('행사 저장', async () => {
     if(asPlan){ // 행사 전: 칩은 지원자 → 예정으로만 저장(가점 없음)
-      await evPost({ action:'eventLeader', date, title, points, leader, time, applicants: body.names, orig });
+      await evPost({ action:'eventLeader', date, title, points, leader, time, applicants: body.names, orig, place: evPlace });
       return;
     }
     if(body.names.length || (evEditing && !evEditing.planOnly)) await evPost(body);
-    if(leader || hadPlan || time) await evPost({ action:'eventLeader', date, title, points, leader, time, applicants: hadPlan ? (hadPlan.applicants || []) : [], orig });
+    if(leader || hadPlan || time || evPlace) await evPost({ action:'eventLeader', date, title, points, leader, time, applicants: hadPlan ? (hadPlan.applicants || []) : [], orig, place: evPlace });
   }, async () => {
     const r = await attendJsonpRaw({ action:'eventList' });
     return ((r && r.events) || []).some(e => e.date === body.date && e.title === body.title) || ((r && r.plans) || []).some(x => x.date === body.date && x.title === body.title);
@@ -6839,10 +6969,12 @@ document.getElementById('evCheckBtn').addEventListener('click', async () => {
   if(!time){ info.textContent = '집합 시간을 먼저 넣어 주세요. 이 시간이 지나면 지각이에요.'; return; }
   btn.disabled = true;
   try{
-    info.textContent = '이 휴대폰 위치를 확인하고 있어요…';
-    let c;
-    try{ c = await mcPos(); }catch(err){ info.textContent = mcPosErr(err); return; }
-    const j = await mcPost({ action:'eventOpen', title, points, time, lat: c.latitude, lng: c.longitude, acc: c.accuracy });
+    let c = null;
+    if(!evPlace){
+      info.textContent = '이 휴대폰 위치를 확인하고 있어요…';
+      try{ c = await mcPos(); }catch(err){ info.textContent = mcPosErr(err); return; }
+    }
+    const j = await mcPost(Object.assign({ action:'eventOpen', title, points, time }, evPlace ? { place: evPlace } : { lat: c.latitude, lng: c.longitude, acc: c.accuracy }));
     if(j && j.error === 'acc'){ info.textContent = `위치 오차가 약 ${j.acc}m라 시작하지 못했어요. 와이파이를 켜고 다시 눌러 주세요.`; return; }
     if(!j || !j.ok) throw new Error((j && j.error) || '');
     info.textContent = `${j.until}까지 받는 중이에요. 단톡방에 「지금 JJ 스튜디오 열기」를 알려 주세요.`;

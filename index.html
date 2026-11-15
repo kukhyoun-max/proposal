@@ -1134,6 +1134,32 @@
   /* 회의 자동 출석 카드 (2026-11-15) */
   .mc-card{position:fixed; left:16px; right:16px; bottom:20px; z-index:30; max-width:480px; margin:0 auto; padding:14px 16px; border:1px solid var(--line); border-radius:16px; background:var(--surface, #fff); color:var(--ink); box-shadow:0 4px 18px rgba(0,0,0,.16); font-size:14.5px; line-height:1.5;}
   .mc-card .mc-title{font-weight:800; margin-bottom:4px;}
+  /* 출석 카드 그림 (2026-11-15 담당자 「알림창에 그래픽적으로 뭔가」): 출석·지각 = JJ 로고의 슬레이트가 닫힘, 찾는 중 = 레이더, 멀어요 = 반경 원 밖의 내 점 */
+  .mc-card .mc-row{display:flex; gap:14px; align-items:center;}
+  .mc-card .mc-text{flex:1; min-width:0;}
+  .mc-art{flex:none; width:72px; height:72px; display:block; overflow:visible;}
+  .mc-art .ring{fill:var(--purple-soft); stroke:var(--purple); stroke-width:1.5; stroke-dasharray:3 3;}
+  .mc-art .home{fill:var(--purple);}
+  .mc-art .sweep{transform-origin:32px 32px; animation:mcSweep 1.6s linear infinite;}
+  .mc-art .sweep path{fill:var(--purple); opacity:.28;}
+  .mc-art .ping{transform-origin:32px 32px; fill:none; stroke:var(--purple); stroke-width:1.5; animation:mcPing 1.6s ease-out infinite;}
+  .mc-art .me{fill:var(--gold); stroke:var(--ink); stroke-width:1.5;}
+  .mc-art .link{stroke:var(--ink-soft); stroke-width:1.5; stroke-dasharray:2 3;}
+  .mc-art .blur{fill:var(--gold); opacity:.35;}
+  .mc-art .q{fill:var(--ink); font:800 15px/1 inherit; text-anchor:middle;}
+  .mc-art .board{fill:var(--mc-c, var(--purple));}
+  .mc-art .stripe{fill:#fff;}
+  .mc-art .arm{transform-origin:9px 25px; animation:mcSnap .5s cubic-bezier(.5,-0.4,.6,1.4) .15s both;}
+  .mc-art .tick{fill:none; stroke:#fff; stroke-width:4.5; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:32; stroke-dashoffset:32; animation:mcDraw .35s ease-out .6s forwards;}
+  .mc-art.static .arm{animation:none;} .mc-art.static .tick{animation:none; stroke-dashoffset:0;}
+  .mc-art.late{--mc-c:var(--gold);} .mc-art.late .stripe{fill:rgb(25 24 29);} .mc-art.late .tick{stroke:rgb(25 24 29);} /* 노랑 위는 어두운 화면에서도 진한 색 */
+  .mc-card.mc-pop{animation:mcPop .45s ease-out;}
+  @keyframes mcSweep{to{transform:rotate(360deg);}}
+  @keyframes mcPing{0%{transform:scale(.2); opacity:.9;} 100%{transform:scale(1.25); opacity:0;}}
+  @keyframes mcSnap{0%{transform:rotate(-32deg);} 100%{transform:rotate(0);}}
+  @keyframes mcDraw{to{stroke-dashoffset:0;}}
+  @keyframes mcPop{0%{transform:translateY(6px) scale(.98);} 60%{transform:translateY(-2px) scale(1.01);} 100%{transform:none;}}
+  @media (prefers-reduced-motion:reduce){.mc-art .sweep,.mc-art .ping,.mc-art .arm,.mc-card.mc-pop{animation:none;} .mc-art .tick{animation:none; stroke-dashoffset:0;}}
   .mc-card .mc-btns{display:flex; gap:8px; justify-content:flex-end; margin-top:10px;}
   .mc-card button{min-height:44px; padding:0 16px; border-radius:12px; border:1px solid var(--line-input, #CFCBD6); background:transparent; color:var(--ink); font:inherit; font-weight:700; cursor:pointer;}
   .mc-admin{display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; margin:0 0 12px;}
@@ -1748,6 +1774,19 @@
 :root[data-theme="dark"] details.title-guide[open]{background:#262136}
 :root[data-theme="dark"] #f_titlePreview{color:var(--ink-soft);background:#262136}
 :root[data-theme="dark"] .mc-card{border:1px solid var(--line);background:var(--surface, #1E1D24);color:var(--ink)}
+:root[data-theme="dark"] .mc-art .ring{fill:var(--purple-soft);stroke:var(--purple)}
+:root[data-theme="dark"] .mc-art .home{fill:var(--purple)}
+:root[data-theme="dark"] .mc-art .sweep path{fill:var(--purple)}
+:root[data-theme="dark"] .mc-art .ping{fill:none;stroke:var(--purple)}
+:root[data-theme="dark"] .mc-art .me{fill:var(--gold);stroke:var(--ink)}
+:root[data-theme="dark"] .mc-art .link{stroke:var(--ink-soft)}
+:root[data-theme="dark"] .mc-art .blur{fill:var(--gold)}
+:root[data-theme="dark"] .mc-art .q{fill:var(--ink)}
+:root[data-theme="dark"] .mc-art .board{fill:var(--mc-c, var(--purple))}
+:root[data-theme="dark"] .mc-art .stripe{fill:#fff}
+:root[data-theme="dark"] .mc-art .tick{fill:none;stroke:#fff}
+:root[data-theme="dark"] .mc-art.late .stripe{fill:rgb(25 24 29)}
+:root[data-theme="dark"] .mc-art.late .tick{stroke:rgb(25 24 29)}
 :root[data-theme="dark"] .mc-card button{border:1px solid var(--line-input, #3A3844);background:transparent;color:var(--ink)}
 :root[data-theme="dark"] .mc-open{border:1px solid var(--purple);background:#4763E4;color:#fff}
 :root[data-theme="dark"] .mc-open.on{background:transparent;color:var(--purple-dark)}
@@ -4500,10 +4539,28 @@ setTimeout(() => { if(memberToken()) jjWho(); }, 1500);
 // 거리·지각(18:01 고정)·이름은 서버(자동매칭 meetingCheckin)가 정한다. 좌표는 서버에 남기지 않는다. 앱을 열지 않은 휴대폰에는 알릴 수 없다(웹페이지)
 const MC_LS = 'jjMeetCheck_v1';
 let mcBusy = false;
-function mcShow(title, msg, retry){
+// 카드 그림: kind = seek(찾는 중) · ok(출석) · late(지각) · done(이미 기록) · far(멀어요, dist m) · fuzzy(오차 큼·위치 못 받음) · off(받는 중 아님·서버 오류)
+function mcArt(kind, dist){
+  const radar = inner => `<svg class="mc-art" viewBox="0 0 64 64" aria-hidden="true"><circle class="ring" cx="32" cy="32" r="22"/>${inner}<circle class="home" cx="32" cy="32" r="4.5"/></svg>`;
+  if(kind === 'seek') return radar('<circle class="ping" cx="32" cy="32" r="22"/><g class="sweep"><path d="M32 32 L32 10 A22 22 0 0 1 51 21 Z"/></g>');
+  if(kind === 'far'){ // 반경 원(80m) 밖으로 거리만큼, 160m 이상은 가장자리
+    const r = Math.min(31, 22 + 9 * Math.min(1, Math.max(0, (Number(dist) || 160) - 80) / 80)), a = -Math.PI / 4;
+    const x = (32 + r * Math.cos(a)).toFixed(1), y = (32 + r * Math.sin(a)).toFixed(1);
+    return radar(`<line class="link" x1="32" y1="32" x2="${x}" y2="${y}"/><circle class="me" cx="${x}" cy="${y}" r="5"/>`);
+  }
+  if(kind === 'fuzzy') return radar('<circle class="blur" cx="40" cy="26" r="15"/><text class="q" x="40" y="31">?</text>');
+  if(kind === 'off') return radar('');
+  return `<svg class="mc-art ${kind === 'late' ? 'late' : ''} ${kind === 'done' ? 'static' : ''}" viewBox="0 0 64 64" aria-hidden="true">
+    <rect class="board" x="8" y="27" width="48" height="29" rx="4"/>
+    <path class="tick" d="M21 42 l7 7 l14 -14"/>
+    <g class="arm"><rect class="board" x="8" y="16" width="48" height="9" rx="2"/>
+      <path class="stripe" d="M14 16h6l-5 9h-6zM26 16h6l-5 9h-6zM38 16h6l-5 9h-6zM50 16h6l-5 9h-6z"/></g></svg>`;
+}
+function mcShow(title, msg, retry, kind, dist){
   let el = document.getElementById('mcCard');
   if(!el){ el = document.createElement('div'); el.id = 'mcCard'; el.className = 'mc-card'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
-  el.innerHTML = `<div class="mc-title">${esc(title)}</div><div>${esc(msg)}</div><div class="mc-btns">`
+  el.classList.remove('mc-pop'); if(kind === 'ok' || kind === 'late'){ void el.offsetWidth; el.classList.add('mc-pop'); }
+  el.innerHTML = `<div class="mc-row">${mcArt(kind || 'off', dist)}<div class="mc-text"><div class="mc-title">${esc(title)}</div><div>${esc(msg)}</div></div></div><div class="mc-btns">`
     + (retry ? '<button type="button" class="mc-main" data-mc="retry">다시 확인</button>' : '') + '<button type="button" data-mc="close">닫기</button></div>';
   el.querySelector('[data-mc="close"]').onclick = () => el.remove();
   const r = el.querySelector('[data-mc="retry"]'); if(r) r.onclick = () => mcRun(true);
@@ -4534,26 +4591,26 @@ async function mcRun(force, st){
   mcBusy = true;
   try{
     if(!st) st = await attendJsonpCall({ action:'meetingOpenState' }).catch(() => null);
-    if(!st || !st.open){ if(force) mcShow('출석하지 못했어요', MC_ERR.not_time, false); return; }
+    if(!st || !st.open){ if(force) mcShow('출석하지 못했어요', MC_ERR.not_time, false, 'off'); return; }
     if(!force){ try{ if(localStorage.getItem(MC_LS) === st.date) return; }catch(e){} }
-    mcShow('회의 출석 중이에요', '위치를 확인하고 있어요…', false);
+    mcShow('회의 출석 중이에요', '위치를 확인하고 있어요…', false, 'seek');
     let c;
-    try{ c = await mcPos(); }catch(err){ mcShow('출석하지 못했어요', mcPosErr(err), true); return; }
+    try{ c = await mcPos(); }catch(err){ mcShow('출석하지 못했어요', mcPosErr(err), true, 'fuzzy'); return; }
     let j = null;
     try{
       const res = await fetch(ATTEND_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
         body: JSON.stringify({ action:'meetingCheckin', lat: c.latitude, lng: c.longitude, acc: c.accuracy }) });
       j = await res.json();
-    }catch(e){ mcShow('출석하지 못했어요', '서버에 연결하지 못했어요.', true); return; }
+    }catch(e){ mcShow('출석하지 못했어요', '서버에 연결하지 못했어요.', true, 'off'); return; }
     if(j && j.ok){
       try{ localStorage.setItem(MC_LS, st.date); }catch(e){}
-      mcShow(j.already ? '이미 기록돼 있어요' : '회의 ' + j.status + ' 완료', (j.name ? j.name + ' · ' : '') + j.status + (j.time ? ' · ' + j.time : ''), false);
+      mcShow(j.already ? '이미 기록돼 있어요' : '회의 ' + j.status + ' 완료', (j.name ? j.name + ' · ' : '') + j.status + (j.time ? ' · ' + j.time : ''), false, j.already ? 'done' : (j.status === '지각' ? 'late' : 'ok'));
     } else if(j && j.error === 'far'){
-      mcShow('회의 장소와 멀어요', `출석을 연 곳에서 약 ${j.dist}m 떨어진 곳으로 잡혔어요. 홍보대사실 안에서 다시 눌러 주세요. 계속 안 되면 관리자에게 말해 주세요.`, true);
+      mcShow('회의 장소와 멀어요', `출석을 연 곳에서 약 ${j.dist}m 떨어진 곳으로 잡혔어요. 홍보대사실 안에서 다시 눌러 주세요. 계속 안 되면 관리자에게 말해 주세요.`, true, 'far', j.dist);
     } else if(j && j.error === 'acc'){
-      mcShow('위치가 정확하지 않아요', `위치 오차가 약 ${j.acc}m예요. 와이파이를 켜고 다시 눌러 주세요.`, true);
+      mcShow('위치가 정확하지 않아요', `위치 오차가 약 ${j.acc}m예요. 와이파이를 켜고 다시 눌러 주세요.`, true, 'fuzzy');
     } else {
-      mcShow('출석하지 못했어요', MC_ERR[j && j.error] || ('서버 답: ' + ((j && j.error) || '알 수 없음')), !(j && (j.error === 'not_time' || j.error === 'cancelled')));
+      mcShow('출석하지 못했어요', MC_ERR[j && j.error] || ('서버 답: ' + ((j && j.error) || '알 수 없음')), !(j && (j.error === 'not_time' || j.error === 'cancelled')), 'off');
     }
   } finally { mcBusy = false; }
 }

@@ -1131,6 +1131,13 @@
   #f_titlePreview{font-size:13px; color:var(--ink-soft); background:#F6F5F9; border-radius:10px; padding:8px 12px; margin:0 0 4px !important;}
   #f_titlePreview:empty{display:none;}
   @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important;}}
+  /* 회의 자동 출석 카드 (2026-11-15) */
+  .mc-card{position:fixed; left:16px; right:16px; bottom:20px; z-index:30; max-width:480px; margin:0 auto; padding:14px 16px; border:1px solid var(--line); border-radius:16px; background:var(--surface, #fff); color:var(--ink); box-shadow:0 4px 18px rgba(0,0,0,.16); font-size:14.5px; line-height:1.5;}
+  .mc-card .mc-title{font-weight:800; margin-bottom:4px;}
+  .mc-card .mc-btns{display:flex; gap:8px; justify-content:flex-end; margin-top:10px;}
+  .mc-card button{min-height:44px; padding:0 16px; border-radius:12px; border:1px solid var(--line-input, #CFCBD6); background:transparent; color:var(--ink); font:inherit; font-weight:700; cursor:pointer;}
+  .mt-auto{font-size:11px; font-weight:700; color:var(--ink-soft); white-space:nowrap;}
+  .mc-card button.mc-main{background:var(--purple); border-color:var(--purple); color:#fff;}
 /* DARK:START make_dark.cjs가 만듦, 직접 고치지 않음 */
 :root[data-theme="dark"]{--purple:#6F8BFF;--purple-dark:#A9BBFF;--purple-soft:#232A45;--purple-line:#6F8BFF;--gold:#FFC629;--gold-dark:#E8B93F;--ink:#EEEDF2;--ink-soft:#B4B1BE;--ink-faint:#A09DAA;--line:#33313C;--line-input:#6A6774;--page-bg:#141318;--surface:#1E1D24;color-scheme:dark;}
 :root[data-theme="dark"] body{background:var(--page-bg);color:var(--ink)}
@@ -1735,6 +1742,10 @@
 :root[data-theme="dark"] details.title-guide[open] summary{color:var(--purple-dark)}
 :root[data-theme="dark"] details.title-guide[open]{background:#262136}
 :root[data-theme="dark"] #f_titlePreview{color:var(--ink-soft);background:#262136}
+:root[data-theme="dark"] .mc-card{border:1px solid var(--line);background:var(--surface, #1E1D24);color:var(--ink)}
+:root[data-theme="dark"] .mc-card button{border:1px solid var(--line-input, #3A3844);background:transparent;color:var(--ink)}
+:root[data-theme="dark"] .mt-auto{color:var(--ink-soft)}
+:root[data-theme="dark"] .mc-card button.mc-main{background:#4763E4;border-color:var(--purple);color:#fff}
 :root[data-theme="dark"] [style*="background:#F4F5F8" i]{background:#222735 !important}
 :root[data-theme="dark"] [style*="background: #F4F5F8" i]{background:#222735 !important}
 :root[data-theme="dark"] [style*="background:#fff" i]{background:#1E1D24 !important}
@@ -4473,6 +4484,62 @@ function canEditPlan(rec){
 }
 setTimeout(() => { if(memberToken()) jjWho(); }, 1500);
 
+// 회의 자동 출석 (2026-11-15 담당자 「회의 시간에 홍보대사실에서 기획서 프로그램 켜면 자동으로 출첵」 → GPS로).
+// 월 17:40~19:00(한국 시각)에 열면 위치를 한 번 받아 자동매칭 POST meetingCheckin으로 보낸다.
+// 거리·시각 판정과 이름은 서버가 정한다(스타센터 1층, 80m 안, 18:01부터 지각, 「계정연결」 이름). 좌표는 서버에 남기지 않는다
+const MC_LS = 'jjMeetCheck_v1';
+let mcBusy = false;
+function mcDay(){ const k = new Date(Date.now() + 9 * 3600e3), m = k.getUTCHours() * 60 + k.getUTCMinutes();
+  return (k.getUTCDay() === 1 && m >= 17 * 60 + 40 && m < 19 * 60) ? k.toISOString().slice(0, 10) : ''; }
+function mcShow(title, msg, retry){
+  let el = document.getElementById('mcCard');
+  if(!el){ el = document.createElement('div'); el.id = 'mcCard'; el.className = 'mc-card'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  el.innerHTML = `<div class="mc-title">${esc(title)}</div><div>${esc(msg)}</div><div class="mc-btns">`
+    + (retry ? '<button type="button" class="mc-main" data-mc="retry">다시 확인</button>' : '') + '<button type="button" data-mc="close">닫기</button></div>';
+  el.querySelector('[data-mc="close"]').onclick = () => el.remove();
+  const r = el.querySelector('[data-mc="retry"]'); if(r) r.onclick = () => mcRun(true);
+}
+const MC_ERR = {
+  not_time: '회의 출석은 월요일 17:40~19:00에만 돼요.',
+  not_linked: '로그인한 계정이 아직 이름과 연결되지 않았어요. 관리자에게 말해 주세요.',
+  not_member: '현재 홍보대사 명단에 없는 이름이에요. 관리자에게 말해 주세요.',
+  cancelled: '오늘 회의는 휴회예요.',
+  no_pos: '위치를 받지 못했어요.',
+};
+function mcRun(force){
+  const day = mcDay();
+  if(!day || !memberToken() || mcBusy) return;
+  if(!force){ try{ if(localStorage.getItem(MC_LS) === day) return; }catch(e){} }
+  if(JJ_ME && JJ_ME.admin) return; // 관리자 계정은 출석 대상이 아님
+  if(!navigator.geolocation){ mcShow('회의 출석', '이 브라우저는 위치를 받을 수 없어요. 휴대폰으로 열거나 관리자에게 말해 주세요.', false); return; }
+  mcBusy = true;
+  mcShow('회의 출석', '위치를 확인하고 있어요…', false);
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const c = pos.coords;
+    try{
+      const res = await fetch(ATTEND_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ action:'meetingCheckin', lat: c.latitude, lng: c.longitude, acc: c.accuracy }) });
+      const j = await res.json();
+      if(j && j.ok){
+        try{ localStorage.setItem(MC_LS, day); }catch(e){}
+        mcShow(j.already ? '이미 기록돼 있어요' : '회의 ' + j.status + ' 완료', (j.name ? j.name + ' · ' : '') + j.status + (j.time ? ' · ' + j.time : ''), false);
+      } else if(j && j.error === 'far'){
+        mcShow('홍보대사실과 멀어요', `스타센터에서 약 ${j.dist}m 떨어진 곳으로 잡혔어요. 홍보대사실 안에서 다시 눌러 주세요. 계속 안 되면 관리자에게 말해 주세요.`, true);
+      } else if(j && j.error === 'acc'){
+        mcShow('위치가 정확하지 않아요', `위치 오차가 약 ${j.acc}m예요. 와이파이를 켜고 다시 눌러 주세요.`, true);
+      } else {
+        mcShow('출석하지 못했어요', MC_ERR[j && j.error] || ('서버 답: ' + ((j && j.error) || '알 수 없음')), !(j && (j.error === 'not_time' || j.error === 'cancelled')));
+      }
+    }catch(e){ mcShow('출석하지 못했어요', '서버에 연결하지 못했어요.', true); }
+    mcBusy = false;
+  }, err => {
+    mcBusy = false;
+    mcShow('출석하지 못했어요', err && err.code === 1 ? '위치 권한을 허용해야 출석돼요. 브라우저 설정에서 이 사이트의 위치를 허용한 뒤 다시 눌러 주세요.' : '위치를 받지 못했어요. 잠시 뒤 다시 눌러 주세요.', true);
+  }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+}
+setTimeout(() => { if(mcDay() && memberToken()) jjWho().then(() => mcRun(false)); }, 2500);
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && mcDay() && memberToken()) jjWho().then(() => mcRun(false)); });
+
 function renderStatusDetail(key, rec){
   editingKey = key;
   editingRecord = JSON.parse(JSON.stringify(rec));
@@ -5519,6 +5586,7 @@ const MEETING_ROSTER = AMBASSADOR_ROSTER;   // 회의 출결·행사 명단 = �
 const MT_STATUSES = ['출석','지각','사유불참','불참','무단불참'];   // 사유불참 = 하루 전까지 알린 불참, 0점 (활동 가이드 5번)
 const MEETING_START = '2026-08-31';   // 이 주부터 매주 월요일마다 회의 칸 자동 생성
 let mtState = {};
+let mtAuto = {};   // 휴대폰 위치로 자동 기록된 이름 (2026-11-15)
 let mtMeetings = {};
 let mtCancelled = false;
 let mtOnlyMissing = false, mtLoadedDate = '';
@@ -5677,7 +5745,7 @@ function mtRenderList(){
   el.innerHTML = `<div class="miss-bar"><button class="miss-btn ${mtOnlyMissing?'on':''}" id="mtMissBtn">${mtOnlyMissing ? '전체 보기' : '미입력만 보기 (' + missN + ')'}</button></div>`
     + (mtOnlyMissing && !list.length ? '<div class="miss-empty">모두 입력했어요</div>' : '') + list.map(n => `
     <div class="mt-row">
-      <span class="mt-name">${nb(n)}${n}</span>
+      <span class="mt-name">${nb(n)}${n}${mtAuto[n] ? ' <small class="mt-auto" title="휴대폰 위치로 자동 기록">📍자동</small>' : ''}</span>
       <div class="mt-btns">${MT_STATUSES.map(st => `<button data-name="${n}" data-st="${st}" class="${mtState[n]===st?'on':''}">${st}</button>`).join('')}</div>
     </div>`).join('');
   document.getElementById('mtMissBtn').addEventListener('click', ()=>{ mtOnlyMissing = !mtOnlyMissing; mtRenderList(); });
@@ -5714,6 +5782,7 @@ async function mtLoad(){
   const params = { action:'meetingList', date };
   const apply = (res, fresh) => {
     if(mtLoadedDate !== date) return;          // 그 사이 다른 날짜로 이동했으면 무시
+    mtAuto = {}; (res.records || []).forEach(r => { if(r.auto) mtAuto[r.name] = 1; }); // 회의 자동 출석(2026-11-15)
     if(!mtDirty){ mtState = {}; (res.records || []).forEach(r => { mtState[r.name] = r.status; }); mtCancelled = !!res.cancelled; }
     mtMeetings = res.meetings || {};
     mtRenderWeeks(); mtRenderList(); mtUpdateInfo();

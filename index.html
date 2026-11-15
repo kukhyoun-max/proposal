@@ -1136,6 +1136,11 @@
   .mc-card .mc-title{font-weight:800; margin-bottom:4px;}
   .mc-card .mc-btns{display:flex; gap:8px; justify-content:flex-end; margin-top:10px;}
   .mc-card button{min-height:44px; padding:0 16px; border-radius:12px; border:1px solid var(--line-input, #CFCBD6); background:transparent; color:var(--ink); font:inherit; font-weight:700; cursor:pointer;}
+  .mc-admin{display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; margin:0 0 12px;}
+  .mc-open{min-height:44px; padding:0 16px; border-radius:12px; border:1px solid var(--purple); background:var(--purple); color:#fff; font:inherit; font-size:14px; font-weight:700; cursor:pointer;}
+  .mc-open.on{background:transparent; color:var(--purple-dark);}
+  .mc-open:disabled{opacity:.6;}
+  .mc-open-info{flex:1 1 180px; font-size:12.5px; color:var(--ink-soft); line-height:1.45;}
   .mt-auto{font-size:11px; font-weight:700; color:var(--ink-soft); white-space:nowrap;}
   .mc-card button.mc-main{background:var(--purple); border-color:var(--purple); color:#fff;}
 /* DARK:START make_dark.cjs가 만듦, 직접 고치지 않음 */
@@ -1744,6 +1749,9 @@
 :root[data-theme="dark"] #f_titlePreview{color:var(--ink-soft);background:#262136}
 :root[data-theme="dark"] .mc-card{border:1px solid var(--line);background:var(--surface, #1E1D24);color:var(--ink)}
 :root[data-theme="dark"] .mc-card button{border:1px solid var(--line-input, #3A3844);background:transparent;color:var(--ink)}
+:root[data-theme="dark"] .mc-open{border:1px solid var(--purple);background:#4763E4;color:#fff}
+:root[data-theme="dark"] .mc-open.on{background:transparent;color:var(--purple-dark)}
+:root[data-theme="dark"] .mc-open-info{color:var(--ink-soft)}
 :root[data-theme="dark"] .mt-auto{color:var(--ink-soft)}
 :root[data-theme="dark"] .mc-card button.mc-main{background:#4763E4;border-color:var(--purple);color:#fff}
 :root[data-theme="dark"] [style*="background:#F4F5F8" i]{background:#222735 !important}
@@ -2165,6 +2173,7 @@
   </div>
   <div class="content" style="padding-top:0;">
     <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 월요일마다 그 주 회의 칸이 자동으로 생겨요. 실제 회의한 날짜를 고르고 출결을 입력해 주세요.</p>
+    <div class="mc-admin"><button type="button" id="mcOpenBtn" class="mc-open">📍 출석 받기 시작</button><span id="mcOpenInfo" class="mc-open-info"></span></div>
     <div class="mt-weeks" id="mtWeeks"></div>
     <div class="mt-date">
       <input type="date" id="mtDate">
@@ -4245,6 +4254,7 @@ async function showView(viewId){
   document.querySelectorAll('.mt-tabs button.on').forEach(t => { const bar = t.parentElement; if(bar.offsetParent) bar.scrollLeft = t.offsetLeft - bar.clientWidth / 2 + t.clientWidth / 2; });
   jjHistoryNav(viewId);
   if(viewId === 'form') testModeSync();
+  if(viewId === 'meeting') setTimeout(() => mcAdminRefresh(false), 0); // 회의 출석 받는 중인지 (2026-11-15)
   return true;
 }
 
@@ -4485,12 +4495,11 @@ function canEditPlan(rec){
 setTimeout(() => { if(memberToken()) jjWho(); }, 1500);
 
 // 회의 자동 출석 (2026-11-15 담당자 「회의 시간에 홍보대사실에서 기획서 프로그램 켜면 자동으로 출첵」 → GPS로).
-// 월 17:40~19:00(한국 시각)에 열면 위치를 한 번 받아 자동매칭 POST meetingCheckin으로 보낸다.
-// 거리·시각 판정과 이름은 서버가 정한다(스타센터 1층, 80m 안, 18:01부터 지각, 「계정연결」 이름). 좌표는 서버에 남기지 않는다
+// 같은 날 고침: 고정 시간대 대신 회의 권한 계정이 회의 화면에서 「출석 받기 시작」을 누르면(그 휴대폰 위치가 기준점) 60분 동안 받는다
+// (담당자 「내가 뭔가 켜면 주변 사람이 기획서 프로그램 들어가면 알림」). 받는 중이면 홍보대사가 열 때·다시 띄울 때·2분마다 확인해 카드로 알리고 위치를 보낸다.
+// 거리·지각(18:01 고정)·이름은 서버(자동매칭 meetingCheckin)가 정한다. 좌표는 서버에 남기지 않는다. 앱을 열지 않은 휴대폰에는 알릴 수 없다(웹페이지)
 const MC_LS = 'jjMeetCheck_v1';
 let mcBusy = false;
-function mcDay(){ const k = new Date(Date.now() + 9 * 3600e3), m = k.getUTCHours() * 60 + k.getUTCMinutes();
-  return (k.getUTCDay() === 1 && m >= 17 * 60 + 40 && m < 19 * 60) ? k.toISOString().slice(0, 10) : ''; }
 function mcShow(title, msg, retry){
   let el = document.getElementById('mcCard');
   if(!el){ el = document.createElement('div'); el.id = 'mcCard'; el.className = 'mc-card'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
@@ -4500,45 +4509,108 @@ function mcShow(title, msg, retry){
   const r = el.querySelector('[data-mc="retry"]'); if(r) r.onclick = () => mcRun(true);
 }
 const MC_ERR = {
-  not_time: '회의 출석은 월요일 17:40~19:00에만 돼요.',
+  not_time: '지금은 회의 출석을 받고 있지 않아요.',
   not_linked: '로그인한 계정이 아직 이름과 연결되지 않았어요. 관리자에게 말해 주세요.',
   not_member: '현재 홍보대사 명단에 없는 이름이에요. 관리자에게 말해 주세요.',
   cancelled: '오늘 회의는 휴회예요.',
   no_pos: '위치를 받지 못했어요.',
 };
-function mcRun(force){
-  const day = mcDay();
-  if(!day || !memberToken() || mcBusy) return;
-  if(!force){ try{ if(localStorage.getItem(MC_LS) === day) return; }catch(e){} }
-  if(JJ_ME && JJ_ME.admin) return; // 관리자 계정은 출석 대상이 아님
-  if(!navigator.geolocation){ mcShow('회의 출석', '이 브라우저는 위치를 받을 수 없어요. 휴대폰으로 열거나 관리자에게 말해 주세요.', false); return; }
+function mcPos(){
+  return new Promise((ok, no) => {
+    if(!navigator.geolocation){ no({ code: -1 }); return; }
+    navigator.geolocation.getCurrentPosition(p => ok(p.coords), no, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+  });
+}
+function mcPosErr(err){
+  return err && err.code === 1 ? '위치 권한을 허용해야 해요. 브라우저 설정에서 이 사이트의 위치를 허용한 뒤 다시 눌러 주세요.'
+    : err && err.code === -1 ? '이 브라우저는 위치를 받을 수 없어요. 휴대폰으로 열어 주세요.' : '위치를 받지 못했어요. 잠시 뒤 다시 눌러 주세요.';
+}
+// 출석 대상: 현재 명단에 이름이 연결된 계정. 관리자 계정이라도 명단 이름이 있으면(회의 권한을 받은 홍보대사) 대상
+function mcTarget(){ return !(JJ_ME && JJ_ME.admin && !(JJ_ME.name && MEETING_ROSTER.includes(JJ_ME.name))); }
+async function mcRun(force, st){
+  if(!memberToken() || mcBusy) return;
+  await jjWho();
+  if(!mcTarget()) return;
   mcBusy = true;
-  mcShow('회의 출석', '위치를 확인하고 있어요…', false);
-  navigator.geolocation.getCurrentPosition(async pos => {
-    const c = pos.coords;
+  try{
+    if(!st) st = await attendJsonpCall({ action:'meetingOpenState' }).catch(() => null);
+    if(!st || !st.open){ if(force) mcShow('출석하지 못했어요', MC_ERR.not_time, false); return; }
+    if(!force){ try{ if(localStorage.getItem(MC_LS) === st.date) return; }catch(e){} }
+    mcShow('회의 출석 중이에요', '위치를 확인하고 있어요…', false);
+    let c;
+    try{ c = await mcPos(); }catch(err){ mcShow('출석하지 못했어요', mcPosErr(err), true); return; }
+    let j = null;
     try{
       const res = await fetch(ATTEND_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
         body: JSON.stringify({ action:'meetingCheckin', lat: c.latitude, lng: c.longitude, acc: c.accuracy }) });
-      const j = await res.json();
-      if(j && j.ok){
-        try{ localStorage.setItem(MC_LS, day); }catch(e){}
-        mcShow(j.already ? '이미 기록돼 있어요' : '회의 ' + j.status + ' 완료', (j.name ? j.name + ' · ' : '') + j.status + (j.time ? ' · ' + j.time : ''), false);
-      } else if(j && j.error === 'far'){
-        mcShow('홍보대사실과 멀어요', `스타센터에서 약 ${j.dist}m 떨어진 곳으로 잡혔어요. 홍보대사실 안에서 다시 눌러 주세요. 계속 안 되면 관리자에게 말해 주세요.`, true);
-      } else if(j && j.error === 'acc'){
-        mcShow('위치가 정확하지 않아요', `위치 오차가 약 ${j.acc}m예요. 와이파이를 켜고 다시 눌러 주세요.`, true);
-      } else {
-        mcShow('출석하지 못했어요', MC_ERR[j && j.error] || ('서버 답: ' + ((j && j.error) || '알 수 없음')), !(j && (j.error === 'not_time' || j.error === 'cancelled')));
-      }
-    }catch(e){ mcShow('출석하지 못했어요', '서버에 연결하지 못했어요.', true); }
-    mcBusy = false;
-  }, err => {
-    mcBusy = false;
-    mcShow('출석하지 못했어요', err && err.code === 1 ? '위치 권한을 허용해야 출석돼요. 브라우저 설정에서 이 사이트의 위치를 허용한 뒤 다시 눌러 주세요.' : '위치를 받지 못했어요. 잠시 뒤 다시 눌러 주세요.', true);
-  }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+      j = await res.json();
+    }catch(e){ mcShow('출석하지 못했어요', '서버에 연결하지 못했어요.', true); return; }
+    if(j && j.ok){
+      try{ localStorage.setItem(MC_LS, st.date); }catch(e){}
+      mcShow(j.already ? '이미 기록돼 있어요' : '회의 ' + j.status + ' 완료', (j.name ? j.name + ' · ' : '') + j.status + (j.time ? ' · ' + j.time : ''), false);
+    } else if(j && j.error === 'far'){
+      mcShow('회의 장소와 멀어요', `출석을 연 곳에서 약 ${j.dist}m 떨어진 곳으로 잡혔어요. 홍보대사실 안에서 다시 눌러 주세요. 계속 안 되면 관리자에게 말해 주세요.`, true);
+    } else if(j && j.error === 'acc'){
+      mcShow('위치가 정확하지 않아요', `위치 오차가 약 ${j.acc}m예요. 와이파이를 켜고 다시 눌러 주세요.`, true);
+    } else {
+      mcShow('출석하지 못했어요', MC_ERR[j && j.error] || ('서버 답: ' + ((j && j.error) || '알 수 없음')), !(j && (j.error === 'not_time' || j.error === 'cancelled')));
+    }
+  } finally { mcBusy = false; }
 }
-setTimeout(() => { if(mcDay() && memberToken()) jjWho().then(() => mcRun(false)); }, 2500);
-document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && mcDay() && memberToken()) jjWho().then(() => mcRun(false)); });
+setTimeout(() => mcRun(false), 2500);
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') mcRun(false); });
+setInterval(() => { if(document.visibilityState === 'visible') mcRun(false); }, 120000);
+
+// 관리자 회의 화면: 「출석 받기 시작」·「출석 끝」, 받는 중이면 30초마다 자동 출석 명단을 새로 읽음
+let mcAdminSt = null;
+function mcAdminRender(){
+  const btn = document.getElementById('mcOpenBtn'), info = document.getElementById('mcOpenInfo');
+  if(!btn) return;
+  const st = mcAdminSt;
+  btn.textContent = st && st.open ? '출석 끝' : '📍 출석 받기 시작';
+  btn.classList.toggle('on', !!(st && st.open));
+  info.textContent = !st ? '' : st.open ? `${st.until}까지 받는 중 · 자동 출석 ${st.n || 0}명` : '홍보대사실에서 누르면 이 휴대폰 위치에서 80m 안만 출석돼요 (60분, 18:01부터 지각)';
+}
+async function mcAdminRefresh(reload){
+  try{ mcAdminSt = await attendJsonpCall({ action:'meetingOpenState' }); }catch(e){}
+  mcAdminRender();
+  const view = document.getElementById('meetingView');
+  if(reload && mcAdminSt && mcAdminSt.open && view && view.style.display !== 'none' && !mtDirty){
+    const d = document.getElementById('mtDate');
+    if(d.value !== mcAdminSt.date){ d.value = mcAdminSt.date; }
+    attendCache.delete(JSON.stringify({ action:'meetingList', date: mcAdminSt.date }));
+    mtLoad();
+  }
+}
+setInterval(() => { const v = document.getElementById('meetingView'); if(v && v.style.display !== 'none' && document.visibilityState === 'visible' && mcAdminSt && mcAdminSt.open) mcAdminRefresh(true); }, 30000);
+document.getElementById('mcOpenBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('mcOpenBtn'), info = document.getElementById('mcOpenInfo');
+  if(btn.disabled) return;
+  btn.disabled = true;
+  try{
+    if(mcAdminSt && mcAdminSt.open){
+      if(!(await showConfirm('출석 받기를 끝낼까요? 끝내면 더 이상 자동 출석이 들어오지 않아요.'))) return;
+      const res = await fetch(ATTEND_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'meetingClose' }) });
+      const j = await res.json();
+      if(!j || !j.ok) throw new Error((j && j.error) || '');
+      mcAdminSt = { ok: true, open: false };
+      mcAdminRender();
+      return;
+    }
+    info.textContent = '이 휴대폰 위치를 확인하고 있어요…';
+    let c;
+    try{ c = await mcPos(); }catch(err){ info.textContent = mcPosErr(err); return; }
+    const res = await fetch(ATTEND_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ action:'meetingOpen', lat: c.latitude, lng: c.longitude, acc: c.accuracy }) });
+    const j = await res.json();
+    if(j && j.error === 'acc'){ info.textContent = `위치 오차가 약 ${j.acc}m라 시작하지 못했어요. 와이파이를 켜고 다시 눌러 주세요.`; return; }
+    if(!j || !j.ok) throw new Error((j && j.error) || '');
+    mcAdminSt = j;
+    mcAdminRefresh(true);
+  }catch(e){
+    info.textContent = e && e.message === 'auth' ? '회의 관리 권한이 있는 관리자 로그인이 필요해요.' : '서버에 반영하지 못했어요. 다시 눌러 주세요.';
+  }finally{ btn.disabled = false; }
+});
 
 function renderStatusDetail(key, rec){
   editingKey = key;

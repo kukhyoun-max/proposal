@@ -6433,7 +6433,7 @@ function mtRenderList(){
   el.innerHTML = `<div class="miss-bar"><button class="miss-btn ${mtOnlyMissing?'on':''}" id="mtMissBtn">${mtOnlyMissing ? '전체 보기' : '미입력만 보기 (' + missN + ')'}</button></div>`
     + (mtOnlyMissing && !list.length ? '<div class="miss-empty">모두 입력했어요</div>' : '') + list.map(n => `
     <div class="mt-row">
-      <span class="mt-name">${nb(n)}${n}${mtAuto[n] ? ' <small class="mt-auto" title="휴대폰 위치로 자동 기록">📍자동</small>' : ''}</span>
+      <span class="mt-name">${n}${mtAuto[n] ? ' <small class="mt-auto" title="휴대폰 위치로 자동 기록">📍자동</small>' : ''}</span>
       <div class="mt-btns">${MT_STATUSES.map(st => `<button data-name="${n}" data-st="${st}" class="${mtState[n]===st?'on':''}">${st}</button>`).join('')}</div>
     </div>`).join('');
   document.getElementById('mtMissBtn').addEventListener('click', ()=>{ mtOnlyMissing = !mtOnlyMissing; mtRenderList(); });

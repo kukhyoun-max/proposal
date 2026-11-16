@@ -5038,8 +5038,11 @@ function svRender(msg, err){
         + `<span class="sv-d">${esc(d.detail)}</span>${who}${chips}</div>${seg}</li>`;
     }).join('');
     let foot = '';
-    if(it.canAnswer && it.open) foot = `<button type="button" class="sv-save" data-svsave="${esc(it.id)}" ${changed ? '' : 'disabled'}>${changed ? '저장' : (done ? '저장했어요' : '날짜마다 골라 주세요')}</button>`
-      + `<p class="sv-msg">${esc(r.me)} · ${it.dates.length}일 중 ${done}일 골랐어요. 바뀌면 ${esc(due)}까지 다시 고를 수 있어요.</p>`;
+    // 모든 날짜를 골라야 저장 (2026-11-16 담당자 「필수 입력으로」: 일부만 고른 응답이 생김)
+    // 버튼엔 안 고른 날짜를 그대로 보여 줌 (담당자 「1일보다는 안 고른 날짜를」)
+    const left = it.dates.filter(d => !val(d)).map(d => d.label);
+    if(it.canAnswer && it.open) foot = `<button type="button" class="sv-save" data-svsave="${esc(it.id)}" ${changed && !left.length ? '' : 'disabled'}>${left.length ? `${esc(left.join(', '))} 골라 주세요` : (changed ? '저장' : '저장했어요')}</button>`
+      + `<p class="sv-msg">${esc(r.me)} · ${it.dates.length}일 중 ${done}일 골랐어요. 모든 날짜에 가능·불가를 골라야 저장돼요. 바뀌면 ${esc(due)}까지 다시 고를 수 있어요.</p>`;
     else if(it.canAnswer) foot = `<p class="sv-msg">응답을 받는 기간(${esc(due)}까지)이 지났어요. 바꿀 게 있으면 담당자에게 말해 주세요.</p>`;
     else if(!r.admin) foot = `<p class="sv-msg">로그인한 계정이 아직 이름과 연결되지 않았어요. 이름을 연결하면 고를 수 있어요.</p><button type="button" class="sv-link" data-svlink="1">내 이름 연결하기</button>`;
     if(r.admin){
@@ -5159,6 +5162,7 @@ async function svSave(id){
   const answers = {};
   it.dates.forEach(d => { if(pick[d.date] && pick[d.date] !== d.mine) answers[d.date] = pick[d.date]; });
   if(!Object.keys(answers).length) return;
+  if(it.dates.some(d => !(pick[d.date] || d.mine))){ svRender('모든 날짜에 가능·불가를 골라 주세요.', true); return; }
   svBusy = true;
   const b = document.querySelector(`[data-svsave="${CSS.escape(id)}"]`); if(b){ b.disabled = true; b.textContent = '저장하는 중…'; }
   let j = null;

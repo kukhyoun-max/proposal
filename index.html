@@ -2030,7 +2030,7 @@
     <button id="btnMy" type="button">내 성과</button>
     <button id="btnEquipPublic" aria-label="일정·장비">일정<span class="hide-m">·장비</span></button>
     <button id="btnStatusToggle" aria-label="기획서 현황"><span class="hide-m">기획서 </span>현황</button>
-    <button id="btnAdminToggle">관리자 검토 <span id="pendingBadge" style="display:none; background:#E24B4A; border-radius:10px; padding:1px 7px; margin-left:4px;">0</span></button>
+    <button id="btnAdminToggle" style="display:none">관리자 검토 <span id="pendingBadge" style="display:none; background:#E24B4A; border-radius:10px; padding:1px 7px; margin-left:4px;">0</span></button>
   </div>
 </div>
 
@@ -2937,7 +2937,8 @@ function adminRole(){ return JJ_ADMIN_ROLES[memberTkEmail(memberToken()).toLower
   const btn = document.getElementById('btnAdminToggle'); if(!btn) return;
   const role = adminRole(), s = adminSession();
   if(s && s.email !== memberTkEmail(memberToken()).toLowerCase()) adminLogout();   // 예전 PIN 출입증이나 다른 계정 출입증은 버려요
-  if(!role){ btn.disabled = true; btn.title = '관리자 계정만 쓸 수 있어요'; return; }
+  if(!role) return; // 2026-11-16 담당자 「관리자 버튼은 권한이 있는 사람만 보이고, 아닌 친구들은 아예 뜨지 않게」: 기본 숨김, 관리자 계정만 보임
+  btn.style.display = '';
   btn.firstChild.textContent = role.label + ' ';
 })();
 function memberGate(msg){

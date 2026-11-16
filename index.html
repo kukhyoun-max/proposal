@@ -1199,6 +1199,33 @@
   .ldb-btn:disabled{opacity:.65;}
   .ldb-msg{margin:0; font-size:13px; line-height:1.45; background:rgb(255 255 255 / .16); border-radius:10px; padding:8px 10px;}
   @media (prefers-reduced-motion: reduce){.ldb-dot::after{animation:none; opacity:.5; transform:scale(1);}}
+  /* 행사 지원 조사 카드 (2026-11-16): 날짜마다 가능·불가 */
+  .sv-card .sv-k{font-size:13px;font-weight:700;color:var(--purple);display:flex;gap:6px;align-items:center}
+  .sv-card .sv-k .sv-due{margin-left:auto;color:var(--ink-soft);font-weight:600}
+  .sv-card .sv-t{font-size:17px;font-weight:800;color:var(--ink);margin-top:4px;line-height:1.35;text-wrap:balance}
+  .sv-card .sv-s{font-size:13px;color:var(--ink-soft);margin-top:3px;line-height:1.45}
+  .sv-list{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column}
+  .sv-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+  .sv-day{flex:1;min-width:0}
+  .sv-day b{font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .sv-day .sv-need{font-size:12.5px;color:var(--ink-soft);margin-left:6px}
+  .sv-day .sv-need.ok{color:#0B7A3E}
+  .sv-day .sv-d{display:block;font-size:12px;color:var(--ink-faint);margin-top:2px;line-height:1.4;overflow-wrap:anywhere}
+  .sv-day .sv-who{display:block;font-size:12px;color:var(--ink-soft);margin-top:3px;line-height:1.45}
+  .sv-seg{flex:none;display:flex;border:1px solid var(--line-input);border-radius:12px;overflow:hidden}
+  .sv-seg button{min-width:52px;min-height:40px;border:0;background:transparent;font:inherit;font-size:14px;font-weight:700;color:var(--ink-soft);cursor:pointer}
+  .sv-seg button + button{border-left:1px solid var(--line-input)}
+  .sv-seg button[aria-pressed="true"].y{background:var(--purple);color:#fff}
+  .sv-seg button[aria-pressed="true"].n{background:#5B5866;color:#fff}
+  .sv-seg button:focus-visible{outline:3px solid var(--purple-line);outline-offset:-3px}
+  .sv-seg button:disabled{cursor:default;opacity:.6}
+  .sv-foot{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .sv-save{width:100%;min-height:50px;border-radius:14px;border:0;background:var(--purple);color:#fff;font:inherit;font-size:16px;font-weight:800;cursor:pointer}
+  .sv-save:disabled{opacity:.5;cursor:default}
+  .sv-msg{font-size:13px;color:var(--ink-soft);line-height:1.45;margin:0}
+  .sv-msg.err{color:#B3261E}
+  .sv-link{align-self:flex-start;border:1px solid var(--line-input);background:transparent;border-radius:10px;padding:8px 12px;font:inherit;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer}
+  .sv-hr{border:0;border-top:1px solid var(--line);margin:14px 0}
   .ld-row{display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--line);}
   .ld-row:first-of-type{border-top:0;}
   .ld-text{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; font-size:13px; color:var(--ink-soft);}
@@ -1867,6 +1894,27 @@
 :root[data-theme="dark"] .ldb-row.on .ldb-btn{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.7)}
 :root[data-theme="dark"] .ldb-btn:focus-visible{outline:3px solid rgb(255 255 255)}
 :root[data-theme="dark"] .ldb-msg{background:rgb(255 255 255 / .16)}
+:root[data-theme="dark"] .sv-card .sv-k{color:var(--purple)}
+:root[data-theme="dark"] .sv-card .sv-k .sv-due{color:var(--ink-soft)}
+:root[data-theme="dark"] .sv-card .sv-t{color:var(--ink)}
+:root[data-theme="dark"] .sv-card .sv-s{color:var(--ink-soft)}
+:root[data-theme="dark"] .sv-row{border-top:1px solid var(--line)}
+:root[data-theme="dark"] .sv-day b{color:var(--ink)}
+:root[data-theme="dark"] .sv-day .sv-need{color:var(--ink-soft)}
+:root[data-theme="dark"] .sv-day .sv-need.ok{color:#7EF1B3}
+:root[data-theme="dark"] .sv-day .sv-d{color:var(--ink-faint)}
+:root[data-theme="dark"] .sv-day .sv-who{color:var(--ink-soft)}
+:root[data-theme="dark"] .sv-seg{border:1px solid var(--line-input)}
+:root[data-theme="dark"] .sv-seg button{border:0;background:transparent;color:var(--ink-soft)}
+:root[data-theme="dark"] .sv-seg button + button{border-left:1px solid var(--line-input)}
+:root[data-theme="dark"] .sv-seg button[aria-pressed="true"].y{background:#4763E4;color:#fff}
+:root[data-theme="dark"] .sv-seg button[aria-pressed="true"].n{background:#5B5866;color:#fff}
+:root[data-theme="dark"] .sv-seg button:focus-visible{outline:3px solid var(--purple-line)}
+:root[data-theme="dark"] .sv-save{border:0;background:#4763E4;color:#fff}
+:root[data-theme="dark"] .sv-msg{color:var(--ink-soft)}
+:root[data-theme="dark"] .sv-msg.err{color:#EB8A85}
+:root[data-theme="dark"] .sv-link{border:1px solid var(--line-input);background:transparent;color:var(--ink)}
+:root[data-theme="dark"] .sv-hr{border:0;border-top:1px solid var(--line)}
 :root[data-theme="dark"] .ld-row{border-top:1px solid var(--line)}
 :root[data-theme="dark"] .ld-row:first-of-type{border-top:0}
 :root[data-theme="dark"] .ld-text{color:var(--ink-soft)}
@@ -1991,6 +2039,7 @@
     <div class="step-panel" id="panel1">
       <div id="jjhHome">
         <section class="ld-banner" id="jjhLead" aria-live="polite" style="display:none"></section>
+        <section class="jjh-card sv-card" id="jjhSv" aria-label="행사 지원 조사" style="display:none"></section>
         <button class="jjh-goal" id="jjhGoal" type="button" aria-label="공동목표 자세히 보기">
           <div class="l"><div class="k">JJ 공동목표 ›</div><div class="s" id="jjhGoalText">불러오는 중…</div></div>
           <svg id="jjhMini" viewBox="0 0 112 52" aria-hidden="true"></svg>
@@ -4839,6 +4888,80 @@ document.addEventListener('visibilitychange', () => { if(document.visibilityStat
 setTimeout(() => mcRun(false), 2500);
 document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') mcRun(false); });
 setInterval(() => { if(document.visibilityState === 'visible'){ mcRun(false); if(document.getElementById('jjhLead').style.display !== 'none') leadHomeLoad(); } }, 120000);
+
+// 행사 지원 조사 (2026-11-16 담당자 「기획서 프로그램에 연동시켜서 이메일로 누군지 매칭 시키고, 일정별로 가능 여부만 선택」)
+// 홈 카드에서 날짜마다 가능·불가만 고른다. 이름은 서버가 로그인 계정 → 「계정연결」로 정한다(Support.gs svList·svSave).
+// 관리자 계정은 날짜별 이름과 아직 안 낸 사람을 본다. 조사는 서버 SV_SURVEYS에 있고, 마지막 날짜가 지나면 사라진다
+let svData = null, svPick = {}, svBusy = false;
+async function svHomeLoad(){
+  if(!memberToken() || svBusy) return;
+  let r = null;
+  try{ r = await attendJsonpCall({ action:'svList' }); }catch(e){ return; }
+  const el = document.getElementById('jjhSv');
+  if(!r || !r.ok || !(r.items || []).length){ el.style.display = 'none'; return; }
+  svData = r;
+  svRender();
+}
+function svRender(msg, err){
+  const el = document.getElementById('jjhSv'), r = svData;
+  if(!r) return;
+  el.style.display = '';
+  el.innerHTML = r.items.map(it => {
+    const pick = svPick[it.id] || {}, val = d => pick[d.date] || d.mine || '';
+    const done = it.dates.filter(d => val(d)).length;
+    const changed = it.dates.some(d => pick[d.date] && pick[d.date] !== d.mine);
+    const due = it.until.slice(5).replace('-', '/');
+    const rows = it.dates.map(d => {
+      const v = val(d);
+      const who = r.admin ? `<span class="sv-who">가능 ${d.yesNames.length ? d.yesNames.map(abEsc).join(', ') : '-'}${d.noNames.length ? ` · 불가 ${d.noNames.map(abEsc).join(', ')}` : ''}</span>` : '';
+      const seg = r.me ? `<div class="sv-seg" role="group" aria-label="${esc(d.label)} 가능 여부">`
+        + `<button type="button" class="y" data-sv="${esc(it.id)}" data-d="${esc(d.date)}" data-v="가능" aria-pressed="${v === '가능'}" ${it.open ? '' : 'disabled'}>가능</button>`
+        + `<button type="button" class="n" data-sv="${esc(it.id)}" data-d="${esc(d.date)}" data-v="불가" aria-pressed="${v === '불가'}" ${it.open ? '' : 'disabled'}>불가</button></div>` : '';
+      return `<li class="sv-row"><div class="sv-day"><b>${esc(d.label)}</b><span class="sv-need${d.yes >= d.need ? ' ok' : ''}">${esc(d.need)}명 필요 · 가능 ${esc(d.yes)}명</span>`
+        + `<span class="sv-d">${esc(d.detail)}</span>${who}</div>${seg}</li>`;
+    }).join('');
+    let foot = '';
+    if(r.me && it.open) foot = `<button type="button" class="sv-save" data-svsave="${esc(it.id)}" ${changed ? '' : 'disabled'}>${changed ? '저장' : (done ? '저장했어요' : '날짜마다 골라 주세요')}</button>`
+      + `<p class="sv-msg">${esc(r.me)} · ${it.dates.length}일 중 ${done}일 골랐어요. 바뀌면 ${esc(due)}까지 다시 고를 수 있어요.</p>`;
+    else if(r.me) foot = `<p class="sv-msg">응답을 받는 기간(${esc(due)}까지)이 지났어요. 바꿀 게 있으면 담당자에게 말해 주세요.</p>`;
+    else if(!r.admin) foot = `<p class="sv-msg">로그인한 계정이 아직 이름과 연결되지 않았어요. 이름을 연결하면 고를 수 있어요.</p><button type="button" class="sv-link" data-svlink="1">내 이름 연결하기</button>`;
+    if(r.admin) foot += `<p class="sv-msg">응답 ${esc(it.answered)}/${esc(it.total)}명${it.missing && it.missing.length ? ` · 아직: ${it.missing.map(abEsc).join(', ')}` : ''}</p>`;
+    if(msg) foot += `<p class="sv-msg${err ? ' err' : ''}" role="status">${esc(msg)}</p>`;
+    return `<div class="sv-k"><span>지원 조사</span><span class="sv-due">${esc(due)}까지</span></div>`
+      + `<div class="sv-t">${esc(it.title)}</div><div class="sv-s">📍 ${esc(it.place)} · ${esc(it.note)}</div>`
+      + `<ul class="sv-list">${rows}</ul><div class="sv-foot">${foot}</div>`;
+  }).join('<hr class="sv-hr">');
+  el.querySelectorAll('[data-sv]').forEach(b => b.onclick = () => {
+    const p = svPick[b.dataset.sv] || (svPick[b.dataset.sv] = {});
+    p[b.dataset.d] = b.dataset.v;
+    svRender();
+  });
+  el.querySelectorAll('[data-svsave]').forEach(b => b.onclick = () => svSave(b.dataset.svsave));
+  const lk = el.querySelector('[data-svlink]'); if(lk) lk.onclick = () => mcLinkPicker();
+}
+async function svSave(id){
+  const it = svData && svData.items.find(x => x.id === id), pick = svPick[id] || {};
+  if(!it || svBusy) return;
+  const answers = {};
+  it.dates.forEach(d => { if(pick[d.date] && pick[d.date] !== d.mine) answers[d.date] = pick[d.date]; });
+  if(!Object.keys(answers).length) return;
+  svBusy = true;
+  const b = document.querySelector(`[data-svsave="${CSS.escape(id)}"]`); if(b){ b.disabled = true; b.textContent = '저장하는 중…'; }
+  let j = null;
+  try{ j = await mcPost({ action:'svSave', id, answers }); }catch(e){ j = null; }
+  svBusy = false;
+  if(j && j.ok){
+    it.dates.forEach(d => { const a = answers[d.date]; if(!a) return; if(d.mine === '가능') d.yes--; if(d.mine === '불가') d.no--; d.mine = a; if(a === '가능') d.yes++; else d.no++; });
+    svPick[id] = {};
+    svRender('저장했어요.');
+    svHomeLoad();
+    return;
+  }
+  const why = { not_linked:'로그인한 계정이 아직 이름과 연결되지 않았어요.', not_member:'현재 홍보대사 명단에 없는 이름이에요. 담당자에게 말해 주세요.', closed:'응답을 받는 기간이 지났어요.', busy:'서버가 바빠요. 잠시 뒤 다시 눌러 주세요.' };
+  svRender(why[j && j.error] || ('저장하지 못했어요. 다시 눌러 주세요.' + (j && j.error ? ' (' + j.error + ')' : '')), true);
+}
+setTimeout(() => svHomeLoad(), 3200);
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && !Object.values(svPick).some(p => Object.keys(p).length)) svHomeLoad(); });
 
 // 관리자 회의 화면: 「출석 받기 시작」·「출석 끝」, 받는 중이면 30초마다 자동 출석 명단을 새로 읽음
 let mcAdminSt = null;

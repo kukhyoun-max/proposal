@@ -1226,6 +1226,17 @@
   .sv-msg.err{color:#B3261E}
   .sv-link{align-self:flex-start;border:1px solid var(--line-input);background:transparent;border-radius:10px;padding:8px 12px;font:inherit;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer}
   .sv-hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+  /* 다 답한 조사는 접어 둠 (2026-11-16 담당자 「투표 했으면 상단 제목 영역만 뜨고, 접어놓는게」) */
+  .sv-sum{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+  .sv-sum-t{flex:1;min-width:0;font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.45}
+  .sv-sum-t .sv-sum-ck{color:#0B7A3E}
+  .sv-sum-t small{display:block;font-size:12.5px;font-weight:500;color:var(--ink-soft);margin-top:2px}
+  .sv-sum-t small span{white-space:nowrap}
+  .sv-fold{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:46px;margin-top:12px;border:1px solid var(--line-input);background:transparent;border-radius:12px;font:inherit;font-size:14.5px;font-weight:700;color:var(--ink);cursor:pointer}
+  .sv-fold::after{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg)}
+  .sv-fold[aria-expanded="true"]::after{transform:translateY(2px) rotate(-135deg)}
+  .sv-fold:focus-visible{outline:3px solid var(--purple-line);outline-offset:2px}
+  .sv-sum + .sv-list{margin-top:6px}
   .sv-ok{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--purple);color:#fff;font-size:11.5px;font-weight:800;vertical-align:2px}
   .sv-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
   .sv-chip{border:1px solid var(--line-input);background:transparent;border-radius:999px;padding:6px 11px;font:inherit;font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;min-height:34px}
@@ -1932,6 +1943,22 @@
 :root[data-theme="dark"] .sv-msg.err{color:#EB8A85}
 :root[data-theme="dark"] .sv-link{border:1px solid var(--line-input);background:transparent;color:var(--ink)}
 :root[data-theme="dark"] .sv-hr{border:0;border-top:1px solid var(--line)}
+:root[data-theme="dark"] .sv-sum{border-top:1px solid var(--line)}
+:root[data-theme="dark"] .sv-sum-t{color:var(--ink)}
+:root[data-theme="dark"] .sv-sum-t .sv-sum-ck{color:#7EF1B3}
+:root[data-theme="dark"] .sv-sum-t small{color:var(--ink-soft)}
+:root[data-theme="dark"] .sv-fold{border:1px solid var(--line-input);background:transparent;color:var(--ink)}
+:root[data-theme="dark"] .sv-fold::after{border-right:2px solid currentColor;border-bottom:2px solid currentColor}
+:root[data-theme="dark"] .sv-fold:focus-visible{outline:3px solid var(--purple-line)}
+:root[data-theme="dark"] .sv-ok{background:#4763E4;color:#fff}
+:root[data-theme="dark"] .sv-chip{border:1px solid var(--line-input);background:transparent;color:var(--ink-soft)}
+:root[data-theme="dark"] .sv-chip.yes{color:var(--ink)}
+:root[data-theme="dark"] .sv-chip.yes::before{color:#7EF1B3}
+:root[data-theme="dark"] .sv-chip[aria-pressed="true"]{background:#4763E4;border-color:var(--purple);color:#fff}
+:root[data-theme="dark"] .sv-chip[aria-pressed="true"]::before{color:#fff}
+:root[data-theme="dark"] .sv-chip:focus-visible{outline:3px solid var(--purple-line)}
+:root[data-theme="dark"] .sv-cf-n{color:var(--ink-soft)}
+:root[data-theme="dark"] .sv-save.alt{background:transparent;color:var(--ink);border:1.5px solid var(--line-input)}
 :root[data-theme="dark"] .sv-page{background:var(--page-bg)}
 :root[data-theme="dark"] .sv-page-top b{color:var(--ink)}
 :root[data-theme="dark"] .sv-page-top button{border:1px solid var(--line-input);background:transparent;color:var(--ink)}
@@ -4930,7 +4957,7 @@ setInterval(() => { if(document.visibilityState === 'visible'){ mcRun(false); if
 // 행사 지원 조사 (2026-11-16 담당자 「기획서 프로그램에 연동시켜서 이메일로 누군지 매칭 시키고, 일정별로 가능 여부만 선택」)
 // 홈 카드에서 날짜마다 가능·불가만 고른다. 이름은 서버가 로그인 계정 → 「계정연결」로 정한다(Support.gs svList·svSave).
 // 관리자 계정은 날짜별 이름과 아직 안 낸 사람을 본다. 조사는 서버 SV_SURVEYS에 있고, 마지막 날짜가 지나면 사라진다
-let svData = null, svPick = {}, svBusy = false;
+let svData = null, svPick = {}, svBusy = false, svExp = {}; // svExp: 다 답한 조사를 펼쳤는지(조사 id → true)
 let svCf = {}, svCfDirty = {}; // 관리자 확정 칩: 조사 id → 날짜 → 이름 배열(저장 전 상태)
 // 링크 https://kukhyoun-max.github.io/proposal/?sv=<조사 id> (2026-11-16 「모델팀에게만 따로 링크」): 로그인으로 주소가 바뀌어도 이 탭에선 기억
 (function(){ try{ const v = new URLSearchParams(location.search).get('sv'); if(v) sessionStorage.setItem('jjSvFocus', v); }catch(e){} })();
@@ -4984,6 +5011,22 @@ function svRender(msg, err){
     const done = it.dates.filter(d => val(d)).length;
     const changed = it.dates.some(d => pick[d.date] && pick[d.date] !== d.mine);
     const due = it.until.slice(5).replace('-', '/');
+    // 홍보대사가 모든 날짜를 저장했으면 제목만 두고 접음. 「펼치기」로 목록·수정
+    const answered = !r.admin && it.canAnswer && it.dates.every(d => d.mine);
+    const head = `<div class="sv-k"><span>지원 조사${it.team ? ' · ' + esc(it.team) : ''}</span><span class="sv-due">${esc(due)}까지</span></div>`
+      + `<div class="sv-t">${esc(it.title)}</div><div class="sv-s">📍 ${esc(it.place)} · ${esc(it.note)}</div>`;
+    let sum = '';
+    if(answered){
+      const ny = it.dates.filter(d => d.mine === '가능').length, nOk = it.dates.filter(d => d.mineOk).length;
+      sum = `<div class="sv-sum"><span class="sv-sum-t"><span class="sv-sum-ck">✓</span> 응답 완료${nOk ? ` · 확정 ${nOk}일` : ''}`
+        + `<small><span>가능 ${ny}일 · 불가 ${it.dates.length - ny}일</span> · <span>${it.open ? `${esc(due)}까지 고칠 수 있어요` : '응답 기간 끝'}</span></small></span></div>`;
+    }
+    // 펼치기·접기는 카드 맨 아래 (2026-11-16 담당자 「펼치기는 하단에 있는게 맞는 거 같아」)
+    const exp = !!svExp[it.id];
+    const fold = answered ? `<button type="button" class="sv-fold" data-svexp="${esc(it.id)}" aria-expanded="${exp}">${exp ? '접기' : (it.open ? '펼쳐서 고치기' : '내 응답 펼치기')}</button>` : '';
+    if(answered && !exp){
+      return head + sum + (msg ? `<div class="sv-foot"><p class="sv-msg${err ? ' err' : ''}" role="status">${esc(msg)}</p></div>` : '') + fold;
+    }
     const rows = it.dates.map(d => {
       const v = val(d);
       const who = r.admin ? `<span class="sv-who">가능 ${d.yesNames.length ? d.yesNames.map(abEsc).join(', ') : '-'}${d.noNames.length ? ` · 불가 ${d.noNames.map(abEsc).join(', ')}` : ''}</span>` : '';
@@ -5008,9 +5051,7 @@ function svRender(msg, err){
         + `<p class="sv-msg">「홍보실 엑셀 받기」: 홍보실 협조 엑셀 파일을 고르면 J열(홍보대사 협조 인원)에 확정한 이름을 넣은 새 파일을 내려받아요. 파일은 이 휴대폰·PC 안에서만 고치고 어디에도 올리지 않아요.</p>`;
     }
     if(msg) foot += `<p class="sv-msg${err ? ' err' : ''}" role="status">${esc(msg)}</p>`;
-    return `<div class="sv-k"><span>지원 조사${it.team ? ' · ' + esc(it.team) : ''}</span><span class="sv-due">${esc(due)}까지</span></div>`
-      + `<div class="sv-t">${esc(it.title)}</div><div class="sv-s">📍 ${esc(it.place)} · ${esc(it.note)}</div>`
-      + `<ul class="sv-list">${rows}</ul><div class="sv-foot">${foot}</div>`;
+    return head + sum + `<ul class="sv-list">${rows}</ul><div class="sv-foot">${foot}</div>` + fold;
   }).join('<hr class="sv-hr">');
   el.querySelectorAll('[data-sv]').forEach(b => b.onclick = () => {
     const p = svPick[b.dataset.sv] || (svPick[b.dataset.sv] = {});
@@ -5018,6 +5059,12 @@ function svRender(msg, err){
     svRender();
   });
   el.querySelectorAll('[data-svsave]').forEach(b => b.onclick = () => svSave(b.dataset.svsave));
+  el.querySelectorAll('[data-svexp]').forEach(b => b.onclick = () => {
+    const id = b.dataset.svexp; svExp[id] = !svExp[id];
+    if(!svExp[id]) svPick[id] = {}; // 접으면 저장 안 한 선택은 버림
+    svRender();
+    const nb = el.querySelector(`[data-svexp="${CSS.escape(id)}"]`); if(nb) nb.focus();
+  });
   const lk = el.querySelector('[data-svlink]'); if(lk) lk.onclick = () => mcLinkPicker();
   el.querySelectorAll('[data-cfn]').forEach(b => b.onclick = () => {
     const id = b.dataset.cfid, day = b.dataset.cfd, n = b.dataset.cfn;
@@ -5119,7 +5166,7 @@ async function svSave(id){
   svBusy = false;
   if(j && j.ok){
     it.dates.forEach(d => { const a = answers[d.date]; if(!a) return; if(d.mine === '가능') d.yes--; if(d.mine === '불가') d.no--; d.mine = a; if(a === '가능') d.yes++; else d.no++; });
-    svPick[id] = {};
+    svPick[id] = {}; svExp[id] = false; // 저장하면 다시 접음
     svRender('저장했어요.');
     svHomeLoad();
     return;

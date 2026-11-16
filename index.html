@@ -1136,7 +1136,7 @@
   .mc-card .mc-title{font-weight:800; margin-bottom:4px;}
   /* 출석 카드 그림 (2026-11-15 담당자 「알림창에 그래픽적으로 뭔가」): 출석·지각 = JJ 로고의 슬레이트가 닫힘, 찾는 중 = 레이더, 멀어요 = 반경 원 밖의 내 점 */
   .mc-card .mc-row{display:flex; gap:14px; align-items:center;}
-  .mc-card .mc-text{flex:1; min-width:0;}
+  .mc-card .mc-text{flex:1; min-width:0; white-space:pre-line;}
   .mc-art{flex:none; width:72px; height:72px; display:block; overflow:visible;}
   .mc-art .ring{fill:var(--purple-soft); stroke:var(--purple); stroke-width:1.5; stroke-dasharray:3 3;}
   .mc-art .home{fill:var(--purple);}
@@ -4766,8 +4766,25 @@ function mcPos(){
   });
 }
 function mcPosErr(err){
-  return err && err.code === 1 ? '위치 권한을 허용해야 해요. 브라우저 설정에서 이 사이트의 위치를 허용한 뒤 다시 눌러 주세요.'
+  return err && err.code === 1 ? mcDeniedHelp()
     : err && err.code === -1 ? '이 브라우저는 위치를 받을 수 없어요. 휴대폰으로 열어 주세요.' : '위치를 받지 못했어요. 잠시 뒤 다시 눌러 주세요.';
+}
+// 위치 거부(code 1) 안내: 기기별로 켜는 순서(2026-11-16 「위치 권한 허용해야 한다고 뜨는 친구들」)
+function mcDeniedHelp(){
+  const ua = navigator.userAgent, head = '휴대폰이 이 사이트에 위치를 주지 않고 있어요. 아래 순서로 켠 뒤 다시 눌러 주세요.';
+  if(/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)){
+    const app = /CriOS/i.test(ua) ? 'Chrome' : 'Safari';
+    return head + '\n① 설정 > 개인정보 보호 및 보안 > 위치 서비스 켜기'
+      + '\n② 같은 화면 아래 「' + (app === 'Safari' ? 'Safari 웹사이트' : 'Chrome') + '」 → 「앱을 사용하는 동안」'
+      + (app === 'Safari' ? '\n③ 설정 > 앱 > Safari > 위치 → 「허용」 또는 「묻기」\n④' : '\n③') + ' 이 화면 새로고침 → 위치를 물으면 「허용」';
+  }
+  if(/Android/i.test(ua)){
+    const site = /SamsungBrowser/i.test(ua) ? '메뉴(≡) > 설정 > 사이트 및 다운로드 > 사이트 권한 > 위치' : '주소창 왼쪽 아이콘 > 권한 > 위치';
+    return head + '\n① 화면 위쪽을 내려 「위치」 켜기'
+      + '\n② ' + site + ' → 이 사이트 「허용」'
+      + '\n③ 이 화면 새로고침 → 위치를 물으면 「허용」';
+  }
+  return head + '\n① 휴대폰 위치(GPS) 켜기\n② 브라우저 설정에서 이 사이트의 위치 「허용」\n③ 새로고침 뒤 다시 누르기';
 }
 // 출석 대상: 현재 명단에 이름이 연결된 계정. 관리자 계정이라도 명단 이름이 있으면(회의 권한을 받은 홍보대사) 대상
 function mcTarget(){ return !(JJ_ME && JJ_ME.admin && !(JJ_ME.name && MEETING_ROSTER.includes(JJ_ME.name))); }

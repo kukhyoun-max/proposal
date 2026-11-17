@@ -4992,6 +4992,8 @@ async function svHomeLoad(){
   try{ r = await attendJsonpCall({ action:'svList' }); }catch(e){ if(focus && !svData) el.innerHTML = '<p class="sv-msg err">불러오지 못했어요. 잠시 뒤 링크를 다시 열어 주세요.</p>'; return; }
   // 불러오기 실패: 보이던 내용은 그대로 두고, 링크로 처음 열 때만 안내
   if(!r || !r.ok){ if(focus && !svData) el.innerHTML = '<p class="sv-msg err">불러오지 못했어요. 잠시 뒤 링크를 다시 열어 주세요.</p>'; return; }
+  // 마감한 조사는 홈에서 내림. ?sv= 링크로 열면 그대로 보임(확정·엑셀용) (2026-11-17 담당자 「이제 공지에서 닫자」)
+  if(!focus && !svPageOn()) r.items = (r.items || []).filter(it => it.open);
   if(!(r.items || []).length){
     if(focus){ el.style.display = ''; el.innerHTML = '<div class="sv-k"><span>지원 조사</span></div><p class="sv-msg" style="margin-top:6px">이 링크의 조사는 정해진 팀만 볼 수 있어요. 대상인데 안 보이면 담당자에게 말해 주세요.</p>'; svFocusDone(); }
     else if(!svPageOn()){ svData = null; el.style.display = 'none'; }

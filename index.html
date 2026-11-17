@@ -2911,11 +2911,29 @@ const STORAGE_KEY = 'content-plan:current';
 const ADMIN_TK_KEY = 'jjAdminToken_v1';
 // 관리자 창에 들어갈 수 있는 계정과 버튼 이름 (서버 Attendance.gs SEC_ACCOUNTS와 같게). 그 외 계정은 버튼이 꺼져 있어요
 // 권한 판단은 서버가 로그인 출입증으로 해요. 이 목록은 버튼 표시용이에요
+// 작은 SHA-256 (동기). 관리자 목록은 메일 대신 해시만 둬요(2026-11-17 공개 저장소 메일 노출 정리)
+function jjSha256(str){
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  const b=Array.from(new TextEncoder().encode(str)),l=b.length*8;
+  b.push(0x80); while(b.length%64!==56) b.push(0);
+  for(let i=7;i>=0;i--) b.push(i>3?0:(l>>>(i*8))&255);
+  let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const r=(x,n)=>(x>>>n)|(x<<(32-n)), W=new Array(64);
+  for(let o=0;o<b.length;o+=64){
+    for(let t=0;t<16;t++) W[t]=(b[o+t*4]<<24)|(b[o+t*4+1]<<16)|(b[o+t*4+2]<<8)|b[o+t*4+3];
+    for(let t=16;t<64;t++){ const s0=r(W[t-15],7)^r(W[t-15],18)^(W[t-15]>>>3), s1=r(W[t-2],17)^r(W[t-2],19)^(W[t-2]>>>10); W[t]=(W[t-16]+s0+W[t-7]+s1)|0; }
+    let [a,bb,c,d,e,f,g,h]=H;
+    for(let t=0;t<64;t++){ const t1=(h+(r(e,6)^r(e,11)^r(e,25))+((e&f)^(~e&g))+K[t]+W[t])|0, t2=((r(a,2)^r(a,13)^r(a,22))+((a&bb)^(a&c)^(bb&c)))|0; h=g;g=f;f=e;e=(d+t1)|0;d=c;c=bb;bb=a;a=(t1+t2)|0; }
+    H=[H[0]+a,H[1]+bb,H[2]+c,H[3]+d,H[4]+e,H[5]+f,H[6]+g,H[7]+h].map(x=>x|0);
+  }
+  return H.map(x=>(x>>>0).toString(16).padStart(8,"0")).join("");
+}
+// 키는 소문자 메일의 SHA-256 해시예요. 계정을 더하면: node -e "console.log(require('crypto').createHash('sha256').update('메일'.toLowerCase()).digest('hex'))"
 const JJ_ADMIN_ROLES = {
-  'kukhyoun@jj.ac.kr': { label:'관리자 검토', full:true },
-  'kukhyoun5@gmail.com': { label:'관리자 검토', full:true },   // 담당자 서브 계정 (2026-10-19)
-  'kjhwlgns6463@gmail.com': { label:'회의 관리' },
-  'gysdk4776@gmail.com': { label:'개인 콘텐츠' },
+  'd489808c22bde1672faa098454b33844a4c160d091207f684d0e9d25085d2a11': { label:'관리자 검토', full:true },
+  'cb46f6ab4e9d99c11ad59228c65b065e47e01791fdf595cad317a805b62017c0': { label:'관리자 검토', full:true },   // 담당자 서브 계정 (2026-10-19)
+  'bc88fb68c3352187fc400baa0e7ab66e95d3fd0be52041d4d090b9121973c89c': { label:'회의 관리' },
+  'be5c7ae8e15a88f04d4969158bef8a6ca4a39a249012241eb47aff1f610c996d': { label:'개인 콘텐츠' },
 };
 function adminSession(){
   try{
@@ -2958,7 +2976,8 @@ function memberTkEmail(tk){ try{ const p = tk.split('.')[0].replace(/-/g,'+').re
   if(m){ try{ localStorage.setItem(MEMBER_TK_KEY, decodeURIComponent(m[1])); }catch(e){} history.replaceState(null, '', location.pathname + location.search); }
 })();
 function memberToken(){ let tk = ''; try{ tk = localStorage.getItem(MEMBER_TK_KEY) || ''; }catch(e){} return (tk && memberTkExp(tk) > Date.now() + 60000) ? tk : ''; }
-function adminRole(){ return JJ_ADMIN_ROLES[memberTkEmail(memberToken()).toLowerCase()] || null; }
+let _jjRoleMemo = null;
+function adminRole(){ const e = memberTkEmail(memberToken()).toLowerCase(); if(!e) return null; if(!_jjRoleMemo || _jjRoleMemo.e !== e) _jjRoleMemo = { e, r: JJ_ADMIN_ROLES[jjSha256(e)] || null }; return _jjRoleMemo.r; }
 // 관리자 버튼: 계정에 맞는 이름으로 바꾸고, 권한 없는 계정은 눌리지 않게 꺼요
 (function(){
   const btn = document.getElementById('btnAdminToggle'); if(!btn) return;

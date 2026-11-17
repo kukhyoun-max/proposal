@@ -2116,7 +2116,7 @@
         <div class="dl-list" id="ov_list"></div>
       </div>
 
-      <div class="jjh-card jjh-sc" id="jjhSchedule"><h3>주요 일정</h3><div class="jjh-chips" id="jjhScChips"></div><div id="jjhScList"><div class="jjh-empty">불러오는 중…</div></div></div>
+      <div class="jjh-card jjh-sc" id="jjhSchedule"><h3>7일 안에 있는 일정</h3><div class="jjh-chips" id="jjhScChips"></div><div id="jjhScList"><div class="jjh-empty">불러오는 중…</div></div></div>
     </div>
 
     <!-- 2026-11-01 담당자 「한 페이지에 너무 많은 정보를 입력하게 하지 말자, 토스 참고해봐」「고르고 입력하는 것도 사용자 입장에서 편하게」:
@@ -8790,8 +8790,9 @@ function jjRosterApply(r){
   };
   document.addEventListener('jjroster', () => { if (EVENTS.length) renderSchedule(); });
   function renderSchedule(){
-    const list = EVENTS.filter(e => scFilter === 'all' || e.calKey === scFilter || (scFilter === 'up' && (e.calKey === 'sns' || e.calKey === 'hong')));
-    if (!list.length){ $('jjhScList').innerHTML = '<div class="jjh-empty">2주 안에 잡힌 일정이 없어요</div>'; return; }
+    const d7 = new Date(); d7.setDate(d7.getDate() + 6); const until = d7.getFullYear() + '-' + String(d7.getMonth() + 1).padStart(2, '0') + '-' + String(d7.getDate()).padStart(2, '0'); // 2026-11-18 담당자 「오늘부터 7일」: 서버는 14일 그대로(처음 화면 묶음), 화면에서만 자름
+    const list = EVENTS.filter(e => String(e.start) <= until).filter(e => scFilter === 'all' || e.calKey === scFilter || (scFilter === 'up' && (e.calKey === 'sns' || e.calKey === 'hong')));
+    if (!list.length){ $('jjhScList').innerHTML = '<div class="jjh-empty">일주일 안에 잡힌 일정이 없어요</div>'; return; }
     let html = '', last = '';
     list.forEach((e, i) => {
       if (e.start !== last){ last = e.start; const d = new Date(e.start + 'T00:00:00'); html += `<div class="jjh-day">${md(e.start)} (${'일월화수목금토'[d.getDay()]})</div>`; }

@@ -886,13 +886,7 @@
   /* 조회수 패치 */
   .hb{display:none; width:2.3em; height:1em; margin-right:4px; vertical-align:-0.16em; background:center/contain no-repeat; flex:none; font-style:normal;}
 
-  /* ───── JJ 홈 (공동목표 · 우수 홍보대사 · 주요 일정) ───── */
-  .jjh-goal{display:flex;align-items:center;gap:10px;width:calc(100% + 40px);margin:6px -20px 0;padding:14px 20px;background:linear-gradient(180deg,#F5F8FF,#fff);border:0;text-align:left;cursor:pointer;font-family:inherit}
-  .jjh-goal .l{flex:1;min-width:0}
-  .jjh-goal .k{font-size:13px;font-weight:700;color:var(--purple)}
-  .jjh-goal .s{font-size:16px;font-weight:600;color:#333D4B;margin-top:3px;line-height:1.4}
-  .jjh-goal .s b{color:var(--ink);font-weight:700}
-  .jjh-goal svg{flex:none;width:112px;height:52px}
+  /* ───── JJ 홈 (우수 홍보대사 · 주요 일정) ───── */
   .jjh-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin:12px 0 0}
   .jjh-best{display:flex;align-items:flex-start;gap:12px;cursor:pointer}
   .jjh-mine{cursor:pointer}
@@ -1761,10 +1755,6 @@
 :root[data-theme="dark"] .sc-months button{border:1.5px solid var(--line);background:#1E1D24;color:var(--ink-soft)}
 :root[data-theme="dark"] .sc-months button.on{border-color:var(--ink);color:var(--ink)}
 :root[data-theme="dark"] .sc-toggle{color:var(--ink-soft);background:none;border:none}
-:root[data-theme="dark"] .jjh-goal{background:linear-gradient(180deg,#19243E,#1E1D24);border:0}
-:root[data-theme="dark"] .jjh-goal .k{color:var(--purple)}
-:root[data-theme="dark"] .jjh-goal .s{color:#AAB5C5}
-:root[data-theme="dark"] .jjh-goal .s b{color:var(--ink)}
 :root[data-theme="dark"] .jjh-card{background:#1E1D24;border:1px solid var(--line)}
 :root[data-theme="dark"] .jjh-mine .k{color:var(--purple)}
 :root[data-theme="dark"] .jjh-mine .k .go{color:var(--ink-faint)}
@@ -2087,10 +2077,6 @@
       <div id="jjhHome">
         <section class="ld-banner" id="jjhLead" aria-live="polite" style="display:none"></section>
         <section class="jjh-card sv-card" id="jjhSv" aria-label="행사 지원 조사" style="display:none"></section>
-        <button class="jjh-goal" id="jjhGoal" type="button" aria-label="공동목표 자세히 보기">
-          <div class="l"><div class="k">JJ 공동목표 ›</div><div class="s" id="jjhGoalText">불러오는 중…</div></div>
-          <svg id="jjhMini" viewBox="0 0 112 52" aria-hidden="true"></svg>
-        </button>
         <div class="jjh-card jjh-mine" id="jjhMine" role="group" aria-label="내 이름 연결" style="display:none">
           <div class="k"><span id="jjhMineMon">이번 달</span> 내 기록 <span class="go" id="jjhMineGo" style="display:none">›</span></div>
           <div id="jjhMineBody"><div class="msg">불러오는 중…</div></div>
@@ -2740,19 +2726,6 @@
   <div class="jjh-sec">지난주 올린 콘텐츠</div>
   <div id="jjhWhyPosts"></div>
   <p class="jjh-note" id="jjhWhyNote"></p>
-</div>
-<div class="jjh-sheet" id="jjhSheetGoal" role="dialog" aria-label="공동목표">
-  <h4>JJ 공동목표</h4>
-  <div class="sub" id="jjhGoalMeta"></div>
-  <div style="display:flex;align-items:baseline;gap:6px;margin-top:10px;"><span style="font-size:32px;font-weight:700;letter-spacing:-1px;" id="jjhGoalCur"></span><span style="font-size:16px;font-weight:700;color:var(--ink-faint);">/ 500만</span></div>
-  <div class="jjh-prize">500만 달성 시 <b>홍보대사 전체 쿠우쿠우 회식</b></div>
-  <div style="font-size:14px;font-weight:700;color:#F04452;" id="jjhGoalWeek"></div>
-  <svg id="jjhChart" viewBox="0 0 360 220" style="width:100%;height:auto;margin-top:8px;" role="img" aria-label="누적 조회수 그래프"></svg>
-  <div class="jjh-sec">보상 단계</div>
-  <div class="jjh-tiles" id="jjhTiles"></div>
-  <div class="jjh-sec">조회수 높은 콘텐츠</div>
-  <div id="jjhTop"></div>
-  <p class="jjh-note">기간 내 새로 올라온 홍보대사 크레딧 콘텐츠(인스타 공식·홍비디오·유튜브)의 조회수 합계예요. 광고·기관 홍보물은 빠져요. 매일 밤 자동 갱신.</p>
 </div>
 <div class="jjh-sheet" id="jjhSheetMine" role="dialog" aria-label="내 콘텐츠 기록">
   <h4><span id="jjhMineName"></span>님의 기록</h4>
@@ -6375,7 +6348,7 @@ setTimeout(()=>{ try{ attendJsonpRaw({ action:'planAuto' }).then(r => { if(r && 
 // 처음 화면 묶음(2026-11-08 담당자 「가장 속도를 느리게 하는 게 뭐야」 → 「지금 해」): 서버 한 번 부르는 데 1.3~1.8초라
 // 첫 화면이 따로 부르던 8개를 GET boot 한 번으로 받는다. 각 항목은 처음 한 번만 묶음 답을 쓰고(1분 안), 그 뒤엔 예전처럼 따로 부른다.
 // 묶음이 실패하거나 그 항목이 오류면 따로 부른다(예전 서버에서도 그대로 동작)
-const BOOT_KEYS = ['roster', 'whoami', 'mine', 'weeklyTop', 'goal', 'seriesList', 'topViews', 'schedule'];
+const BOOT_KEYS = ['roster', 'whoami', 'mine', 'weeklyTop', 'seriesList', 'topViews', 'schedule'];
 let jjBoot = null, jjBootAt = 0;
 const jjBootUsed = {};
 function jjBootGet(){
@@ -8448,7 +8421,7 @@ function jjRosterApply(r){
   attendJsonpRaw({ action:'roster' }).then(r => { if(r && !r.error && jjRosterApply(r)){ try{ localStorage.setItem(ROSTER_LS, JSON.stringify(r)); }catch(e){} } }).catch(()=>{});
 })();
 
-/* ───── JJ 홈: 공동목표 · 지난주 우수 홍보대사 · 이름 칩 · 주요 일정 · 정규 편성 (자동매칭 Apps Script: ATTEND_URL) ───── */
+/* ───── JJ 홈: 지난주 우수 홍보대사 · 이름 칩 · 주요 일정 · 정규 편성 (자동매칭 Apps Script: ATTEND_URL) ───── */
 (function(){
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -8462,7 +8435,7 @@ function jjRosterApply(r){
   const post = async body => { const r = await fetch(ATTEND_URL, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: JSON.stringify(body) }); return r.json(); };
 
   /* 시트 열고 닫기 */
-  const SHEETS = ['jjhSheetWhy', 'jjhSheetGoal', 'jjhSheetEv', 'jjhSheetMine'];
+  const SHEETS = ['jjhSheetWhy', 'jjhSheetEv', 'jjhSheetMine'];
   function openSheet(id){ SHEETS.forEach(x => $(x).classList.toggle('on', x === id)); $('jjhDim').classList.toggle('on', !!id); }
   $('jjhDim').addEventListener('click', () => openSheet(null));
 
@@ -8484,55 +8457,6 @@ function jjRosterApply(r){
     swing(JJ_ARM, 50, 90, 38, 52, 66, 100, 30, -30, false);
   }
 
-  /* ── 공동목표 ── */
-  let GOAL = null;
-  function renderGoal(g){
-    GOAL = g;
-    const start = new Date(g.start + 'T00:00:00'), end = new Date(g.end + 'T00:00:00');
-    const DAYS = Math.round((end - start) / 864e5), day = Math.max(0, g.series.length - 1);
-    const left = Math.max(1, DAYS - day), remain = Math.max(0, 5000000 - g.cur);
-    $('jjhGoalText').innerHTML = remain > 0
-      ? `500만 되면 <b>쿠우쿠우</b><br><b>${man(remain)}</b> 남음 · 하루 <b>${man(remain / left)}</b>씩`
-      : `<b>500만 달성</b> 쿠우쿠우 회식 확정<br>다음 목표 <b>700만</b>`;
-    const s = $('jjhMini'); s.innerHTML = '';
-    const W = 112, H = 52, MAX = 5200000, x = d => 4 + (W - 18) * d / DAYS, y = v => H - 6 - (H - 14) * Math.min(v, MAX) / MAX;
-    el('line', { x1:4, x2:W - 14, y1:y(5000000), y2:y(5000000), stroke:'#B0B8C1', 'stroke-width':.8, 'stroke-dasharray':'2 3' }, s);
-    el('path', { d:`M${W - 14} ${y(5000000)} v-9 l-6 2.5 6 2.5`, fill:'#FFB800', stroke:'#191F28', 'stroke-width':.6 }, s);
-    const pts = g.series.length ? g.series : [0];
-    const d = 'M' + pts.map((v, i) => `${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' L');
-    el('path', { d: d + ` L${x(day)} ${H - 6} L4 ${H - 6}Z`, fill:'rgba(49,130,246,.12)' }, s);
-    el('path', { d, fill:'none', stroke:'#3182F6', 'stroke-width':2, 'stroke-linecap':'round', 'stroke-linejoin':'round' }, s);
-    el('line', { x1:x(day), y1:y(g.cur), x2:W - 14, y2:y(5000000), stroke:'#3182F6', 'stroke-width':1.6, 'stroke-linecap':'round', opacity:.45 }, s);
-    drawJJ(s, x(day), y(g.cur) + 2, .62);
-  }
-  function openGoal(){
-    const g = GOAL; if (!g) return;
-    const start = new Date(g.start + 'T00:00:00'), end = new Date(g.end + 'T00:00:00');
-    const DAYS = Math.round((end - start) / 864e5), day = Math.max(0, g.series.length - 1);
-    $('jjhGoalMeta').textContent = md(g.start) + ' ~ ' + md(g.end) + ' · 남은 ' + Math.max(0, DAYS - day) + '일 · ' + g.updated + ' 기준';
-    $('jjhGoalCur').textContent = man(g.cur);
-    $('jjhGoalWeek').textContent = '최근 7일 +' + man(g.week);
-    const s = $('jjhChart'); s.innerHTML = '';
-    const W = 360, H = 220, L = 36, R = 12, T = 14, B = 24, MAX = 7600000;
-    const x = d => L + (W - L - R) * d / DAYS, y = v => T + (H - T - B) * (1 - Math.min(v, MAX) / MAX);
-    [['11/1', '2026-11-01'], ['12/1', '2026-12-01'], ['1/1', '2027-01-01'], ['2/1', '2027-02-01']].forEach(([lb, dt]) => {
-      const dd = (new Date(dt + 'T00:00:00') - start) / 864e5; el('text', { x:x(dd), y:H - 6, 'text-anchor':'middle', 'font-size':10, fill:'#B0B8C1' }, s).textContent = lb; });
-    g.goals.forEach(t => { const main = t.v === 5000000, hit = g.cur >= t.v;
-      el('line', { x1:L, x2:W - R, y1:y(t.v), y2:y(t.v), stroke: hit ? '#11A35A' : (main ? '#3182F6' : '#E5E8EB'), 'stroke-width': main ? 1.4 : 1, 'stroke-dasharray':'3 4' }, s);
-      el('text', { x:L - 4, y:y(t.v) + 3, 'text-anchor':'end', 'font-size':10, fill: main ? '#3182F6' : '#8B95A1', 'font-weight': main ? 700 : 400 }, s).textContent = man(t.v);
-      el('text', { x:W - R, y:y(t.v) - 4, 'text-anchor':'end', 'font-size':13 }, s).textContent = t.icon; });
-    el('line', { x1:x(0), y1:y(0), x2:x(DAYS), y2:y(5000000), stroke:'#FFB800', 'stroke-width':1.2, 'stroke-dasharray':'2 4' }, s);
-    const pts = g.series.length ? g.series : [0];
-    const d = 'M' + pts.map((v, i) => `${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' L');
-    el('path', { d: d + ` L${x(day)} ${y(0)} L${x(0)} ${y(0)}Z`, fill:'rgba(240,68,82,.08)' }, s);
-    el('path', { d, fill:'none', stroke:'#F04452', 'stroke-width':2.2, 'stroke-linecap':'round', 'stroke-linejoin':'round' }, s);
-    el('line', { x1:x(day), y1:y(g.cur), x2:x(DAYS), y2:y(5000000), stroke:'#3182F6', 'stroke-width':2, 'stroke-linecap':'round', opacity:.35 }, s);
-    drawJJ(s, x(day), y(g.cur), 1.3);
-    $('jjhTiles').innerHTML = g.goals.map(t => `<div class="${g.cur < t.v && (g.goals.find(z => g.cur < z.v) || {}).v === t.v ? 'on' : ''}"><div class="e">${esc(t.icon)}</div><b>${man(t.v)}</b><small>${g.cur >= t.v ? '달성 🎉' : (g.goals.find(z => g.cur < z.v) || {}).v === t.v ? man(t.v - g.cur) + ' 남음' : esc(t.label)}</small></div>`).join('');
-    $('jjhTop').innerHTML = (g.top || []).map(p => `<div class="jjh-post"><span class="pf">${esc(p.platform)}</span><span class="t">${esc(p.title)}<small style="display:block;color:var(--ink-faint);font-size:11.5px;">${esc(p.by)}</small></span><span class="vw">${kv(p.views)}회</span></div>`).join('') || '<div class="jjh-empty">아직 기간 내 콘텐츠가 없어요</div>';
-    openSheet('jjhSheetGoal');
-  }
-  $('jjhGoal').addEventListener('click', openGoal);
 
   /* ── 지난주 우수 홍보대사 ── */
   let WEEKLY = null;
@@ -8964,7 +8888,6 @@ function jjRosterApply(r){
   /* ── 불러오기 (화면 먼저, 데이터는 뒤에서) ── */
   setTimeout(() => {
     homeLoad({ action:'weeklyTop' }, w => w && w.from, w => { renderBest(w); renderNames(); }, () => { $('jjhBestName').textContent = '불러오지 못했어요'; });
-    homeLoad({ action:'goal' }, g => g && g.series, renderGoal, () => { $('jjhGoalText').textContent = '공동목표를 불러오지 못했어요'; });
     let skip = false; try{ skip = localStorage.getItem(MINE_SKIP) === '1'; }catch(_){}
     if (skip) showBest(); else homeLoad({ action:'mine' }, d => d && !d.error && !d.admin && !d.pending && !d.need, renderMine, d => d ? renderMine(d) : showBest());
     loadSchedule();

@@ -84,7 +84,7 @@
   .admin-topbar #btnTestMode[hidden]{display:none}
   /* 관리자는 휴대폰 폭에서 버튼이 화면 밖으로 밀려 안 보였음 → 넘치면 두 줄로(홍보대사 계정은 한 줄 그대로) */
   .admin-topbar > div{flex-wrap:wrap; justify-content:flex-end; row-gap:4px; min-width:0}
-  .admin-topbar #btnTestMode[aria-pressed="true"]{background:#181818 !important; color:#fff !important; border-radius:7px}
+  .admin-topbar #btnTestMode[aria-pressed="true"]{background:#181818 !important; color:#fff !important; border-radius:4px}
   .topbar.in-card + .test-banner{display:none}
   .test-banner{margin:0; padding:6px 16px; background:#F4F4F4; color:#525252; font-size:12.5px; line-height:1.45; word-break:keep-all;}
   .progress-track{display:flex; gap:4px; margin-bottom:6px;}
@@ -647,7 +647,7 @@
   .pc-legend i{display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:3px; vertical-align:0;}
   .mt-sum td .bad{color:#646464; font-weight:700;} .mt-sum td .late{color:#6A6A6A; font-weight:700;}
   .admin-topbar{gap:8px;} .admin-topbar button{white-space:nowrap;}
-  #btnTheme{padding-left:8px; padding-right:8px; line-height:1; display:inline-flex; align-items:center;}
+  #btnTheme, #btnTestMode{padding-left:8px; padding-right:8px; line-height:1; display:inline-flex; align-items:center;}
   @media (max-width:520px){ .home-txt, .hide-m{display:none;} }
   /* 내 성과: 실제 기록으로만 칭찬한다. 순위·감점·검수는 넣지 않는다 */
   .my-hero{padding:18px; border-radius:16px; background:var(--purple-soft);}
@@ -1367,7 +1367,7 @@
 :root[data-theme="dark"] .prev-btn svg{fill:none;stroke:currentColor}
 :root[data-theme="dark"] .prev-btn:focus-visible{outline:2px solid var(--purple)}
 :root[data-theme="dark"] .test-link[aria-pressed="true"]{color:#C3C3C3}
-:root[data-theme="dark"] .admin-topbar #btnTestMode[aria-pressed="true"]{background:#EEEEEE !important; color:#181818 !important}
+:root[data-theme="dark"] .admin-topbar #btnTestMode[aria-pressed="true"]{background:#2A2A2A !important;color:#fff !important}
 :root[data-theme="dark"] .test-banner{background:#242424;color:#C3C3C3}
 :root[data-theme="dark"] .progress-seg{background:#323232;border:none}
 :root[data-theme="dark"] .progress-seg.done{background:var(--point)}
@@ -2147,6 +2147,8 @@
 :root[data-theme="dark"] .jjh-chips button.on[style]::before{background:#181818}
 :root[data-theme="dark"] .jjh-row .ico{background:#2E2E2E !important;color:#EEEEEE !important}
 :root[data-theme="dark"] .jjh-row{--cc:#CDCDCD !important}
+  /* 테스트 아이콘 켜짐: 어둡게 보기는 밝은 칩 + 검정 아이콘(어두운 회색 칩은 안 보였음) */
+  :root[data-theme="dark"] .admin-topbar #btnTestMode[aria-pressed="true"]{background:#EEEEEE !important; color:#181818 !important}
 </style>
 </head>
 <body>
@@ -2164,7 +2166,7 @@
 <div class="admin-topbar">
   <button id="btnHome" aria-label="JJ 스튜디오 처음으로" style="background:none; border:none; font-size:13px; font-weight:700; padding:0; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;"><img class="hong-logo" src="logo-hong-k.webp" alt="" width="34" height="34"></button>
   <div style="display:flex; gap:8px;">
-    <button class="test-link" id="btnTestMode" type="button" aria-pressed="false" hidden>테스트</button>
+    <button class="test-link" id="btnTestMode" type="button" aria-pressed="false" aria-label="테스트 모드 켜기(관리자)" title="테스트 모드" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6.2L4.6 18.4A1.7 1.7 0 0 0 6.1 21h11.8a1.7 1.7 0 0 0 1.5-2.6L14 9.2V3"/><path d="M7.2 15h9.6"/></svg></button>
     <button id="btnTheme" type="button" aria-label="어둡게 보기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
     <button id="btnGuide" type="button">가이드</button>
     <button id="btnMy" type="button">내 성과</button>
@@ -2191,7 +2193,7 @@
     </div>
     <button class="reset-link" id="btnReset">처음으로</button>
   </div>
-  <p class="test-banner" id="testBanner" hidden>테스트 중 · 빈칸도 넘어가요 · 이 작성 화면의 제출·임시 저장만 막혀요(관리자 승인은 돼요)</p>
+  <p class="test-banner" id="testBanner" hidden>테스트 중(위쪽 플라스크 아이콘으로 끄기) · 빈칸도 넘어가요 · 이 작성 화면의 제출·임시 저장만 막혀요(관리자 승인은 돼요)</p>
 
   <div class="content">
 
@@ -4044,7 +4046,7 @@ function testModeSync(){
   const b = document.getElementById('btnTestMode'), r = adminRole();
   b.hidden = !(r && r.full);
   testMode = b.hidden ? false : !!testModeUser;
-  b.setAttribute('aria-pressed', testMode); b.textContent = testMode ? '테스트 끄기' : '테스트';
+  b.setAttribute('aria-pressed', testMode); b.title = testMode ? '테스트 모드 끄기' : '테스트 모드';
   b.setAttribute('aria-label', testMode ? '테스트 모드 끄기' : '테스트 모드 켜기(관리자)');
   document.getElementById('testBanner').hidden = !testMode;
   updateCta();
@@ -4501,7 +4503,7 @@ document.getElementById('btnCopyText').addEventListener('click', async ()=>{
 });
 
 async function submitForReview(){
-  if(testMode){ showAlert('테스트 모드에서는 제출되지 않아요. 위쪽 「테스트 끄기」를 누르고 다시 제출해 주세요.'); return; }
+  if(testMode){ showAlert('테스트 모드에서는 제출되지 않아요. 위쪽 검정 플라스크 아이콘을 눌러 테스트를 끄고 다시 제출해 주세요.'); return; }
   // 위 단계 막대로 앞 단계에 돌아가 고친 뒤 바로 건너오면 그 단계 확인을 안 거쳐서, 내기 직전에 모든 질문을 다시 봄(2026-10-31, 11-01 한 화면 한 질문)
   for(let k = 2; k <= TOTAL_STEPS; k++) if(!stepValid(k)){ goStep(k); setTimeout(flagMissing, 350); return; }
   const btn = document.getElementById('btnSubmitReview');

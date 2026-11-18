@@ -1346,6 +1346,10 @@
   /* 관리자 화면 제목 (2026-11-18 담당자 「여기도 관리자 검토 타이틀 넣으면 좋을 듯」): 다른 화면(내 성과·활동 가이드) 제목과 같은 크기 */
   .topbar > .adm-h{order:0; margin:0; font-size:17px; font-weight:700; white-space:nowrap}
   #equipView.ro .adm-h{display:none}
+  /* 기획서 상세 아래 버튼 셋 (2026-11-18 담당자 「버튼 간격 안 맞느다」): 높이 52·모서리 4·글자 15·간격 8로 통일 */
+  #statusSaveImage, #statusCopyCredit, #stageBtn{min-height:52px; border-radius:4px !important}
+  #stageBtn{margin-top:0; padding:0 16px}
+  #statusCopyCredit + #stageBtn{margin-top:-12px}
 /* DARK:START make_dark.cjs가 만듦, 직접 고치지 않음 */
 :root[data-theme="dark"]{--purple:#EEEEEE;--purple-dark:#FFFFFF;--purple-soft:#282828;--purple-line:#A0A0A0;--gold:#CECECE;--gold-dark:#BFBFBF;--ink:#EEEEEE;--ink-soft:#B3B3B3;--ink-faint:#9F9F9F;--line:#323232;--line-input:#696969;--page-bg:#141414;--surface:#1E1E1E;color-scheme:dark;}
 :root[data-theme="dark"] body{background:var(--page-bg);color:var(--ink)}
@@ -2199,7 +2203,7 @@
             <path d="M22 18h-7a8 8 0 0 0 8 14M62 18h7a8 8 0 0 1-8 14"/>
             <path d="M22 13h40v23a20 20 0 0 1-40 0z"/>
             <path d="M42 56v18M32 74h20v8H32z"/>
-            <text id="jjhCupN" x="42" y="40" text-anchor="middle" font-size="17" font-weight="800" fill="currentColor" stroke="none"></text>
+            <text id="jjhCupN" x="42" y="45" text-anchor="middle" font-size="24" letter-spacing="-1" font-weight="800" fill="currentColor" stroke="none"></text>
           </svg>
           <div class="l">
             <div class="k">지난주 우수 홍보대사는? <span class="dt" id="jjhBestDt"></span><span class="go" id="jjhBestGo" style="display:none">›</span></div>
@@ -5360,19 +5364,19 @@ function renderStatusDetail(key, rec){
   const isAccepted = ['approved','filming','editing','completed','uploaded'].includes(editingRecord.status);
   const imageSection = isAccepted ? `
     <div id="statusDocCard">${buildDocCardHTML(editingRecord)}</div>
-    <button id="statusSaveImage" style="width:100%; margin:14px 0 8px; padding:16px; border-radius:12px; border:none; background:var(--purple); color:#fff; font-weight:700; font-size:15px; cursor:pointer;">이미지로 다운로드</button>
-    <button id="statusCopyCredit" style="width:100%; margin:0 0 20px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14.5px; cursor:pointer;">캡션 크레딧 복사</button>
+    <button id="statusSaveImage" style="width:100%; margin:14px 0 8px; padding:0 16px; border-radius:12px; border:none; background:var(--purple); color:#fff; font-weight:700; font-size:15px; cursor:pointer;">이미지로 다운로드</button>
+    <button id="statusCopyCredit" style="width:100%; margin:0 0 20px; padding:0 16px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:15px; cursor:pointer;">캡션 크레딧 복사</button>
   ` : '';
 
   const canEdit = canEditPlan(editingRecord);
   let stageSection = '';
   if(!canEdit){ /* 팀원·관리자가 아니면 단계 버튼 없음 */ }
   else if(editingRecord.status === 'approved'){
-    stageSection = `<button class="save-edit-btn" id="stageBtn" style="background:#181818; margin-top:0; margin-bottom:20px;" data-next="filming">촬영 시작</button>`;
+    stageSection = `<button class="save-edit-btn" id="stageBtn" style="background:#181818; margin-bottom:20px;" data-next="filming">촬영 시작</button>`;
   }else if(editingRecord.status === 'filming'){
-    stageSection = `<button class="save-edit-btn" id="stageBtn" style="background:#676767; margin-top:0; margin-bottom:20px;" data-next="editing">편집 시작</button>`;
+    stageSection = `<button class="save-edit-btn" id="stageBtn" style="background:#676767; margin-bottom:20px;" data-next="editing">편집 시작</button>`;
   }else if(editingRecord.status === 'editing' && isFullAdmin()){   // 제작 완료는 관리자(검수 뒤) 또는 최종본 폴더 자동 처리 (2026-10-30)
-    stageSection = `<button class="save-edit-btn" id="stageBtn" style="margin-top:0; margin-bottom:20px;" data-next="completed">제작 완료 처리</button>`;
+    stageSection = `<button class="save-edit-btn" id="stageBtn" style="margin-bottom:20px;" data-next="completed">제작 완료 처리</button>`;
   }
 
   const toggleEditHtml = !canEdit ? `<p class="req-hint" style="margin:0 0 16px;">이 기획서의 팀원과 관리자만 수정할 수 있어요${JJ_ME && !JJ_ME.name ? ' · 홈 「내 기록」에서 내 이름 연결이 승인돼야 해요' : ''}</p>` : `<button id="toggleEditBtn" style="width:100%; margin:0 0 16px; padding:14px; border-radius:12px; border:1.5px solid var(--purple); background:#fff; color:var(--purple); font-weight:700; font-size:14px; cursor:pointer;">수정하기</button>`;
@@ -8598,7 +8602,7 @@ function jjRosterApply(r){
     }
     box.classList.remove('wait'); $('jjhBestGo').style.display = '';
     const wins = Math.max.apply(null, w.top.map(x => x.wins || 1));
-    $('jjhCupN').innerHTML = wins + '<tspan font-size="11" font-weight="700" dx="1">회</tspan>';
+    $('jjhCupN').textContent = wins;   // 2026-11-18 담당자 「회는 빼고 숫자만, 크기는 키우자」
     $('jjhBestName').innerHTML = esc(w.top.map(x => x.name).join(' · ')) + (w.top.length > 1 ? '<small style="font-size:13px;color:var(--ink-soft);">공동 1등</small>' : '') + `<span class="gn">+${esc(w.top[0].gain)}점</span>`;
   }
   function openWhy(){

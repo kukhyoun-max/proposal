@@ -8549,9 +8549,9 @@ function jjRosterApply(r){
     WEEKLY = w;
     const box = $('jjhBest');
     $('jjhBestDt').textContent = md(w.from) + '~' + md(w.to) + (w.provisional ? ' · 집계 중' : '');   // 화요일 밤 계산 때 확정
-    const nw = w.now || { lead:0, daysLeft:0 }, dl = nw.daysLeft > 0 ? '집계 마감 D-' + nw.daysLeft : '오늘 밤 집계 마감';
+    const nw = w.now || { lead:0 };   // 2026-11-18 담당자: 「집계 마감 D-n」은 뺌
     const nowEl = $('jjhBestNow'); nowEl.style.display = '';
-    nowEl.innerHTML = nw.lead > 0 ? `이번 주 1위 <b class="n1">${esc((nw.names || []).join(' · '))}</b> <b>+${esc(nw.lead)}점</b> · ${esc(dl)}` : `이번 주는 아직 1위가 없어요 · <b>먼저 올리면 1등</b>`;
+    nowEl.innerHTML = nw.lead > 0 ? `이번 주 1위 <b class="n1">${esc((nw.names || []).join(' · '))}</b> <b>+${esc(nw.lead)}점</b>` : `이번 주는 아직 1위가 없어요 · <b>먼저 올리면 1등</b>`;
     if (!w.ready || !w.top.length){
       box.classList.add('wait'); $('jjhCupN').textContent = ''; $('jjhBestGo').style.display = 'none';
       $('jjhBestName').textContent = w.ready ? '지난주는 1등이 없어요' : '첫 1등은 다음 주 월요일 공개'; return;

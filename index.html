@@ -1308,9 +1308,9 @@
   .hong-wait{display:flex; flex-direction:column; align-items:center; gap:10px; padding:14px 0; text-align:center; color:var(--ink-soft)}
   :root[data-theme="dark"] .hong-spin{content:url(logo-hong-w.webp)}
   /* 로딩창(2026-11-18 담당자 「늘 화면 전체 기준 정중앙에서 돌아가게, 바탕은 살짝 어둡게」) */
-  .jj-loading{position:fixed; inset:0; z-index:9999; display:grid; place-items:center; background:rgba(0,0,0,.32); opacity:0; visibility:hidden; transition:opacity .15s, visibility .15s}
+  .jj-loading{position:fixed; inset:0; z-index:9999; display:grid; place-items:center; background:rgba(214,214,214,.72); opacity:0; visibility:hidden; transition:opacity .15s, visibility .15s}
   .jj-loading.on{opacity:1; visibility:visible}
-  .jj-loading .hong-spin{width:76px; height:76px; border-radius:50%; background:rgba(0,0,0,.6)}   /* 원본처럼 검은 원 위 흰 로고, 뒤 내용이 비쳐도 잘 보이게 */
+  .jj-loading .hong-spin{width:76px; height:76px}   /* 2026-11-18 담당자: 로고 색은 그대로(밝게 검은 선·어둡게 흰 선), 로고 뒤 바탕만 연한 회색으로 덮음 */
   .hong-spin{width:56px; height:56px; animation:hongSpin 1.6s linear infinite}
   @keyframes hongSpin{to{transform:rotate(360deg)}}
   @media (prefers-reduced-motion: reduce){ .hong-spin{animation-duration:4s} }
@@ -2045,8 +2045,7 @@
 :root[data-theme="dark"] .jjh-names button.on{background:var(--point);border-color:var(--point);color:#000}
 :root[data-theme="dark"] .jjh-names button.more{border:1px dashed var(--ink-soft)}
 :root[data-theme="dark"] .hong-wait{color:var(--ink-soft)}
-:root[data-theme="dark"] .jj-loading{background:rgba(0,0,0,.32)}
-:root[data-theme="dark"] .jj-loading .hong-spin{background:rgba(0,0,0,.6)}
+:root[data-theme="dark"] .jj-loading{background:rgba(214,214,214,.72)}
 :root[data-theme="dark"] body,:root[data-theme="dark"] .phone{background:#1E1E1E}
 :root[data-theme="dark"] .admin-topbar{border-bottom:1px solid #393939}
 :root[data-theme="dark"] .admin-topbar button{border:0;background:none}
@@ -2112,6 +2111,9 @@
 /* DARK:END */
 </style>
 <style>/* make_dark.cjs가 읽지 않는 둘째 style: 어두운 화면 직접 보정(2026-11-18) */
+/* 로딩창: 어두운 화면은 어두운 회색 막 + 흰 로고 */
+:root[data-theme="dark"] .jj-loading{background:rgba(30,30,30,.72) !important}
+:root[data-theme="dark"] .jj-loading .hong-spin{content:url(logo-hong-w.webp)}
 /* 노랑 바탕 위 글자는 어두운 화면에서도 검정(2026-11-18) */
 :root[data-theme="dark"] .dl-main.urgent, :root[data-theme="dark"] .dl-main.urgent *, :root[data-theme="dark"] .jjh-names button.on, :root[data-theme="dark"] .pick.on, :root[data-theme="dark"] .pick.on small, :root[data-theme="dark"] .ld-banner{color:#000 !important}
 /* 흑백 틀 다크 보정(2026-11-18, make_dark 밖이라 직접 고침): 일정 종류 점·칩, 일정 아이콘 */
@@ -2133,7 +2135,7 @@
   </div>
 </div>
 
-<div class="jj-loading" id="jjLoading" role="status" aria-live="polite" aria-label="불러오고 있어요"><img class="hong-spin" src="logo-hong-w.webp" alt="" width="76" height="76"></div>
+<div class="jj-loading" id="jjLoading" role="status" aria-live="polite" aria-label="불러오고 있어요"><img class="hong-spin" src="logo-hong-k.webp" alt="" width="76" height="76"></div>
 <div class="admin-topbar">
   <button id="btnHome" aria-label="JJ 스튜디오 처음으로" style="background:none; border:none; font-size:13px; font-weight:700; padding:0; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;"><img class="hong-logo" src="logo-hong-k.webp" alt="" width="34" height="34"></button>
   <div style="display:flex; gap:8px;">

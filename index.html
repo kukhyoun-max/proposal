@@ -924,7 +924,7 @@
   .jjh-names{display:flex;gap:8px;overflow-x:auto;margin:10px -20px 4px;padding:0 20px 4px;scrollbar-width:none}
   .jjh-names::-webkit-scrollbar{display:none}
   .jjh-names button{flex:none;min-height:44px;padding:10px 15px;border-radius:12px;border:1.5px solid #D1D6DB;background:#fff;font:inherit;font-size:15px;font-weight:700;color:#333D4B;cursor:pointer}
-  .jjh-names button.champ{background:#FFF4DB;border-color:#F5C451;color:#8A5A00}
+  .jjh-names button.more{border-style:dashed;color:#6B7684;font-weight:500}
   .jjh-names button.on{background:var(--purple);border-color:var(--purple);color:#fff}
   .jjh-plan{margin-top:22px;padding:16px 16px 14px}
   .jjh-plan .jjh-plan-h{margin:2px 0 4px}
@@ -1779,7 +1779,7 @@
 :root[data-theme="dark"] .jjh-plan-h{color:var(--ink-faint)}
 :root[data-theme="dark"] .jjh-plan-h .lb{color:var(--purple)}
 :root[data-theme="dark"] .jjh-names button{border:1.5px solid #3A3844;background:#1E1D24;color:#AAB5C5}
-:root[data-theme="dark"] .jjh-names button.champ{background:#534422;border-color:#F5C451;color:#F1C97E}
+:root[data-theme="dark"] .jjh-names button.more{color:#AAB5C5}
 :root[data-theme="dark"] .jjh-names button.on{background:#4763E4;border-color:var(--purple);color:#fff}
 :root[data-theme="dark"] .jjh-chips button{border:0;background:#232B33;color:#ADB6C2}
 :root[data-theme="dark"] .jjh-chips button.on{background:#33313C;color:#fff}
@@ -8747,12 +8747,25 @@ function jjRosterApply(r){
   $('jjhMine').addEventListener('keydown', e => { if (e.key === 'Enter') openMine(); });
 
   /* ── 팀장 이름 칩: 지난주 1등 먼저, 나머지 가나다. 누르면 바로 다음 단계 ── */
+  // 팀장 칩(2026-11-18 담당자 「지난주 우수 홍보대사 먼저 보여주지 말고, 현재 팀콘 기획 맡고 있는 팀장을 가나다 순으로」):
+  // 최근 45일에 낸 팀콘 기획서(오리지널·반려 제외)의 팀장 = 지금 팀장. 그 외 이름은 「다른 이름」을 눌러야 나옴. 기획서 목록을 못 받으면 전체 명단
+  let JJH_LEADS = null, namesOpen = false;
   function renderNames(){
-    const champs = WEEKLY && WEEKLY.ready ? WEEKLY.top.map(t => t.name).filter(n => AMBASSADOR_ROSTER.includes(n)) : [];
-    const rest = AMBASSADOR_ROSTER.filter(n => !champs.includes(n)).sort((a, b) => a.localeCompare(b, 'ko'));
-    $('jjhNames').innerHTML = champs.map(n => `<button type="button" class="champ" data-n="${esc(n)}">🏆 ${esc(n)}</button>`).join('') + rest.map(n => `<button type="button" data-n="${esc(n)}">${esc(n)}</button>`).join('');
+    const ko = (a, b) => a.localeCompare(b, 'ko');
+    const leads = (JJH_LEADS || []).filter(n => AMBASSADOR_ROSTER.includes(n)).sort(ko);
+    const chip = n => `<button type="button" data-n="${esc(n)}">${esc(n)}</button>`;
+    if (!leads.length){ $('jjhNames').innerHTML = AMBASSADOR_ROSTER.slice().sort(ko).map(chip).join(''); return; }
+    const rest = AMBASSADOR_ROSTER.filter(n => !leads.includes(n)).sort(ko);
+    $('jjhNames').innerHTML = leads.map(chip).join('') + (rest.length ? (namesOpen ? rest.map(chip).join('') : '<button type="button" class="more" data-more="1">다른 이름</button>') : '');
   }
+  sheetGetAll().then(rows => {
+    const since = new Date(Date.now() - 45 * 864e5).toISOString().slice(0, 10);
+    JJH_LEADS = [...new Set((rows || []).map(mapRowToRecord).filter(r => r && r.category !== 'original' && r.status !== 'rejected' && String(r.submittedAt || '').slice(0, 10) >= since)
+      .map(r => String(r.name || '').trim()).filter(Boolean))];
+    renderNames();
+  }).catch(() => {});
   $('jjhNames').addEventListener('click', e => {
+    if (e.target.closest('button[data-more]')){ namesOpen = true; renderNames(); return; }
     const b = e.target.closest('button[data-n]'); if (!b) return;
     const n = b.dataset.n;
     b.classList.add('on');

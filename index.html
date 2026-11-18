@@ -1331,6 +1331,11 @@
   input[type="text"], input:not([type]), textarea, select{border-radius:4px}
   .overview-wrap{border-top:1px solid #EEEEEE; padding-top:22px}
   .jjh-card.jjh-best{border-top:0; padding-top:12px}
+  /* 위치 핀 선 아이콘 (2026-11-18 담당자 「위치 핀버튼도 새로 리디자인」): 글자색을 따라가 흑백·노랑 어디서나 맞음 */
+  .pin-ic{display:inline-block; width:1.05em; height:1.05em; margin-right:.3em; vertical-align:-.17em; fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round; flex:none}
+  .mc-open, .ldb-btn{display:inline-flex; align-items:center; justify-content:center}
+  .ldb-btn{display:flex; border-radius:4px}
+  .mt-auto .pin-ic, .sv-s .pin-ic, .ev-meta .pin-ic{width:.95em; height:.95em; margin-right:.15em}
 /* DARK:START make_dark.cjs가 만듦, 직접 고치지 않음 */
 :root[data-theme="dark"]{--purple:#EEEEEE;--purple-dark:#FFFFFF;--purple-soft:#282828;--purple-line:#A0A0A0;--gold:#CECECE;--gold-dark:#BFBFBF;--ink:#EEEEEE;--ink-soft:#B3B3B3;--ink-faint:#9F9F9F;--line:#323232;--line-input:#696969;--page-bg:#141414;--surface:#1E1E1E;color-scheme:dark;}
 :root[data-theme="dark"] body{background:var(--page-bg);color:var(--ink)}
@@ -2055,6 +2060,7 @@
 :root[data-theme="dark"] .jjh-chips button{background:#242424;color:#EEEEEE}
 :root[data-theme="dark"] .overview-wrap{border-top:1px solid #393939}
 :root[data-theme="dark"] .jjh-card.jjh-best{border-top:0}
+:root[data-theme="dark"] .pin-ic{fill:none;stroke:currentColor}
 :root[data-theme="dark"] [style*="background:#CDCDCD" i]{background:#2C2C2C !important}
 :root[data-theme="dark"] [style*="background: #CDCDCD" i]{background:#2C2C2C !important}
 :root[data-theme="dark"] [style*="background:#EEEEEE" i]{background:#2C2C2C !important}
@@ -2485,7 +2491,7 @@
   </div>
   <div class="content" style="padding-top:0;">
     <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 월요일마다 그 주 회의 칸이 자동으로 생겨요. 실제 회의한 날짜를 고르고 출결을 입력해 주세요.</p>
-    <div class="mc-admin"><button type="button" id="mcOpenBtn" class="mc-open">📍 출석 받기 시작</button><span id="mcOpenInfo" class="mc-open-info"></span></div>
+    <div class="mc-admin"><button type="button" id="mcOpenBtn" class="mc-open"><svg class="pin-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s-7-6.4-7-11.7a7 7 0 0 1 14 0c0 5.3-7 11.7-7 11.7z"/><circle cx="12" cy="9.8" r="2.5"/></svg>출석 받기 시작</button><span id="mcOpenInfo" class="mc-open-info"></span></div>
     <div class="mt-weeks" id="mtWeeks"></div>
     <div class="mt-date">
       <input type="date" id="mtDate">
@@ -2644,7 +2650,7 @@
     </div>
 
     <div id="evSection">
-    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;">참여한 행사를 등록하고 참여자만 고르면 가점이 들어가요. 가점은 행사마다 정할 수 있고, 종합 점수표의 <b>행사 가점</b>에 반영돼요. 행사 전에 집합 시간과 지원자를 넣어 두고, 행사 날 <b>📍 이 행사 출석 받기</b>를 누르거나 출석 리더를 정해 두면 그 자리에서 앱을 연 사람이 참여자로 들어가요. 끝나면 안 온 지원자가 <b>불참 후보</b>로 보여요.</p>
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;">참여한 행사를 등록하고 참여자만 고르면 가점이 들어가요. 가점은 행사마다 정할 수 있고, 종합 점수표의 <b>행사 가점</b>에 반영돼요. 행사 전에 집합 시간과 지원자를 넣어 두고, 행사 날 <b>이 행사 출석 받기</b>를 누르거나 출석 리더를 정해 두면 그 자리에서 앱을 연 사람이 참여자로 들어가요. 끝나면 안 온 지원자가 <b>불참 후보</b>로 보여요.</p>
     <div class="mc-admin" id="evOpenBar" style="display:none"><span id="evOpenText" class="mc-open-info"></span><button type="button" id="evOpenStop" class="mc-open on">출석 끝</button></div>
     <div class="mt-tools">
       <span id="evInfo">불러오는 중...</span>
@@ -2660,7 +2666,7 @@
       <label>1인당 가점</label><input type="number" id="evPoints" step="0.5" min="0.5" max="20" value="2">
       <label for="evLeader">출석 리더 <small style="font-weight:400; color:var(--ink-faint);">내가 없을 때 행사 날 이 사람이 출석을 받아요</small></label>
       <select id="evLeader" class="mc-select" style="margin-top:4px;"><option value="">없음 (내가 직접)</option></select>
-      <div class="mc-admin" style="margin-top:10px;"><button type="button" id="evCheckBtn" class="mc-open">📍 이 행사 출석 받기</button><span id="evCheckInfo" class="mc-open-info">행사 당일, 행사장에서 누르면 이 휴대폰 위치에서 80m 안만 참여로 들어가요 (2시간)</span></div>
+      <div class="mc-admin" style="margin-top:10px;"><button type="button" id="evCheckBtn" class="mc-open"><svg class="pin-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s-7-6.4-7-11.7a7 7 0 0 1 14 0c0 5.3-7 11.7-7 11.7z"/><circle cx="12" cy="9.8" r="2.5"/></svg>이 행사 출석 받기</button><span id="evCheckInfo" class="mc-open-info">행사 당일, 행사장에서 누르면 이 휴대폰 위치에서 80m 안만 참여로 들어가요 (2시간)</span></div>
       <label style="display:flex; align-items:center; justify-content:space-between;"><span id="evWho">참여자</span> <span id="evCount" style="margin-right:auto; margin-left:4px;"></span><button type="button" class="mt-quick" id="evAll">전체 선택</button></label>
       <div class="ev-chips" id="evChips"></div>
       <button class="mt-save" id="evSave">저장</button>
@@ -4841,6 +4847,7 @@ setTimeout(() => { if(memberToken()) jjWho(); }, 1500);
 const MC_LS = 'jjMeetCheck_v1';
 let mcBusy = false;
 // 카드 그림: kind = seek(찾는 중) · ok(출석) · late(지각) · done(이미 기록) · far(멀어요, dist m) · fuzzy(오차 큼·위치 못 받음) · off(받는 중 아님·서버 오류)
+function pinIc(){ return '<svg class="pin-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.5s-7-6.4-7-11.7a7 7 0 0 1 14 0c0 5.3-7 11.7-7 11.7z"/><circle cx="12" cy="9.8" r="2.5"/></svg>'; }
 function mcArt(kind, dist){
   const radar = inner => `<svg class="mc-art" viewBox="0 0 64 64" aria-hidden="true"><circle class="ring" cx="32" cy="32" r="22"/>${inner}<circle class="home" cx="32" cy="32" r="4.5"/></svg>`;
   if(kind === 'seek') return radar('<circle class="ping" cx="32" cy="32" r="22"/><g class="sweep"><path d="M32 32 L32 10 A22 22 0 0 1 51 21 Z"/></g>');
@@ -5005,7 +5012,7 @@ function leadRender(r, msg, msgTitle){
       <div class="ldb-head"><span class="ldb-dot" aria-hidden="true"></span><div class="ldb-txt">
         <span class="ldb-k">${on ? '행사 출석 받는 중' : (it.mine ? '오늘 내가 출석 리더' : '오늘 행사 출석')}</span>
         <b class="ldb-t">${esc(it.title)}</b><span class="ldb-s">${sub}</span></div></div>
-      <button type="button" class="ldb-btn" data-ld="${esc(it.title)}" data-on="${on ? 1 : 0}" data-admin="${it.mine ? 0 : 1}">${on ? '출석 끝' : '📍 출석 받기 시작'}</button>
+      <button type="button" class="ldb-btn" data-ld="${esc(it.title)}" data-on="${on ? 1 : 0}" data-admin="${it.mine ? 0 : 1}">${on ? '출석 끝' : pinIc() + '출석 받기 시작'}</button>
       ${msg && msgTitle === it.title ? `<p class="ldb-msg">${esc(msg)}</p>` : ''}
     </div>`; }).join('');
   el.querySelectorAll('[data-ld]').forEach(b => b.onclick = async () => {
@@ -5102,7 +5109,7 @@ function svRender(msg, err){
     // 홍보대사가 모든 날짜를 저장했으면 제목만 두고 접음. 「펼치기」로 목록·수정
     const answered = !r.admin && it.canAnswer && it.dates.every(d => d.mine);
     const head = `<div class="sv-k"><span>지원 조사${it.team ? ' · ' + esc(it.team) : ''}</span><span class="sv-due">${esc(due)}까지</span></div>`
-      + `<div class="sv-t">${esc(it.title)}</div><div class="sv-s">📍 ${esc(it.place)} · ${esc(it.note)}</div>`;
+      + `<div class="sv-t">${esc(it.title)}</div><div class="sv-s">${pinIc()}${esc(it.place)} · ${esc(it.note)}</div>`;
     let sum = '';
     if(answered){
       const ny = it.dates.filter(d => d.mine === '가능').length, nOk = it.dates.filter(d => d.mineOk).length;
@@ -5275,7 +5282,7 @@ function mcAdminRender(){
   const btn = document.getElementById('mcOpenBtn'), info = document.getElementById('mcOpenInfo');
   if(!btn) return;
   const st = mcAdminSt;
-  btn.textContent = st && st.open ? '출석 끝' : '📍 출석 받기 시작';
+  btn.innerHTML = st && st.open ? '출석 끝' : pinIc() + '출석 받기 시작';
   btn.classList.toggle('on', !!(st && st.open));
   info.textContent = !st ? '' : st.open ? `${st.until}까지 받는 중 · 자동 출석 ${st.n || 0}명` : '홍보대사실에서 누르면 이 휴대폰 위치에서 80m 안만 출석돼요 (60분, 18:01부터 지각)';
 }
@@ -6529,7 +6536,7 @@ function mtRenderList(){
   el.innerHTML = `<div class="miss-bar"><button class="miss-btn ${mtOnlyMissing?'on':''}" id="mtMissBtn">${mtOnlyMissing ? '전체 보기' : '미입력만 보기 (' + missN + ')'}</button></div>`
     + (mtOnlyMissing && !list.length ? '<div class="miss-empty">모두 입력했어요</div>' : '') + list.map(n => `
     <div class="mt-row">
-      <span class="mt-name">${n}${mtAuto[n] ? ' <small class="mt-auto" title="휴대폰 위치로 자동 기록">📍자동</small>' : ''}</span>
+      <span class="mt-name">${n}${mtAuto[n] ? ' <small class="mt-auto" title="휴대폰 위치로 자동 기록">' + pinIc() + '자동</small>' : ''}</span>
       <div class="mt-btns">${MT_STATUSES.map(st => `<button data-name="${n}" data-st="${st}" class="${mtState[n]===st?'on':''}">${st}</button>`).join('')}</div>
     </div>`).join('');
   document.getElementById('mtMissBtn').addEventListener('click', ()=>{ mtOnlyMissing = !mtOnlyMissing; mtRenderList(); });
@@ -7228,11 +7235,11 @@ function evRender(){
   const plansOnly = evPlans.filter(x => !evEvents.some(e => e.date === x.date && e.title === x.title));
   el.innerHTML = (plansOnly.length || evEvents.length) ? plansOnly.map((x, i) => `<div class="ev-card ev-plan" data-p="${i}">
       <span class="ev-pts">+${esc(x.points)}점</span><b>${abEsc(x.title)}</b>
-      <div class="ev-meta">${esc(x.date.slice(5).replace('-','/'))} · 예정${x.time ? ' · 집합 ' + esc(x.time) : ''}${x.place ? ' · 📍' + abEsc(x.place.name) + ' ' + esc(x.place.r) + 'm' : ''} · 지원 ${(x.applicants || []).length}명${x.leader ? ' · 리더 ' + abEsc(x.leader) : ''}</div>
+      <div class="ev-meta">${esc(x.date.slice(5).replace('-','/'))} · 예정${x.time ? ' · 집합 ' + esc(x.time) : ''}${x.place ? ' · ' + pinIc() + abEsc(x.place.name) + ' ' + esc(x.place.r) + 'm' : ''} · 지원 ${(x.applicants || []).length}명${x.leader ? ' · 리더 ' + abEsc(x.leader) : ''}</div>
       ${evMissing({ date: x.date, title: x.title, names: [] }).length ? `<div class="ev-meta ev-miss">불참 후보: ${evMissing({ date: x.date, title: x.title, names: [] }).map(abEsc).join(', ')}</div>` : ''}
     </div>`).join('') + evEvents.map((ev, i) => { const pl = evPlanOf(ev.date, ev.title), au = ev.auto || [], lt = ev.late || [], miss = evMissing(ev); return `<div class="ev-card" data-i="${i}">
       <span class="ev-pts">+${esc(ev.points)}점</span><b>${abEsc(ev.title)}</b>
-      <div class="ev-meta">${esc(ev.date.slice(5).replace('-','/'))}${pl && pl.time ? ' · 집합 ' + esc(pl.time) : ''} · ${ev.names.length}명${pl && pl.leader ? ' · 리더 ' + abEsc(pl.leader) : ''} — ${ev.names.map(n => abEsc(n) + (au.includes(n) ? '📍' : '') + (lt.includes(n) ? '(지각)' : '')).join(', ')}</div>
+      <div class="ev-meta">${esc(ev.date.slice(5).replace('-','/'))}${pl && pl.time ? ' · 집합 ' + esc(pl.time) : ''} · ${ev.names.length}명${pl && pl.leader ? ' · 리더 ' + abEsc(pl.leader) : ''} — ${ev.names.map(n => abEsc(n) + (au.includes(n) ? pinIc() : '') + (lt.includes(n) ? '(지각)' : '')).join(', ')}</div>
       ${miss.length ? `<div class="ev-meta ev-miss">불참 후보: ${miss.map(abEsc).join(', ')}</div>` : ''}
     </div>`; }).join('') : '<p style="font-size:12.5px;color:var(--ink-faint);">등록된 행사가 없어요. <b>+ 새 행사</b>로 추가하세요.</p>';
   el.querySelectorAll('.ev-card[data-i]').forEach(c => c.addEventListener('click', ()=>evOpen(evEvents[Number(c.dataset.i)])));
@@ -8422,12 +8429,12 @@ document.getElementById('scRerun').addEventListener('click', async ()=>{
    홍비디오 캡션의 "🎬 by 아이디" → 이름 명단도 서버 AM_ROSTER 하나에서 받아요(페이지에 따로 적어 두던 9명 목록은 뺌 — A3).
    6시간 캐시가 지난 뒤(또는 새로고침 시 캐시 만료 후) 자동 반영돼요. */
 const HB_TIERS = [
-  { key:'gold',   min:1000000, label:'100만', img:"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 28%22%3E%3Cdefs%3E%3ClinearGradient id=%22ggold%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23FFE68A%22/%3E%3Cstop offset=%220.45%22 stop-color=%22%23F5C02E%22/%3E%3Cstop offset=%221%22 stop-color=%22%23C98A0C%22/%3E%3C/linearGradient%3E%3ClinearGradient id=%22sgold%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220.85%22/%3E%3Cstop offset=%220.5%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x=%221%22 y=%221%22 width=%2262%22 height=%2226%22 rx=%2213%22 fill=%22url(%23ggold)%22 stroke=%22%239A6406%22 stroke-width=%221.5%22/%3E%3Crect x=%223.5%22 y=%223.5%22 width=%2257%22 height=%2221%22 rx=%2210.5%22 fill=%22none%22 stroke=%22%23FFF1B8%22 stroke-width=%221%22 stroke-dasharray=%222 1.6%22 opacity=%220.85%22/%3E%3Cpath d=%22M5 13 A9 9 0 0 1 14 4 H40 L30 13 Z%22 fill=%22url(%23sgold)%22/%3E%3Cpath d=%22M13 8.2l1.5 3.1 3.4.5-2.45 2.4.58 3.4L13 16l-3.03 1.6.58-3.4L8.1 11.8l3.4-.5z%22 fill=%22%23FFF8DC%22 stroke=%22%239A6406%22 stroke-width=%220.8%22 stroke-linejoin=%22round%22/%3E%3Ctext x=%2239.5%22 y=%2218.6%22 text-anchor=%22middle%22 font-family=%22'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif%22 font-size=%2212.5%22 font-weight=%22800%22 fill=%22%236B4200%22 letter-spacing=%22-0.3%22%3E100%EB%A7%8C%3C/text%3E%3C/svg%3E" },
-  { key:'silver', min:500000,  label:'50만',  img:"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 28%22%3E%3Cdefs%3E%3ClinearGradient id=%22gsilver%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23FFFFFF%22/%3E%3Cstop offset=%220.45%22 stop-color=%22%23D5DAE1%22/%3E%3Cstop offset=%221%22 stop-color=%22%239AA3AE%22/%3E%3C/linearGradient%3E%3ClinearGradient id=%22ssilver%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220.85%22/%3E%3Cstop offset=%220.5%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x=%221%22 y=%221%22 width=%2262%22 height=%2226%22 rx=%2213%22 fill=%22url(%23gsilver)%22 stroke=%22%236B7480%22 stroke-width=%221.5%22/%3E%3Crect x=%223.5%22 y=%223.5%22 width=%2257%22 height=%2221%22 rx=%2210.5%22 fill=%22none%22 stroke=%22%23FFFFFF%22 stroke-width=%221%22 stroke-dasharray=%222 1.6%22 opacity=%220.85%22/%3E%3Cpath d=%22M5 13 A9 9 0 0 1 14 4 H40 L30 13 Z%22 fill=%22url(%23ssilver)%22/%3E%3Cpath d=%22M13 8.2l1.5 3.1 3.4.5-2.45 2.4.58 3.4L13 16l-3.03 1.6.58-3.4L8.1 11.8l3.4-.5z%22 fill=%22%23FFFFFF%22 stroke=%22%236B7480%22 stroke-width=%220.8%22 stroke-linejoin=%22round%22/%3E%3Ctext x=%2239.5%22 y=%2218.6%22 text-anchor=%22middle%22 font-family=%22'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif%22 font-size=%2212.5%22 font-weight=%22800%22 fill=%22%233A414B%22 letter-spacing=%22-0.3%22%3E50%EB%A7%8C%3C/text%3E%3C/svg%3E" },
-  { key:'bronze', min:100000,  label:'10만',  img:"data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 28%22%3E%3Cdefs%3E%3ClinearGradient id=%22gbronze%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23F6C8A0%22/%3E%3Cstop offset=%220.45%22 stop-color=%22%23D68A52%22/%3E%3Cstop offset=%221%22 stop-color=%22%239C5A2A%22/%3E%3C/linearGradient%3E%3ClinearGradient id=%22sbronze%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220.85%22/%3E%3Cstop offset=%220.5%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x=%221%22 y=%221%22 width=%2262%22 height=%2226%22 rx=%2213%22 fill=%22url(%23gbronze)%22 stroke=%22%236E3B17%22 stroke-width=%221.5%22/%3E%3Crect x=%223.5%22 y=%223.5%22 width=%2257%22 height=%2221%22 rx=%2210.5%22 fill=%22none%22 stroke=%22%23FCE0C8%22 stroke-width=%221%22 stroke-dasharray=%222 1.6%22 opacity=%220.85%22/%3E%3Cpath d=%22M5 13 A9 9 0 0 1 14 4 H40 L30 13 Z%22 fill=%22url(%23sbronze)%22/%3E%3Cpath d=%22M13 8.2l1.5 3.1 3.4.5-2.45 2.4.58 3.4L13 16l-3.03 1.6.58-3.4L8.1 11.8l3.4-.5z%22 fill=%22%23FFF0E2%22 stroke=%22%236E3B17%22 stroke-width=%220.8%22 stroke-linejoin=%22round%22/%3E%3Ctext x=%2239.5%22 y=%2218.6%22 text-anchor=%22middle%22 font-family=%22'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif%22 font-size=%2212.5%22 font-weight=%22800%22 fill=%22%234A2408%22 letter-spacing=%22-0.3%22%3E10%EB%A7%8C%3C/text%3E%3C/svg%3E" }
+  { key:'gold',   min:1000000, label:'100만', img:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 28'%3E%3Crect x='0' y='0' width='64' height='28' rx='4' fill='%23F2CE00'/%3E%3Cpath d='M9 8.6v10.8l8.6-5.4z' fill='%23000000'/%3E%3Ctext x='40' y='18.8' text-anchor='middle' font-family='Pretendard,Apple SD Gothic Neo,Noto Sans KR,sans-serif' font-size='13' font-weight='800' fill='%23000000' letter-spacing='-0.4'%3E100%EB%A7%8C%3C/text%3E%3C/svg%3E", dark:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 28'%3E%3Crect x='0' y='0' width='64' height='28' rx='4' fill='%23F2CE00'/%3E%3Cpath d='M9 8.6v10.8l8.6-5.4z' fill='%23000000'/%3E%3Ctext x='40' y='18.8' text-anchor='middle' font-family='Pretendard,Apple SD Gothic Neo,Noto Sans KR,sans-serif' font-size='13' font-weight='800' fill='%23000000' letter-spacing='-0.4'%3E100%EB%A7%8C%3C/text%3E%3C/svg%3E" },
+  { key:'silver', min:500000,  label:'50만',  img:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 28'%3E%3Crect x='0' y='0' width='64' height='28' rx='4' fill='%23181818'/%3E%3Cpath d='M9 8.6v10.8l8.6-5.4z' fill='%23FFFFFF'/%3E%3Ctext x='40' y='18.8' text-anchor='middle' font-family='Pretendard,Apple SD Gothic Neo,Noto Sans KR,sans-serif' font-size='13' font-weight='800' fill='%23FFFFFF' letter-spacing='-0.4'%3E50%EB%A7%8C%3C/text%3E%3C/svg%3E", dark:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 28'%3E%3Crect x='0' y='0' width='64' height='28' rx='4' fill='%23EEEEEE'/%3E%3Cpath d='M9 8.6v10.8l8.6-5.4z' fill='%23181818'/%3E%3Ctext x='40' y='18.8' text-anchor='middle' font-family='Pretendard,Apple SD Gothic Neo,Noto Sans KR,sans-serif' font-size='13' font-weight='800' fill='%23181818' letter-spacing='-0.4'%3E50%EB%A7%8C%3C/text%3E%3C/svg%3E" },
+  { key:'bronze', min:100000,  label:'10만',  img:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 28'%3E%3Crect x='1' y='1' width='62' height='26' rx='4' fill='%23FFFFFF' stroke='%23181818' stroke-width='1.5'/%3E%3Cpath d='M9 8.6v10.8l8.6-5.4z' fill='%23181818'/%3E%3Ctext x='40' y='18.8' text-anchor='middle' font-family='Pretendard,Apple SD Gothic Neo,Noto Sans KR,sans-serif' font-size='13' font-weight='800' fill='%23181818' letter-spacing='-0.4'%3E10%EB%A7%8C%3C/text%3E%3C/svg%3E", dark:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 28'%3E%3Crect x='1' y='1' width='62' height='26' rx='4' fill='%231E1E1E' stroke='%23EEEEEE' stroke-width='1.5'/%3E%3Cpath d='M9 8.6v10.8l8.6-5.4z' fill='%23EEEEEE'/%3E%3Ctext x='40' y='18.8' text-anchor='middle' font-family='Pretendard,Apple SD Gothic Neo,Noto Sans KR,sans-serif' font-size='13' font-weight='800' fill='%23EEEEEE' letter-spacing='-0.4'%3E10%EB%A7%8C%3C/text%3E%3C/svg%3E" }
 ];
 // 아직 10만 게시물이 없는 홍보대사에게 붙는 새싹 패치
-const HB_SPROUT_IMG = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 28%22%3E%3Cdefs%3E%3ClinearGradient id=%22gsprout%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23EAF9D9%22/%3E%3Cstop offset=%220.5%22 stop-color=%22%23C6EBA4%22/%3E%3Cstop offset=%221%22 stop-color=%22%238FCF66%22/%3E%3C/linearGradient%3E%3ClinearGradient id=%22ssprout%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220.85%22/%3E%3Cstop offset=%220.5%22 stop-color=%22%23FFFFFF%22 stop-opacity=%220%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x=%221%22 y=%221%22 width=%2262%22 height=%2226%22 rx=%2213%22 fill=%22url(%23gsprout)%22 stroke=%22%234E9A2C%22 stroke-width=%221.5%22/%3E%3Crect x=%223.5%22 y=%223.5%22 width=%2257%22 height=%2221%22 rx=%2210.5%22 fill=%22none%22 stroke=%22%23F4FFE8%22 stroke-width=%221%22 stroke-dasharray=%222 1.6%22 opacity=%220.9%22/%3E%3Cpath d=%22M5 13 A9 9 0 0 1 14 4 H40 L30 13 Z%22 fill=%22url(%23ssprout)%22/%3E%3Cpath d=%22M13.2 19.2 V13.4%22 stroke=%22%233F7F22%22 stroke-width=%221.4%22 stroke-linecap=%22round%22 fill=%22none%22/%3E%3Cpath d=%22M13.2 13.6 C 12.6 10.4, 9.8 9.4, 7.6 9.8 C 7.8 12.4, 10.2 14.2, 13.2 13.6 Z%22 fill=%22%235DB536%22 stroke=%22%233F7F22%22 stroke-width=%220.8%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M13.2 12.6 C 13.6 9.2, 16.4 7.6, 18.8 8 C 18.8 10.8, 16.4 12.8, 13.2 12.6 Z%22 fill=%22%237BCB4C%22 stroke=%22%233F7F22%22 stroke-width=%220.8%22 stroke-linejoin=%22round%22/%3E%3Ctext x=%2239.5%22 y=%2218.6%22 text-anchor=%22middle%22 font-family=%22'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif%22 font-size=%2212.5%22 font-weight=%22800%22 fill=%22%232E5E16%22 letter-spacing=%22-0.3%22%3E%EC%83%88%EC%8B%B9%3C/text%3E%3C/svg%3E";
+const HB_SPROUT_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 28'%3E%3Crect x='0' y='0' width='64' height='28' rx='4' fill='%23EEEEEE'/%3E%3Cpath d='M13 20v-6.2M13 14c0-3.4-2.4-5-5-5 0 3.2 2.2 5 5 5zM13 13c0-2.8 2.2-4.4 4.6-4.4 0 2.8-2 4.4-4.6 4.4z' fill='none' stroke='%235C5C5C' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ctext x='40' y='18.8' text-anchor='middle' font-family='Pretendard,Apple SD Gothic Neo,Noto Sans KR,sans-serif' font-size='13' font-weight='800' fill='%235C5C5C' letter-spacing='-0.4'%3E%EC%83%88%EC%8B%B9%3C/text%3E%3C/svg%3E", HB_SPROUT_DARK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 28'%3E%3Crect x='0' y='0' width='64' height='28' rx='4' fill='%23323232'/%3E%3Cpath d='M13 20v-6.2M13 14c0-3.4-2.4-5-5-5 0 3.2 2.2 5 5 5zM13 13c0-2.8 2.2-4.4 4.6-4.4 0 2.8-2 4.4-4.6 4.4z' fill='none' stroke='%23B3B3B3' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ctext x='40' y='18.8' text-anchor='middle' font-family='Pretendard,Apple SD Gothic Neo,Noto Sans KR,sans-serif' font-size='13' font-weight='800' fill='%23B3B3B3' letter-spacing='-0.4'%3E%EC%83%88%EC%8B%B9%3C/text%3E%3C/svg%3E";
 // 패치에서 제외할 사람 (본인 콘텐츠가 아닌 게시물로 잡히는 경우 등)
 const HB_EXCLUDE = [];   // 서버 명단(hbExclude)에서 채움 (2026-10-30)
 const HB_CACHE_KEY = 'hbBadges.v5', HB_TTL = 6*60*60*1000;
@@ -8475,10 +8482,12 @@ function hbApply(badges){
   Object.entries(badges).forEach(([n, b]) => {
     const t = HB_TIERS.find(t => t.key === b.tier);
     css += `.hb[data-hb="${n.replace(/"/g,'')}"]{display:inline-block;background-image:url("${t.img}");}\n`;
+    css += `:root[data-theme="dark"] .hb[data-hb="${n.replace(/"/g,'')}"]{background-image:url("${t.dark}");}\n`;
   });
   // 패치가 없는 현재 홍보대사 → 새싹
   MEETING_ROSTER.forEach(n => {
     if(!badges[n]) css += `.hb[data-hb="${n.replace(/"/g,'')}"]{display:inline-block;background-image:url("${HB_SPROUT_IMG}");}\n`;
+    if(!badges[n]) css += `:root[data-theme="dark"] .hb[data-hb="${n.replace(/"/g,'')}"]{background-image:url("${HB_SPROUT_DARK}");}\n`;
   });
   let el = document.getElementById('hbStyle');
   if(!el){ el = document.createElement('style'); el.id = 'hbStyle'; document.head.appendChild(el); }

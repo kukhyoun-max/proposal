@@ -1334,6 +1334,10 @@
   /* 위치 핀 선 아이콘 (2026-11-18 담당자 「위치 핀버튼도 새로 리디자인」): 글자색을 따라가 흑백·노랑 어디서나 맞음 */
   .pin-ic{display:inline-block; width:1.05em; height:1.05em; margin-right:.3em; vertical-align:-.17em; fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round; flex:none}
   .mc-open, .ldb-btn{display:inline-flex; align-items:center; justify-content:center}
+  /* 출석 버튼 옆 빈 공간 없앰 (2026-11-18 담당자 「버튼 옆에 공간 많이 남는거 없애」): 버튼은 한 줄 꽉, 안내 글은 그 아래 */
+  .mc-admin > .mc-open{flex:1 1 100%}
+  .mc-admin > .mc-open-info{flex:1 1 100%}
+  .mc-admin > .mc-open-info:empty{display:none}
   .ldb-btn{display:flex; border-radius:4px}
   /* 버튼 안 핀: 아이콘 위·아래 끝을 글자 위·아래 끝에 맞춤(2026-11-18 담당자 「아이콘이랑 줄그어서 라인 맞춰라」, 픽셀로 재서 맞춤) */
   .mc-open .pin-ic, .ldb-btn .pin-ic{width:1.1em; height:1.1em; margin-right:.32em; position:relative; top:.04em}

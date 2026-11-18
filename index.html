@@ -2134,17 +2134,26 @@
 :root[data-theme="dark"] #btnHome svg [fill="#CECECE"]{fill:#CECECE}
 :root[data-theme="dark"] #btnHome svg [fill="#fff"]{fill:#fff}
 /* DARK:END */
-  /* 2026-11-18 담당자 「관리자 검토 아래줄로 내려가는 것도 잡아야지」: 관리자 계정 휴대폰 폭에서 상단 버튼을 한 줄로(간격·글자 조금 줄임) */
+  /* 2026-11-18 담당자 「모바일에서 상단 메뉴가 너무 오밀조밀」(앞서 「관리자 검토 아래줄로 내려가는 것도 잡아야지」): 관리자 계정 휴대폰 폭은 두 줄로 나눔.
+     윗줄 = 로고 + 아이콘(테스트·밝기), 아랫줄 = 글자 메뉴를 폭 전체에 고르게. 저절로 넘치는 줄바꿈이 아니라 정해 둔 두 줄 */
   @media (max-width:440px){
-    .admin-topbar:has(#btnAdminToggle:not([style*="none"])){padding-left:12px; padding-right:12px; gap:6px}
-    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) .hong-logo{width:30px; height:30px}
-    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) > div{flex-wrap:nowrap; gap:0 !important}
-    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) button{padding:6px 5px; font-size:13px; letter-spacing:-.3px}
-    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTheme, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTestMode{padding-left:5px; padding-right:5px}
-    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #pendingBadge{margin-left:2px !important; padding:1px 6px !important}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])){flex-wrap:wrap; row-gap:6px; padding:8px 16px 4px}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) > div{display:contents !important}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTestMode{margin-left:auto}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTestMode[hidden] + #btnTheme{margin-left:auto}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"]))::after{content:''; order:2; flex-basis:100%; height:0}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnGuide, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnMy, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnEquipPublic, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnStatusToggle, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnAdminToggle{order:3; flex:1 1 auto; font-size:14px; padding:8px 4px; text-align:center}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnGuide{margin-left:-4px} .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnAdminToggle{margin-right:-4px}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTheme, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTestMode{padding:7px 8px}
   }
-  @media (max-width:400px){ .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnHome{flex:none} .admin-topbar:has(#btnAdminToggle:not([style*="none"])) .hong-logo{width:26px; height:26px} .admin-topbar:has(#btnAdminToggle:not([style*="none"])) button{padding:6px 2.5px !important; font-size:12px !important; letter-spacing:-.4px} .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTestMode svg, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTheme svg{width:14px; height:14px} .admin-topbar:has(#btnAdminToggle:not([style*="none"])){padding-left:8px !important; padding-right:8px !important; gap:4px} }
-  @media (max-width:340px){ .admin-topbar:has(#btnAdminToggle:not([style*="none"])) button{padding:6px 1.5px !important; font-size:11.5px !important; letter-spacing:-.5px} .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #pendingBadge{padding:1px 5px !important} }
+  /* 2026-11-18 담당자 「트로피에 없어졌다가 뿅하고 튀어나오는 효과」: 첫 표시 때 한 번, 화면에 보일 때. 움직임 줄이기 설정이면 안 함 */
+  @keyframes cupPop{0%{transform:scale(0) rotate(-14deg);opacity:0} 55%{transform:scale(1.2) rotate(5deg);opacity:1} 75%{transform:scale(.93) rotate(-2deg)} 90%{transform:scale(1.03)} 100%{transform:scale(1) rotate(0)}}
+  @keyframes cupNum{0%,35%{transform:scale(0);opacity:0} 70%{transform:scale(1.35);opacity:1} 100%{transform:scale(1)}}
+  .jjh-best .cup{transform-origin:50% 70%}
+  #jjhCupN{transform-box:fill-box; transform-origin:center}
+  .jjh-best.pop .cup{animation:cupPop .75s ease-out both}
+  .jjh-best.pop #jjhCupN{animation:cupNum .9s ease-out both}
+  @media (prefers-reduced-motion:reduce){ .jjh-best.pop .cup, .jjh-best.pop #jjhCupN{animation:none} }
 </style>
 <style>/* make_dark.cjs가 읽지 않는 둘째 style: 어두운 화면 직접 보정(2026-11-18) */
 /* 로딩창: 어두운 화면은 어두운 회색 막 + 흰 로고 */
@@ -8606,6 +8615,15 @@ function jjRosterApply(r){
 
 
   /* ── 지난주 우수 홍보대사 ── */
+  // 트로피 뿅(2026-11-18): 페이지에서 한 번만, 화면에 들어왔을 때
+  let cupPopped = false;
+  function cupPopOnce(box){
+    if (cupPopped) return; cupPopped = true;
+    const go = () => { box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop'); };
+    if (!('IntersectionObserver' in window)) return go();
+    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)){ io.disconnect(); go(); } }, { threshold:.6 });
+    io.observe(box);
+  }
   let WEEKLY = null;
   function renderBest(w){
     WEEKLY = w;
@@ -8621,6 +8639,7 @@ function jjRosterApply(r){
     box.classList.remove('wait'); $('jjhBestGo').style.display = '';
     const wins = Math.max.apply(null, w.top.map(x => x.wins || 1));
     $('jjhCupN').textContent = wins;   // 2026-11-18 담당자 「회는 빼고 숫자만, 크기는 키우자」
+    cupPopOnce(box);
     $('jjhBestName').innerHTML = esc(w.top.map(x => x.name).join(' · ')) + (w.top.length > 1 ? '<small style="font-size:13px;color:var(--ink-soft);">공동 1등</small>' : '') + `<span class="gn">+${esc(w.top[0].gain)}점</span>`;
   }
   function openWhy(){

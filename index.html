@@ -1335,6 +1335,10 @@
   input[type="text"], input:not([type]), textarea, select{border-radius:4px}
   .overview-wrap{border-top:1px solid #EEEEEE; padding-top:22px}
   .jjh-card.jjh-best{border-top:0; padding-top:12px}
+  /* 항목 사이 구분선 (2026-11-18 담당자 「항목별로 구분선은 있는게 맞아, 전체적으로 구분선만 넣어줘」): 같은 날 안의 일정·게시물 줄 사이에 가는 선 */
+  .jjh-row + .jjh-row, .jjh-post + .jjh-post{border-top:1px solid #EEEEEE}
+  :root[data-theme="dark"] .jjh-row + .jjh-row, :root[data-theme="dark"] .jjh-post + .jjh-post{border-top-color:#2C2C2C}
+  .jjh-sc .jjh-row{padding-top:10px; padding-bottom:10px}
   /* 위치 핀 선 아이콘 (2026-11-18 담당자 「위치 핀버튼도 새로 리디자인」): 글자색을 따라가 흑백·노랑 어디서나 맞음 */
   .pin-ic{display:inline-block; width:1.05em; height:1.05em; margin-right:.3em; vertical-align:-.17em; fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round; flex:none}
   .mc-open, .ldb-btn{display:inline-flex; align-items:center; justify-content:center}

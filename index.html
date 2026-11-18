@@ -2134,6 +2134,17 @@
 :root[data-theme="dark"] #btnHome svg [fill="#CECECE"]{fill:#CECECE}
 :root[data-theme="dark"] #btnHome svg [fill="#fff"]{fill:#fff}
 /* DARK:END */
+  /* 2026-11-18 담당자 「관리자 검토 아래줄로 내려가는 것도 잡아야지」: 관리자 계정 휴대폰 폭에서 상단 버튼을 한 줄로(간격·글자 조금 줄임) */
+  @media (max-width:440px){
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])){padding-left:12px; padding-right:12px; gap:6px}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) .hong-logo{width:30px; height:30px}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) > div{flex-wrap:nowrap; gap:0 !important}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) button{padding:6px 5px; font-size:13px; letter-spacing:-.3px}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTheme, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTestMode{padding-left:5px; padding-right:5px}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #pendingBadge{margin-left:2px !important; padding:1px 6px !important}
+  }
+  @media (max-width:400px){ .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnHome{flex:none} .admin-topbar:has(#btnAdminToggle:not([style*="none"])) .hong-logo{width:26px; height:26px} .admin-topbar:has(#btnAdminToggle:not([style*="none"])) button{padding:6px 2.5px !important; font-size:12px !important; letter-spacing:-.4px} .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTestMode svg, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTheme svg{width:14px; height:14px} .admin-topbar:has(#btnAdminToggle:not([style*="none"])){padding-left:8px !important; padding-right:8px !important; gap:4px} }
+  @media (max-width:340px){ .admin-topbar:has(#btnAdminToggle:not([style*="none"])) button{padding:6px 1.5px !important; font-size:11.5px !important; letter-spacing:-.5px} .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #pendingBadge{padding:1px 5px !important} }
 </style>
 <style>/* make_dark.cjs가 읽지 않는 둘째 style: 어두운 화면 직접 보정(2026-11-18) */
 /* 로딩창: 어두운 화면은 어두운 회색 막 + 흰 로고 */

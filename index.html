@@ -1335,7 +1335,13 @@
   .pin-ic{display:inline-block; width:1.05em; height:1.05em; margin-right:.3em; vertical-align:-.17em; fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round; flex:none}
   .mc-open, .ldb-btn{display:inline-flex; align-items:center; justify-content:center}
   .ldb-btn{display:flex; border-radius:4px}
+  /* 버튼 안 핀: 아이콘 위·아래 끝을 글자 위·아래 끝에 맞춤(2026-11-18 담당자 「아이콘이랑 줄그어서 라인 맞춰라」, 픽셀로 재서 맞춤) */
+  .mc-open .pin-ic, .ldb-btn .pin-ic{width:1.1em; height:1.1em; margin-right:.32em; position:relative; top:.04em}
+  .ldb-btn .pin-ic{top:.075em}
   .mt-auto .pin-ic, .sv-s .pin-ic, .ev-meta .pin-ic{width:.95em; height:.95em; margin-right:.15em}
+  /* 관리자 화면 제목 (2026-11-18 담당자 「여기도 관리자 검토 타이틀 넣으면 좋을 듯」): 다른 화면(내 성과·활동 가이드) 제목과 같은 크기 */
+  .topbar > .adm-h{order:0; margin:0; font-size:17px; font-weight:700; white-space:nowrap}
+  #equipView.ro .adm-h{display:none}
 /* DARK:START make_dark.cjs가 만듦, 직접 고치지 않음 */
 :root[data-theme="dark"]{--purple:#EEEEEE;--purple-dark:#FFFFFF;--purple-soft:#282828;--purple-line:#A0A0A0;--gold:#CECECE;--gold-dark:#BFBFBF;--ink:#EEEEEE;--ink-soft:#B3B3B3;--ink-faint:#9F9F9F;--line:#323232;--line-input:#696969;--page-bg:#141414;--surface:#1E1E1E;color-scheme:dark;}
 :root[data-theme="dark"] body{background:var(--page-bg);color:var(--ink)}
@@ -2448,6 +2454,7 @@
 
 <div class="phone" id="adminView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <h2 class="adm-h">관리자 검토</h2>
     <div class="mt-tabs"><button class="on">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button></div>
     <button class="reset-link" id="btnAdminBack">← 돌아가기</button>
   </div>
@@ -2486,6 +2493,7 @@
 
 <div class="phone" id="meetingView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <h2 class="adm-h">관리자 검토</h2>
     <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button class="on">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button></div>
     <button class="reset-link" id="btnMeetingBack">← 돌아가기</button>
   </div>
@@ -2511,6 +2519,7 @@
 
 <div class="phone" id="personalView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <h2 class="adm-h">관리자 검토</h2>
     <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button class="on">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button></div>
     <button class="reset-link" id="btnPersonalBack">← 돌아가기</button>
   </div>
@@ -2541,6 +2550,7 @@
 
 <div class="phone" id="absentView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <h2 class="adm-h">관리자 검토</h2>
     <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button class="on">불참</button></div>
     <button class="reset-link" id="btnAbsentBack">← 돌아가기</button>
   </div>
@@ -2559,6 +2569,7 @@
 
 <div class="phone" id="ttView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <h2 class="adm-h">관리자 검토</h2>
     <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button></div>
     <button class="reset-link" id="btnTtBack">← 돌아가기</button>
   </div>
@@ -2584,6 +2595,7 @@
 
 <div class="phone" id="scoreView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <h2 class="adm-h">관리자 검토</h2>
     <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button><button class="on">점수표</button></div>
     <button class="reset-link" id="btnScoreBack">← 돌아가기</button>
   </div>
@@ -2604,6 +2616,7 @@
 
 <div class="phone" id="eventView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <h2 class="adm-h">관리자 검토</h2>
     <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button class="on">행사</button><button data-go="absent">불참</button></div>
     <button class="reset-link" id="btnEventBack">← 돌아가기</button>
   </div>
@@ -2684,6 +2697,7 @@
 
 <div class="phone" id="equipView" style="display:none;">
   <div class="topbar" style="justify-content:space-between; padding-bottom:16px;">
+    <h2 class="adm-h">관리자 검토</h2>
     <div class="mt-tabs"><button data-go="admin">기획서 관리</button><button data-go="meeting">회의</button><button data-go="personal">개인콘텐츠</button><button data-go="event">행사</button><button data-go="absent">불참</button><button class="on">일정·장비</button></div>
     <h2 class="eq-ro-title">일정·장비 현황</h2>
     <button class="reset-link" id="btnEquipBack">← 돌아가기</button>

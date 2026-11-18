@@ -729,6 +729,8 @@
   .eqi-who{font-size:13px; color:var(--ink-soft); margin-top:2px;}
   .eqi-clash{font-size:13px; color:#646464; font-weight:700; margin-top:6px; word-break:keep-all;}
   .eqi-card.has-kit .eqi-body{cursor:pointer;}
+  .eqi-card.kit-open .eqi-date{align-self:flex-start; height:var(--dh, auto); box-sizing:border-box;}
+  .eqi-card.kit-open .ab-btn{align-self:flex-start; margin-top:calc((var(--dh, 44px) - 44px) / 2);}
   .eqi-dept{display:inline-block; font-size:11.5px; font-weight:700; line-height:18px; padding:0 7px; margin-right:6px; vertical-align:2px; border-radius:4px; background:#191919; color:#fff;}
   .eq-kind{display:flex; gap:6px; margin:10px 0 2px;}
   .eq-kind button{flex:1; min-height:44px; border:1.5px solid var(--line); border-radius:4px; background:#fff; font:inherit; font-size:14px; font-weight:700; color:var(--ink-soft); cursor:pointer;}
@@ -7690,6 +7692,13 @@ function eqOpenBulk(items){
   document.getElementById('eqLabel').disabled = true;
   document.getElementById('eqPlanNote').textContent = `${eqGroupTitle(items[0])} — ${items.map(it => '#' + it.label).join(', ')} 에 같은 기간·시간이 적용돼요.`;
   document.getElementById('eqDelete').textContent = dept ? '이 부서 대여 모두 삭제' : '팀 대여 모두 빼기';
+  if(dept){ // 다른 부서 대여는 장비를 더하거나 뺄 수 있게 체크 목록으로 (2026-11-18 담당자)
+    eqSetKind('dept', 'deptEdit', true);
+    const have = new Set(items.map(x => Number(x.label)));
+    document.querySelectorAll('#eqMulti input').forEach(x => { x.checked = have.has(Number(x.value)); });
+    document.getElementById('eqFormTitle').textContent = `다른 부서 대여 수정 · 장비 ${items.length}개`;
+    document.getElementById('eqPlanNote').textContent = '장비를 체크하면 더해지고, 체크를 풀면 빠져요. 기간·시간은 모든 장비에 같이 적용돼요.';
+  }
 }
 function eqConflicts(){
   const bad = new Set(), by = {};
@@ -8046,7 +8055,7 @@ function eqRenderCal(){
       <div class="eq-team-head"><div><b>${abEsc(title)}</b><span class="t">${sameTime ? esc(eqTimeText(f)) : '시간 제각각'}</span>${bad ? `<span class="eq-bad">겹침 ${bad}</span>` : ''}
         <small>${abEsc(f.who || '-')} · 장비 ${g.items.length}개</small></div><span class="eq-chev">▾</span></div>
       <div class="eq-team-body">${g.items.map(it => eqRowHTML(it, false, true)).join('')}
-        ${g.items.length > 1 ? `<button class="ab-btn go" data-bulk="${abEsc(g.key)}" style="width:100%; margin-top:10px;">팀 장비 ${g.items.length}개 기간 한 번에 수정</button>` : ''}</div>
+        ${eqIsDept(f) ? `<button class="ab-btn go" data-bulk="${abEsc(g.key)}" style="width:100%; margin-top:10px;">장비 더하기·빼기 · 기간 수정</button>` : g.items.length > 1 ? `<button class="ab-btn go" data-bulk="${abEsc(g.key)}" style="width:100%; margin-top:10px;">팀 장비 ${g.items.length}개 기간 한 번에 수정</button>` : ''}</div>
     </div>`;
   }).join('') : '<p style="font-size:12.5px;color:var(--ink-faint);margin-top:10px;">이 날 나가는 장비가 없어요.</p>');
   el.querySelectorAll('.eq-team-head').forEach(h => h.addEventListener('click', ()=>{
@@ -8095,13 +8104,13 @@ function eqRenderItem(){
         <div class="eqi-who">${dept ? (it.memo ? abEsc(it.memo) : '') : abEsc(it.who || '-') + (it.memo ? ' · ' + abEsc(it.memo) : '')}</div>
         ${kit.length ? `<div class="eqi-kit-btn">장비 ${kit.length}개 보기<span class="ch">▾</span></div>${kitHtml}` : ''}
         ${clash.length ? `<div class="eqi-clash">⚠ 시간이 겹쳐요: ${clash.map(o => abEsc(o.who || '-') + ' (' + abEsc(o.title || '직접 추가') + ')').join(', ')}</div>` : ''}</div>
-      <button class="ab-btn" ${dept && kit.length > 1 ? `data-eqg="${abEsc(eqGroupKey(it))}"` : `data-eq="${abEsc(it.id)}"`}>수정</button></div>`;
+      <button class="ab-btn" ${dept ? `data-eqg="${abEsc(eqGroupKey(it))}"` : `data-eq="${abEsc(it.id)}"`}>수정</button></div>`;
   };
   const el = document.getElementById('eqItemList');
   el.innerHTML = '<h3 class="eqi-h">다가오는 대여</h3>' + (up.length ? up.map(it => card(it, false)).join('') : '<p class="eqi-empty">예정된 대여가 없어요. 빌려도 돼요.</p>')
     + (past.length ? `<details class="eqi-past"><summary>지난 대여 ${past.length}건 (최근 30일)</summary>${past.map(it => card(it, true)).join('')}</details>` : '');
   el.querySelectorAll('.eqi-card.has-kit .eqi-body').forEach(b => {
-    const tog = () => { const on = b.parentElement.classList.toggle('kit-open'); b.setAttribute('aria-expanded', on ? 'true' : 'false'); };
+    const tog = () => { const dt = b.parentElement.querySelector('.eqi-date'); if(dt && !b.parentElement.classList.contains('kit-open')) b.parentElement.style.setProperty('--dh', dt.offsetHeight + 'px'); const on = b.parentElement.classList.toggle('kit-open'); b.setAttribute('aria-expanded', on ? 'true' : 'false'); };
     b.addEventListener('click', tog);
     b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } });
   });
@@ -8112,9 +8121,9 @@ function eqRenderItem(){
 let eqKind = 'ours';
 function eqSetKind(kind, isNew, dept){
   eqKind = kind;
-  document.getElementById('eqKind').style.display = isNew ? '' : 'none';
+  document.getElementById('eqKind').style.display = isNew === true ? '' : 'none';
   document.querySelectorAll('#eqKind button').forEach(b => b.classList.toggle('on', b.dataset.kind === kind));
-  const multi = isNew && kind === 'dept';
+  const multi = (isNew && kind === 'dept') || isNew === 'deptEdit';
   document.getElementById('eqOneWrap').style.display = multi ? 'none' : '';
   document.getElementById('eqMultiWrap').style.display = multi ? '' : 'none';
   const d = kind === 'dept' || dept;
@@ -8178,6 +8187,23 @@ async function eqSaveForm(){
     if(eqMode === 'cal'){ eqDay = start; eqMonth = start.slice(0, 7); }
     showToast(`다른 부서 대여 ${labels.length}개를 저장했어요 · 달력은 곧 바뀌어요`);
     bgSave('대여 저장', () => eqPost(body)).then(() => eqLoad());
+    return;
+  }
+  if(eqBulk && eqIsDept(eqBulk[0])){
+    const labels = [...document.querySelectorAll('#eqMulti input:checked')].map(x => Number(x.value));
+    if(!labels.length){ showAlert('장비를 하나 이상 골라 주세요. 모두 빼려면 「이 부서 대여 모두 삭제」를 눌러 주세요.'); return; }
+    if(!g('eqWho')){ showAlert('빌려 가는 부서 이름을 넣어 주세요.'); return; }
+    const ids = new Set(eqBulk.map(x => x.id)), prefix = String(eqBulk[0].id).split('_')[0];
+    const span = eqSpan({ start, end, from, to });
+    const clashes = labels.filter(l => eqItems.some(x => !ids.has(x.id) && Number(x.label) === l && (() => { const [b0, b1] = eqSpan(x); return span[0] < b1 && b0 < span[1]; })()));
+    if(clashes.length && !(await showConfirm(`${clashes.map(l => '#' + l).join(', ')} 장비가 다른 대여와 겹쳐요. 그래도 저장할까요?`))) return;
+    const keep = labels.map(l => ({ id: (eqBulk.find(x => Number(x.label) === l) || {}).id || prefix + '_' + l, planId: '', label: l, name: eqItemName(l).replace(/ #\d+$/, ''),
+      start, end, from, to, who: g('eqWho'), memo: g('eqMemo') }));
+    const drop = eqBulk.filter(x => !labels.includes(Number(x.label))).map(x => ({ id: x.id, planId: '', label: x.label, name: x.name || '' }));
+    document.getElementById('eqForm').style.display = 'none';
+    if(eqMode === 'cal'){ eqDay = start; eqMonth = start.slice(0, 7); }
+    showToast('대여를 저장했어요 · 달력은 곧 바뀌어요');
+    bgSave('대여 저장', async () => { await eqPost({ action:'equipSaveMany', items: keep }); if(drop.length) await eqPost({ action:'equipDeleteMany', items: drop }); }).then(() => eqLoad());
     return;
   }
   if(eqBulk){

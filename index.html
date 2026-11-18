@@ -728,6 +728,32 @@
   .eqi-title{font-size:15px; font-weight:700; color:var(--ink); word-break:keep-all; overflow-wrap:anywhere; line-height:1.4;}
   .eqi-who{font-size:13px; color:var(--ink-soft); margin-top:2px;}
   .eqi-clash{font-size:13px; color:#646464; font-weight:700; margin-top:6px; word-break:keep-all;}
+  .eqi-card.has-kit .eqi-body{cursor:pointer;}
+  .eqi-dept{display:inline-block; font-size:11.5px; font-weight:700; line-height:18px; padding:0 7px; margin-right:6px; vertical-align:2px; border-radius:4px; background:#191919; color:#fff;}
+  .eq-kind{display:flex; gap:6px; margin:10px 0 2px;}
+  .eq-kind button{flex:1; min-height:44px; border:1.5px solid var(--line); border-radius:4px; background:#fff; font:inherit; font-size:14px; font-weight:700; color:var(--ink-soft); cursor:pointer;}
+  .eq-kind button.on{border-color:var(--ink); background:var(--ink); color:#fff;}
+  .eq-multi{max-height:260px; overflow:auto; border:1.5px solid var(--line); border-radius:4px; padding:4px 10px 8px;}
+  .eq-multi-cat{font-size:12px; font-weight:700; color:var(--ink-faint); margin:8px 0 2px;}
+  .eq-multi-row{display:flex; flex-wrap:wrap; gap:4px 12px;}
+  .eq-chk{display:inline-flex !important; align-items:center; gap:6px; min-height:36px; margin:0 !important; font-size:13.5px; font-weight:500; color:var(--ink); cursor:pointer;}
+  .eq-chk input{width:18px; height:18px; margin:0; accent-color:var(--ink);}
+  :root[data-theme="dark"] .eqi-dept{background:#EEEEEE; color:#181818}
+  :root[data-theme="dark"] .eq-kind button{background:#1E1E1E; border-color:#393939; color:var(--ink-soft)}
+  :root[data-theme="dark"] .eq-kind button.on{background:#EEEEEE; border-color:#EEEEEE; color:#181818}
+  .eqi-kit-btn{display:inline-flex; align-items:center; gap:4px; margin-top:6px; font-size:13px; font-weight:700; color:var(--ink);}
+  .eqi-kit-btn .ch{display:inline-block; transition:transform .2s;}
+  .eqi-card.kit-open .eqi-kit-btn .ch{transform:rotate(180deg);}
+  .eqi-kit{display:none; margin-top:8px;}
+  .eqi-card.kit-open .eqi-kit{display:block;}
+  .eqi-kit ul{list-style:none; margin:0; padding:0;}
+  .eqi-kit li{display:flex; align-items:center; gap:8px; padding:7px 0; font-size:13.5px; color:var(--ink);}
+  .eqi-kit li + li{border-top:1px solid #EEEEEE;}
+  .eqi-kit .c{flex:none; min-width:44px; font-size:12px; color:var(--ink-faint);}
+  .eqi-kit .n{flex:1; min-width:0; font-weight:700;}
+  .eqi-kit .m{flex:none; font-size:11.5px; font-weight:700; padding:1px 7px; border-radius:4px; background:#F4F4F4; color:#585858;}
+  :root[data-theme="dark"] .eqi-kit li + li{border-top-color:#2C2C2C}
+  :root[data-theme="dark"] .eqi-kit .m{background:#2C2C2C; color:#C3C3C3}
   .eqi-card .ab-btn{align-self:center; flex:none; min-height:44px;}
   .eqi-past summary{font-size:14px; font-weight:700; color:var(--ink-soft); cursor:pointer; padding:12px 0; min-height:44px; box-sizing:border-box; list-style:none;}
   .eqi-past summary::-webkit-details-marker{display:none;}
@@ -735,7 +761,7 @@
   .eqi-empty{font-size:14px; color:var(--ink-soft); background:var(--page-bg); border-radius:12px; padding:16px; text-align:center; margin-top:8px;}
   #equipView .eq-ro-title{display:none; font-size:17px; font-weight:700; margin:0;}
   #equipView.ro .eq-ro-title{display:block;}
-  #equipView.ro .mt-tabs, #equipView.ro #eqNew, #equipView.ro #eqForm, #equipView.ro [data-eq], #equipView.ro [data-bulk]{display:none !important;}
+  #equipView.ro .mt-tabs, #equipView.ro #eqNew, #equipView.ro #eqForm, #equipView.ro [data-eq], #equipView.ro [data-eqg], #equipView.ro [data-bulk]{display:none !important;}
   .mt-tabs{overflow-x:auto; scrollbar-width:none;} .mt-tabs::-webkit-scrollbar{display:none;}
   .mt-tabs button{flex:none; padding:7px 10px; font-size:13px;}
   @media (max-width:400px){ #btnHome{line-height:1.25;} .admin-topbar button{padding:6px 8px; font-size:12px;} .mt-tabs button{padding:7px 8px; font-size:12.5px;} }
@@ -2751,7 +2777,9 @@
     <p id="eqInfo" style="font-size:12px; color:var(--ink-faint); margin:4px 0;"></p>
     <div class="ev-form" id="eqForm" style="display:none;">
       <b id="eqFormTitle" style="font-size:14px;">대여 추가</b>
-      <label>장비</label><select id="eqLabel"></select>
+      <div class="eq-kind" id="eqKind"><button type="button" class="on" data-kind="ours">우리 촬영</button><button type="button" data-kind="dept">다른 부서</button></div>
+      <div id="eqOneWrap"><label>장비</label><select id="eqLabel"></select></div>
+      <div id="eqMultiWrap" style="display:none;"><label>빌려 가는 장비 <span style="color:var(--ink-faint);">(여러 개 고르기)</span></label><div class="eq-multi" id="eqMulti"></div></div>
       <div class="grid2">
         <div><label>시작일</label><span class="date-box"><input type="date" id="eqStart"></span></div>
         <div><label>종료일</label><span class="date-box"><input type="date" id="eqEnd"></span></div>
@@ -2760,7 +2788,7 @@
         <div><label>시작 시간 <span style="color:var(--ink-faint);">(비우면 종일)</span></label><input type="time" id="eqFrom" step="1800"></div>
         <div><label>종료 시간</label><input type="time" id="eqTo" step="1800"></div>
       </div>
-      <label>대여자</label><input type="text" id="eqWho" placeholder="예) 홍길동">
+      <label id="eqWhoLabel">대여자</label><input type="text" id="eqWho" placeholder="예) 홍길동">
       <label>메모</label><input type="text" id="eqMemo" placeholder="예) 반납 하루 연장">
       <p id="eqPlanNote" style="font-size:12px; color:var(--ink-soft); margin:8px 0 0;"></p>
       <button class="mt-save" id="eqSave">저장</button>
@@ -7650,14 +7678,18 @@ document.getElementById('btnEventBack').addEventListener('click', ()=>{ showView
 let eqItems = [], eqMonth = '', eqDay = '', eqEditing = null, eqMode = 'cal', eqBad = new Set();
 function eqSpan(it){ return [it.start + ' ' + (it.from || '00:00'), it.end + ' ' + (it.to || '23:59')]; }
 let eqOpenGroups = new Set(), eqBulk = null;
-function eqGroupKey(it){ return it.planId ? 'P:' + it.planId : 'M:' + it.id; }
+// 다른 부서 대여(2026-11-18 담당자 「우리 촬영과 관계없이 다른 부서 대여가 들어오는 경우」): id를 D<시각>_<장비번호>로 저장해 한 건으로 묶음. 부서 이름은 대여자 칸
+function eqIsDept(it){ return /^D\d+_/.test(String(it.id || '')); }
+function eqGroupKey(it){ return it.planId ? 'P:' + it.planId : eqIsDept(it) ? 'D:' + String(it.id).split('_')[0] : 'M:' + it.id; }
+function eqGroupTitle(it){ return it.planId ? (it.title || it.planId) : it.mask ? '홍보실 사용' : eqIsDept(it) ? '다른 부서 · ' + (it.who || '-') : '직접 추가한 대여'; }
 function eqOpenBulk(items){
   eqOpen(items[0]);
   eqBulk = items;
-  document.getElementById('eqFormTitle').textContent = `팀 장비 ${items.length}개 기간 수정`;
+  const dept = eqIsDept(items[0]);
+  document.getElementById('eqFormTitle').textContent = `${dept ? '같이 빌린' : '팀'} 장비 ${items.length}개 기간 수정`;
   document.getElementById('eqLabel').disabled = true;
-  document.getElementById('eqPlanNote').textContent = `${items[0].title || '직접 추가'} — ${items.map(it => '#' + it.label).join(', ')} 에 같은 기간·시간이 적용돼요.`;
-  document.getElementById('eqDelete').textContent = '팀 대여 모두 빼기';
+  document.getElementById('eqPlanNote').textContent = `${eqGroupTitle(items[0])} — ${items.map(it => '#' + it.label).join(', ')} 에 같은 기간·시간이 적용돼요.`;
+  document.getElementById('eqDelete').textContent = dept ? '이 부서 대여 모두 삭제' : '팀 대여 모두 빼기';
 }
 function eqConflicts(){
   const bad = new Set(), by = {};
@@ -7688,7 +7720,9 @@ async function eqLoad(){
     const [res, rows, evr, tkr, acr] = await Promise.all([attendJsonp({ action:'equipList' }), sheetGetAll().catch(()=>[]),
       attendJsonp({ action:'eventList' }).then(ok).catch(()=>({})), attendJsonp({ action:'taskList' }).then(ok).catch(()=>({})), acadLoad()]);
     if(res && res.error) throw new Error(res.error);
-    eqItems = res.items || [];
+    // 다른 부서 대여는 관리자 탭에서만 부서 이름이 보임. 홍보대사 화면엔 「홍보실 사용」으로만 (2026-11-18 담당자 「홍보실에서 사용하는 걸로 보여주면 될 거 같음」)
+    const eqRo = document.getElementById('equipView').classList.contains('ro');
+    eqItems = (res.items || []).map(it => (eqRo && eqIsDept(it)) ? Object.assign({}, it, { who: '홍보실', memo: '', mask: true }) : it);
     eqBuildEvents(rows || []);
     eqAddDuty(evr.events || [], tkr.tasks || []);
     eqAddAcad(acr);
@@ -8007,7 +8041,7 @@ function eqRenderCal(){
   el.innerHTML = evHtml + (groups.length ? groups.map(g => {
     const f = g.items[0], bad = g.items.filter(it => eqBad.has(it.id)).length;
     const sameTime = g.items.every(it => eqTimeText(it) === eqTimeText(f));
-    const title = f.planId ? (f.title || f.planId) : '직접 추가한 대여';
+    const title = eqGroupTitle(f);
     return `<div class="eq-team ${bad ? 'bad' : ''} ${eqOpenGroups.has(g.key) ? 'open' : ''}" data-g="${abEsc(g.key)}">
       <div class="eq-team-head"><div><b>${abEsc(title)}</b><span class="t">${sameTime ? esc(eqTimeText(f)) : '시간 제각각'}</span>${bad ? `<span class="eq-bad">겹침 ${bad}</span>` : ''}
         <small>${abEsc(f.who || '-')} · 장비 ${g.items.length}개</small></div><span class="eq-chev">▾</span></div>
@@ -8051,20 +8085,56 @@ function eqRenderItem(){
     const date = multi ? `<div class="eqi-date multi"><b>${md(it.start)}</b><span>~ ${md(it.end)}</span></div>` : `<div class="eqi-date"><b>${md(it.start)}</b><span>${dow(it.start)}요일</span></div>`;
     const time = (it.from || it.to) ? (it.from || '00:00') + ' ~ ' + (it.to || '24:00') : '종일';
     const tag = isPast ? '' : (it.start <= today ? (multi ? '<span class="eqi-tag">대여 중</span>' : '<span class="eqi-tag">오늘</span>') : it.start === tmr ? '<span class="eqi-tag">내일</span>' : '');
-    return `<div class="eqi-card${clash.length ? ' bad' : ''}${isPast ? ' past' : ''}">${date}
-      <div class="eqi-body"><div class="eqi-top"><span class="eqi-time">${esc(time)}</span>${tag}</div>
-        <div class="eqi-title">${abEsc(it.title || '직접 추가')}</div>
-        <div class="eqi-who">${abEsc(it.who || '-')}${it.memo ? ' · ' + abEsc(it.memo) : ''}</div>
+    // 팀콘을 누르면 그 기획이 함께 빌리는 장비 전체를 펼침 (2026-11-18 담당자 「팀콘 누르면 무슨 장비 대여하는지 나오게」)
+    const dept = eqIsDept(it);
+    const kit = (it.planId || dept) ? eqItems.filter(o => eqGroupKey(o) === eqGroupKey(it)).sort((a, b) => Number(a.label) - Number(b.label)) : [];
+    const kitHtml = kit.length ? `<div class="eqi-kit"><ul>${kit.map(o => { const e = EQUIPMENT_LIST.find(x => x.label === Number(o.label)) || {}; return `<li${o.id === it.id ? ' class="me"' : ''}><span class="c">${esc(e.cat || '장비')}</span><span class="n">${esc(e.name || '')} #${esc(String(o.label))}</span>${o.id === it.id ? '<span class="m">이 장비</span>' : ''}</li>`; }).join('')}</ul></div>` : '';
+    return `<div class="eqi-card${clash.length ? ' bad' : ''}${isPast ? ' past' : ''}${kit.length ? ' has-kit' : ''}">${date}
+      <div class="eqi-body"${kit.length ? ' role="button" tabindex="0" aria-expanded="false"' : ''}><div class="eqi-top"><span class="eqi-time">${esc(time)}</span>${tag}</div>
+        <div class="eqi-title">${it.mask ? '홍보실 사용' : dept ? `<span class="eqi-dept">다른 부서</span>${abEsc(it.who || '-')}` : abEsc(it.title || '직접 추가')}</div>
+        <div class="eqi-who">${dept ? (it.memo ? abEsc(it.memo) : '') : abEsc(it.who || '-') + (it.memo ? ' · ' + abEsc(it.memo) : '')}</div>
+        ${kit.length ? `<div class="eqi-kit-btn">장비 ${kit.length}개 보기<span class="ch">▾</span></div>${kitHtml}` : ''}
         ${clash.length ? `<div class="eqi-clash">⚠ 시간이 겹쳐요: ${clash.map(o => abEsc(o.who || '-') + ' (' + abEsc(o.title || '직접 추가') + ')').join(', ')}</div>` : ''}</div>
-      <button class="ab-btn" data-eq="${abEsc(it.id)}">수정</button></div>`;
+      <button class="ab-btn" ${dept && kit.length > 1 ? `data-eqg="${abEsc(eqGroupKey(it))}"` : `data-eq="${abEsc(it.id)}"`}>수정</button></div>`;
   };
   const el = document.getElementById('eqItemList');
   el.innerHTML = '<h3 class="eqi-h">다가오는 대여</h3>' + (up.length ? up.map(it => card(it, false)).join('') : '<p class="eqi-empty">예정된 대여가 없어요. 빌려도 돼요.</p>')
     + (past.length ? `<details class="eqi-past"><summary>지난 대여 ${past.length}건 (최근 30일)</summary>${past.map(it => card(it, true)).join('')}</details>` : '');
+  el.querySelectorAll('.eqi-card.has-kit .eqi-body').forEach(b => {
+    const tog = () => { const on = b.parentElement.classList.toggle('kit-open'); b.setAttribute('aria-expanded', on ? 'true' : 'false'); };
+    b.addEventListener('click', tog);
+    b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } });
+  });
+  // 다른 부서 대여는 수정하면 같이 빌린 장비 전체 기간을 한 번에 고침
+  el.querySelectorAll('[data-eqg]').forEach(b => b.addEventListener('click', () => eqOpenBulk(eqItems.filter(o => eqGroupKey(o) === b.dataset.eqg))));
   eqBindRows(el);
 }
+let eqKind = 'ours';
+function eqSetKind(kind, isNew, dept){
+  eqKind = kind;
+  document.getElementById('eqKind').style.display = isNew ? '' : 'none';
+  document.querySelectorAll('#eqKind button').forEach(b => b.classList.toggle('on', b.dataset.kind === kind));
+  const multi = isNew && kind === 'dept';
+  document.getElementById('eqOneWrap').style.display = multi ? 'none' : '';
+  document.getElementById('eqMultiWrap').style.display = multi ? '' : 'none';
+  const d = kind === 'dept' || dept;
+  document.getElementById('eqWhoLabel').textContent = d ? '부서' : '대여자';
+  document.getElementById('eqWho').placeholder = d ? '예) 학생지원처' : '예) 홍길동';
+  document.getElementById('eqMemo').placeholder = d ? '예) 담당 선생님, 행사 이름' : '예) 반납 하루 연장';
+  if(multi){
+    const box = document.getElementById('eqMulti');
+    if(!box.dataset.built){
+      box.dataset.built = '1';
+      const cats = [...new Set(EQUIPMENT_LIST.map(e => e.cat))];
+      box.innerHTML = cats.map(c => `<div class="eq-multi-cat">${esc(c)}</div><div class="eq-multi-row">${EQUIPMENT_LIST.filter(e => e.cat === c).map(e => `<label class="eq-chk"><input type="checkbox" value="${e.label}"><span>${esc(e.name)} #${e.label}</span></label>`).join('')}</div>`).join('');
+    }
+    box.querySelectorAll('input').forEach(x => { x.checked = false; });
+  }
+}
+document.querySelectorAll('#eqKind button').forEach(b => b.addEventListener('click', () => eqSetKind(b.dataset.kind, true)));
 function eqOpen(it){
   eqEditing = it || null; eqBulk = null;
+  eqSetKind('ours', !it, !!(it && eqIsDept(it)));
   const sel = document.getElementById('eqLabel');
   if(!sel.options.length) sel.innerHTML = EQUIPMENT_LIST.map(e => `<option value="${e.label}">[${e.cat}] ${e.name} #${e.label}</option>`).join('');
   const day = it ? it.start : (eqMode === 'cal' ? eqDay : mtYmd(new Date()));
@@ -8094,6 +8164,22 @@ async function eqSaveForm(){
   if((from && !to) || (!from && to)){ showAlert('시작·종료 시간을 둘 다 넣거나 둘 다 비워 주세요 (비우면 종일).'); return; }
   if(start === end && from && to && to <= from){ showAlert('종료 시간이 시작 시간보다 늦어야 해요.'); return; }
   const it = eqEditing;
+  if(!it && !eqBulk && eqKind === 'dept'){
+    const labels = [...document.querySelectorAll('#eqMulti input:checked')].map(x => Number(x.value));
+    if(!labels.length){ showAlert('빌려 가는 장비를 하나 이상 골라 주세요.'); return; }
+    if(!g('eqWho')){ showAlert('빌려 가는 부서 이름을 넣어 주세요.'); return; }
+    const span = eqSpan({ start, end, from, to });
+    const clashes = labels.filter(l => eqItems.some(x => Number(x.label) === l && (() => { const [b0, b1] = eqSpan(x); return span[0] < b1 && b0 < span[1]; })()));
+    if(clashes.length && !(await showConfirm(`${clashes.map(l => '#' + l).join(', ')} 장비가 다른 대여와 겹쳐요. 그래도 저장할까요?`))) return;
+    const ts = Date.now();
+    const body = { action:'equipSaveMany', items: labels.map(l => ({ id: 'D' + ts + '_' + l, planId: '', label: l, name: eqItemName(l).replace(/ #\d+$/, ''),
+      start, end, from, to, who: g('eqWho'), memo: g('eqMemo') })) };
+    document.getElementById('eqForm').style.display = 'none';
+    if(eqMode === 'cal'){ eqDay = start; eqMonth = start.slice(0, 7); }
+    showToast(`다른 부서 대여 ${labels.length}개를 저장했어요 · 달력은 곧 바뀌어요`);
+    bgSave('대여 저장', () => eqPost(body)).then(() => eqLoad());
+    return;
+  }
   if(eqBulk){
     const ids = new Set(eqBulk.map(x => x.id));
     const clashes = eqBulk.filter(b => eqItems.some(x => !ids.has(x.id) && Number(x.label) === Number(b.label) && (()=>{ const [a0, a1] = eqSpan({ start, end, from, to }), [b0, b1] = eqSpan(x); return a0 < b1 && b0 < a1; })()));
@@ -8119,7 +8205,7 @@ async function eqSaveForm(){
 async function eqRemove(){
   const it = eqEditing; if(!it) return;
   if(eqBulk){
-    if(!(await showConfirm(`이 팀의 장비 ${eqBulk.length}개 대여를 달력에서 모두 뺄까요? 기획서 내용은 그대로예요.`))) return;
+    if(!(await showConfirm(eqIsDept(eqBulk[0]) ? `${eqBulk[0].who || '이 부서'} 장비 ${eqBulk.length}개 대여를 모두 삭제할까요?` : `이 팀의 장비 ${eqBulk.length}개 대여를 달력에서 모두 뺄까요? 기획서 내용은 그대로예요.`))) return;
     const body = { action:'equipDeleteMany', items: eqBulk.map(x => ({ id: x.id, planId: x.planId || '', label: x.label, name: x.name || '' })) };
     const ids = new Set(eqBulk.map(x => x.id));
     eqItems = eqItems.filter(x => !ids.has(x.id)); document.getElementById('eqForm').style.display = 'none'; eqRender();

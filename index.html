@@ -2136,7 +2136,7 @@
 /* DARK:END */
   /* 2026-11-18 담당자 「모바일에서 상단 메뉴가 너무 오밀조밀」(앞서 「관리자 검토 아래줄로 내려가는 것도 잡아야지」): 관리자 계정 휴대폰 폭은 두 줄로 나눔.
      윗줄 = 로고 + 아이콘(테스트·밝기), 아랫줄 = 글자 메뉴를 폭 전체에 고르게. 저절로 넘치는 줄바꿈이 아니라 정해 둔 두 줄 */
-  @media (max-width:440px){
+  @media (max-width:767px){
     .admin-topbar:has(#btnAdminToggle:not([style*="none"])){flex-wrap:wrap; row-gap:6px; padding:8px 16px 4px}
     .admin-topbar:has(#btnAdminToggle:not([style*="none"])) > div{display:contents !important}
     .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTestMode{margin-left:auto}
@@ -7686,6 +7686,7 @@ async function eqLoad(){
     eqBuildEvents(rows || []);
     eqAddDuty(evr.events || [], tkr.tasks || []);
     eqAddAcad(acr);
+    eqAddCalDuty(ACAD_DUTY);
     document.getElementById('eqInfo').textContent = '';
   }catch(e){ document.getElementById('eqInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류'); }
   if(!eqMonth) eqMonth = mtYmd(new Date()).slice(0, 7);
@@ -7714,16 +7715,22 @@ function eqAddDuty(events, tasks){
     eqSpans.push({ duty: t.kind || '요청사항', title: t.title + ' 마감', start: t.date, end: t.date, info: `대상 ${n}` }); });
   eqSpans.sort((a, b) => a.start < b.start ? -1 : a.start > b.start ? 1 : (a.end < b.end ? 1 : -1));
 }
+// 의전/행사 구글 캘린더에 직접 넣은 일정(예: [의전] 영화관 입시설명회): 행사 막대와 같은 색, 설명 첫 줄·장소만
+function eqAddCalDuty(items){
+  (items || []).forEach(d => { if(d.start) eqSpans.push({ duty: d.kind || '의전', title: d.title || '(제목 없음)', start: d.start, end: d.end || d.start,
+    info: [d.time, d.note, d.place].filter(Boolean).join(' · ') || '의전/행사 캘린더 일정' }); });
+  eqSpans.sort((a, b) => a.start < b.start ? -1 : a.start > b.start ? 1 : (a.end < b.end ? 1 : -1));
+}
 // 학사 일정(제작 캘린더 「[학사]」, 읽기 전용): 회색 막대. 한 주에 줄이 넘치면 학사부터 +n으로 접힘
 function eqAddAcad(items){
   (items || []).forEach(a => { if(a.start) eqSpans.push({ acad: true, title: a.title, start: a.start, end: a.end || a.start, info: '학사 일정 · 구글 캘린더에서 관리' }); });
   eqSpans.sort((a, b) => a.start < b.start ? -1 : a.start > b.start ? 1 : (a.end < b.end ? 1 : -1));
 }
 // 학사 일정 목록 (서버 GET academic, 1시간 캐시). 실패하면 빈 목록 — 학사 일정이 없어도 화면은 그대로
-let ACAD = null;
+let ACAD = null, ACAD_DUTY = [];   // ACAD_DUTY: 의전/행사 캘린더에 직접 넣은 일정(같은 응답의 duty, 2026-11-18)
 function acadLoad(){
   if(ACAD) return Promise.resolve(ACAD);
-  return attendJsonp({ action:'academic' }).then(r => (ACAD = (r && !r.error && Array.isArray(r.items)) ? r.items : null) || []).catch(() => []);
+  return attendJsonp({ action:'academic' }).then(r => { if(r && Array.isArray(r.duty)) ACAD_DUTY = r.duty; return (ACAD = (r && !r.error && Array.isArray(r.items)) ? r.items : null) || []; }).catch(() => []);
 }
 // 기획서 촬영일~제출일이 기말·중간시험·수강신청과 겹치면 안내만 (막지 않음)
 const ACAD_HINT = /시험|수강신청/;

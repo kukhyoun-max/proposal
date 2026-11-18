@@ -2153,7 +2153,9 @@
   #jjhCupN{transform-box:fill-box; transform-origin:center}
   .jjh-best.pop .cup{animation:cupPop .75s ease-out both}
   .jjh-best.pop #jjhCupN{animation:cupNum .9s ease-out both}
-  @media (prefers-reduced-motion:reduce){ .jjh-best.pop .cup, .jjh-best.pop #jjhCupN{animation:none} }
+  /* 기기에서 「애니메이션 효과」를 끈 사람: 튀는 움직임 대신 짧게 나타나기만 */
+  @keyframes cupFade{from{opacity:0} to{opacity:1}}
+  @media (prefers-reduced-motion:reduce){ .jjh-best.pop .cup{animation:cupFade .4s ease-out both} .jjh-best.pop #jjhCupN{animation:none} }
 </style>
 <style>/* make_dark.cjs가 읽지 않는 둘째 style: 어두운 화면 직접 보정(2026-11-18) */
 /* 로딩창: 어두운 화면은 어두운 회색 막 + 흰 로고 */
@@ -8626,7 +8628,9 @@ function jjRosterApply(r){
   let cupPopped = false;
   function cupPopOnce(box){
     if (cupPopped) return; cupPopped = true;
-    const go = () => { box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop'); };
+    // 불러오는 회색 막(jjLoading)이 덮고 있으면 걷힐 때까지 기다렸다가(덮인 채로 터져서 못 보는 일 막기)
+    const covered = () => { const l = document.getElementById('jjLoading'); return document.hidden || (l && l.classList.contains('on')); };
+    const go = () => { if (covered()) return setTimeout(go, 200); box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop'); };
     if (!('IntersectionObserver' in window)) return go();
     const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)){ io.disconnect(); go(); } }, { threshold:.6 });
     io.observe(box);

@@ -1310,12 +1310,23 @@
   .hong-spin{width:56px; height:56px; animation:hongSpin 1.6s linear infinite}
   @keyframes hongSpin{to{transform:rotate(360deg)}}
   @media (prefers-reduced-motion: reduce){ .hong-spin{animation-duration:4s} }
-/* 흑백 틀 다크 보정(2026-11-18, make_dark 밖이라 직접 고침): 일정 종류 점·칩, 일정 아이콘 */
-:root[data-theme="dark"] .jjh-chips button[style]::before{background:#CDCDCD}
-:root[data-theme="dark"] .jjh-chips button.on[style]{background:#EEEEEE;color:#181818}
-:root[data-theme="dark"] .jjh-chips button.on[style]::before{background:#181818}
-:root[data-theme="dark"] .jjh-row .ico{background:#2E2E2E !important;color:#EEEEEE !important}
-:root[data-theme="dark"] .jjh-row{--cc:#CDCDCD !important}
+  /* ───── 29CM 참고 (2026-11-18 담당자 「https://www.29cm.co.kr 디자인 참고」): 흰 바탕, 상자 대신 여백·가는 선, 굵은 큰 제목, 모서리 4px, 회색 작은 태그 ───── */
+  body, .phone{background:#fff}
+  .admin-topbar{border-bottom:1px solid #EEEEEE}
+  .admin-topbar button{border:0; background:none; border-radius:4px; font-size:14px; font-weight:700; padding:6px 8px}
+  .jjh-card{background:#fff; border:0; border-top:1px solid #EEEEEE; border-radius:0; margin:0; padding:22px 0}
+  #jjhHome > .jjh-card:first-child, #jjhHome > .ld-banner + .jjh-card, #jjhHome > .sv-card + .jjh-card{border-top:0}
+  .jjh-sc h3, .jjh-plan h2.heading, .overview-title{font-size:20px; font-weight:800; color:var(--ink); letter-spacing:-.3px; margin:0 0 12px}
+  .jjh-best .nm{font-size:20px; font-weight:800}
+  .jjh-chips button{border-radius:4px; min-height:36px; background:#F4F4F4; color:#333; font-weight:500}
+  .jjh-names button{border-radius:4px; font-weight:500}
+  .dl-main{border-radius:4px}
+  .cta, .submit-main, .save-edit-btn, .mt-save, .tt-go, .sv-save, .evm-ok, .mc-open{border-radius:4px}
+  .ld-banner{border-radius:4px}
+  .pick, .sub-btns button, .modal-ok{border-radius:4px}
+  input[type="text"], input:not([type]), textarea, select{border-radius:4px}
+  .overview-wrap{border-top:1px solid #EEEEEE; padding-top:22px}
+  .jjh-card.jjh-best{border-top:0; padding-top:12px}
 /* DARK:START make_dark.cjs가 만듦, 직접 고치지 않음 */
 :root[data-theme="dark"]{--purple:#EEEEEE;--purple-dark:#FFFFFF;--purple-soft:#282828;--purple-line:#A0A0A0;--gold:#CECECE;--gold-dark:#BFBFBF;--ink:#EEEEEE;--ink-soft:#B3B3B3;--ink-faint:#9F9F9F;--line:#323232;--line-input:#696969;--page-bg:#141414;--surface:#1E1E1E;color-scheme:dark;}
 :root[data-theme="dark"] body{background:var(--page-bg);color:var(--ink)}
@@ -2030,16 +2041,27 @@
 :root[data-theme="dark"] .jjh-names button.on{background:var(--point);border-color:var(--point);color:#000}
 :root[data-theme="dark"] .jjh-names button.more{border:1px dashed var(--ink-soft)}
 :root[data-theme="dark"] .hong-wait{color:var(--ink-soft)}
-:root[data-theme="dark"][data-theme="dark"] .jjh-chips button[style]::before{background:#2C2C2C}
-:root[data-theme="dark"][data-theme="dark"] .jjh-chips button.on[style]{background:#2C2C2C;color:#EEEEEE}
-:root[data-theme="dark"][data-theme="dark"] .jjh-chips button.on[style]::before{background:#2A2A2A}
-:root[data-theme="dark"][data-theme="dark"] .jjh-row .ico{background:#2A2A2A !important;color:#EEEEEE !important}
+:root[data-theme="dark"] body,:root[data-theme="dark"] .phone{background:#1E1E1E}
+:root[data-theme="dark"] .admin-topbar{border-bottom:1px solid #393939}
+:root[data-theme="dark"] .admin-topbar button{border:0;background:none}
+:root[data-theme="dark"] .jjh-card{background:#1E1E1E;border:0;border-top:1px solid #393939}
+:root[data-theme="dark"] #jjhHome > .jjh-card:first-child,:root[data-theme="dark"] #jjhHome > .ld-banner + .jjh-card,:root[data-theme="dark"] #jjhHome > .sv-card + .jjh-card{border-top:0}
+:root[data-theme="dark"] .jjh-sc h3,:root[data-theme="dark"] .jjh-plan h2.heading,:root[data-theme="dark"] .overview-title{color:var(--ink)}
+:root[data-theme="dark"] .jjh-chips button{background:#242424;color:#EEEEEE}
+:root[data-theme="dark"] .overview-wrap{border-top:1px solid #393939}
+:root[data-theme="dark"] .jjh-card.jjh-best{border-top:0}
+:root[data-theme="dark"] [style*="background:#CDCDCD" i]{background:#2C2C2C !important}
+:root[data-theme="dark"] [style*="background: #CDCDCD" i]{background:#2C2C2C !important}
+:root[data-theme="dark"] [style*="background:#EEEEEE" i]{background:#2C2C2C !important}
+:root[data-theme="dark"] [style*="background: #EEEEEE" i]{background:#2C2C2C !important}
+:root[data-theme="dark"] [style*="background:#181818" i]{background:#2A2A2A !important}
+:root[data-theme="dark"] [style*="background: #181818" i]{background:#2A2A2A !important}
+:root[data-theme="dark"] [style*="background:#2E2E2E !important" i]{background:#2A2A2A !important !important}
+:root[data-theme="dark"] [style*="background: #2E2E2E !important" i]{background:#2A2A2A !important !important}
 :root[data-theme="dark"] [style*="background:#F5F5F5" i]{background:#242424 !important}
 :root[data-theme="dark"] [style*="background: #F5F5F5" i]{background:#242424 !important}
 :root[data-theme="dark"] [style*="background:#fff" i]{background:#1E1E1E !important}
 :root[data-theme="dark"] [style*="background: #fff" i]{background:#1E1E1E !important}
-:root[data-theme="dark"] [style*="background:#181818" i]{background:#2A2A2A !important}
-:root[data-theme="dark"] [style*="background: #181818" i]{background:#2A2A2A !important}
 :root[data-theme="dark"] [style*="background:#C7C7C7" i]{background:#2C2C2C !important}
 :root[data-theme="dark"] [style*="background: #C7C7C7" i]{background:#2C2C2C !important}
 :root[data-theme="dark"] [style*="background:#CBCBCB" i]{background:#2C2C2C !important}
@@ -2048,16 +2070,16 @@
 :root[data-theme="dark"] [style*="border-color: #D2D2D2" i]{border-color:#393939 !important}
 :root[data-theme="dark"] [style*="border:1px solid #DADADA" i]{border:1px solid #393939 !important}
 :root[data-theme="dark"] [style*="border: 1px solid #DADADA" i]{border:1px solid #393939 !important}
-:root[data-theme="dark"] [style*="background:#EEEEEE" i]{background:#2C2C2C !important}
-:root[data-theme="dark"] [style*="background: #EEEEEE" i]{background:#2C2C2C !important}
 :root[data-theme="dark"] [style*="background:#F4F4F4" i]{background:#242424 !important}
 :root[data-theme="dark"] [style*="background: #F4F4F4" i]{background:#242424 !important}
+:root[data-theme="dark"] [style^="color:#000 !important" i],:root[data-theme="dark"] [style*=";color:#000 !important" i],:root[data-theme="dark"] [style*="; color:#000 !important" i]{color:#EEEEEE !important !important}
+:root[data-theme="dark"] [style^="color: #000 !important" i],:root[data-theme="dark"] [style*=";color: #000 !important" i],:root[data-theme="dark"] [style*="; color: #000 !important" i]{color:#EEEEEE !important !important}
+:root[data-theme="dark"] [style^="color:#181818" i],:root[data-theme="dark"] [style*=";color:#181818" i],:root[data-theme="dark"] [style*="; color:#181818" i]{color:#EEEEEE !important}
+:root[data-theme="dark"] [style^="color: #181818" i],:root[data-theme="dark"] [style*=";color: #181818" i],:root[data-theme="dark"] [style*="; color: #181818" i]{color:#EEEEEE !important}
 :root[data-theme="dark"] [style^="color:#585858" i],:root[data-theme="dark"] [style*=";color:#585858" i],:root[data-theme="dark"] [style*="; color:#585858" i]{color:#C3C3C3 !important}
 :root[data-theme="dark"] [style^="color: #585858" i],:root[data-theme="dark"] [style*=";color: #585858" i],:root[data-theme="dark"] [style*="; color: #585858" i]{color:#C3C3C3 !important}
 :root[data-theme="dark"] [style^="color:#646464" i],:root[data-theme="dark"] [style*=";color:#646464" i],:root[data-theme="dark"] [style*="; color:#646464" i]{color:#C3C3C3 !important}
 :root[data-theme="dark"] [style^="color: #646464" i],:root[data-theme="dark"] [style*=";color: #646464" i],:root[data-theme="dark"] [style*="; color: #646464" i]{color:#C3C3C3 !important}
-:root[data-theme="dark"] [style^="color:#181818" i],:root[data-theme="dark"] [style*=";color:#181818" i],:root[data-theme="dark"] [style*="; color:#181818" i]{color:#EEEEEE !important}
-:root[data-theme="dark"] [style^="color: #181818" i],:root[data-theme="dark"] [style*=";color: #181818" i],:root[data-theme="dark"] [style*="; color: #181818" i]{color:#EEEEEE !important}
 :root[data-theme="dark"] [style^="color:#757575" i],:root[data-theme="dark"] [style*=";color:#757575" i],:root[data-theme="dark"] [style*="; color:#757575" i]{color:#C3C3C3 !important}
 :root[data-theme="dark"] [style^="color: #757575" i],:root[data-theme="dark"] [style*=";color: #757575" i],:root[data-theme="dark"] [style*="; color: #757575" i]{color:#C3C3C3 !important}
 :root[data-theme="dark"] [style^="color:#6D6D6D" i],:root[data-theme="dark"] [style*=";color:#6D6D6D" i],:root[data-theme="dark"] [style*="; color:#6D6D6D" i]{color:#C3C3C3 !important}
@@ -2082,6 +2104,16 @@
 :root[data-theme="dark"] #btnHome svg [fill="#CECECE"]{fill:#CECECE}
 :root[data-theme="dark"] #btnHome svg [fill="#fff"]{fill:#fff}
 /* DARK:END */
+</style>
+<style>/* make_dark.cjs가 읽지 않는 둘째 style: 어두운 화면 직접 보정(2026-11-18) */
+/* 노랑 바탕 위 글자는 어두운 화면에서도 검정(2026-11-18) */
+:root[data-theme="dark"] .dl-main.urgent, :root[data-theme="dark"] .dl-main.urgent *, :root[data-theme="dark"] .jjh-names button.on, :root[data-theme="dark"] .pick.on, :root[data-theme="dark"] .pick.on small, :root[data-theme="dark"] .ld-banner{color:#000 !important}
+/* 흑백 틀 다크 보정(2026-11-18, make_dark 밖이라 직접 고침): 일정 종류 점·칩, 일정 아이콘 */
+:root[data-theme="dark"] .jjh-chips button[style]::before{background:#CDCDCD}
+:root[data-theme="dark"] .jjh-chips button.on[style]{background:#EEEEEE;color:#181818}
+:root[data-theme="dark"] .jjh-chips button.on[style]::before{background:#181818}
+:root[data-theme="dark"] .jjh-row .ico{background:#2E2E2E !important;color:#EEEEEE !important}
+:root[data-theme="dark"] .jjh-row{--cc:#CDCDCD !important}
 </style>
 </head>
 <body>

@@ -2255,9 +2255,9 @@
 :root[data-theme="dark"] #btnHome svg [fill="#fff"]{fill:#fff}
 /* DARK:END */
   /* 아이콘 선 굵기 통일 (2026-11-19 담당자 「아이콘 라인 굵기, 디자인 전체 다 통일」): 아이콘 크기가 달라도 화면에 보이는 선은 모두 1.5px.
-     non-scaling-stroke라 viewBox 배율과 상관없음. 트로피 그림(.cup)·그래프·체크박스 체크 표시는 그림이라 제외 */
-  svg[stroke="currentColor"]:not(.cup), .prev-btn svg, .kind-lock svg, svg.pin-ic{stroke-width:1.5px !important}
-  svg[stroke="currentColor"]:not(.cup) *, .prev-btn svg *, .kind-lock svg *, svg.pin-ic *{vector-effect:non-scaling-stroke}
+     non-scaling-stroke라 viewBox 배율과 상관없음. 트로피도 포함(같은 날 담당자 「응 맞춰」). 출석 그림·그래프·체크박스 체크 표시는 그림이라 제외 */
+  svg[stroke="currentColor"], .prev-btn svg, .kind-lock svg, svg.pin-ic{stroke-width:1.5px !important}
+  svg[stroke="currentColor"] *, .prev-btn svg *, .kind-lock svg *, svg.pin-ic *{vector-effect:non-scaling-stroke}
   /* 일정 줄 통일: 종류 아이콘 칸·달력 버튼·⋯ 버튼 모두 40px 네모, 모서리 4px(29CM 기준), 아이콘 20px. 종류 색은 왼쪽 띠·태그만 */
   .jjh-row .ico, .jjh-row .addcal, .jjh-row .more{flex:none; width:40px; height:40px; border:0; border-radius:4px; padding:0; display:grid; place-items:center}
   .jjh-row .ico, .jjh-row .addcal{background:#F4F4F4 !important; color:var(--ink) !important}

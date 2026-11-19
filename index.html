@@ -350,8 +350,9 @@
   .sub-card .sub-title{font-size:15px; font-weight:700; margin:2px 0 4px;}
   .sub-card .sub-meta{font-size:12px; color:var(--ink-soft); margin:0 0 10px;}
   /* 기획서 카드 한 줄 「이름 | 형식 | 분류 | 다른 정보」(2026-11-20 담당자 「간격은 이름 포함해서 맞추고」): 칸 사이 간격 같게, 이름 뒤 C·별 칸은 표시가 있을 때만 폭을 가짐 */
-  .sub-meta.sm{display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px;}
-  .sub-meta.sm>.sm-sep{color:var(--ink-faint); font-style:normal;}
+  .sub-meta.sm{display:flex; flex-wrap:wrap; align-items:center; gap:0 8px; line-height:20px; height:22px; padding-top:2px; box-sizing:border-box; overflow:hidden;}   /* 한 줄 고정: 넘치는 칸(구분선과 함께)은 다음 줄로 밀려 안 보임 → 칩이 붙어 길어지면 시간부터 빠짐(같은 날 「두 줄 되는 경우엔 시간 지워서 한 줄로」) */
+  .sub-meta.sm>.sm-p{white-space:nowrap;}
+  .sub-meta.sm .sm-sep{color:var(--ink-faint); font-style:normal; margin-right:8px;}
   .sub-meta.sm>.sm-nm{display:inline-flex; align-items:center; white-space:nowrap;}
   .sub-meta.sm .nmk{width:auto; height:auto; align-self:flex-start;}
   .sub-meta.sm .nmk>b{position:static; display:flex; margin-top:-.1em;}
@@ -8765,8 +8766,8 @@ function hbi(name){ const n = String(name||'').trim(); return n ? `<i class="hb"
 // 기획서 카드 한 줄: 이름 | 형식 | 분류 | 다른 정보 (2026-11-20 담당자)
 function subMeta(rec, catLabel, extra){
   const nm = `<span class="sm-nm">${hbi(rec.name)}${esc(rec.name||'-')}${nb(rec.name)}</span>`;
-  const parts = [rec.format, rec.tag || catLabel, extra].map(v => String(v||'').trim()).filter(v => v && v !== '-').map(v => `<span>${esc(v)}</span>`);
-  return `<p class="sub-meta sm">${[nm, ...parts].join('<i class="sm-sep">|</i>')}</p>`;
+  const parts = [rec.format, rec.tag || catLabel, extra].map(v => String(v||'').trim()).filter(v => v && v !== '-').map(v => `<span class="sm-p"><i class="sm-sep">|</i>${esc(v)}</span>`);
+  return `<p class="sub-meta sm">${[nm, ...parts].join('')}</p>`;
 }
 function nb(name){ const n = String(name||'').trim(); return n ? nmk(n) : ''; }
 // 기장 C 마크: 서버 명단의 chiefs만 보이게 (이름은 공개 저장소에 두지 않음)

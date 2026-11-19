@@ -8906,7 +8906,7 @@ function jjRosterApply(r){
     $('jjhBestDt').textContent = md(w.from) + '~' + md(w.to) + (w.provisional ? ' · 집계 중' : '');   // 화요일 밤 계산 때 확정
     const nw = w.now || { lead:0 };   // 2026-11-18 담당자: 「집계 마감 D-n」은 뺌
     const nowEl = $('jjhBestNow'); nowEl.style.display = '';
-    nowEl.innerHTML = nw.lead > 0 ? `이번 주 1위 <b class="n1">${(nw.names || []).map(n => esc(n) + nmk(n)).join(' · ')}</b> <b>+${esc(nw.lead)}점</b>` : `이번 주는 아직 1위가 없어요 · <b>먼저 올리면 1등</b>`;
+    nowEl.innerHTML = nw.lead > 0 ? `이번 주 1위 <b class="n1">${esc((nw.names || []).join(' · '))}</b> <b>+${esc(nw.lead)}점</b>` : `이번 주는 아직 1위가 없어요 · <b>먼저 올리면 1등</b>`;
     wstApply(w.ready && w.top ? w.top.map(x => x.name) : []);
     if (!w.ready || !w.top.length){
       box.classList.add('wait'); $('jjhCupN').textContent = ''; $('jjhBestGo').style.display = 'none';
@@ -8916,7 +8916,8 @@ function jjRosterApply(r){
     const wins = Math.max.apply(null, w.top.map(x => x.wins || 1));
     $('jjhCupN').textContent = wins;   // 2026-11-18 담당자 「회는 빼고 숫자만, 크기는 키우자」
     cupPopOnce(box);
-    $('jjhBestName').innerHTML = '<span>' + w.top.map(x => esc(x.name) + nmk(x.name)).join(' · ') + '</span>' + (w.top.length > 1 ? '<small style="font-size:13px;color:var(--ink-soft);">공동 1등</small>' : '') + `<span class="gn">+${esc(w.top[0].gain)}점</span>`;
+    $('jjhBestName').innerHTML = esc(w.top.map(x => x.name).join(' · ')) +   // 2026-11-20 담당자 「여긴 달지마」: 우수 카드엔 C·별 없음
+      (w.top.length > 1 ? '<small style="font-size:13px;color:var(--ink-soft);">공동 1등</small>' : '') + `<span class="gn">+${esc(w.top[0].gain)}점</span>`;
   }
   function openWhy(){
     const w = WEEKLY; if (!w || !w.ready || !w.top.length) return;

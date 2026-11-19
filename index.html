@@ -1379,6 +1379,7 @@
   .mc-open .pin-ic, .ldb-btn .pin-ic{width:1.1em; height:1.1em; margin-right:.32em; position:relative; top:.04em}
   .ldb-btn .pin-ic{top:.075em}
   .mt-auto .pin-ic, .sv-s .pin-ic, .ev-meta .pin-ic{width:.95em; height:.95em; margin-right:.15em}
+  .mt-auto .pin-ic{width:1.15em; height:1.15em; margin-right:0}   /* 2026-11-19 담당자 「자동 글씨는 빼고 아이콘만」 */
   /* 관리자 화면 제목 (2026-11-18 담당자 「여기도 관리자 검토 타이틀 넣으면 좋을 듯」): 다른 화면(내 성과·활동 가이드) 제목과 같은 크기 */
   .topbar > .adm-h{order:0; margin:0; font-size:17px; font-weight:700; white-space:nowrap}
   #equipView.ro .adm-h{display:none}
@@ -6621,7 +6622,7 @@ function mtRenderList(){
   el.innerHTML = `<div class="miss-bar"><button class="miss-btn ${mtOnlyMissing?'on':''}" id="mtMissBtn">${mtOnlyMissing ? '전체 보기' : '미입력만 보기 (' + missN + ')'}</button></div>`
     + (mtOnlyMissing && !list.length ? '<div class="miss-empty">모두 입력했어요</div>' : '') + list.map(n => `
     <div class="mt-row">
-      <span class="mt-name">${n}${mtAuto[n] ? ' <small class="mt-auto" title="휴대폰 위치로 자동 기록">' + pinIc() + '자동</small>' : ''}</span>
+      <span class="mt-name">${n}${mtAuto[n] ? ' <small class="mt-auto" title="휴대폰 위치로 자동 기록" role="img" aria-label="위치로 자동 출석">' + pinIc() + '</small>' : ''}</span>
       <div class="mt-btns">${MT_STATUSES.map(st => `<button data-name="${n}" data-st="${st}" class="${mtState[n]===st?'on':''}">${st}</button>`).join('')}</div>
     </div>`).join('');
   document.getElementById('mtMissBtn').addEventListener('click', ()=>{ mtOnlyMissing = !mtOnlyMissing; mtRenderList(); });

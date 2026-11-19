@@ -1427,6 +1427,9 @@
   .pc-bulk{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 14px}
   #personalView .mt-quick, #personalView .mt-off{min-height:40px; padding:0 12px; font-size:13px; border-radius:4px}
   #personalView .miss-btn{min-height:32px; font-size:13px; border-radius:4px}
+  /* 2026-11-19 담당자 「휴회 버튼 빼고는 없애도 되지 않나? 대부분 자동화」: 인원·감점 줄, 전원 제출, 미입력만 보기 숨김(코드는 남김) */
+  .pc-meta, .pc-bulk, #personalView .miss-bar{display:none !important}
+  .pc-head{margin-bottom:14px}
 /* DARK:START make_dark.cjs가 만듦, 직접 고치지 않음 */
 :root[data-theme="dark"]{--purple:#C8C8C8;--purple-dark:#D6D6D6;--purple-soft:#282828;--purple-line:#9A9A9A;--gold:#CECECE;--gold-dark:#BFBFBF;--ink:#DCDCDC;--ink-soft:#ADADAD;--ink-faint:#999999;--line:#333333;--line-input:#666666;--page-bg:#181818;--surface:#202020;color-scheme:dark;}
 :root[data-theme="dark"] body{background:var(--page-bg);color:var(--ink)}

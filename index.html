@@ -1323,7 +1323,7 @@
   .admin-topbar button{background:#fff; border:1px solid var(--line); color:var(--ink); border-radius:7px}
   .admin-topbar button:hover{border-color:var(--ink)}
   #btnHome{color:var(--ink) !important}
-  #btnHome .hong-logo{display:block; width:34px; height:34px}
+  #btnHome .hong-logo{display:block; width:auto; height:34px}   /* 2026-11-19 담당자 「상단에 로고도 홍비디오 로고로」: 동그라미 로고 → 홍비디오 글자 로고 */
   .jjh-card{background:#fff; border:1px solid var(--line); border-radius:10px}
   .jjh-best .k{color:var(--ink-soft)}
   .jjh-best .nm .gn{color:var(--ink)}
@@ -1336,7 +1336,7 @@
   .jjh-names button{border:1px solid var(--line); border-radius:999px; color:var(--ink)}
   .jjh-names button.on{background:var(--point); border-color:var(--point); color:#000}
   .jjh-names button.more{border:1px dashed var(--ink-soft)}
-  :root[data-theme="dark"] #btnHome .hong-logo{content:url(logo-hong-w.webp)}
+  :root[data-theme="dark"] #btnHome .hong-logo{content:url(logo-hong-title-w.webp)}
   .hong-wait{display:flex; flex-direction:column; align-items:center; gap:10px; padding:14px 0; text-align:center; color:var(--ink-soft)}
   :root[data-theme="dark"] .hong-spin{content:url(logo-hong-w.webp)}
   /* 로딩창(2026-11-18 담당자 「늘 화면 전체 기준 정중앙에서 돌아가게, 바탕은 살짝 어둡게」) */
@@ -2218,7 +2218,7 @@
 
 <div class="jj-loading" id="jjLoading" role="status" aria-live="polite" aria-label="불러오고 있어요"><img class="hong-spin" src="logo-hong-k.webp" alt="" width="76" height="76"></div>
 <div class="admin-topbar">
-  <button id="btnHome" aria-label="JJ 스튜디오 처음으로" style="background:none; border:none; font-size:13px; font-weight:700; padding:0; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;"><img class="hong-logo" src="logo-hong-k.webp" alt="" width="34" height="34"></button>
+  <button id="btnHome" aria-label="JJ 스튜디오 처음으로" style="background:none; border:none; font-size:13px; font-weight:700; padding:0; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:7px;"><img class="hong-logo" src="logo-hong-title-k.webp" alt="홍비디오" width="41" height="34"></button>
   <div style="display:flex; gap:8px;">
     <button class="test-link" id="btnTestMode" type="button" aria-pressed="false" aria-label="테스트 모드 켜기(관리자)" title="테스트 모드" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6.2L4.6 18.4A1.7 1.7 0 0 0 6.1 21h11.8a1.7 1.7 0 0 0 1.5-2.6L14 9.2V3"/><path d="M7.2 15h9.6"/></svg></button>
     <button id="btnTheme" type="button" aria-label="어둡게 보기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>

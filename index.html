@@ -349,6 +349,13 @@
   .status-pill.rejected{background:#EEEEEE; color:#646464;}
   .sub-card .sub-title{font-size:15px; font-weight:700; margin:2px 0 4px;}
   .sub-card .sub-meta{font-size:12px; color:var(--ink-soft); margin:0 0 10px;}
+  /* 기획서 카드 한 줄 「이름 | 형식 | 분류 | 다른 정보」(2026-11-20 담당자 「간격은 이름 포함해서 맞추고」): 칸 사이 간격 같게, 이름 뒤 C·별 칸은 표시가 있을 때만 폭을 가짐 */
+  .sub-meta.sm{display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px;}
+  .sub-meta.sm>.sm-sep{color:var(--ink-faint); font-style:normal;}
+  .sub-meta.sm>.sm-nm{display:inline-flex; align-items:center; white-space:nowrap;}
+  .sub-meta.sm .nmk{width:auto; height:auto; align-self:flex-start;}
+  .sub-meta.sm .nmk>b{position:static; display:flex; margin-top:-.1em;}
+  .sub-meta.sm .nmk .cpt, .sub-meta.sm .nmk .wst{margin-left:1px;}
   .sub-card .sub-detail{font-size:12.5px; color:var(--ink); margin:10px 0; padding-top:10px; border-top:1px solid var(--line); white-space:pre-wrap; line-height:1.6;}
   .sub-card .sub-actions, .qa-box .sub-actions{display:flex; gap:8px;}
   .st-filter{display:flex; gap:6px; overflow-x:auto; margin:0 0 14px; padding-bottom:2px; scrollbar-width:none;}
@@ -5003,7 +5010,7 @@ function renderStatusListView(items){
           <span style="font-size:12px; color:var(--ink-faint);">${esc(fmtDateTime(rec.submittedAt))}</span>
         </div>
         <p class="sub-title">${esc(rec.title||'(제목 없음)')}</p>
-        <p class="sub-meta">${hbi(rec.name)}${esc(rec.name||'-')}${nb(rec.name)} · ${esc(rec.tag || catLabel)}</p>
+        ${subMeta(rec, catLabel)}
       </div>
     `;
   }).join('');
@@ -5962,7 +5969,7 @@ function renderAdminList(items){
           <span style="display:flex; gap:12px;"><button class="toggle-detail" data-edit="${esc(key)}">수정</button><button class="toggle-detail" data-toggle="${esc(key)}">자세히 보기</button><button class="toggle-detail" data-del="${esc(key)}" style="color:#727272;">삭제</button></span>
         </div>
         <p class="sub-title">${esc(rec.title||'(제목 없음)')}</p>
-        <p class="sub-meta">${hbi(rec.name)}${esc(rec.name||'-')}${nb(rec.name)} · ${esc(rec.tag || catLabel)} · ${esc(when)}</p>
+        ${subMeta(rec, catLabel, when)}
         ${rec.status === 'pending' ? `<div class="ia-box" data-ia="${esc(key)}" hidden></div>` : ''}
         <div class="sub-detail" id="detail-${esc(key)}" style="display:none; white-space:normal; padding:0; border:none; margin:10px 0 0;">${buildDocCardHTML(rec)}</div>
         ${actions}
@@ -8755,6 +8762,12 @@ function hbEscAttr(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<
 function nmk(n){ return `<i class="nmk"><b><i class="cpt" data-cpt="${hbEscAttr(n)}" title="기장"></i><i class="wst" data-wst="${hbEscAttr(n)}" title="우수 홍보대사"></i></b></i>`; }
 // 2026-11-20 담당자 「100 칩은 이름 앞으로 가자」: 조회수 패치(hbi)는 이름 앞, C·별(nb = nmk)은 이름 뒤
 function hbi(name){ const n = String(name||'').trim(); return n ? `<i class="hb" data-hb="${hbEscAttr(n)}"></i>` : ''; }
+// 기획서 카드 한 줄: 이름 | 형식 | 분류 | 다른 정보 (2026-11-20 담당자)
+function subMeta(rec, catLabel, extra){
+  const nm = `<span class="sm-nm">${hbi(rec.name)}${esc(rec.name||'-')}${nb(rec.name)}</span>`;
+  const parts = [rec.format, rec.tag || catLabel, extra].map(v => String(v||'').trim()).filter(v => v && v !== '-').map(v => `<span>${esc(v)}</span>`);
+  return `<p class="sub-meta sm">${[nm, ...parts].join('<i class="sm-sep">|</i>')}</p>`;
+}
 function nb(name){ const n = String(name||'').trim(); return n ? nmk(n) : ''; }
 // 기장 C 마크: 서버 명단의 chiefs만 보이게 (이름은 공개 저장소에 두지 않음)
 function cptApply(chiefs){

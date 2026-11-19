@@ -924,7 +924,7 @@
   .sc-months button.on{border-color:var(--ink); color:var(--ink); font-weight:700;}
   .sc-toggle{margin-top:12px; font-size:12px; color:var(--ink-soft); background:none; border:none; cursor:pointer; text-decoration:underline; padding:0;}
   /* 조회수 패치 */
-  .hb{display:none; width:1.43em; height:1em; margin-left:4px; margin-right:0; vertical-align:-0.16em; background:center/contain no-repeat; flex:none; font-style:normal;}
+  .hb{display:none; width:2.3em; height:1em; margin-left:0; margin-right:4px; vertical-align:-0.16em; background:right center/contain no-repeat; flex:none; font-style:normal;}
   /* 기장 C 마크 (2026-11-20 담당자 「기장 이름 우측 상단에 노란색 C」). 원 없이 노란 C만(같은 날 「그냥 c를 노랑으로만」, 흰 바탕 노란 글자 금지의 예외). 그림이라 다크 모드에서도 그대로. 기장 명단은 서버 roster.chiefs → cptApply가 보이게 함 */
   /* 정렬(같은 날 「이름에는 항상 달아주되, 다른 이름과 정렬은 항상 맞아야 함」): 모든 이름 뒤에 폭 0 칸 .nmk를 똑같이 두고 C·별은 그 위에 떠 있게 → 표시가 있어도 뒤 패치·글자가 밀리지 않음 */
   .nmk{display:inline-block; position:relative; width:0; height:1em; vertical-align:baseline; flex:none; font-style:normal;}
@@ -3553,7 +3553,7 @@ function initNamePicker(key){
     renderRoster();
     const names = getNames().filter(n => !rosterEl || !AMBASSADOR_ROSTER.includes(n));   // 명단 밖 이름만 칩으로
     chipsEl.innerHTML = names.map(n=>`
-      <span class="chip">${esc(n)}${nb(n)}<button type="button" data-name="${esc(n)}" aria-label="${esc(n)} 빼기">✕</button></span>
+      <span class="chip">${hbi(n)}${esc(n)}${nb(n)}<button type="button" data-name="${esc(n)}" aria-label="${esc(n)} 빼기">✕</button></span>
     `).join('');
     chipsEl.querySelectorAll('button').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -3568,7 +3568,7 @@ function initNamePicker(key){
     if(matches.length===0){
       suggestEl.innerHTML = '<div class="suggest-empty">일치하는 홍보대사가 없어요. 목록에 없으면 직접 이름을 입력해도 돼요.</div>';
     }else{
-      suggestEl.innerHTML = matches.map(n=>`<div class="suggest-item" data-name="${n}">${n}${nb(n)}</div>`).join('');
+      suggestEl.innerHTML = matches.map(n=>`<div class="suggest-item" data-name="${n}">${hbi(n)}${n}${nb(n)}</div>`).join('');
     }
     suggestEl.classList.add('open');
     suggestEl.querySelectorAll('.suggest-item').forEach(item=>{
@@ -4385,7 +4385,7 @@ function renderNameSuggestions(){
   if(matches.length===0){
     suggestEl.classList.remove('open'); suggestEl.innerHTML=''; return;
   }
-  suggestEl.innerHTML = matches.map(n=>`<div class="suggest-item" data-name="${n}">${n}${nb(n)}</div>`).join('');
+  suggestEl.innerHTML = matches.map(n=>`<div class="suggest-item" data-name="${n}">${hbi(n)}${n}${nb(n)}</div>`).join('');
   suggestEl.classList.add('open');
   suggestEl.querySelectorAll('.suggest-item').forEach(item=>{
     item.addEventListener('click', ()=>{
@@ -5001,7 +5001,7 @@ function renderStatusListView(items){
           <span style="font-size:12px; color:var(--ink-faint);">${esc(fmtDateTime(rec.submittedAt))}</span>
         </div>
         <p class="sub-title">${esc(rec.title||'(제목 없음)')}</p>
-        <p class="sub-meta">${esc(rec.name||'-')}${nb(rec.name)} · ${esc(rec.tag || catLabel)}</p>
+        <p class="sub-meta">${hbi(rec.name)}${esc(rec.name||'-')}${nb(rec.name)} · ${esc(rec.tag || catLabel)}</p>
       </div>
     `;
   }).join('');
@@ -5960,7 +5960,7 @@ function renderAdminList(items){
           <span style="display:flex; gap:12px;"><button class="toggle-detail" data-edit="${esc(key)}">수정</button><button class="toggle-detail" data-toggle="${esc(key)}">자세히 보기</button><button class="toggle-detail" data-del="${esc(key)}" style="color:#727272;">삭제</button></span>
         </div>
         <p class="sub-title">${esc(rec.title||'(제목 없음)')}</p>
-        <p class="sub-meta">${esc(rec.name||'-')}${nb(rec.name)} · ${esc(rec.tag || catLabel)} · ${esc(when)}</p>
+        <p class="sub-meta">${hbi(rec.name)}${esc(rec.name||'-')}${nb(rec.name)} · ${esc(rec.tag || catLabel)} · ${esc(when)}</p>
         ${rec.status === 'pending' ? `<div class="ia-box" data-ia="${esc(key)}" hidden></div>` : ''}
         <div class="sub-detail" id="detail-${esc(key)}" style="display:none; white-space:normal; padding:0; border:none; margin:10px 0 0;">${buildDocCardHTML(rec)}</div>
         ${actions}
@@ -6943,7 +6943,7 @@ function pcRenderList(){
     const planMore = plan ? `<button type="button" class="pc-plan-more" data-plan="${esc(n)}" aria-expanded="${open ? 'true' : 'false'}">기획<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>` : '';
     const folderBtn = pcDone[n] ? `<a class="pc-plan-more pc-folder" href="https://drive.google.com/drive/folders/${encodeURIComponent(pcDone[n])}" target="_blank" rel="noopener" title="갠콘 제출 폴더 열기">제출 폴더<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>` : '';
     return `<div class="pc-row${open ? ' open' : ''}">
-      <div class="pc-name">${n}${nb(n)}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : ''))}</small>${planMore || folderBtn ? `<span class="pc-btns">${planMore}${folderBtn}</span>` : ''}</div>
+      <div class="pc-name">${hbi(n)}${n}${nb(n)}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : ''))}</small>${planMore || folderBtn ? `<span class="pc-btns">${planMore}${folderBtn}</span>` : ''}</div>
       <div class="pc-lines">
         <div class="pc-line"><span class="pc-lab">기획서</span>${seg('plan')}</div>
         <div class="pc-line"><span class="pc-lab">콘텐츠</span>${seg('content')}</div>
@@ -7366,7 +7366,7 @@ function abRender(){
       const it = abItems[i];
       const ok = it.status === '면제';
       return `<div class="ab-row">
-        <div class="ab-who">${abEsc(it.name)}${nb(it.name)}<span class="ab-pill ${ok?'ok':'no'}">${ok?'사유 있는 불참':'불참'}</span>${ok && it.reason ? `<small>사유: ${abEsc(it.reason)}</small>` : ''}</div>
+        <div class="ab-who">${hbi(it.name)}${abEsc(it.name)}${nb(it.name)}<span class="ab-pill ${ok?'ok':'no'}">${ok?'사유 있는 불참':'불참'}</span>${ok && it.reason ? `<small>사유: ${abEsc(it.reason)}</small>` : ''}</div>
         <button class="ab-btn ${ok?'':'go'}" data-i="${i}">${ok?'면제 취소':'사유 있는 불참'}</button>
       </div>`; }).join('')}</div>`;
   }).join('');
@@ -7469,7 +7469,7 @@ function evRender(){
 }
 function evChips(){
   const el = document.getElementById('evChips');
-  el.innerHTML = MEETING_ROSTER.map(n => `<button data-n="${n}" class="${evSel.has(n)?'on':''}">${n}${nb(n)}</button>`).join('');
+  el.innerHTML = MEETING_ROSTER.map(n => `<button data-n="${n}" class="${evSel.has(n)?'on':''}">${hbi(n)}${n}${nb(n)}</button>`).join('');
   el.querySelectorAll('button').forEach(b => b.addEventListener('click', ()=>{
     const n = b.dataset.n; evSel.has(n) ? evSel.delete(n) : evSel.add(n); evChips();
   }));
@@ -7714,7 +7714,7 @@ function tkRender(){
 function tkRenderTargets(){
   const el = document.getElementById('tkTgChips');
   const extra = [...tkTg].filter(n => !MEETING_ROSTER.includes(n));   // 지금 명단에 없는 예전 대상자
-  el.innerHTML = MEETING_ROSTER.concat(extra).map(n => `<button type="button" data-n="${abEsc(n)}" class="${tkTg.has(n)?'on':''}">${abEsc(n)}${nb(n)}</button>`).join('');
+  el.innerHTML = MEETING_ROSTER.concat(extra).map(n => `<button type="button" data-n="${abEsc(n)}" class="${tkTg.has(n)?'on':''}">${hbi(n)}${abEsc(n)}${nb(n)}</button>`).join('');
   el.querySelectorAll('button').forEach(b => b.addEventListener('click', ()=>{
     const n = b.dataset.n; tkTg.has(n) ? tkTg.delete(n) : tkTg.add(n); tkRenderTargets(); tkRenderList();
   }));
@@ -7726,7 +7726,7 @@ function tkRenderList(){
   const list = MEETING_ROSTER.concat([...tkTg].filter(n => !MEETING_ROSTER.includes(n))).filter(n => tkTg.has(n));
   document.getElementById('tkList').innerHTML = list.length ? list.map(n => `
     <div class="mt-row">
-      <span class="mt-name">${abEsc(n)}${nb(n)}${tkAuto[n] && tkAuto[n] === tkState[n] ? ' <small style="font-weight:400; color:var(--ink-faint);">자동</small>' : ''}</span>
+      <span class="mt-name">${hbi(n)}${abEsc(n)}${nb(n)}${tkAuto[n] && tkAuto[n] === tkState[n] ? ' <small style="font-weight:400; color:var(--ink-faint);">자동</small>' : ''}</span>
       <div class="mt-btns">${TK_STATUSES.map(st => `<button data-name="${abEsc(n)}" data-st="${st}" class="${tkState[n]===st?'on':''}">${st}</button>`).join('')}</div>
     </div>`).join('') : '<p style="font-size:12.5px;color:var(--ink-faint);">대상을 먼저 골라 주세요.</p>';
   document.querySelectorAll('#tkList .mt-btns button').forEach(b => b.addEventListener('click', ()=>{
@@ -8492,7 +8492,7 @@ function scRender(){
     </div>${String(r['상태'] || '').trim() ? scWhyHtml(x.name, x.minus) : ''}</td></tr>` : '';
     return `<tr class="sc-row" data-n="${abEsc(x.name)}">
       <td class="l sc-rank">${rank}</td>
-      <td class="l sc-name">${abEsc(x.name)}${nb(x.name)}${x.current ? '' : ' <small style="font-weight:400;color:var(--ink-faint);">이전</small>'}${pill(r['상태'])}</td>
+      <td class="l sc-name">${hbi(x.name)}${abEsc(x.name)}${nb(x.name)}${x.current ? '' : ' <small style="font-weight:400;color:var(--ink-faint);">이전</small>'}${pill(r['상태'])}</td>
       <td class="sc-plus">${scSigned(x.plus)}</td>
       <td class="${x.minus < 0 ? 'sc-minus' : ''}">${scSigned(x.minus)}</td>
       <td class="sc-net">${x.net}</td>
@@ -8623,7 +8623,7 @@ function scRenderMonth(){
     </div></td></tr>` : '';
     return `<tr class="sc-row" data-n="${abEsc(x.n)}">
       <td class="l sc-rank">${rank}</td>
-      <td class="l sc-name">${abEsc(x.n)}${nb(x.n)}${x.current ? '' : ' <small style="font-weight:400;color:var(--ink-faint);">이전</small>'}</td>
+      <td class="l sc-name">${hbi(x.n)}${abEsc(x.n)}${nb(x.n)}${x.current ? '' : ' <small style="font-weight:400;color:var(--ink-faint);">이전</small>'}</td>
       <td class="${x.plus > 0 ? 'sc-plus' : ''}">${scSigned(x.plus)}</td>
       <td class="${x.minus < 0 ? 'sc-minus' : ''}">${scSigned(x.minus)}</td>
       <td class="sc-net">${x.net}</td>
@@ -8688,7 +8688,7 @@ function scRenderBase(){
       ${r['연속 미달'] ? `<div><span>연속 미달</span><b class="neg">${abEsc(r['연속 미달'])}회</b></div>` : ''}
     </div></td></tr>` : '';
     return `<tr class="sc-row" data-n="${abEsc(name)}">
-      <td class="l sc-name">${abEsc(name)}${nb(name)} <small style="font-weight:400;color:var(--ink-faint);">${abEsc(r['역할'])}</small>${act(r['조치'])}</td>
+      <td class="l sc-name">${hbi(name)}${abEsc(name)}${nb(name)} <small style="font-weight:400;color:var(--ink-faint);">${abEsc(r['역할'])}</small>${act(r['조치'])}</td>
       <td>${abEsc(r['팀콘 참여'])}</td>
       <td>${abEsc(r['촬영·편집'])}</td>
       <td>${abEsc(r['개인콘(제출/회차)'] || '—')}</td>
@@ -8750,7 +8750,9 @@ const HB_CACHE_KEY = 'hbBadges.v5', HB_TTL = 6*60*60*1000;
 // 이름 앞에 붙는 패치 자리. 패치가 없는 사람은 아무것도 안 보여요.
 function hbEscAttr(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function nmk(n){ return `<i class="nmk"><b><i class="cpt" data-cpt="${hbEscAttr(n)}" title="기장"></i><i class="wst" data-wst="${hbEscAttr(n)}" title="우수 홍보대사"></i></b></i>`; }
-function nb(name){ const n = String(name||'').trim(); return n ? nmk(n) + `<i class="hb" data-hb="${hbEscAttr(n)}"></i>` : ''; }
+// 2026-11-20 담당자 「100 칩은 이름 앞으로 가자」: 조회수 패치(hbi)는 이름 앞, C·별(nb = nmk)은 이름 뒤
+function hbi(name){ const n = String(name||'').trim(); return n ? `<i class="hb" data-hb="${hbEscAttr(n)}"></i>` : ''; }
+function nb(name){ const n = String(name||'').trim(); return n ? nmk(n) : ''; }
 // 기장 C 마크: 서버 명단의 chiefs만 보이게 (이름은 공개 저장소에 두지 않음)
 function cptApply(chiefs){
   let el = document.getElementById('cptStyle');
@@ -8764,7 +8766,7 @@ function wstApply(names){
   el.textContent = (names || []).map(n => `.wst[data-wst="${String(n).replace(/["\\]/g,'')}"]{display:inline-block;}`).join('\n');
 }
 // "홍길동, 김철수" 같은 목록 문자열 → 각 이름 앞에 패치 (html은 이미 이스케이프된 문자열)
-function nbList(html){ return String(html||'').replace(/[가-힣]{2,4}/g, m => hbRoster().includes(m) ? m + nb(m) : m); }
+function nbList(html){ return String(html||'').replace(/[가-힣]{2,4}/g, m => hbRoster().includes(m) ? hbi(m) + m + nb(m) : m); }
 
 function hbRoster(){ return MEETING_ROSTER.filter(n => !HB_EXCLUDE.includes(n)); }   // 현재 활동 중인 홍보대사만 (회의 출결 명단 기준)
 

@@ -1415,6 +1415,18 @@
   /* 기기에서 「애니메이션 효과」를 끈 사람: 튀는 움직임 대신 짧게 나타나기만 */
   @keyframes cupFade{from{opacity:0} to{opacity:1}}
   @media (prefers-reduced-motion:reduce){ .jjh-best.pop .cup{animation:cupFade .4s ease-out both} .jjh-best.pop #jjhCupN{animation:none} }
+  /* 개인콘텐츠 탭 정리 (2026-11-19 담당자 「붙여넣기 버튼도 출석체크 쪽처럼 길게, 날짜 아래 폰트·버튼 정렬」) */
+  #personalView .pp-open{display:flex; width:100%; gap:6px; margin:0 0 14px}
+  #personalView .pp-open svg{width:1.1em; height:1.1em}
+  .pc-head{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 12px; margin:4px 0 6px}
+  .pc-head .mt-off{margin-left:auto}
+  .pc-meta #pcRule span{white-space:nowrap}
+  #pcCycle{flex:1 1 180px; word-break:keep-all; margin:0; font-size:14px; font-weight:700; line-height:1.5; color:var(--ink); white-space:pre-line}
+  .pc-meta{display:flex; flex-direction:column; gap:2px; margin:0 0 12px; font-size:12.5px; line-height:1.5; color:var(--ink-faint)}
+  .pc-meta #pcInfo{color:var(--ink-soft); font-weight:700}
+  .pc-bulk{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 14px}
+  #personalView .mt-quick, #personalView .mt-off{min-height:40px; padding:0 12px; font-size:13px; border-radius:4px}
+  #personalView .miss-btn{min-height:32px; font-size:13px; border-radius:4px}
 /* DARK:START make_dark.cjs가 만듦, 직접 고치지 않음 */
 :root[data-theme="dark"]{--purple:#C8C8C8;--purple-dark:#D6D6D6;--purple-soft:#282828;--purple-line:#9A9A9A;--gold:#CECECE;--gold-dark:#BFBFBF;--ink:#DCDCDC;--ink-soft:#ADADAD;--ink-faint:#999999;--line:#333333;--line-input:#666666;--page-bg:#181818;--surface:#202020;color-scheme:dark;}
 :root[data-theme="dark"] body{background:var(--page-bg);color:var(--ink)}
@@ -2162,6 +2174,9 @@
 :root[data-theme="dark"] .jjh-row + .jjh-row,:root[data-theme="dark"] .jjh-post + .jjh-post{border-top:1px solid #393939}
 :root[data-theme="dark"][data-theme="dark"] .jjh-row + .jjh-row,:root[data-theme="dark"][data-theme="dark"] .jjh-post + .jjh-post{border-top-color:#696969}
 :root[data-theme="dark"] .pin-ic{fill:none;stroke:currentColor}
+:root[data-theme="dark"] #pcCycle{color:var(--ink)}
+:root[data-theme="dark"] .pc-meta{color:var(--ink-faint)}
+:root[data-theme="dark"] .pc-meta #pcInfo{color:var(--ink-soft)}
 :root[data-theme="dark"] [style*="background:#CDCDCD" i]{background:#2C2C2C !important}
 :root[data-theme="dark"] [style*="background: #CDCDCD" i]{background:#2C2C2C !important}
 :root[data-theme="dark"] [style*="background:#C8C8C8" i]{background:#2C2C2C !important}
@@ -2182,14 +2197,12 @@
 :root[data-theme="dark"] [style*="border-color: #F2CE00" i]{border-color:#E1E1E1 !important}
 :root[data-theme="dark"] [style*="background:#323232" i]{background:#2A2A2A !important}
 :root[data-theme="dark"] [style*="background: #323232" i]{background:#2A2A2A !important}
+:root[data-theme="dark"] [style*="border:1px solid #4D4D4D" i]{border:1px solid #696969 !important}
+:root[data-theme="dark"] [style*="border: 1px solid #4D4D4D" i]{border:1px solid #696969 !important}
 :root[data-theme="dark"] [style*="background:#F5F5F5" i]{background:#242424 !important}
 :root[data-theme="dark"] [style*="background: #F5F5F5" i]{background:#242424 !important}
 :root[data-theme="dark"] [style*="background:#fff" i]{background:#202020 !important}
 :root[data-theme="dark"] [style*="background: #fff" i]{background:#202020 !important}
-:root[data-theme="dark"] [style*="background:#C7C7C7" i]{background:#2C2C2C !important}
-:root[data-theme="dark"] [style*="background: #C7C7C7" i]{background:#2C2C2C !important}
-:root[data-theme="dark"] [style*="background:#CBCBCB" i]{background:#2C2C2C !important}
-:root[data-theme="dark"] [style*="background: #CBCBCB" i]{background:#2C2C2C !important}
 :root[data-theme="dark"] [style*="border-color:#D2D2D2" i]{border-color:#393939 !important}
 :root[data-theme="dark"] [style*="border-color: #D2D2D2" i]{border-color:#393939 !important}
 :root[data-theme="dark"] [style*="border:1px solid #DADADA" i]{border:1px solid #393939 !important}
@@ -2206,6 +2219,8 @@
 :root[data-theme="dark"] [style^="color: #181818 !important" i],:root[data-theme="dark"] [style*=";color: #181818 !important" i],:root[data-theme="dark"] [style*="; color: #181818 !important" i]{color:#DCDCDC !important !important}
 :root[data-theme="dark"] [style^="color:#000" i],:root[data-theme="dark"] [style*=";color:#000" i],:root[data-theme="dark"] [style*="; color:#000" i]{color:#DCDCDC !important}
 :root[data-theme="dark"] [style^="color: #000" i],:root[data-theme="dark"] [style*=";color: #000" i],:root[data-theme="dark"] [style*="; color: #000" i]{color:#DCDCDC !important}
+:root[data-theme="dark"] [style^="color:#111" i],:root[data-theme="dark"] [style*=";color:#111" i],:root[data-theme="dark"] [style*="; color:#111" i]{color:#DCDCDC !important}
+:root[data-theme="dark"] [style^="color: #111" i],:root[data-theme="dark"] [style*=";color: #111" i],:root[data-theme="dark"] [style*="; color: #111" i]{color:#DCDCDC !important}
 :root[data-theme="dark"] [style^="color:#585858" i],:root[data-theme="dark"] [style*=";color:#585858" i],:root[data-theme="dark"] [style*="; color:#585858" i]{color:#C3C3C3 !important}
 :root[data-theme="dark"] [style^="color: #585858" i],:root[data-theme="dark"] [style*=";color: #585858" i],:root[data-theme="dark"] [style*="; color: #585858" i]{color:#C3C3C3 !important}
 :root[data-theme="dark"] [style^="color:#646464" i],:root[data-theme="dark"] [style*=";color:#646464" i],:root[data-theme="dark"] [style*="; color:#646464" i]{color:#C3C3C3 !important}
@@ -2691,20 +2706,17 @@
   </div>
   <div class="content" style="padding-top:0;">
     <p style="font-size:12px; color:var(--ink-soft); margin:0 0 8px;">매주 수요일(기획서 마감 16시)마다 칸이 생겨요. 기획서를 먼저 입력해 저장하고, 다음 주 월요일 콘텐츠 마감(자정) 뒤에 같은 칸을 눌러 콘텐츠를 이어서 입력하면 돼요.</p>
-    <button type="button" class="mt-quick pp-open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/></svg>갠콘 기획서 붙여넣기</button>
+    <button type="button" class="mc-open pp-open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/></svg>갠콘 기획서 붙여넣기</button>
     <div class="mt-weeks" id="pcWeeks"></div>
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 6px;">
-      <p id="pcCycle" style="font-size:12.5px; font-weight:700; color:var(--ink); margin:0;"></p>
+    <div class="pc-head">
+      <p id="pcCycle"></p>
       <button class="mt-off" id="pcCancel">이번 회차 휴회</button>
     </div>
-    <div class="mt-tools">
-      <span id="pcInfo">불러오는 중...</span>
-      <div style="display:flex; gap:6px;">
-        <button class="mt-quick" id="pcAllPlan">기획서 전원 제출</button>
-        <button class="mt-quick" id="pcAllContent">콘텐츠 전원 제출</button>
-      </div>
+    <div class="pc-meta"><span id="pcInfo">불러오는 중...</span><span id="pcRule"></span></div>
+    <div class="pc-bulk">
+      <button class="mt-quick" id="pcAllPlan">기획서 전원 제출</button>
+      <button class="mt-quick" id="pcAllContent">콘텐츠 전원 제출</button>
     </div>
-    <div class="pc-legend"><span id="pcRule"></span></div>
     <div id="pcList"></div>
     <div class="pc-add" id="pcAdd"></div>
     <button class="mt-save" id="pcSave">저장</button>
@@ -6863,7 +6875,7 @@ function pcRenderWeeks(){
     return `<button class="mt-week ${cls} ${w===pcWeek?'sel':''}" data-w="${esc(w)}"><b>${mtFmt(w)}</b><small>${esc(label)}</small></button>`;
   }).join('');
   el.querySelectorAll('.mt-week').forEach(b => b.addEventListener('click', ()=>{ pcWeek = b.dataset.w; pcLoad(); }));
-  document.getElementById('pcCycle').textContent = pcWeek ? `기획서 ${mtFmt(pcWeek)} 16시 마감 · 콘텐츠 ${mtFmt(pcContentDue(pcWeek))} 자정 마감` : '';
+  document.getElementById('pcCycle').textContent = pcWeek ? `기획서 ${mtFmt(pcWeek)} 16시 마감\n콘텐츠 ${mtFmt(pcContentDue(pcWeek))} 자정 마감` : '';
 }
 
 // 이름을 누르면 그 회차 갠콘 기획이 펼쳐짐 (2026-11-06). 못 읽어도 제출 체크 화면은 그대로
@@ -7145,7 +7157,7 @@ document.getElementById('ppBack').addEventListener('click', () => { if(ppState){
 
 function pcFillAll(key){ pcNames().forEach(n => { const s = pcState[n] || (pcState[n] = {}); if(!s[key]) s[key] = '제출'; }); pcDirty = true; pcRenderList(); pcUpdateInfo(); }
 
-document.getElementById('pcRule').textContent = `감점: 기획서 지각 ${PC_POINTS.plan['지각']} / 미제출 ${PC_POINTS.plan['미제출']} · 콘텐츠 지각 ${PC_POINTS.content['지각']} / 미제출 ${PC_POINTS.content['미제출']}`;
+document.getElementById('pcRule').innerHTML = `<span>감점: 기획서 지각 ${PC_POINTS.plan['지각']} / 미제출 ${PC_POINTS.plan['미제출']}</span> · <span>콘텐츠 지각 ${PC_POINTS.content['지각']} / 미제출 ${PC_POINTS.content['미제출']}</span>`;
 document.getElementById('pcAllPlan').addEventListener('click', ()=>pcFillAll('plan'));
 document.getElementById('pcAllContent').addEventListener('click', ()=>pcFillAll('content'));
 document.getElementById('pcSave').addEventListener('click', pcSave);

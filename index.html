@@ -926,7 +926,12 @@
   /* 조회수 패치 */
   .hb{display:none; width:1.43em; height:1em; margin-left:4px; margin-right:0; vertical-align:-0.16em; background:center/contain no-repeat; flex:none; font-style:normal;}
   /* 기장 C 마크 (2026-11-20 담당자 「기장 이름 우측 상단에 노란색 C」). 원 없이 노란 C만(같은 날 「그냥 c를 노랑으로만」, 흰 바탕 노란 글자 금지의 예외). 그림이라 다크 모드에서도 그대로. 기장 명단은 서버 roster.chiefs → cptApply가 보이게 함 */
-  .cpt{display:none; width:.62em; height:.62em; margin-left:1px; position:relative; top:-.55em; vertical-align:baseline; flex:none; font-style:normal; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13 3.6A6.2 6.2 0 1 0 13 12.4' fill='none' stroke='%23F2CE00' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;}
+  /* 정렬(같은 날 「이름에는 항상 달아주되, 다른 이름과 정렬은 항상 맞아야 함」): 모든 이름 뒤에 폭 0 칸 .nmk를 똑같이 두고 C·별은 그 위에 떠 있게 → 표시가 있어도 뒤 패치·글자가 밀리지 않음 */
+  .nmk{display:inline-block; position:relative; width:0; height:1em; vertical-align:baseline; flex:none; font-style:normal;}
+  .nmk>b{position:absolute; left:1px; top:-.5em; display:flex; gap:1px; white-space:nowrap; pointer-events:none;}
+  .cpt{display:none; width:.56em; height:.56em; flex:none; font-style:normal; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13 3.6A6.2 6.2 0 1 0 13 12.4' fill='none' stroke='%23F2CE00' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;}
+  /* 우수 홍보대사 별 (2026-11-20 담당자 「이번 주 우수 홍보대사 이름 우측 상단에 별」). 홈 카드의 확정 1등(weeklyTop.top) → wstApply가 보이게 함 */
+  .wst{display:none; width:.62em; height:.62em; flex:none; font-style:normal; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 .9l2.15 4.6 5 .6-3.7 3.45.97 4.95L8 12.05 3.58 14.5l.97-4.95L.85 6.1l5-.6z' fill='%23F2CE00'/%3E%3C/svg%3E") center/contain no-repeat;}
 
   /* ───── JJ 홈 (우수 홍보대사 · 주요 일정) ───── */
   .jjh-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin:12px 0 0}
@@ -6750,7 +6755,7 @@ function mtRenderList(){
   el.innerHTML = `<div class="miss-bar"><button class="miss-btn ${mtOnlyMissing?'on':''}" id="mtMissBtn">${mtOnlyMissing ? '전체 보기' : '미입력만 보기 (' + missN + ')'}</button></div>`
     + (mtOnlyMissing && !list.length ? '<div class="miss-empty">모두 입력했어요</div>' : '') + list.map(n => `
     <div class="mt-row">
-      <span class="mt-name">${n}${mtAuto[n] ? ' <small class="mt-auto" title="휴대폰 위치로 자동 기록" role="img" aria-label="위치로 자동 출석">' + pinIc() + '</small>' : ''}</span>
+      <span class="mt-name">${n}${nmk(n)}${mtAuto[n] ? ' <small class="mt-auto" title="휴대폰 위치로 자동 기록" role="img" aria-label="위치로 자동 출석">' + pinIc() + '</small>' : ''}</span>
       <div class="mt-btns">${MT_STATUSES.map(st => `<button data-name="${n}" data-st="${st}" class="${mtState[n]===st?'on':''}">${st}</button>`).join('')}</div>
     </div>`).join('');
   document.getElementById('mtMissBtn').addEventListener('click', ()=>{ mtOnlyMissing = !mtOnlyMissing; mtRenderList(); });
@@ -7336,7 +7341,7 @@ function ttRender(){
   const pct = m => ((Math.min(Math.max(m, TT_S), TT_E) - TT_S) / (TT_E - TT_S) * 100).toFixed(2);
   let tl = '<div class="tt-tl"><div class="tt-ticks">' + [9,12,15,18].map(t => `<span style="left:${pct(t*60)}%">${t}시</span>`).join('') + '</div>';
   all.concat(part, no).forEach(r => {
-    tl += `<div class="tt-row"><span class="nm">${esc(r.name)}</span><div class="tt-track">`;
+    tl += `<div class="tt-row"><span class="nm">${esc(r.name)}${nmk(r.name)}</span><div class="tt-track">`;
     r.day.forEach(x => { const l = pct(ttMin(x.s)); tl += `<span class="tt-blk${x.q ? ' q' : ''}" style="left:${l}%; width:${(pct(ttMin(x.e)) - l).toFixed(2)}%;" title="${esc((x.c || '일정') + ' ' + x.s + '–' + x.e)}"></span>`; });
     tl += `<span class="tt-band" style="left:${pct(a)}%; width:${(pct(b) - pct(a)).toFixed(2)}%;"></span></div></div>`;
   });
@@ -8744,12 +8749,19 @@ const HB_CACHE_KEY = 'hbBadges.v5', HB_TTL = 6*60*60*1000;
 
 // 이름 앞에 붙는 패치 자리. 패치가 없는 사람은 아무것도 안 보여요.
 function hbEscAttr(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function nb(name){ const n = String(name||'').trim(); return n ? `<i class="cpt" data-cpt="${hbEscAttr(n)}" title="기장"></i><i class="hb" data-hb="${hbEscAttr(n)}"></i>` : ''; }
+function nmk(n){ return `<i class="nmk"><b><i class="cpt" data-cpt="${hbEscAttr(n)}" title="기장"></i><i class="wst" data-wst="${hbEscAttr(n)}" title="우수 홍보대사"></i></b></i>`; }
+function nb(name){ const n = String(name||'').trim(); return n ? nmk(n) + `<i class="hb" data-hb="${hbEscAttr(n)}"></i>` : ''; }
 // 기장 C 마크: 서버 명단의 chiefs만 보이게 (이름은 공개 저장소에 두지 않음)
 function cptApply(chiefs){
   let el = document.getElementById('cptStyle');
   if(!el){ el = document.createElement('style'); el.id = 'cptStyle'; document.head.appendChild(el); }
   el.textContent = (chiefs || []).map(n => `.cpt[data-cpt="${String(n).replace(/["\\]/g,'')}"]{display:inline-block;}`).join('\n');
+}
+// 우수 홍보대사 별: 홈 「우수 홍보대사」 카드의 확정 1등(공동 1등 포함)만
+function wstApply(names){
+  let el = document.getElementById('wstStyle');
+  if(!el){ el = document.createElement('style'); el.id = 'wstStyle'; document.head.appendChild(el); }
+  el.textContent = (names || []).map(n => `.wst[data-wst="${String(n).replace(/["\\]/g,'')}"]{display:inline-block;}`).join('\n');
 }
 // "홍길동, 김철수" 같은 목록 문자열 → 각 이름 앞에 패치 (html은 이미 이스케이프된 문자열)
 function nbList(html){ return String(html||'').replace(/[가-힣]{2,4}/g, m => hbRoster().includes(m) ? m + nb(m) : m); }
@@ -8894,7 +8906,8 @@ function jjRosterApply(r){
     $('jjhBestDt').textContent = md(w.from) + '~' + md(w.to) + (w.provisional ? ' · 집계 중' : '');   // 화요일 밤 계산 때 확정
     const nw = w.now || { lead:0 };   // 2026-11-18 담당자: 「집계 마감 D-n」은 뺌
     const nowEl = $('jjhBestNow'); nowEl.style.display = '';
-    nowEl.innerHTML = nw.lead > 0 ? `이번 주 1위 <b class="n1">${esc((nw.names || []).join(' · '))}</b> <b>+${esc(nw.lead)}점</b>` : `이번 주는 아직 1위가 없어요 · <b>먼저 올리면 1등</b>`;
+    nowEl.innerHTML = nw.lead > 0 ? `이번 주 1위 <b class="n1">${(nw.names || []).map(n => esc(n) + nmk(n)).join(' · ')}</b> <b>+${esc(nw.lead)}점</b>` : `이번 주는 아직 1위가 없어요 · <b>먼저 올리면 1등</b>`;
+    wstApply(w.ready && w.top ? w.top.map(x => x.name) : []);
     if (!w.ready || !w.top.length){
       box.classList.add('wait'); $('jjhCupN').textContent = ''; $('jjhBestGo').style.display = 'none';
       $('jjhBestName').textContent = w.ready ? '지난주는 1등이 없어요' : '첫 1등은 다음 주 월요일 공개'; return;
@@ -8903,7 +8916,7 @@ function jjRosterApply(r){
     const wins = Math.max.apply(null, w.top.map(x => x.wins || 1));
     $('jjhCupN').textContent = wins;   // 2026-11-18 담당자 「회는 빼고 숫자만, 크기는 키우자」
     cupPopOnce(box);
-    $('jjhBestName').innerHTML = esc(w.top.map(x => x.name).join(' · ')) + (w.top.length > 1 ? '<small style="font-size:13px;color:var(--ink-soft);">공동 1등</small>' : '') + `<span class="gn">+${esc(w.top[0].gain)}점</span>`;
+    $('jjhBestName').innerHTML = '<span>' + w.top.map(x => esc(x.name) + nmk(x.name)).join(' · ') + '</span>' + (w.top.length > 1 ? '<small style="font-size:13px;color:var(--ink-soft);">공동 1등</small>' : '') + `<span class="gn">+${esc(w.top[0].gain)}점</span>`;
   }
   function openWhy(){
     const w = WEEKLY; if (!w || !w.ready || !w.top.length) return;
@@ -9184,7 +9197,7 @@ function jjRosterApply(r){
   function renderNames(){
     const ko = (a, b) => a.localeCompare(b, 'ko');
     const leads = (JJH_LEADS || []).filter(n => AMBASSADOR_ROSTER.includes(n)).sort(ko);
-    const chip = n => `<button type="button" data-n="${esc(n)}">${esc(n)}</button>`;
+    const chip = n => `<button type="button" data-n="${esc(n)}">${esc(n)}${nmk(n)}</button>`;
     if (!leads.length){ $('jjhNames').innerHTML = AMBASSADOR_ROSTER.slice().sort(ko).map(chip).join(''); return; }
     const rest = AMBASSADOR_ROSTER.filter(n => !leads.includes(n)).sort(ko);
     $('jjhNames').innerHTML = leads.map(chip).join('') + (rest.length ? (namesOpen ? rest.map(chip).join('') : '<button type="button" class="more" data-more="1">다른 이름</button>') : '');

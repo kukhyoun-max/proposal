@@ -484,6 +484,7 @@
   .mt-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 0; border-bottom:1px solid var(--line);}
   .mt-name{font-size:14px; font-weight:700; min-width:52px; white-space:nowrap;}
   .mt-btns{display:flex; gap:4px;}
+  .mt-btns button, .seg button, .ev-chips button, .jjh-names button{white-space:nowrap; word-break:keep-all;}   /* 2026-11-20 담당자 「출/석 이런 형태는 지양」: 버튼 글자가 세로로 꺾이지 않게 */
   .mt-btns button{font-size:12px; padding:7px 8px; border-radius:8px; border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer; font-family:'Noto Sans KR',sans-serif;}
   /* 2026-11-19 담당자 「다른 탭(회의 등)도 반영」: 고른 상태를 꽉 찬 색으로. 출석·제출 검정 · 지각 회색 · 사유불참 연회색 · 불참·미제출 노랑 · 무단불참 노랑 + 검정 테두리 */
   .mt-btns button.on[data-st="출석"]{background:#181818; border-color:#181818; color:#fff; font-weight:700;}
@@ -5301,7 +5302,7 @@ async function svHomeLoad(){
   const focus = svFocusId();
   if(focus){ svPageOpen(); el.style.display = ''; if(!svData) el.innerHTML = '<p class="sv-msg">불러오는 중…</p>'; }
   let r = null;
-  try{ r = await attendJsonpCall({ action:'svList' }); }catch(e){ if(focus && !svData) el.innerHTML = '<p class="sv-msg err">불러오지 못했어요. 잠시 뒤 링크를 다시 열어 주세요.</p>'; return; }
+  try{ r = await (focus && !svData ? jjLoading(attendJsonpCall({ action:'svList' })) : attendJsonpCall({ action:'svList' })); }catch(e){ if(focus && !svData) el.innerHTML = '<p class="sv-msg err">불러오지 못했어요. 잠시 뒤 링크를 다시 열어 주세요.</p>'; return; }
   // 불러오기 실패: 보이던 내용은 그대로 두고, 링크로 처음 열 때만 안내
   if(!r || !r.ok){ if(focus && !svData) el.innerHTML = '<p class="sv-msg err">불러오지 못했어요. 잠시 뒤 링크를 다시 열어 주세요.</p>'; return; }
   // 마감한 조사는 홈에서 내림. ?sv= 링크로 열면 그대로 보임(확정·엑셀용) (2026-11-17 담당자 「이제 공지에서 닫자」)
@@ -6609,7 +6610,7 @@ async function attSwr(params, apply){
   const cached = attCacheGet(params);
   if(cached){ try{ apply(cached, false); }catch(e){} }
   try{
-    const res = await attendJsonp(params);
+    const res = await (cached ? attendJsonp(params) : jjLoading(attendJsonp(params)));   // 지난 결과가 없을 때만 로딩창 (2026-11-20)
     if(res && res.error) throw new Error(res.error);
     apply(res, true);
   }catch(e){ if(!cached) throw e; }
@@ -6803,7 +6804,7 @@ async function mtLoad(){
   const cached = attCacheGet(params);
   if(cached) apply(cached, false); else document.getElementById('mtInfo').textContent = '불러오는 중...';
   try{
-    const res = await attendJsonp(params);
+    const res = await (cached ? attendJsonp(params) : jjLoading(attendJsonp(params)));
     if(res && res.error) throw new Error(res.error);
     apply(res, true);
   }catch(e){
@@ -7003,7 +7004,7 @@ async function pcLoad(){
   const cached = attCacheGet(params);
   if(cached) apply(cached, false); else document.getElementById('pcInfo').textContent = '불러오는 중...';
   try{
-    const res = await attendJsonp(params);
+    const res = await (cached ? attendJsonp(params) : jjLoading(attendJsonp(params)));
     if(res && res.error) throw new Error(res.error);
     apply(res, true);
   }catch(e){
@@ -7271,7 +7272,7 @@ async function ttLoad(force){
   const out = document.getElementById('ttOut');
   out.innerHTML = '<p class="tt-none">불러오는 중...</p>';
   try{
-    const r = await attendJsonpCall({ action:'timetable', tk: adminToken() });
+    const r = await jjLoading(attendJsonpCall({ action:'timetable', tk: adminToken() }));
     if(!r || !r.ok){
       out.innerHTML = `<p class="tt-none">${r && r.error === 'auth' ? '관리자 로그인이 필요해요. 관리자 버튼으로 다시 들어와 주세요.' : '시간표를 불러오지 못했어요: ' + esc((r && r.error) || '오류')}</p>`;
       return;
@@ -7860,8 +7861,8 @@ async function eqLoad(){
   try{
     attendCache.delete(JSON.stringify({ action:'equipList' }));   // 일정·장비 화면은 열 때마다 최신 대여 목록으로
     const ok = r => (r && !r.error) ? r : {};
-    const [res, rows, evr, tkr, acr] = await Promise.all([attendJsonp({ action:'equipList' }), sheetGetAll().catch(()=>[]),
-      attendJsonp({ action:'eventList' }).then(ok).catch(()=>({})), attendJsonp({ action:'taskList' }).then(ok).catch(()=>({})), acadLoad()]);
+    const [res, rows, evr, tkr, acr] = await jjLoading(Promise.all([attendJsonp({ action:'equipList' }), sheetGetAll().catch(()=>[]),
+      attendJsonp({ action:'eventList' }).then(ok).catch(()=>({})), attendJsonp({ action:'taskList' }).then(ok).catch(()=>({})), acadLoad()]));
     if(res && res.error) throw new Error(res.error);
     // 다른 부서 대여는 관리자 탭에서만 부서 이름이 보임. 홍보대사 화면엔 「홍보실 사용」으로만 (2026-11-18 담당자 「홍보실에서 사용하는 걸로 보여주면 될 거 같음」)
     const eqRo = document.getElementById('equipView').classList.contains('ro');

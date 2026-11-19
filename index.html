@@ -636,6 +636,7 @@
   .pc-name{width:88px; flex:0 0 88px; font-size:14px; font-weight:700; white-space:nowrap;}
   .pc-name small{display:block; font-size:11px; font-weight:700; margin-top:2px; color:var(--ink-faint);}
   .pc-name small.neg{color:#646464;}
+  .pc-name small:empty{display:none} /* 2026-11-19 「콘텐츠 입력 전」 문구 뺌 */
   .pc-lines{flex:1; display:flex; flex-direction:column; gap:6px;}
   .pc-line{display:flex; align-items:center; gap:8px;}
   .pc-lab{width:38px; flex:0 0 38px; font-size:11.5px; color:var(--ink-soft); font-weight:500;}
@@ -6905,7 +6906,7 @@ function pcRenderList(){
     const planMore = plan ? `<button type="button" class="pc-plan-more" data-plan="${esc(n)}" aria-expanded="${open ? 'true' : 'false'}">기획<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>` : '';
     const folderBtn = pcDone[n] ? `<a class="pc-plan-more pc-folder" href="https://drive.google.com/drive/folders/${encodeURIComponent(pcDone[n])}" target="_blank" rel="noopener" title="갠콘 제출 폴더 열기">제출 폴더<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>` : '';
     return `<div class="pc-row${open ? ' open' : ''}">
-      <div class="pc-name">${n}${nb(n)}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : '콘텐츠 입력 전'))}</small>${planMore || folderBtn ? `<span class="pc-btns">${planMore}${folderBtn}</span>` : ''}</div>
+      <div class="pc-name">${n}${nb(n)}${pcExtra.has(n) ? `<button class="pc-x" data-x="${n}" title="빼기">✕</button>` : ''}<small class="${pts<0?'neg':''}">${!s.plan ? '' : (pts<0 ? pts+'점' : (s.content ? '정상' : ''))}</small>${planMore || folderBtn ? `<span class="pc-btns">${planMore}${folderBtn}</span>` : ''}</div>
       <div class="pc-lines">
         <div class="pc-line"><span class="pc-lab">기획서</span>${seg('plan')}</div>
         <div class="pc-line"><span class="pc-lab">콘텐츠</span>${seg('content')}</div>

@@ -973,6 +973,7 @@
   .jjh-names::-webkit-scrollbar{display:none}
   .jjh-names button{flex:none;min-height:44px;padding:10px 15px;border-radius:12px;border:1.5px solid #D5D5D5;background:#fff;font:inherit;font-size:15px;font-weight:700;color:#3C3C3C;cursor:pointer}
   .jjh-names button.more{border-style:dashed;color:#757575;font-weight:500}
+  .jjh-names button[data-n]::before{content:''; display:inline-block; width:1.3em;}   /* 2026-11-20 「가운데 안맞추냐?」: 이름 뒤 C·별 칸(1.3em)과 같은 빈칸을 앞에도 → 이름이 칩 가운데 */
   .jjh-names button.on{background:var(--point);border-color:var(--point);color:#000}
   .jjh-plan{margin-top:22px;padding:16px 16px 14px}
   .jjh-plan .jjh-plan-h{margin:2px 0 4px}

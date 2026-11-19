@@ -638,9 +638,10 @@
   .seg{flex:1; display:flex; border:1.5px solid var(--line); border-radius:9px; overflow:hidden;}
   .seg button{flex:1; border:none; border-left:1.5px solid var(--line); background:#fff; padding:7px 0; font-size:12px; color:var(--ink-faint); cursor:pointer; font-family:'Noto Sans KR',sans-serif;}
   .seg button:first-child{border-left:none;}
-  .seg button.on[data-v="제출"]{background:#F1F1F1; color:#6A6A6A; font-weight:700;}
-  .seg button.on[data-v="지각"]{background:#F3F3F3; color:#6A6A6A; font-weight:700;}
-  .seg button.on[data-v="미제출"]{background:#EEEEEE; color:#646464; font-weight:700;}
+  /* 2026-11-19 담당자 「제출 바탕 색이 너무 연해서 구분이 안돼」: 고른 칸을 꽉 찬 색으로. 제출 검정 · 지각 회색 · 미제출 노랑(눈에 띄어야 할 것) */
+  .seg button.on[data-v="제출"]{background:#181818; color:#fff; font-weight:700;}
+  .seg button.on[data-v="지각"]{background:#6B6B6B; color:#fff; font-weight:700;}
+  .seg button.on[data-v="미제출"]{background:#F2CE00; color:#000; font-weight:700;}
   .pc-legend{display:flex; flex-wrap:wrap; gap:4px 10px; font-size:11px; color:var(--ink-faint); margin:0 0 4px;}
   .pc-legend span{white-space:nowrap;}
   .pc-legend #pcRule{flex-basis:100%; white-space:normal;}
@@ -1387,6 +1388,28 @@
   #statusSaveImage, #statusCopyCredit, #stageBtn{min-height:52px; border-radius:4px !important}
   #stageBtn{margin-top:0; padding:0 16px}
   #statusCopyCredit + #stageBtn{margin-top:-12px}
+  /* 2026-11-18 담당자 「모바일에서 상단 메뉴가 너무 오밀조밀」(앞서 「관리자 검토 아래줄로 내려가는 것도 잡아야지」): 관리자 계정 휴대폰 폭은 두 줄로 나눔.
+     윗줄 = 로고 + 아이콘(테스트·밝기), 아랫줄 = 글자 메뉴를 폭 전체에 고르게. 저절로 넘치는 줄바꿈이 아니라 정해 둔 두 줄 */
+  @media (max-width:767px){
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])){flex-wrap:wrap; row-gap:6px; padding:8px 16px 4px}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) > div{display:contents !important}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTestMode{margin-left:auto}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTestMode[hidden] + #btnTheme{margin-left:auto}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"]))::after{content:''; order:2; flex-basis:100%; height:0}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnGuide, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnMy, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnEquipPublic, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnStatusToggle, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnAdminToggle{order:3; flex:1 1 auto; font-size:14px; padding:8px 4px; text-align:center}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnGuide{margin-left:-4px} .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnAdminToggle{margin-right:-4px}
+    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTheme, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTestMode{padding:7px 8px}
+  }
+  /* 2026-11-18 담당자 「트로피에 없어졌다가 뿅하고 튀어나오는 효과」: 첫 표시 때 한 번, 화면에 보일 때. 움직임 줄이기 설정이면 안 함 */
+  @keyframes cupPop{0%{transform:scale(0) rotate(-14deg);opacity:0} 55%{transform:scale(1.2) rotate(5deg);opacity:1} 75%{transform:scale(.93) rotate(-2deg)} 90%{transform:scale(1.03)} 100%{transform:scale(1) rotate(0)}}
+  @keyframes cupNum{0%,35%{transform:scale(0);opacity:0} 70%{transform:scale(1.35);opacity:1} 100%{transform:scale(1)}}
+  .jjh-best .cup{transform-origin:50% 70%}
+  #jjhCupN{transform-box:fill-box; transform-origin:center}
+  .jjh-best.pop .cup{animation:cupPop .75s ease-out both}
+  .jjh-best.pop #jjhCupN{animation:cupNum .9s ease-out both}
+  /* 기기에서 「애니메이션 효과」를 끈 사람: 튀는 움직임 대신 짧게 나타나기만 */
+  @keyframes cupFade{from{opacity:0} to{opacity:1}}
+  @media (prefers-reduced-motion:reduce){ .jjh-best.pop .cup{animation:cupFade .4s ease-out both} .jjh-best.pop #jjhCupN{animation:none} }
 /* DARK:START make_dark.cjs가 만듦, 직접 고치지 않음 */
 :root[data-theme="dark"]{--purple:#EEEEEE;--purple-dark:#FFFFFF;--purple-soft:#282828;--purple-line:#A0A0A0;--gold:#CECECE;--gold-dark:#BFBFBF;--ink:#EEEEEE;--ink-soft:#B3B3B3;--ink-faint:#9F9F9F;--line:#323232;--line-input:#696969;--page-bg:#141414;--surface:#1E1E1E;color-scheme:dark;}
 :root[data-theme="dark"] body{background:var(--page-bg);color:var(--ink)}
@@ -1717,9 +1740,9 @@
 :root[data-theme="dark"] .seg{border:1.5px solid var(--line)}
 :root[data-theme="dark"] .seg button{border:none;border-left:1.5px solid var(--line);background:#1E1E1E;color:var(--ink-faint)}
 :root[data-theme="dark"] .seg button:first-child{border-left:none}
-:root[data-theme="dark"] .seg button.on[data-v="제출"]{background:#242424;color:#C3C3C3}
-:root[data-theme="dark"] .seg button.on[data-v="지각"]{background:#242424;color:#C3C3C3}
-:root[data-theme="dark"] .seg button.on[data-v="미제출"]{background:#2C2C2C;color:#C3C3C3}
+:root[data-theme="dark"] .seg button.on[data-v="제출"]{background:#2A2A2A;color:#fff}
+:root[data-theme="dark"] .seg button.on[data-v="지각"]{background:#6B6B6B;color:#fff}
+:root[data-theme="dark"] .seg button.on[data-v="미제출"]{background:#F2CE00;color:#000}
 :root[data-theme="dark"] .pc-legend{color:var(--ink-faint)}
 :root[data-theme="dark"] .mt-sum td .bad{color:#C3C3C3}
 :root[data-theme="dark"] .mt-sum td .late{color:#C3C3C3}
@@ -1768,6 +1791,23 @@
 :root[data-theme="dark"] .eqi-title{color:var(--ink)}
 :root[data-theme="dark"] .eqi-who{color:var(--ink-soft)}
 :root[data-theme="dark"] .eqi-clash{color:#C3C3C3}
+:root[data-theme="dark"] .eqi-dept{background:#2A2A2A;color:#fff}
+:root[data-theme="dark"] .eq-kind button{border:1.5px solid var(--line);background:#1E1E1E;color:var(--ink-soft)}
+:root[data-theme="dark"] .eq-kind button.on{border-color:var(--ink);background:#323232;color:#fff}
+:root[data-theme="dark"] .eq-multi{border:1.5px solid var(--line)}
+:root[data-theme="dark"] .eq-multi-cat{color:var(--ink-faint)}
+:root[data-theme="dark"] .eq-chk{color:var(--ink)}
+:root[data-theme="dark"] .eq-chk input{accent-color:var(--ink)}
+:root[data-theme="dark"][data-theme="dark"] .eqi-dept{background:#2C2C2C;color:#EEEEEE}
+:root[data-theme="dark"][data-theme="dark"] .eq-kind button{background:#2A2A2A;border-color:#696969;color:var(--ink-soft)}
+:root[data-theme="dark"][data-theme="dark"] .eq-kind button.on{background:#2C2C2C;border-color:#393939;color:#EEEEEE}
+:root[data-theme="dark"] .eqi-kit-btn{color:var(--ink)}
+:root[data-theme="dark"] .eqi-kit li{color:var(--ink)}
+:root[data-theme="dark"] .eqi-kit li + li{border-top:1px solid #393939}
+:root[data-theme="dark"] .eqi-kit .c{color:var(--ink-faint)}
+:root[data-theme="dark"] .eqi-kit .m{background:#242424;color:#C3C3C3}
+:root[data-theme="dark"][data-theme="dark"] .eqi-kit li + li{border-top-color:#696969}
+:root[data-theme="dark"][data-theme="dark"] .eqi-kit .m{background:#2A2A2A;color:#A8A8A8}
 :root[data-theme="dark"] .eqi-past summary{color:var(--ink-soft)}
 :root[data-theme="dark"] .eqi-empty{color:var(--ink-soft);background:var(--page-bg)}
 :root[data-theme="dark"] .toast{background:#323232;color:#fff}
@@ -2112,6 +2152,8 @@
 :root[data-theme="dark"] .jjh-chips button{background:#242424;color:#EEEEEE}
 :root[data-theme="dark"] .overview-wrap{border-top:1px solid #393939}
 :root[data-theme="dark"] .jjh-card.jjh-best{border-top:0}
+:root[data-theme="dark"] .jjh-row + .jjh-row,:root[data-theme="dark"] .jjh-post + .jjh-post{border-top:1px solid #393939}
+:root[data-theme="dark"][data-theme="dark"] .jjh-row + .jjh-row,:root[data-theme="dark"][data-theme="dark"] .jjh-post + .jjh-post{border-top-color:#696969}
 :root[data-theme="dark"] .pin-ic{fill:none;stroke:currentColor}
 :root[data-theme="dark"] [style*="background:#CDCDCD" i]{background:#2C2C2C !important}
 :root[data-theme="dark"] [style*="background: #CDCDCD" i]{background:#2C2C2C !important}
@@ -2121,6 +2163,8 @@
 :root[data-theme="dark"] [style*="background: #181818" i]{background:#2A2A2A !important}
 :root[data-theme="dark"] [style*="background:#2E2E2E !important" i]{background:#2A2A2A !important !important}
 :root[data-theme="dark"] [style*="background: #2E2E2E !important" i]{background:#2A2A2A !important !important}
+:root[data-theme="dark"] [style*="background:#EEEEEE !important" i]{background:#2C2C2C !important !important}
+:root[data-theme="dark"] [style*="background: #EEEEEE !important" i]{background:#2C2C2C !important !important}
 :root[data-theme="dark"] [style*="background:#F5F5F5" i]{background:#242424 !important}
 :root[data-theme="dark"] [style*="background: #F5F5F5" i]{background:#242424 !important}
 :root[data-theme="dark"] [style*="background:#fff" i]{background:#1E1E1E !important}
@@ -2139,6 +2183,10 @@
 :root[data-theme="dark"] [style^="color: #000 !important" i],:root[data-theme="dark"] [style*=";color: #000 !important" i],:root[data-theme="dark"] [style*="; color: #000 !important" i]{color:#EEEEEE !important !important}
 :root[data-theme="dark"] [style^="color:#181818" i],:root[data-theme="dark"] [style*=";color:#181818" i],:root[data-theme="dark"] [style*="; color:#181818" i]{color:#EEEEEE !important}
 :root[data-theme="dark"] [style^="color: #181818" i],:root[data-theme="dark"] [style*=";color: #181818" i],:root[data-theme="dark"] [style*="; color: #181818" i]{color:#EEEEEE !important}
+:root[data-theme="dark"] [style^="color:#181818 !important" i],:root[data-theme="dark"] [style*=";color:#181818 !important" i],:root[data-theme="dark"] [style*="; color:#181818 !important" i]{color:#EEEEEE !important !important}
+:root[data-theme="dark"] [style^="color: #181818 !important" i],:root[data-theme="dark"] [style*=";color: #181818 !important" i],:root[data-theme="dark"] [style*="; color: #181818 !important" i]{color:#EEEEEE !important !important}
+:root[data-theme="dark"] [style^="color:#000" i],:root[data-theme="dark"] [style*=";color:#000" i],:root[data-theme="dark"] [style*="; color:#000" i]{color:#EEEEEE !important}
+:root[data-theme="dark"] [style^="color: #000" i],:root[data-theme="dark"] [style*=";color: #000" i],:root[data-theme="dark"] [style*="; color: #000" i]{color:#EEEEEE !important}
 :root[data-theme="dark"] [style^="color:#585858" i],:root[data-theme="dark"] [style*=";color:#585858" i],:root[data-theme="dark"] [style*="; color:#585858" i]{color:#C3C3C3 !important}
 :root[data-theme="dark"] [style^="color: #585858" i],:root[data-theme="dark"] [style*=";color: #585858" i],:root[data-theme="dark"] [style*="; color: #585858" i]{color:#C3C3C3 !important}
 :root[data-theme="dark"] [style^="color:#646464" i],:root[data-theme="dark"] [style*=";color:#646464" i],:root[data-theme="dark"] [style*="; color:#646464" i]{color:#C3C3C3 !important}
@@ -2167,28 +2215,6 @@
 :root[data-theme="dark"] #btnHome svg [fill="#CECECE"]{fill:#CECECE}
 :root[data-theme="dark"] #btnHome svg [fill="#fff"]{fill:#fff}
 /* DARK:END */
-  /* 2026-11-18 담당자 「모바일에서 상단 메뉴가 너무 오밀조밀」(앞서 「관리자 검토 아래줄로 내려가는 것도 잡아야지」): 관리자 계정 휴대폰 폭은 두 줄로 나눔.
-     윗줄 = 로고 + 아이콘(테스트·밝기), 아랫줄 = 글자 메뉴를 폭 전체에 고르게. 저절로 넘치는 줄바꿈이 아니라 정해 둔 두 줄 */
-  @media (max-width:767px){
-    .admin-topbar:has(#btnAdminToggle:not([style*="none"])){flex-wrap:wrap; row-gap:6px; padding:8px 16px 4px}
-    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) > div{display:contents !important}
-    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTestMode{margin-left:auto}
-    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTestMode[hidden] + #btnTheme{margin-left:auto}
-    .admin-topbar:has(#btnAdminToggle:not([style*="none"]))::after{content:''; order:2; flex-basis:100%; height:0}
-    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnGuide, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnMy, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnEquipPublic, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnStatusToggle, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnAdminToggle{order:3; flex:1 1 auto; font-size:14px; padding:8px 4px; text-align:center}
-    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnGuide{margin-left:-4px} .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnAdminToggle{margin-right:-4px}
-    .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTheme, .admin-topbar:has(#btnAdminToggle:not([style*="none"])) #btnTestMode{padding:7px 8px}
-  }
-  /* 2026-11-18 담당자 「트로피에 없어졌다가 뿅하고 튀어나오는 효과」: 첫 표시 때 한 번, 화면에 보일 때. 움직임 줄이기 설정이면 안 함 */
-  @keyframes cupPop{0%{transform:scale(0) rotate(-14deg);opacity:0} 55%{transform:scale(1.2) rotate(5deg);opacity:1} 75%{transform:scale(.93) rotate(-2deg)} 90%{transform:scale(1.03)} 100%{transform:scale(1) rotate(0)}}
-  @keyframes cupNum{0%,35%{transform:scale(0);opacity:0} 70%{transform:scale(1.35);opacity:1} 100%{transform:scale(1)}}
-  .jjh-best .cup{transform-origin:50% 70%}
-  #jjhCupN{transform-box:fill-box; transform-origin:center}
-  .jjh-best.pop .cup{animation:cupPop .75s ease-out both}
-  .jjh-best.pop #jjhCupN{animation:cupNum .9s ease-out both}
-  /* 기기에서 「애니메이션 효과」를 끈 사람: 튀는 움직임 대신 짧게 나타나기만 */
-  @keyframes cupFade{from{opacity:0} to{opacity:1}}
-  @media (prefers-reduced-motion:reduce){ .jjh-best.pop .cup{animation:cupFade .4s ease-out both} .jjh-best.pop #jjhCupN{animation:none} }
 </style>
 <style>/* make_dark.cjs가 읽지 않는 둘째 style: 어두운 화면 직접 보정(2026-11-18) */
 /* 로딩창: 어두운 화면은 어두운 회색 막 + 흰 로고 */
@@ -2204,6 +2230,10 @@
 :root[data-theme="dark"] .jjh-row{--cc:#CDCDCD !important}
   /* 테스트 아이콘 켜짐: 어둡게 보기는 밝은 칩 + 검정 아이콘(어두운 회색 칩은 안 보였음) */
   :root[data-theme="dark"] .admin-topbar #btnTestMode[aria-pressed="true"]{background:#EEEEEE !important; color:#181818 !important}
+  /* 출석·제출 고른 칸(어둡게): 제출 밝은 칸 + 검정 글자, 지각 중간 회색, 미제출 노랑 */
+  :root[data-theme="dark"] .seg button.on[data-v="제출"]{background:#EEEEEE; color:#181818}
+  :root[data-theme="dark"] .seg button.on[data-v="지각"]{background:#8A8A8A; color:#000}
+  :root[data-theme="dark"] .seg button.on[data-v="미제출"]{background:#F2CE00; color:#000}
 </style>
 </head>
 <body>

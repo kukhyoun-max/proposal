@@ -2284,6 +2284,17 @@
 .eq-legend .eq-bar{display:inline-block; height:auto; line-height:1.6; margin:0; padding:1px 8px; font-size:12px; border-radius:4px; overflow:visible;}
 .eq-legend p{margin:8px 0 0; font-size:12.5px; line-height:1.6; color:var(--ink-soft);}
 @media (min-width:768px){ .eq-legend .eq-bar{font-size:12.5px;} .eq-legend p{font-size:13px;} }
+/* 설명 글씨 최소 크기(2026-11-19 담당자 「가독성 떨어지는 설명 부분 찾아서 개선해」): 휴대폰 12px·PC 12.5~13px, 줄간격 넉넉히 */
+.overview-label{font-size:12px;}
+.ia-box small, .ia-box .ia-foot{font-size:12px; line-height:1.55;} .ia-box .ia-few{font-size:12.5px; line-height:1.55;}
+.mt-week small{font-size:12px;} .pp-row .pp-sub{font-size:12px;} .pc-name small{font-size:12px;} .roster-pick .pick small{font-size:12px;}
+.eq-evrow small, .eq-row small{font-size:12.5px; line-height:1.5;} .eq-cell .more{font-size:10.5px;}
+.pc-legend{font-size:12.5px; line-height:1.6; color:var(--ink-soft); margin:2px 0 8px;}
+.sc-legend{font-size:12.5px; line-height:1.65; color:var(--ink-soft);} .sc-why-m{font-size:12.5px;} .sc-why-t small{font-size:12px;}
+.sc-list{margin:8px 0 0; padding:0; list-style:none;} .sc-list li{position:relative; padding-left:12px; margin:2px 0;} .sc-list li::before{content:'·'; position:absolute; left:2px; font-weight:700;}
+.sc-list b{color:var(--ink); font-weight:700;} .sc-list li > b:first-child{margin-right:4px;} .sc-h{margin:12px 0 0 !important; font-weight:700; color:var(--ink);}
+:root[data-theme="dark"] .sc-list b, :root[data-theme="dark"] .sc-h{color:var(--ink);}
+@media (min-width:768px){ .pc-legend, .sc-legend, .ia-box .ia-foot, .ia-box .ia-few, .eq-evrow small, .eq-row small{font-size:13px;} .ia-box small, .mt-week small, .pp-row .pp-sub{font-size:12.5px;} }
 </style>
 </head>
 <body>
@@ -2688,7 +2699,7 @@
         <button class="mt-quick" id="pcAllContent">콘텐츠 전원 제출</button>
       </div>
     </div>
-    <div class="pc-legend"><span><i style="background:#C7C7C7"></i>제출</span><span><i style="background:#CBCBCB"></i>지각</span><span><i style="background:#BBBBBB"></i>미제출</span><span id="pcRule"></span></div>
+    <div class="pc-legend"><span id="pcRule"></span></div>
     <div id="pcList"></div>
     <div class="pc-add" id="pcAdd"></div>
     <button class="mt-save" id="pcSave">저장</button>
@@ -2784,7 +2795,7 @@
       <label>제목</label><input type="text" id="tkTitle" placeholder="예) 공부하는 사진 올리기">
       <label>응답 시트 <small style="font-weight:400; color:var(--ink-faint);">선택 · 구글폼으로 받으면 넣어 주세요</small></label>
       <input type="url" id="tkSheet" placeholder="https://docs.google.com/spreadsheets/d/...">
-      <p style="font-size:11.5px; color:var(--ink-faint); margin:4px 0 0;">폼 → 응답 → <b>스프레드시트에서 보기</b>를 눌러 열린 시트 주소를 붙여 넣으면, 응답의 이름·제출 시각으로 제출(마감일까지)·지연제출(마감 뒤)·미제출(마감이 지났는데 응답 없음)을 매일 자동으로 체크해요. 직접 고른 결과는 바꾸지 않아요.</p>
+      <p style="font-size:12.5px; line-height:1.6; color:var(--ink-faint); margin:4px 0 0;">폼 → 응답 → <b>스프레드시트에서 보기</b>를 눌러 열린 시트 주소를 붙여 넣으면, 응답의 이름·제출 시각으로 제출(마감일까지)·지연제출(마감 뒤)·미제출(마감이 지났는데 응답 없음)을 매일 자동으로 체크해요. 직접 고른 결과는 바꾸지 않아요.</p>
       <p id="tkNote" style="font-size:11.5px; margin:4px 0 0; display:none;"></p>
       <label style="display:flex; align-items:center; justify-content:space-between;">대상 <span id="tkTgCount" style="margin-right:auto; margin-left:4px;"></span><button type="button" class="mt-quick" id="tkTgAll">전체 선택</button></label>
       <div class="ev-chips" id="tkTgChips"></div>
@@ -4945,7 +4956,7 @@ function renderStatusListView(items){
       <div class="sub-card" data-open="${esc(key)}" style="cursor:pointer;">
         <div class="sub-card-top">
           <span><span class="status-pill ${esc(rec.status)}">${esc(STATUS_LABELS[rec.status]||rec.status)}</span>${ddayBadge(rec)}</span>
-          <span style="font-size:11px; color:var(--ink-faint);">${esc(fmtDateTime(rec.submittedAt))}</span>
+          <span style="font-size:12px; color:var(--ink-faint);">${esc(fmtDateTime(rec.submittedAt))}</span>
         </div>
         <p class="sub-title">${esc(rec.title||'(제목 없음)')}</p>
         <p class="sub-meta">${esc(rec.name||'-')}${nb(rec.name)} · ${esc(rec.tag || catLabel)}</p>
@@ -8450,7 +8461,7 @@ function scRender(){
       <tr><th class="l"></th><th class="l">이름</th><th>가점</th><th>감점</th><th>순점수</th></tr>
       ${body}
     </table>
-    <p class="sc-legend" style="margin-top:8px;">가점 = 콘텐츠 가점 + 행사 가점 · 감점 = 회의·개인콘·제출지연·요청·이벤트·팀콘 미완주 감점 합계 · 면담·제적 대상은 눌러서 감점 내역을 볼 수 있어요</p>
+    <ul class="sc-legend sc-list"><li><b>가점</b> 콘텐츠 가점 + 행사 가점</li><li><b>감점</b> 회의·개인콘·제출지연·요청·이벤트·팀콘 미완주 합계</li><li>면담·제적 대상은 눌러서 감점 내역을 볼 수 있어요</li></ul>
     ${scNote ? `<p class="sc-legend">${abEsc(scNote)}</p>` : ''}
     ${hidden ? `<button class="sc-toggle" id="scToggle">${scShowAll ? '현재 멤버만 보기' : `이전 멤버 ${hidden}명도 보기`}</button>` : ''}`
     : '<p style="font-size:12.5px;color:var(--ink-faint);">아직 점수 기록이 없어요.</p>';
@@ -8647,8 +8658,8 @@ function scRenderBase(){
       <tr><th class="l">이름</th><th>팀콘</th><th>촬영·편집</th><th>개인콘</th><th>판정</th></tr>
       ${body}
     </table>
-    <p class="sc-legend" style="margin-top:8px;">기준(8주 기간마다): 모델팀 팀콘 2건 + 개인콘 80% + 의전 · 콘텐츠팀(촬영·편집 담당) 촬영·편집 2건 · 콘텐츠팀 팀콘 2건 + 개인콘 80% · 기장 팀콘 2건 + 요청 처리·팀 관리. 한 번 미달이면 면담, 두 번 연속이면 제적 심사예요.</p>
-    <p class="sc-legend">2026-10-26 전 기간은 '참고'로만 보여 주고 면담·제적에 쓰지 않아요. 기록이 없어 판단할 수 없는 항목(개인콘 회차 4번 미만, 관리자 칸이 빈 경우 등)은 '보류'로 두고 미달로 치지 않아요. 신규는 첫 달을, 불참 처리된 팀콘은 세지 않아요.${first['계산일시'] ? ` · 계산 ${abEsc(scYmd(first['계산일시']))}` : ''}</p>`
+    <p class="sc-legend sc-h">기준 (8주 기간마다)</p><ul class="sc-legend sc-list"><li><b>모델팀</b> 팀콘 2건 + 개인콘 80% + 의전</li><li><b>콘텐츠팀(촬영·편집)</b> 촬영·편집 2건</li><li><b>콘텐츠팀</b> 팀콘 2건 + 개인콘 80%</li><li><b>기장</b> 팀콘 2건 + 요청 처리·팀 관리</li><li>한 번 미달이면 <b>면담</b>, 두 번 연속이면 <b>제적 심사</b></li></ul>
+    <ul class="sc-legend sc-list"><li>2026-10-26 전 기간은 '참고'로만 보여 주고 면담·제적에 쓰지 않아요.</li><li>판단할 기록이 없으면(개인콘 회차 4번 미만, 관리자 칸이 빈 경우 등) '보류'로 두고 미달로 치지 않아요.</li><li>신규는 첫 달을, 불참 처리된 팀콘은 세지 않아요.</li></ul>${first['계산일시'] ? `<p class="sc-legend" style="margin-top:6px;">계산 ${abEsc(scYmd(first['계산일시']))}</p>` : ''}`
     : '<p style="font-size:12.5px;color:var(--ink-faint);">아직 활동 기준선 기록이 없어요.</p>';
   document.querySelectorAll('#scList .sc-row').forEach(tr => tr.addEventListener('click', () => { scOpen = scOpen === tr.dataset.n ? null : tr.dataset.n; scRenderBase(); }));
 }
@@ -8914,7 +8925,7 @@ function jjRosterApply(r){
   const minePosts = list => list.map(p => {
     // 참여율(좋아요·댓글·공유·저장 ÷ 도달, 유튜브는 ÷ 조회)·공유 수가 있으면 조회수 아래 작게 (2026-10-30)
     const ex = [p.rate != null ? '참여 ' + p.rate + '%' : '', p.shares ? '공유 ' + kv(p.shares) : ''].filter(Boolean).join(' · ');
-    const inner = `<span class="dt">${p.date ? md(p.date) : ''}</span><span class="pf">${esc(p.platform)}</span><span class="t">${esc(p.title)}</span><span class="vw">${kv(p.views)}회${ex ? `<small style="display:block;font-size:11px;color:var(--ink-faint);font-weight:500;">${esc(ex)}</small>` : ''}</span>`;
+    const inner = `<span class="dt">${p.date ? md(p.date) : ''}</span><span class="pf">${esc(p.platform)}</span><span class="t">${esc(p.title)}</span><span class="vw">${kv(p.views)}회${ex ? `<small style="display:block;font-size:12px;color:var(--ink-faint);font-weight:500;">${esc(ex)}</small>` : ''}</span>`;
     return /^https?:\/\//.test(p.url) ? `<a class="jjh-post" href="${esc(safeUrl(p.url))}" target="_blank" rel="noopener">${inner}</a>` : `<div class="jjh-post">${inner}</div>`;
   }).join('');
   // 내 기획서 검수 결과 (2026-10-30, 자동매칭 「검수」 탭의 기획서별 마지막 기록)

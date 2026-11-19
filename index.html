@@ -925,6 +925,8 @@
   .sc-toggle{margin-top:12px; font-size:12px; color:var(--ink-soft); background:none; border:none; cursor:pointer; text-decoration:underline; padding:0;}
   /* 조회수 패치 */
   .hb{display:none; width:1.43em; height:1em; margin-left:4px; margin-right:0; vertical-align:-0.16em; background:center/contain no-repeat; flex:none; font-style:normal;}
+  /* 기장 C 마크 (2026-11-20 담당자 「기장 이름 우측 상단에 노란색 C」). 원 없이 노란 C만(같은 날 「그냥 c를 노랑으로만」, 흰 바탕 노란 글자 금지의 예외). 그림이라 다크 모드에서도 그대로. 기장 명단은 서버 roster.chiefs → cptApply가 보이게 함 */
+  .cpt{display:none; width:.62em; height:.62em; margin-left:1px; position:relative; top:-.55em; vertical-align:baseline; flex:none; font-style:normal; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13 3.6A6.2 6.2 0 1 0 13 12.4' fill='none' stroke='%23F2CE00' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;}
 
   /* ───── JJ 홈 (우수 홍보대사 · 주요 일정) ───── */
   .jjh-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin:12px 0 0}
@@ -8742,7 +8744,13 @@ const HB_CACHE_KEY = 'hbBadges.v5', HB_TTL = 6*60*60*1000;
 
 // 이름 앞에 붙는 패치 자리. 패치가 없는 사람은 아무것도 안 보여요.
 function hbEscAttr(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function nb(name){ const n = String(name||'').trim(); return n ? `<i class="hb" data-hb="${hbEscAttr(n)}"></i>` : ''; }
+function nb(name){ const n = String(name||'').trim(); return n ? `<i class="cpt" data-cpt="${hbEscAttr(n)}" title="기장"></i><i class="hb" data-hb="${hbEscAttr(n)}"></i>` : ''; }
+// 기장 C 마크: 서버 명단의 chiefs만 보이게 (이름은 공개 저장소에 두지 않음)
+function cptApply(chiefs){
+  let el = document.getElementById('cptStyle');
+  if(!el){ el = document.createElement('style'); el.id = 'cptStyle'; document.head.appendChild(el); }
+  el.textContent = (chiefs || []).map(n => `.cpt[data-cpt="${String(n).replace(/["\\]/g,'')}"]{display:inline-block;}`).join('\n');
+}
 // "홍길동, 김철수" 같은 목록 문자열 → 각 이름 앞에 패치 (html은 이미 이스케이프된 문자열)
 function nbList(html){ return String(html||'').replace(/[가-힣]{2,4}/g, m => hbRoster().includes(m) ? m + nb(m) : m); }
 
@@ -8820,6 +8828,7 @@ function jjRosterApply(r){
   Object.keys(MEMBER_DEPT).forEach(k => delete MEMBER_DEPT[k]); Object.assign(MEMBER_DEPT, r.dept || {});
   fill(PC_DEFAULT, AMBASSADOR_ROSTER.filter(n => !(r.pcExempt || []).includes(n)));
   fill(HB_EXCLUDE, r.hbExclude || []);
+  cptApply(r.chiefs);
   try{ document.dispatchEvent(new Event('jjroster')); }catch(e){}
   return true;
 }

@@ -924,14 +924,14 @@
   .sc-months button.on{border-color:var(--ink); color:var(--ink); font-weight:700;}
   .sc-toggle{margin-top:12px; font-size:12px; color:var(--ink-soft); background:none; border:none; cursor:pointer; text-decoration:underline; padding:0;}
   /* 조회수 패치 */
-  .hb{display:none; width:2.3em; height:1em; margin-left:0; margin-right:4px; vertical-align:-0.16em; background:right center/contain no-repeat; flex:none; font-style:normal;}
+  .hb{display:none; width:1.43em; height:1em; margin-left:0; margin-right:4px; vertical-align:-0.16em; background:right center/contain no-repeat; flex:none; font-style:normal;}
   /* 기장 C 마크 (2026-11-20 담당자 「기장 이름 우측 상단에 노란색 C」). 원 없이 노란 C만(같은 날 「그냥 c를 노랑으로만」, 흰 바탕 노란 글자 금지의 예외). 그림이라 다크 모드에서도 그대로. 기장 명단은 서버 roster.chiefs → cptApply가 보이게 함 */
   /* 정렬(같은 날 「이름에는 항상 달아주되, 다른 이름과 정렬은 항상 맞아야 함」): 모든 이름 뒤에 폭 0 칸 .nmk를 똑같이 두고 C·별은 그 위에 떠 있게 → 표시가 있어도 뒤 패치·글자가 밀리지 않음 */
-  .nmk{display:inline-block; position:relative; width:0; height:1em; vertical-align:baseline; flex:none; font-style:normal;}
-  .nmk>b{position:absolute; left:1px; top:-.5em; display:flex; gap:1px; white-space:nowrap; pointer-events:none;}
-  .cpt{display:none; width:.56em; height:.56em; flex:none; font-style:normal; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13 3.6A6.2 6.2 0 1 0 13 12.4' fill='none' stroke='%23F2CE00' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;}
+  .nmk{display:inline-block; position:relative; width:1.3em; height:1em; vertical-align:baseline; flex:none; font-style:normal;}   /* 같은 날 「다른 영역에 간섭은 있으면 안돼」: 폭 0으로 떠 있던 것을 모든 이름에 같은 폭 1.3em 칸으로 → 옆 글자·버튼과 겹치지 않고 정렬도 같음 */
+  .nmk>b{position:absolute; left:2px; top:-.18em; display:flex; gap:1px; white-space:nowrap; pointer-events:none;}
+  .cpt{display:none; width:.5em; height:.5em; flex:none; font-style:normal; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13 3.6A6.2 6.2 0 1 0 13 12.4' fill='none' stroke='%23F2CE00' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;}
   /* 우수 홍보대사 별 (2026-11-20 담당자 「이번 주 우수 홍보대사 이름 우측 상단에 별」). 홈 카드의 확정 1등(weeklyTop.top) → wstApply가 보이게 함 */
-  .wst{display:none; width:.62em; height:.62em; flex:none; font-style:normal; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 .9l2.15 4.6 5 .6-3.7 3.45.97 4.95L8 12.05 3.58 14.5l.97-4.95L.85 6.1l5-.6z' fill='%23F2CE00'/%3E%3C/svg%3E") center/contain no-repeat;}
+  .wst{display:none; width:.56em; height:.56em; flex:none; font-style:normal; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 .9l2.15 4.6 5 .6-3.7 3.45.97 4.95L8 12.05 3.58 14.5l.97-4.95L.85 6.1l5-.6z' fill='%23F2CE00'/%3E%3C/svg%3E") center/contain no-repeat;}
 
   /* ───── JJ 홈 (우수 홍보대사 · 주요 일정) ───── */
   .jjh-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin:12px 0 0}
@@ -7341,7 +7341,7 @@ function ttRender(){
   const pct = m => ((Math.min(Math.max(m, TT_S), TT_E) - TT_S) / (TT_E - TT_S) * 100).toFixed(2);
   let tl = '<div class="tt-tl"><div class="tt-ticks">' + [9,12,15,18].map(t => `<span style="left:${pct(t*60)}%">${t}시</span>`).join('') + '</div>';
   all.concat(part, no).forEach(r => {
-    tl += `<div class="tt-row"><span class="nm">${esc(r.name)}${nmk(r.name)}</span><div class="tt-track">`;
+    tl += `<div class="tt-row"><span class="nm">${esc(r.name)}</span><div class="tt-track">`;
     r.day.forEach(x => { const l = pct(ttMin(x.s)); tl += `<span class="tt-blk${x.q ? ' q' : ''}" style="left:${l}%; width:${(pct(ttMin(x.e)) - l).toFixed(2)}%;" title="${esc((x.c || '일정') + ' ' + x.s + '–' + x.e)}"></span>`; });
     tl += `<span class="tt-band" style="left:${pct(a)}%; width:${(pct(b) - pct(a)).toFixed(2)}%;"></span></div></div>`;
   });
@@ -8742,7 +8742,8 @@ const HB_TIERS = [
   { key:'bronze', min:100000,  label:'10만',  img:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 28'%3E%3Crect width='40' height='28' rx='4' fill='%23D6D6D6'/%3E%3Ctext x='20' y='20.8' text-anchor='middle' font-family='Pretendard,Apple SD Gothic Neo,Noto Sans KR,sans-serif' font-size='20' font-weight='800' fill='%23181818' letter-spacing='-0.4'%3E10%3C/text%3E%3C/svg%3E", dark:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 28'%3E%3Crect width='40' height='28' rx='4' fill='%23B8B8B8'/%3E%3Ctext x='20' y='20.8' text-anchor='middle' font-family='Pretendard,Apple SD Gothic Neo,Noto Sans KR,sans-serif' font-size='20' font-weight='800' fill='%23000000' letter-spacing='-0.4'%3E10%3C/text%3E%3C/svg%3E" }
 ];
 // 아직 10만 게시물이 없는 홍보대사에게 붙는 새싹 패치
-const HB_SPROUT_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 28'%3E%3Crect width='64' height='28' rx='4' fill='%23F2F2F2'/%3E%3Cpath d='M13 20v-6.2M13 14c0-3.4-2.4-5-5-5 0 3.2 2.2 5 5 5zM13 13c0-2.8 2.2-4.4 4.6-4.4 0 2.8-2 4.4-4.6 4.4z' fill='none' stroke='%236B6B6B' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ctext x='40' y='18.8' text-anchor='middle' font-family='Pretendard,Apple SD Gothic Neo,Noto Sans KR,sans-serif' font-size='13' font-weight='800' fill='%236B6B6B' letter-spacing='-0.4'%3E%EC%83%88%EC%8B%B9%3C/text%3E%3C/svg%3E", HB_SPROUT_DARK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 28'%3E%3Crect width='64' height='28' rx='4' fill='%23323232'/%3E%3Cpath d='M13 20v-6.2M13 14c0-3.4-2.4-5-5-5 0 3.2 2.2 5 5 5zM13 13c0-2.8 2.2-4.4 4.6-4.4 0 2.8-2 4.4-4.6 4.4z' fill='none' stroke='%23B3B3B3' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ctext x='40' y='18.8' text-anchor='middle' font-family='Pretendard,Apple SD Gothic Neo,Noto Sans KR,sans-serif' font-size='13' font-weight='800' fill='%23B3B3B3' letter-spacing='-0.4'%3E%EC%83%88%EC%8B%B9%3C/text%3E%3C/svg%3E";
+// 2026-11-20 담당자 「새싹 칩에 새싹 텍스트 빼고 새싹 크기를 키워」: 글자 없이 새싹만 1.8배, 칸은 100 패치와 같은 40×28
+const HB_SPROUT_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 28'%3E%3Crect width='40' height='28' rx='4' fill='%23F2F2F2'/%3E%3Cg transform='translate(20 14.6) scale(1.8) translate(-12.8 -14.3)'%3E%3Cpath d='M13 20v-6.2M13 14c0-3.4-2.4-5-5-5 0 3.2 2.2 5 5 5zM13 13c0-2.8 2.2-4.4 4.6-4.4 0 2.8-2 4.4-4.6 4.4z' fill='none' stroke='%236B6B6B' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E", HB_SPROUT_DARK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 28'%3E%3Crect width='40' height='28' rx='4' fill='%23323232'/%3E%3Cg transform='translate(20 14.6) scale(1.8) translate(-12.8 -14.3)'%3E%3Cpath d='M13 20v-6.2M13 14c0-3.4-2.4-5-5-5 0 3.2 2.2 5 5 5zM13 13c0-2.8 2.2-4.4 4.6-4.4 0 2.8-2 4.4-4.6 4.4z' fill='none' stroke='%23B3B3B3' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E";
 // 패치에서 제외할 사람 (본인 콘텐츠가 아닌 게시물로 잡히는 경우 등)
 const HB_EXCLUDE = [];   // 서버 명단(hbExclude)에서 채움 (2026-10-30)
 const HB_CACHE_KEY = 'hbBadges.v5', HB_TTL = 6*60*60*1000;
@@ -8809,7 +8810,7 @@ function hbApply(badges){
   });
   // 패치가 없는 현재 홍보대사 → 새싹
   MEETING_ROSTER.forEach(n => {
-    if(!badges[n]) css += `.hb[data-hb="${n.replace(/"/g,'')}"]{display:inline-block;width:2.3em;background-image:url("${HB_SPROUT_IMG}");}\n`;
+    if(!badges[n]) css += `.hb[data-hb="${n.replace(/"/g,'')}"]{display:inline-block;background-image:url("${HB_SPROUT_IMG}");}\n`;
     if(!badges[n]) css += `:root[data-theme="dark"] .hb[data-hb="${n.replace(/"/g,'')}"]{background-image:url("${HB_SPROUT_DARK}");}\n`;
   });
   let el = document.getElementById('hbStyle');

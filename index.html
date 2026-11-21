@@ -404,6 +404,7 @@
   .ia-sug li > b{display:block;}
   .ia-box button.ia-ask{margin-top:10px; padding:7px 12px; border-radius:10px; border:1px solid #CBCBCB; background:#fff; font-size:12.5px; cursor:pointer;}
   .ia-box button.ia-ask:disabled{opacity:.6; cursor:default;}
+  .uic{display:inline-block; width:1.15em; height:1.15em; vertical-align:-0.2em; margin-right:4px; flex:none;}
   .st-force{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line, #E5E5E5); font-size:11.5px; color:var(--ink-faint);}
   .st-force select{font-size:12px; padding:5px 8px; border-radius:8px; border:1px solid #DADADA; background:#fff; color:var(--ink);}
   .sub-card .sub-actions button, .qa-box .sub-actions button{flex:1; padding:9px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; border:none;}
@@ -3080,6 +3081,21 @@
 
 <script>
 // XSS 방지 (2026-10-16): 화면(innerHTML)에 넣는 학생 입력·시트 값은 esc(), href에 넣는 URL은 safeUrl() 후 esc()
+// 화면 아이콘은 색 이모지 대신 한 가지 선 아이콘으로(2026-11-21 담당자 「아이콘 통일화」): 일정 화면 CAL_I와 같은 24칸·선 1.75·글자색 따라감
+const UIC_P = {
+  timer:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M10 2h4"/>',
+  star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  cloudSun:'<path d="M12 2v2M4.9 4.9l1.4 1.4M20 12h2M19.1 4.9l-1.4 1.4M15.9 13.1A4 4 0 0 0 8.4 9.5"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6z"/>',
+  cloud:'<path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9z"/>',
+  rain:'<path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2M16 14v6M8 14v6M12 16v6"/>',
+  moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  camera:'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/>',
+  compass:'<circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-2.1 6.3-6.3 2.1 2.1-6.3z"/>',
+  alert:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/>'
+};
+function uic(k){ return UIC_P[k] ? `<svg class="uic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${UIC_P[k]}</svg>` : ''; }
 function esc(s){ return (s === undefined || s === null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function safeUrl(u){ const s = String(u == null ? '' : u); try{ const p = new URL(s.trim()); return (p.protocol === 'http:' || p.protocol === 'https:') ? s : ''; }catch(e){ return ''; } }
 function showConfirm(message){
@@ -5991,7 +6007,7 @@ function renderAdminList(items){
         ${['filming','editing','completed','uploaded'].includes(rec.status) ? `<div class="st-force rv-row" data-rv="${esc(key)}"><span>검수 <b class="rv-last" style="font-weight:600;">-</b></span><span style="display:flex;gap:10px;"><button type="button" class="toggle-detail" data-rvset="수정요청">수정요청</button><button type="button" class="toggle-detail" data-rvset="통과">통과</button></span></div>` : ''}
         ${rec.uploadedAt ? `<a class="up-link" ${/^https?:/.test(rec.uploadUrl) ? `href="${esc(safeUrl(rec.uploadUrl))}" target="_blank" rel="noopener"` : ''}>${mtFmt(rec.uploadedAt)} 업로드${/^https?:/.test(rec.uploadUrl) ? ' · 게시물 보기' : ''}</a>` : ''}
         ${['completed','uploaded'].includes(rec.status) ? `<div class="st-force" style="border-top:none; margin-top:8px; padding-top:0;"><span>제작 완료일 <small>(지연 감점 기준)</small></span><input type="date" data-done="${esc(key)}" value="${esc(doneYmd(rec.completedAt))}" style="font-size:12px; padding:5px 8px; border-radius:8px; border:1px solid #DADADA;"></div>` : ''}
-        ${['approved','filming','editing','completed','uploaded','dropped'].includes(rec.status) ? `<div class="st-force"><span>${rec.locked ? '관리자 지정' : ({completed:'제작 완료 (관리자 처리)', uploaded:'게시물이 올라와 자동 처리', dropped:'제작 중단 · 불참·장비 집계에서 빠짐'}[rec.status] || '⏱ 촬영일 기준 자동')}</span>
+        ${['approved','filming','editing','completed','uploaded','dropped'].includes(rec.status) ? `<div class="st-force"><span>${rec.locked ? '관리자 지정' : ({completed:'제작 완료 (관리자 처리)', uploaded:'게시물이 올라와 자동 처리', dropped:'제작 중단 · 불참·장비 집계에서 빠짐'}[rec.status] || uic('timer') + '촬영일 기준 자동')}</span>
           <select data-force="${esc(key)}"><option value="">상태 직접 변경</option>${rec.locked ? '<option value="auto">자동으로 되돌리기</option>' : ''}<option value="approved">승인됨 · 촬영 예정</option><option value="filming">촬영 중</option><option value="editing">편집 중</option><option value="completed">제작 완료</option><option value="uploaded">업로드 완료</option><option value="dropped">제작 중단</option></select></div>` : ''}
       </div>
     `;
@@ -7985,8 +8001,8 @@ function ltScore(theme, rows){
   else { s = 40 + Math.min(pr, 3) * 15 + pp * 0.3 - Math.max(0, pr - 5) * 10; }
   if(wind > 25) s -= (wind - 25) * 1.5;
   if(theme !== 'rain' && pr > 0.2) s -= 30;
-  const sky = pr > 0.2 || pp >= 60 ? '☔ 비' : cc < 30 ? '☀️ 맑음' : cc < 70 ? '⛅ 구름 조금' : '☁️ 흐림';
-  return { s: Math.round(s), sky: sky + (wind > 25 ? ' · 바람 강함' : '') };
+  const [ic, sky] = pr > 0.2 || pp >= 60 ? ['rain', '비'] : cc < 30 ? ['sun', '맑음'] : cc < 70 ? ['cloudSun', '구름 조금'] : ['cloud', '흐림'];
+  return { s: Math.round(s), ic, sky: sky + (wind > 25 ? ' · 바람 강함' : '') };
 }
 function ltRender(){
   const out = document.getElementById('ltOut'); if(!out || !ltTheme) return;
@@ -8013,7 +8029,7 @@ function ltRender(){
     const ok = theme === 'rain' ? 70 : 85;
     const good = best.filter(x => x.s >= ok - 25).sort((p, q) => q.s - p.s).slice(0, 3);
     const rows = good.map((x, i) => `<li class="lt-row${i ? '' : ' best'}${x.d === data.filmdate ? ' pick' : ''}">
-        <div class="lt-when"><b>${i ? '' : '⭐ '}${esc(formatDateLabel(x.d))} ${ltHm(x.a)}~${ltHm(x.b)}</b><span>${esc(x.sky)}</span></div>
+        <div class="lt-when"><b>${i ? '' : uic('star')}${esc(formatDateLabel(x.d))} ${ltHm(x.a)}~${ltHm(x.b)}</b><span>${uic(x.ic)}${esc(x.sky)}</span></div>
         <button type="button" data-d="${x.d}" data-a="${ltHm(x.a)}" data-b="${ltHm(x.b)}">이 시간으로</button></li>`).join('');
     const sun = data.filmdate && wx.sun[data.filmdate];
     let warn = '';
@@ -8090,11 +8106,11 @@ function sunRender(){
   if(sp.alt > 0){
     const ratio = 1 / Math.tan(sp.alt * SUN_R), back = sunDir((sp.az + 180) % 360);
     const high = sp.alt < 25 ? '낮음' : sp.alt < 45 ? '중간' : '높음';
-    facts.push(`☀️ 해: <b>${sunDir(sp.az)}쪽, ${high}</b> <small>(${Math.round(sp.az)}°, 높이 ${Math.round(sp.alt)}°)</small>`);
-    facts.push(`👤 그림자: <b>${back}쪽으로 ${ratio >= 2 ? '길게' : ratio >= 1 ? '키만큼' : '짧게'}</b>`);
-    facts.push(`📷 밝게: <b>해 등지기</b> · 역광: <b>해 보기</b>`);
-  } else facts.push(`🌙 ${sunLight(sp.alt)}`);
-  box.innerHTML = `<div class="sun-box"><h3>🧭 ${esc(from)}${to ? '~' + esc(to) : ''} 해 위치</h3>
+    facts.push(`${uic('sun')}해: <b>${sunDir(sp.az)}쪽, ${high}</b> <small>(${Math.round(sp.az)}°, 높이 ${Math.round(sp.alt)}°)</small>`);
+    facts.push(`${uic('user')}그림자: <b>${back}쪽으로 ${ratio >= 2 ? '길게' : ratio >= 1 ? '키만큼' : '짧게'}</b>`);
+    facts.push(`${uic('camera')}밝게: <b>해 등지기</b> · 역광: <b>해 보기</b>`);
+  } else facts.push(`${uic('moon')}${sunLight(sp.alt)}`);
+  box.innerHTML = `<div class="sun-box"><h3>${uic('compass')}${esc(from)}${to ? '~' + esc(to) : ''} 해 위치</h3>
     <div class="sun-row">${compass ? `<div class="sun-fig">${compass}</div>` : ''}<ul class="sun-facts">${facts.map(f => `<li>${f}</li>`).join('')}</ul></div></div>`;
 }
 // 캠퍼스 빛 3D(2026-10-30): 촬영 시간 바로 아래 버튼. 고른 날짜·시간·첫 촬영 장소를 넘겨 실제 건물 그늘을 확인
@@ -8131,20 +8147,20 @@ function wxRender(ask){
   ltLoad().then(wx => {
     if(key !== sunKey()) return;
     const rows = []; for(let m = a - a % 60; m < b; m += 60){ const r = wx.hours[`${d}T${ltHm(m)}`]; if(r) rows.push(r); }
-    if(!rows.length){ el.className = 'sg-wx'; el.innerHTML = '🌤️ 이 날짜는 아직 예보가 없어요.<small>촬영 2~3일 전에 날씨를 다시 확인해 주세요.</small>'; return; }
+    if(!rows.length){ el.className = 'sg-wx'; el.innerHTML = uic('cloudSun') + '이 날짜는 아직 예보가 없어요.<small>촬영 2~3일 전에 날씨를 다시 확인해 주세요.</small>'; return; }
     const max = k => Math.max(...rows.map(r => r[k] || 0)), min = k => Math.min(...rows.map(r => r[k] || 0));
     const pp = max('pp'), mm = rows.reduce((s, r) => s + (r.pr || 0), 0), cc = rows.reduce((s, r) => s + (r.cc || 0), 0) / rows.length;
     const rain = rows.some(r => (r.pr || 0) > 0.2) || pp >= 60;
-    const sky = rain ? '☔ 비 예보' : cc < 30 ? '☀️ 맑음' : cc < 70 ? '⛅ 구름 조금' : '☁️ 흐림';
+    const [ic, sky] = rain ? ['rain', '비 예보'] : cc < 30 ? ['sun', '맑음'] : cc < 70 ? ['cloudSun', '구름 조금'] : ['cloud', '흐림'];
     const t1 = Math.round(min('t')), t2 = Math.round(max('t'));
     const parts = [sky, t1 === t2 ? `${t1}℃` : `${t1}~${t2}℃`, `비 올 확률 ${pp}%`];
     if(mm >= 0.1) parts.push(`비 ${mm.toFixed(1)}mm`);
     if(max('wind') > 25) parts.push('바람 강함');
     el.className = 'sg-wx' + (rain ? ' rain' : '');
-    el.innerHTML = `${esc(formatDateLabel(d))} ${esc(data.filmfrom)}~${esc(data.filmto)} · ${esc(parts.join(' · '))}<small>예보는 바뀔 수 있어요. 촬영 전날 한 번 더 확인해 주세요.</small>`;
+    el.innerHTML = `${uic(ic)}${esc(formatDateLabel(d))} ${esc(data.filmfrom)}~${esc(data.filmto)} · ${esc(parts.join(' · '))}<small>예보는 바뀔 수 있어요. 촬영 전날 한 번 더 확인해 주세요.</small>`;
     if(!(ask && rain && wxWarned !== key && step === 12)) return;
     wxWarned = key;
-    showAlert(`☔ 이 시간에 비 예보가 있어요(비 올 확률 ${pp}%${mm >= 0.1 ? `, ${mm.toFixed(1)}mm` : ''}).\n\n야외 촬영이면 날짜·시간을 바꾸는 걸 생각해 보세요.`);
+    showAlert(`이 시간에 비 예보가 있어요(비 올 확률 ${pp}%${mm >= 0.1 ? `, ${mm.toFixed(1)}mm` : ''}).\n\n야외 촬영이면 날짜·시간을 바꾸는 걸 생각해 보세요.`);
   }).catch(() => { if(key === sunKey()){ el.className = 'sg-wx'; el.innerHTML = '예보를 불러오지 못했어요.<small>촬영 전날 날씨를 꼭 확인해 주세요.</small>'; } });
 }
 ['f_filmdate', 'f_filmfrom', 'f_filmto'].forEach(id => document.getElementById(id).addEventListener('change', () => wxRender(true)));
@@ -8232,7 +8248,7 @@ function eqRenderItem(){
     const mine = eqItems.filter(it => Number(it.label) === e.label && it.end >= today);
     const now = mine.some(it => it.start <= today), bad = mine.some(it => eqBad.has(it.id));
     const fut = mine.filter(it => it.start > today).length;
-    const tail = [now ? '대여 중' : '', fut ? '예정 ' + fut : '', bad ? '⚠겹침' : ''].filter(Boolean).join('·');
+    const tail = [now ? '대여 중' : '', fut ? '예정 ' + fut : '', bad ? '겹침' : ''].filter(Boolean).join('·');
     return `<option value="${e.label}">[${e.cat}] ${e.name} #${e.label}${tail ? ' (' + tail + ')' : ''}</option>`;
   }).join('');
   if(prev) sel.value = prev;
@@ -8261,7 +8277,7 @@ function eqRenderItem(){
         <div class="eqi-title">${it.mask ? '홍보실 사용' : dept ? `<span class="eqi-dept">다른 부서</span>${abEsc(it.who || '-')}` : abEsc(it.title || '직접 추가')}</div>
         <div class="eqi-who">${dept ? (it.memo ? abEsc(it.memo) : '') : abEsc(it.who || '-') + (it.memo ? ' · ' + abEsc(it.memo) : '')}</div>
         ${kit.length ? `<div class="eqi-kit-btn">장비 ${kit.length}개 보기<span class="ch">▾</span></div>${kitHtml}` : ''}
-        ${clash.length ? `<div class="eqi-clash">⚠ 시간이 겹쳐요: ${clash.map(o => abEsc(o.who || '-') + ' (' + abEsc(o.title || '직접 추가') + ')').join(', ')}</div>` : ''}</div>
+        ${clash.length ? `<div class="eqi-clash">${uic('alert')}시간이 겹쳐요: ${clash.map(o => abEsc(o.who || '-') + ' (' + abEsc(o.title || '직접 추가') + ')').join(', ')}</div>` : ''}</div>
       <button class="ab-btn" ${dept ? `data-eqg="${abEsc(eqGroupKey(it))}"` : `data-eq="${abEsc(it.id)}"`}>수정</button></div>`;
   };
   const el = document.getElementById('eqItemList');

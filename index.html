@@ -5435,9 +5435,9 @@ function svRender(msg, err){
     }).join('');
     let foot = '';
     // 모든 날짜를 골라야 저장 (2026-11-16 담당자 「필수 입력으로」: 일부만 고른 응답이 생김)
-    // 버튼엔 안 고른 날짜를 그대로 보여 줌 (담당자 「1일보다는 안 고른 날짜를」)
+    // 버튼엔 짧게: 처음엔 「가능한 일정을 골라 주세요」, 고르다 말면 「남은 n일도」 (2026-11-21 담당자 「날짜를 다 보여주면 너무 길다」, 예전 「안 고른 날짜를」 대신)
     const left = it.dates.filter(d => !val(d)).map(d => d.label);
-    if(canAns && it.open) foot = `<button type="button" class="sv-save" data-svsave="${esc(it.id)}" ${changed && !left.length ? '' : 'disabled'}>${left.length ? `${esc(left.join(', '))} 골라 주세요` : (changed ? '저장' : '저장했어요')}</button>`
+    if(canAns && it.open) foot = `<button type="button" class="sv-save" data-svsave="${esc(it.id)}" ${changed && !left.length ? '' : 'disabled'}>${left.length ? (left.length === it.dates.length ? '가능한 일정을 골라 주세요' : `남은 ${left.length}일도 골라 주세요`) : (changed ? '저장' : '저장했어요')}</button>`
       + `<p class="sv-msg">${(stu ? '테스트(모델팀 화면)' : esc(r.me))} · ${it.dates.length}일 중 ${done}일 골랐어요. 모든 날짜에 가능·불가를 골라야 저장돼요. 바뀌면 ${esc(due)}까지 다시 고를 수 있어요.</p>`;
     else if(canAns) foot = `<p class="sv-msg">응답을 받는 기간(${esc(due)}까지)이 지났어요. 바꿀 게 있으면 담당자에게 말해 주세요.</p>`;
     else if(!adm) foot = `<p class="sv-msg">로그인한 계정이 아직 이름과 연결되지 않았어요. 이름을 연결하면 고를 수 있어요.</p><button type="button" class="sv-link" data-svlink="1">내 이름 연결하기</button>`;

@@ -3093,6 +3093,10 @@ const UIC_P = {
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   camera:'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/>',
   compass:'<circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-2.1 6.3-6.3 2.1 2.1-6.3z"/>',
+  check:'<circle cx="12" cy="12" r="10"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/>',
+  upload:'<path d="M12 15V3M7 8l5-5 5 5M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>',
+  stop:'<circle cx="12" cy="12" r="10"/><path d="M9 9h6v6H9z"/>',
+  lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   alert:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/>'
 };
 function uic(k){ return UIC_P[k] ? `<svg class="uic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${UIC_P[k]}</svg>` : ''; }
@@ -6007,7 +6011,7 @@ function renderAdminList(items){
         ${['filming','editing','completed','uploaded'].includes(rec.status) ? `<div class="st-force rv-row" data-rv="${esc(key)}"><span>검수 <b class="rv-last" style="font-weight:600;">-</b></span><span style="display:flex;gap:10px;"><button type="button" class="toggle-detail" data-rvset="수정요청">수정요청</button><button type="button" class="toggle-detail" data-rvset="통과">통과</button></span></div>` : ''}
         ${rec.uploadedAt ? `<a class="up-link" ${/^https?:/.test(rec.uploadUrl) ? `href="${esc(safeUrl(rec.uploadUrl))}" target="_blank" rel="noopener"` : ''}>${mtFmt(rec.uploadedAt)} 업로드${/^https?:/.test(rec.uploadUrl) ? ' · 게시물 보기' : ''}</a>` : ''}
         ${['completed','uploaded'].includes(rec.status) ? `<div class="st-force" style="border-top:none; margin-top:8px; padding-top:0;"><span>제작 완료일 <small>(지연 감점 기준)</small></span><input type="date" data-done="${esc(key)}" value="${esc(doneYmd(rec.completedAt))}" style="font-size:12px; padding:5px 8px; border-radius:8px; border:1px solid #DADADA;"></div>` : ''}
-        ${['approved','filming','editing','completed','uploaded','dropped'].includes(rec.status) ? `<div class="st-force"><span>${rec.locked ? '관리자 지정' : ({completed:'제작 완료 (관리자 처리)', uploaded:'게시물이 올라와 자동 처리', dropped:'제작 중단 · 불참·장비 집계에서 빠짐'}[rec.status] || uic('timer') + '촬영일 기준 자동')}</span>
+        ${['approved','filming','editing','completed','uploaded','dropped'].includes(rec.status) ? `<div class="st-force"><span>${rec.locked ? uic('lock') + '관리자 지정' : ({completed:uic('check') + '제작 완료 (관리자 처리)', uploaded:uic('upload') + '게시물이 올라와 자동 처리', dropped:uic('stop') + '제작 중단 · 불참·장비 집계에서 빠짐'}[rec.status] || uic('timer') + '촬영일 기준 자동')}</span>
           <select data-force="${esc(key)}"><option value="">상태 직접 변경</option>${rec.locked ? '<option value="auto">자동으로 되돌리기</option>' : ''}<option value="approved">승인됨 · 촬영 예정</option><option value="filming">촬영 중</option><option value="editing">편집 중</option><option value="completed">제작 완료</option><option value="uploaded">업로드 완료</option><option value="dropped">제작 중단</option></select></div>` : ''}
       </div>
     `;

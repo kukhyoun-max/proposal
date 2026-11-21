@@ -405,6 +405,20 @@
   .ia-box button.ia-ask{margin-top:10px; padding:7px 12px; border-radius:10px; border:1px solid #CBCBCB; background:#fff; font-size:12.5px; cursor:pointer;}
   .ia-box button.ia-ask:disabled{opacity:.6; cursor:default;}
   .uic{display:inline-block; width:1.15em; height:1.15em; vertical-align:-0.2em; margin-right:4px; flex:none;}
+  /* 행사 탭 「지원 조사」 상단 게시 (2026-11-21) */
+  .sva-row{display:grid; grid-template-columns:1fr 88px 44px; gap:6px; align-items:center; padding:8px 0; border-top:1px dashed var(--line);}
+  .sva-row:first-child{border-top:0; padding-top:0;}
+  .sva-row .sva-need{display:flex; align-items:center; gap:4px; font-size:13px; color:var(--ink-soft);}
+  .sva-row .sva-need input{text-align:center; padding:10px 4px;}
+  .sva-row .sva-det{grid-column:1 / -1;}
+  .sva-row .sva-x{min-height:44px; border:1.5px solid var(--line); border-radius:10px; background:transparent; color:var(--ink-soft); font-size:15px; cursor:pointer;}
+  .sva-due{display:grid; grid-template-columns:1fr 150px; gap:6px;}
+  #svaAud button.on{background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  .sva-card{cursor:default;}
+  .sva-card .sva-st{float:right; font-size:12px; font-weight:700; padding:2px 8px; border-radius:20px; background:#F1F1F1; color:#646464;}
+  .sva-card .sva-st.live{background:var(--point); color:#000;}
+  .sva-acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+  .sva-acts button{min-height:40px;}
   .st-force{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line, #E5E5E5); font-size:11.5px; color:var(--ink-faint);}
   .st-force select{font-size:12px; padding:5px 8px; border-radius:8px; border:1px solid #DADADA; background:#fff; color:var(--ink);}
   .sub-card .sub-actions button, .qa-box .sub-actions button{flex:1; padding:9px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; border:none;}
@@ -2271,6 +2285,9 @@
 :root[data-theme="dark"] #btnHome svg [fill="#6B6B6B"]{fill:#6B6B6B}
 :root[data-theme="dark"] #btnHome svg [fill="#CECECE"]{fill:#CECECE}
 :root[data-theme="dark"] #btnHome svg [fill="#fff"]{fill:#fff}
+:root[data-theme="dark"] #svaAud button.on{background:#202020;color:var(--ink);box-shadow:none}
+:root[data-theme="dark"] .sva-card .sva-st{background:#242424;color:#C3C3C3}
+:root[data-theme="dark"] .sva-card .sva-st.live{background:var(--point);color:#000}
 /* DARK:END */
   /* 아이콘 선 굵기 통일 (2026-11-19 담당자 「아이콘 라인 굵기, 디자인 전체 다 통일」): 아이콘 크기가 달라도 화면에 보이는 선은 모두 1.5px.
      non-scaling-stroke라 viewBox 배율과 상관없음. 트로피도 포함(같은 날 담당자 「응 맞춰」). 출석 그림·그래프·체크박스 체크 표시는 그림이라 제외 */
@@ -2835,7 +2852,35 @@
     <button class="reset-link" id="btnEventBack">← 돌아가기</button>
   </div>
   <div class="content" style="padding-top:0;">
-    <div class="sc-seg" id="evSeg"><button data-k="행사" class="on">행사</button><button data-k="요청사항">요청사항</button><button data-k="이벤트">이벤트</button></div>
+    <div class="sc-seg" id="evSeg"><button data-k="행사" class="on">행사</button><button data-k="요청사항">요청사항</button><button data-k="이벤트">이벤트</button><button data-k="지원 조사">지원 조사</button></div>
+    <div id="svAdmSection" style="display:none;">
+    <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;">「상단 게시」를 누르면 홈 맨 위에 <b>지원 조사</b> 카드로 올라가요. 노출 대상만 카드를 보고 날짜마다 가능·불가를 골라요. 확정·홍보실 엑셀은 홈 카드에서 해요.</p>
+    <div class="mt-tools">
+      <span id="svaInfo">불러오는 중...</span>
+      <button class="mt-quick" id="svaNew" style="color:var(--purple); border-color:var(--purple); font-weight:700;">+ 새 지원 조사</button>
+    </div>
+    <div class="ev-form" id="svaForm" style="display:none;">
+      <b id="svaFormTitle" style="font-size:14px;">새 지원 조사</b>
+      <label for="svaTitle">제목</label><input type="text" id="svaTitle" maxlength="60" placeholder="예) 영화관 입시설명회 홍보대사 지원 (12월)">
+      <label for="svaPlace">장소 <small style="font-weight:400; color:var(--ink-faint);">선택</small></label><input type="text" id="svaPlace" maxlength="60" placeholder="예) 전주롯데백화점 7층 시네마">
+      <label for="svaNote">안내 <small style="font-weight:400; color:var(--ink-faint);">선택 · 복장·시간 등</small></label><input type="text" id="svaNote" maxlength="120" placeholder="예) 단복 · 08:30~12:30 내외">
+      <label>날짜·필요 인원</label>
+      <div id="svaDates"></div>
+      <button type="button" class="mt-quick" id="svaAddDate" style="margin-top:6px;">+ 날짜 추가</button>
+      <label for="svaUntilD">응답 마감</label>
+      <div class="sva-due"><input type="date" id="svaUntilD" aria-label="마감 날짜"><input type="time" id="svaUntilT" value="11:00" aria-label="마감 시각"></div>
+      <label style="display:flex; align-items:center;">노출 대상 <span id="svaTgCount" style="margin-left:4px;"></span></label>
+      <div class="sc-seg" id="svaAud" role="group" aria-label="노출 대상" style="margin:4px 0 0;"><button type="button" data-a="모델팀">모델팀</button><button type="button" data-a="전체">전체</button><button type="button" data-a="직접">직접 고르기</button></div>
+      <div class="ev-chips" id="svaChips" style="margin-top:8px;"></div>
+      <p id="svaEditNote" class="sv-msg" style="margin-top:8px; display:none;">날짜를 빼면 그 날짜에 받은 응답은 카드에서 안 보여요(기록은 남아요).</p>
+      <p id="svaMsg" class="sv-msg err" role="status" style="margin-top:8px;"></p>
+      <button class="mt-save" id="svaSave">상단 게시</button>
+      <div style="display:flex; justify-content:space-between; margin-top:10px;">
+        <button class="ab-btn" id="svaCancel">닫기</button>
+      </div>
+    </div>
+    <div id="svaList"></div>
+    </div>
     <div id="tkSection" style="display:none;">
     <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;" id="tkHint"></p>
     <div class="mt-tools">
@@ -5339,6 +5384,7 @@ async function svHomeLoad(){
   if(!r || !r.ok){ if(focus && !svData) el.innerHTML = '<p class="sv-msg err">불러오지 못했어요. 잠시 뒤 링크를 다시 열어 주세요.</p>'; return; }
   // 마감한 조사는 홈에서 내림. ?sv= 링크로 열면 그대로 보임(확정·엑셀용) (2026-11-17 담당자 「이제 공지에서 닫자」)
   if(!focus && !svPageOn()) r.items = (r.items || []).filter(it => it.open);
+  r.items = (r.items || []).filter(it => !it.ended && !it.off); // 2026-11-21: 관리자는 끝난·내린 조사도 받음 → 홈엔 안 올림(행사 탭 「지원 조사」에서 다룸)
   if(!(r.items || []).length){
     if(focus){ el.style.display = ''; el.innerHTML = '<div class="sv-k"><span>지원 조사</span></div><p class="sv-msg" style="margin-top:6px">이 링크의 조사는 정해진 팀만 볼 수 있어요. 대상인데 안 보이면 담당자에게 말해 주세요.</p>'; svFocusDone(); }
     else if(!svPageOn()){ svData = null; el.style.display = 'none'; }
@@ -5436,6 +5482,137 @@ function svChips(it, d){
   names.sort((a, b) => (yes.includes(b) - yes.includes(a)) || a.localeCompare(b, 'ko'));
   return `<span class="sv-who">확정<span class="sv-cf-n">${cf.length}/${esc(d.need)}명</span></span><div class="sv-chips" role="group" aria-label="${esc(d.label)} 확정 인원">`
     + names.map(n => `<button type="button" class="sv-chip${yes.includes(n) ? ' yes' : ''}" data-cfid="${esc(it.id)}" data-cfd="${esc(d.date)}" data-cfn="${esc(n)}" aria-pressed="${cf.includes(n)}">${abEsc(n)}</button>`).join('') + '</div>';
+}
+/* ── 행사 탭 「지원 조사」: 상단 게시·수정·내리기 (2026-11-21 담당자 「행사 탭에서 상단 게시 버튼(노출 대상 설정도 가능하게) 누르면 지금처럼 상단에 노출」)
+ * 서버 Support.gs svPost(만들기·고치기)·svOff(내리기·다시 올리기), 전체 관리자 계정만. 목록은 svList(관리자는 내린·끝난 조사도 받음) */
+let svaData = null, svaEditing = null, svaAud = '모델팀', svaNames = new Set(), svaBusy = false;
+const SV_LINK = id => 'https://kukhyoun-max.github.io/proposal/?sv=' + encodeURIComponent(id);
+async function svaLoad(){
+  if(!svaData) document.getElementById('svaInfo').textContent = '불러오는 중...';
+  let r = null;
+  try{ r = await attendJsonpCall({ action:'svList' }); }catch(e){ r = null; }
+  if(!r || !r.ok){ document.getElementById('svaInfo').textContent = '불러오지 못했어요. 탭을 다시 눌러 주세요.'; return; }
+  if(!r.admin){ document.getElementById('svaInfo').textContent = '전체 관리자 계정만 게시할 수 있어요.'; document.getElementById('svaNew').style.display = 'none'; svaData = r; svaRenderList(); return; }
+  svaData = r; svaRenderList();
+}
+function svaState(it){ return it.off ? ['내림', ''] : it.ended ? ['끝남', ''] : it.open ? ['게시 중', 'live'] : ['마감', '']; }
+function svaAudText(it){ return it.aud === '모델팀' ? `모델팀 ${it.total}명` : it.aud === '직접' ? `지정 ${it.total}명` : `전체 ${it.total}명`; }
+function svaRenderList(){
+  const r = svaData, items = (r && r.items) || [];
+  document.getElementById('svaInfo').textContent = `지원 조사 ${items.length}건`;
+  const el = document.getElementById('svaList');
+  el.innerHTML = items.length ? items.slice().reverse().map(it => {
+    const [st, cls] = svaState(it), d0 = it.dates[0], d1 = it.dates[it.dates.length - 1];
+    const span = it.dates.length > 1 ? `${d0.label}~${d1.label} · ${it.dates.length}일` : d0.label;
+    const need = it.dates.reduce((t, d) => t + (Number(d.need) || 0), 0);
+    return `<div class="ev-card sva-card"><span class="sva-st ${cls}">${st}</span><b>${abEsc(it.title)}</b>
+      <div class="ev-meta">${esc(span)} · 필요 ${need}명 · ${esc(svaAudText(it))}</div>
+      <div class="ev-meta">마감 ${esc(String(it.until).slice(5).replace('-', '/'))} · 응답 ${esc(it.answered)}/${esc(it.total)}명</div>
+      ${r.admin ? `<div class="sva-acts"><button type="button" class="mt-quick" data-svaed="${esc(it.id)}">수정</button>`
+        + (it.ended ? '' : `<button type="button" class="mt-quick" data-svaoff="${esc(it.id)}" data-off="${it.off ? '0' : '1'}">${it.off ? '다시 상단 게시' : '홈에서 내리기'}</button>`)
+        + `<button type="button" class="mt-quick" data-svalink="${esc(it.id)}">링크 복사</button></div>` : ''}
+    </div>`; }).join('') : '<p style="font-size:12.5px;color:var(--ink-faint);">게시한 지원 조사가 없어요. <b>+ 새 지원 조사</b>로 만들어 주세요.</p>';
+  el.querySelectorAll('[data-svaed]').forEach(b => b.onclick = () => svaOpen(items.find(x => x.id === b.dataset.svaed)));
+  el.querySelectorAll('[data-svaoff]').forEach(b => b.onclick = () => svaOff(b.dataset.svaoff, b.dataset.off === '1'));
+  el.querySelectorAll('[data-svalink]').forEach(b => b.onclick = async () => {
+    try{ await navigator.clipboard.writeText(SV_LINK(b.dataset.svalink)); b.textContent = '복사했어요'; setTimeout(() => { b.textContent = '링크 복사'; }, 1800); }
+    catch(e){ showAlert('이 링크를 복사해 주세요\n' + SV_LINK(b.dataset.svalink)); }
+  });
+}
+function svaDateRow(d){
+  const row = document.createElement('div'); row.className = 'sva-row';
+  row.innerHTML = `<input type="date" class="sva-d" aria-label="날짜" value="${esc(d.date || '')}">`
+    + `<span class="sva-need"><input type="number" class="sva-n" min="1" max="20" step="1" aria-label="필요 인원" value="${esc(d.need || 1)}">명</span>`
+    + `<button type="button" class="sva-x" aria-label="이 날짜 빼기">✕</button>`
+    + `<input type="text" class="sva-det" maxlength="120" aria-label="세부" placeholder="세부 (선택) 예) 09:00 ○○고 · 10:00 ○○고" value="${esc(d.detail || '')}">`;
+  row.querySelector('.sva-x').onclick = () => { row.remove(); if(!document.querySelector('#svaDates .sva-row')) svaDateRow({}); };
+  document.getElementById('svaDates').appendChild(row);
+  return row;
+}
+function svaRenderAud(){
+  document.querySelectorAll('#svaAud button').forEach(b => b.classList.toggle('on', b.dataset.a === svaAud));
+  const r = svaData || {}, roster = r.roster || MEETING_ROSTER, model = r.model || [];
+  const el = document.getElementById('svaChips');
+  let n = roster.length;
+  if(svaAud === '직접'){
+    el.innerHTML = roster.map(x => `<button type="button" data-n="${abEsc(x)}" class="${svaNames.has(x) ? 'on' : ''}" aria-pressed="${svaNames.has(x)}">${hbi(x)}${abEsc(x)}${nb(x)}</button>`).join('');
+    el.querySelectorAll('button').forEach(b => b.onclick = () => { const x = b.dataset.n; svaNames.has(x) ? svaNames.delete(x) : svaNames.add(x); svaRenderAud(); });
+    n = roster.filter(x => svaNames.has(x)).length;
+  } else {
+    const list = svaAud === '모델팀' ? model : roster; n = list.length;
+    el.innerHTML = `<p class="sv-msg" style="margin:0;">${list.map(abEsc).join(', ') || '-'}</p>`;
+  }
+  document.getElementById('svaTgCount').textContent = `(${n}명)`;
+}
+document.querySelectorAll('#svaAud button').forEach(b => b.addEventListener('click', () => { svaAud = b.dataset.a; svaRenderAud(); }));
+function svaOpen(it){
+  svaEditing = it || null;
+  document.getElementById('svaFormTitle').textContent = it ? '지원 조사 수정' : '새 지원 조사';
+  document.getElementById('svaSave').textContent = it ? (it.off ? '수정 저장 (내린 상태 그대로)' : '수정해서 상단 게시') : '상단 게시';
+  document.getElementById('svaEditNote').style.display = it ? '' : 'none';
+  document.getElementById('svaTitle').value = it ? it.title : '';
+  document.getElementById('svaPlace').value = it ? (it.place || '') : '';
+  document.getElementById('svaNote').value = it ? (it.note || '') : '';
+  const [ud, ut] = it ? String(it.until).split(' ') : ['', '11:00'];
+  document.getElementById('svaUntilD').value = ud || '';
+  document.getElementById('svaUntilT').value = ut || '23:59';
+  document.getElementById('svaDates').innerHTML = '';
+  (it ? it.dates : [{}]).forEach(svaDateRow);
+  svaAud = it ? (it.aud || (it.team === '모델팀' ? '모델팀' : '전체')) : '모델팀';
+  svaNames = new Set(it && it.names ? it.names : []);
+  svaRenderAud();
+  document.getElementById('svaMsg').textContent = '';
+  const f = document.getElementById('svaForm'); f.style.display = '';
+  f.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+document.getElementById('svaNew').addEventListener('click', () => svaOpen(null));
+document.getElementById('svaAddDate').addEventListener('click', () => {
+  const rows = [...document.querySelectorAll('#svaDates .sva-row')], last = rows[rows.length - 1];
+  const r = svaDateRow({ need: last ? last.querySelector('.sva-n').value : 1 });
+  r.querySelector('.sva-d').focus();
+});
+document.getElementById('svaCancel').addEventListener('click', () => { document.getElementById('svaForm').style.display = 'none'; svaEditing = null; });
+function svaCollect(){
+  const v = id => document.getElementById(id).value.trim();
+  const dates = [...document.querySelectorAll('#svaDates .sva-row')].map(r => ({ date: r.querySelector('.sva-d').value, need: Number(r.querySelector('.sva-n').value) || 0, detail: r.querySelector('.sva-det').value.trim() })).filter(d => d.date);
+  const s = { title: v('svaTitle'), place: v('svaPlace'), note: v('svaNote'), until: v('svaUntilD') + ' ' + (v('svaUntilT') || '23:59'), aud: svaAud, names: svaAud === '직접' ? [...svaNames] : [], dates };
+  if(svaEditing) s.id = svaEditing.id;
+  const days = dates.map(d => d.date);
+  const err = !s.title ? '제목을 넣어 주세요.'
+    : !dates.length ? '날짜를 하나 이상 넣어 주세요.'
+    : new Set(days).size !== days.length ? '같은 날짜가 두 번 들어 있어요.'
+    : dates.some(d => d.need < 1 || d.need > 20) ? '필요 인원은 1~20명으로 넣어 주세요.'
+    : !v('svaUntilD') ? '응답 마감 날짜를 넣어 주세요.'
+    : v('svaUntilD') > days.slice().sort()[0] ? '응답 마감은 첫 날짜보다 앞이어야 해요.'
+    : svaAud === '직접' && !svaNames.size ? '노출할 사람을 한 명 이상 골라 주세요.' : '';
+  return { s, err };
+}
+const SVA_ERR = { auth:'전체 관리자 계정만 게시할 수 있어요.', title:'제목을 넣어 주세요.', until:'마감 날짜를 다시 확인해 주세요.', dates:'날짜를 하나 이상 넣어 주세요.', names:'노출할 사람을 한 명 이상 골라 주세요.', no_survey:'이 조사를 찾지 못했어요. 새로고침해 주세요.' };
+document.getElementById('svaSave').addEventListener('click', async () => {
+  if(svaBusy) return;
+  const { s, err } = svaCollect(), msg = document.getElementById('svaMsg');
+  if(err){ msg.textContent = err; return; }
+  const who = svaAud === '모델팀' ? '모델팀' : svaAud === '직접' ? `고른 ${svaNames.size}명` : '홍보대사 전원';
+  if(!svaEditing && !(await showConfirm(`「${s.title}」을 홈 맨 위에 올릴까요?\n\n노출 대상: ${who}\n날짜 ${s.dates.length}일 · 마감 ${s.until.slice(5).replace('-', '/')}`))) return;
+  svaBusy = true; const btn = document.getElementById('svaSave'), t0 = btn.textContent; btn.disabled = true; btn.textContent = '올리는 중…'; msg.textContent = '';
+  let j = null;
+  try{ j = await mcPost({ action:'svPost', survey: s }); }catch(e){ j = null; }
+  svaBusy = false; btn.disabled = false; btn.textContent = t0;
+  if(!(j && j.ok)){ msg.textContent = (j && SVA_ERR[j.error]) || ('저장하지 못했어요. 다시 눌러 주세요.' + (j && j.error ? ' (' + j.error + ')' : '')); return; }
+  document.getElementById('svaForm').style.display = 'none'; svaEditing = null;
+  await svaLoad(); svHomeLoad();
+  showAlert('홈 맨 위에 올렸어요. 노출 대상에게만 보여요.\n\n링크로 따로 보낼 땐 목록의 「링크 복사」를 눌러 주세요.');
+});
+async function svaOff(id, off){
+  const it = ((svaData && svaData.items) || []).find(x => x.id === id);
+  if(!it || svaBusy) return;
+  if(!(await showConfirm(off ? `「${it.title}」을 홈에서 내릴까요?\n\n받은 응답과 확정은 그대로 남고, 다시 올릴 수 있어요. 내린 동안은 응답을 받지 않아요.` : `「${it.title}」을 다시 홈 맨 위에 올릴까요?`))) return;
+  svaBusy = true;
+  let j = null;
+  try{ j = await mcPost({ action:'svOff', id, off }); }catch(e){ j = null; }
+  svaBusy = false;
+  if(!(j && j.ok)){ showAlert((j && SVA_ERR[j.error]) || '바꾸지 못했어요. 다시 눌러 주세요.'); return; }
+  await svaLoad(); svHomeLoad();
 }
 async function svCfSave(id){
   const it = svData && svData.items.find(x => x.id === id);
@@ -7705,7 +7882,9 @@ function evSetKind(k){
   evKind = k;
   document.querySelectorAll('#evSeg button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
   document.getElementById('evSection').style.display = k === '행사' ? '' : 'none';
-  document.getElementById('tkSection').style.display = k === '행사' ? 'none' : '';
+  document.getElementById('tkSection').style.display = k === '행사' || k === '지원 조사' ? 'none' : '';
+  document.getElementById('svAdmSection').style.display = k === '지원 조사' ? '' : 'none';
+  if(k === '지원 조사'){ svaLoad(); return; }
   if(k !== '행사'){
     if(tkKind !== k) document.getElementById('tkForm').style.display = 'none';
     tkKind = k;

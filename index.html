@@ -4912,9 +4912,9 @@ function ovFmt(ymd){ const d = new Date(ymd + 'T00:00:00'); return (d.getMonth()
 function ovRenderDeadline(){
   const p = n => String(n).padStart(2,'0');
   const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  // 개인콘텐츠 루틴: 수요일 16시 기획서 마감 → 다음 주 월요일 자정(24시) 콘텐츠 마감
+  // 수요일 16시 = 팀콘 기획서 마감(2026-11-24 담당자 「팀콘 기획서 마감이야」), 월요일 자정(24시) = 개인 콘텐츠 마감
   // 팀콘 영상 제출: 2주 간격 목요일 자정(2026-11-26 목요일 기준, 2026-11-23 담당자)
-  const DL = [{ dow: 3, label: '개인 기획서', hour: 16, time: '16시까지' }, { dow: 1, label: '개인 콘텐츠', hour: 24, time: '자정까지' },
+  const DL = [{ dow: 3, label: '팀콘 기획서', hour: 16, time: '16시까지' }, { dow: 1, label: '개인 콘텐츠', hour: 24, time: '자정까지' },
               { dow: 4, label: '팀콘 영상 제출', hour: 24, time: '자정까지', every: 2, anchor: '2026-11-26' }];
   const cards = DL.map(x => {
     let diff = (x.dow - today.getDay() + 7) % 7;   // 오늘이 마감일이면 0

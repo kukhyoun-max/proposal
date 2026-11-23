@@ -5527,7 +5527,8 @@ const SV_LINK = id => 'https://kukhyoun-max.github.io/proposal/?sv=' + encodeURI
 async function svaLoad(){
   if(!svaData) document.getElementById('svaInfo').textContent = '불러오는 중...';
   let r = null;
-  try{ r = await attendJsonpCall({ action:'svList' }); }catch(e){ r = null; }
+  // 2026-11-23 담당자 「지원조사 누르면 불러오기 동그라미 안 떠」: 처음 받을 때(화면이 빈 때)는 로딩창
+  try{ r = await (svaData ? attendJsonpCall({ action:'svList' }) : jjLoading(attendJsonpCall({ action:'svList' }))); }catch(e){ r = null; }
   if(!r || !r.ok){ document.getElementById('svaInfo').textContent = '불러오지 못했어요. 탭을 다시 눌러 주세요.'; return; }
   if(!r.admin){ document.getElementById('svaInfo').textContent = '전체 관리자 계정만 게시할 수 있어요.'; document.getElementById('svaNew').style.display = 'none'; svaData = r; svaRenderList(); return; }
   svaData = r;
@@ -8257,7 +8258,7 @@ function ltRender(){
   const out = document.getElementById('ltOut'); if(!out || !ltTheme) return;
   const theme = ltTheme;
   out.innerHTML = '<p class="lt-note">예보를 불러오는 중이에요…</p>';
-  ltLoad().then(wx => {
+  (ltWx ? ltLoad() : jjLoading(ltLoad())).then(wx => {
     if(theme !== ltTheme) return;
     const filmEl = document.getElementById('f_filmdate');
     const days = [...filmEl.options].map(o => o.value).filter(Boolean);
@@ -8739,7 +8740,7 @@ async function scLoad(){
   const info = document.getElementById('scInfo');
   info.textContent = '불러오는 중...';
   try{
-    const all = await scFetch();
+    const all = await jjLoading(scFetch());   // 2026-11-23 로딩창 (점수표는 매번 새로 받음)
     // 시트 맨 아래 안내 줄(갱신 시각·면담/제적 기준)은 사람이 아니라서 따로 빼서 보여줘요
     const isNote = r => { const n = String(r['이름']).trim(); return /[:：|]/.test(n) || n.length > 6; };
     scNote = all.filter(isNote).map(r => String(r['이름']).trim()).join(' / ');
@@ -8807,7 +8808,7 @@ async function scWhyLoad(){
   if(!x || !String(x['상태'] || '').trim()) return;
   scWhy[n] = 'loading'; scRender();
   try{
-    const res = await attendJsonpRaw({ action:'scoreWhy', name: n, tk: adminToken() });
+    const res = await jjLoading(attendJsonpRaw({ action:'scoreWhy', name: n, tk: adminToken() }));
     scWhy[n] = res && Array.isArray(res.items) ? res : { error: res && res.error === 'auth' ? '관리자 확인이 필요해요' : '서버가 아직 감점 상세를 지원하지 않아요' };
   }catch(e){ scWhy[n] = { error: e && e.message || '오류' }; }
   if(scMode === 'all') scRender();
@@ -8840,10 +8841,10 @@ async function scLoadMonth(){
   info.textContent = '불러오는 중...';
   try{
     if(!scMonthData){
-      const [am, ev, mt, pc, dl, tk] = await Promise.all([
+      const [am, ev, mt, pc, dl, tk] = await jjLoading(Promise.all([
         scFetch('자동매칭', '게시일'), scFetch('행사참여', '날짜'), scFetch('회의출결', '날짜'),
         scFetch('개인콘텐츠', '회차(기획서 수요일)'), scFetch('제출지연', '기획서ID'), scFetch('제출체크', '마감일').catch(() => [])   // 요청사항·이벤트를 처음 등록하기 전에는 탭이 없어요
-      ]);
+      ]));
       const data = {};   // month -> name -> { content, contentN, event, eventN, meeting, mtLate, mtAbs, mtNo, personal, pcN, delay, delayDays }
       const get = (mon, n) => { if(!mon || !n) return null; data[mon] = data[mon] || {}; return data[mon][n] = data[mon][n] || { content:0, contentN:0, event:0, eventN:0, meeting:0, mtLate:0, mtAbs:0, mtNo:0, personal:0, pcLate:0, pcMiss:0, delay:0, delayDays:0, task:0, tkLate:0, tkMiss:0 }; };
       am.forEach(r => {

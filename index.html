@@ -305,7 +305,8 @@
   .overview-card{background:var(--purple-soft); border-radius:12px; padding:14px 6px; text-align:center;}
   .overview-num{display:block; font-size:22px; font-weight:700; color:var(--purple-dark); line-height:1;}
   .overview-label{display:block; font-size:10.5px; color:var(--ink-soft); margin-top:6px; line-height:1.3;}
-  .dl-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .dl-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+  @media (max-width:420px){ .dl-grid{grid-template-columns:1fr 1fr;} }
   .dl-main{display:flex; flex-direction:column; gap:8px; background:var(--purple-soft); border-radius:12px; padding:14px;}
   .dl-d{font-size:22px; font-weight:700; color:var(--purple-dark); line-height:1;}
   .dl-main.urgent{background:#EEEEEE;} .dl-main.urgent .dl-d{color:#646464;}
@@ -4894,16 +4895,27 @@ function ovRenderDeadline(){
   const p = n => String(n).padStart(2,'0');
   const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   // 개인콘텐츠 루틴: 수요일 16시 기획서 마감 → 다음 주 월요일 자정(24시) 콘텐츠 마감
-  const DL = [{ dow: 3, label: '기획서', hour: 16, time: '16시까지' }, { dow: 1, label: '콘텐츠', hour: 24, time: '자정까지' }];
+  // 팀콘 영상 제출: 2주 간격 목요일 자정(2026-11-26 목요일 기준, 2026-11-23 담당자)
+  const DL = [{ dow: 3, label: '개인 기획서', hour: 16, time: '16시까지' }, { dow: 1, label: '개인 콘텐츠', hour: 24, time: '자정까지' },
+              { dow: 4, label: '팀콘 영상 제출', hour: 24, time: '자정까지', every: 2, anchor: '2026-11-26' }];
   const cards = DL.map(x => {
     let diff = (x.dow - today.getDay() + 7) % 7;   // 오늘이 마감일이면 0
     if(diff === 0 && now.getHours() + now.getMinutes() / 60 >= x.hour) diff = 7;   // 마감 시각이 지나면 다음 주로
+    if(x.every){   // 격주: 기준일에서 2주 배수인 목요일만
+      const a = new Date(x.anchor + 'T00:00:00');
+      for(let i = 0; i < x.every; i++){
+        const d = new Date(today); d.setDate(today.getDate() + diff);
+        const wk = Math.round((d - a) / 86400000 / 7);
+        if(((wk % x.every) + x.every) % x.every === 0) break;
+        diff += 7;
+      }
+    }
     const due = new Date(today); due.setDate(today.getDate() + diff);
     return { ...x, diff, ymd: due.getFullYear()+'-'+p(due.getMonth()+1)+'-'+p(due.getDate()) };
   }).sort((a,b) => a.diff - b.diff);
   document.getElementById('ov_deadline').innerHTML = cards.map(c => `<div class="dl-main ${c.diff <= 1 ? 'urgent' : ''}">
       <span class="dl-d">${c.diff === 0 ? 'D-DAY' : 'D-' + c.diff}</span>
-      <span class="dl-txt"><b>개인 ${c.label} 마감</b><small>${ovFmt(c.ymd)} ${c.time}${c.diff === 0 ? ' · 오늘!' : c.diff === 1 ? ' · 내일' : ''}</small></span>
+      <span class="dl-txt"><b>${c.label} 마감</b><small>${ovFmt(c.ymd)} ${c.time}${c.diff === 0 ? ' · 오늘!' : c.diff === 1 ? ' · 내일' : ''}</small></span>
     </div>`).join('');
   const t = today.getFullYear()+'-'+p(today.getMonth()+1)+'-'+p(today.getDate());
   const end = new Date(today); end.setDate(today.getDate() + 7);

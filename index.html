@@ -306,7 +306,12 @@
   .overview-num{display:block; font-size:22px; font-weight:700; color:var(--purple-dark); line-height:1;}
   .overview-label{display:block; font-size:10.5px; color:var(--ink-soft); margin-top:6px; line-height:1.3;}
   .dl-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
-  @media (max-width:420px){ .dl-grid{grid-template-columns:1fr 1fr;} }
+  /* 2026-11-23 담당자 「모바일에선 옆으로 넘기면 볼 수 있게, 칸 넘기지 말고」: 휴대폰은 한 줄 가로 넘김(세 번째 카드가 살짝 보이게) */
+  @media (max-width:420px){
+    .dl-grid{display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
+    .dl-grid::-webkit-scrollbar{display:none;}
+    .dl-grid > .dl-main{flex:0 0 58%; scroll-snap-align:start; word-break:keep-all;}
+  }
   .dl-main{display:flex; flex-direction:column; gap:8px; background:var(--purple-soft); border-radius:12px; padding:14px;}
   .dl-d{font-size:22px; font-weight:700; color:var(--purple-dark); line-height:1;}
   .dl-main.urgent{background:#EEEEEE;} .dl-main.urgent .dl-d{color:#646464;}

@@ -2402,6 +2402,23 @@
 .sc-list b{color:var(--ink); font-weight:700;} .sc-list li > b:first-child{margin-right:4px;} .sc-h{margin:12px 0 0 !important; font-weight:700; color:var(--ink);}
 :root[data-theme="dark"] .sc-list b, :root[data-theme="dark"] .sc-h{color:var(--ink);}
 @media (min-width:768px){ .pc-legend, .sc-legend, .ia-box .ia-foot, .ia-box .ia-few, .eq-evrow small, .eq-row small{font-size:13px;} .ia-box small, .mt-week small, .pp-row .pp-sub{font-size:12.5px;} }
+/* 칩 정렬(2026-11-23 담당자 「칩 좌우 상하 정렬 안맞아」): 모든 칩은 높이를 정하고 글자를 상하·좌우 가운데로.
+   Noto Sans KR 한글은 줄 상자 가운데보다 아래로 처져서 높이 고정 + flex 가운데 + 아래 여백 .1em으로 보정(휴대폰 3배·PC 1배 픽셀 측정, 남는 차이 1픽셀 이하). 카드 칩은 float 대신 .ev-head 한 줄(제목 첫 줄과 칩 가운데 일치) */
+.dl-tag, .status-pill, .dday, .ia-pill, .ab-pill, .sva-card .sva-st, .ev-pts, .sc-pill, .sv-ok, .eq-bad, .eqi-kit .m, .sc-why-k, .jjh-row .tag, .jjh-row .dup, .jjh-post .pf, .eq-evrow .eq-ev{
+  display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; line-height:normal; white-space:nowrap; vertical-align:middle; padding-top:0; padding-bottom:.1em; flex-shrink:0;}
+.dl-tag, .status-pill, .dday, .ab-pill, .sva-card .sva-st, .ev-pts, .jjh-post .pf, .ia-pill{height:20px;}
+.sc-pill, .sv-ok, .eq-bad, .eqi-kit .m, .sc-why-k, .jjh-row .tag, .jjh-row .dup, .eq-evrow .eq-ev{height:18px;}
+.status-pill{height:22px;}
+.sva-card .sva-st{float:none;} .ev-pts{float:none;}
+.ev-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;}
+.ev-head > b{flex:1; min-width:0; line-height:20px; word-break:keep-all; overflow-wrap:anywhere;}
+/* 카드 목록 바로 위 버튼 줄(지원 조사·요청사항·행사)은 카드 안쪽선(테두리 1.5 + 여백 14)에 맞춰 버튼 오른쪽 끝 = 칩 오른쪽 끝, 왼쪽 글 = 카드 제목 */
+.mt-tools.on-cards{padding:0 15.5px;}
+.pill-pair{display:inline-flex; align-items:center;}
+.jjh-row .t small .dup{height:16px;}
+/* 옆 글자와 높이 맞춤(픽셀 측정): 가운데 정렬 줄의 칩은 글자가 아래로 처진 만큼 1px 내리고, 글 사이 칩은 글자 기준선에 맞춘 뒤 옆 글자 크기만큼 올림 */
+.dl-tag, .status-pill, .dday, .eqi-kit .m{position:relative; top:1px;} .jjh-post .pf{position:relative; top:.5px;} .ia-pill{position:relative; top:-1px;}
+.ab-pill{vertical-align:1px;} .sc-pill, .sv-ok{vertical-align:1.5px;} .eq-bad, .jjh-row .tag{vertical-align:1px;} .sc-why-k, .jjh-row .dup{vertical-align:.5px;}
 </style>
 </head>
 <body>
@@ -2889,7 +2906,7 @@
     <div class="sc-seg" id="evSeg"><button data-k="행사" class="on">행사</button><button data-k="요청사항">요청사항</button><button data-k="이벤트">이벤트</button><button data-k="지원 조사">지원 조사</button></div>
     <div id="svAdmSection" style="display:none;">
     <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;">「상단 게시」를 누르면 홈 맨 위에 <b>지원 조사</b> 카드로 올라가요. 노출 대상만 카드를 보고 날짜마다 가능·불가를 골라요. 날짜별 응답(투표 결과)·확정·홍보실 엑셀은 아래 각 조사의 「응답·확정」에서 해요. 홈 카드는 관리자에게도 일반 화면으로 보여요.</p>
-    <div class="mt-tools">
+    <div class="mt-tools on-cards">
       <span id="svaInfo">불러오는 중...</span>
       <button class="mt-quick" id="svaNew" style="color:var(--purple); border-color:var(--purple); font-weight:700;">+ 새 지원 조사</button>
     </div>
@@ -2917,7 +2934,7 @@
     </div>
     <div id="tkSection" style="display:none;">
     <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;" id="tkHint"></p>
-    <div class="mt-tools">
+    <div class="mt-tools on-cards">
       <span id="tkInfo">불러오는 중...</span>
       <button class="mt-quick" id="tkNew" style="color:var(--purple); border-color:var(--purple); font-weight:700;">+ 새 요청사항</button>
     </div>
@@ -2958,7 +2975,7 @@
     <div id="evSection">
     <p style="font-size:12px; color:var(--ink-soft); margin:0 0 10px;">참여한 행사를 등록하고 참여자만 고르면 가점이 들어가요. 가점은 행사마다 정할 수 있고, 종합 점수표의 <b>행사 가점</b>에 반영돼요. 행사 전에 집합 시간과 지원자를 넣어 두고, 행사 날 <b>이 행사 출석 받기</b>를 누르거나 출석 리더를 정해 두면 그 자리에서 앱을 연 사람이 참여자로 들어가요. 끝나면 안 온 지원자가 <b>불참 후보</b>로 보여요.</p>
     <div class="mc-admin" id="evOpenBar" style="display:none"><span id="evOpenText" class="mc-open-info"></span><button type="button" id="evOpenStop" class="mc-open on">출석 끝</button></div>
-    <div class="mt-tools">
+    <div class="mt-tools on-cards">
       <span id="evInfo">불러오는 중...</span>
       <button class="mt-quick" id="evNew" style="color:var(--purple); border-color:var(--purple); font-weight:700;">+ 새 행사</button>
     </div>
@@ -5107,7 +5124,7 @@ function renderStatusListView(items){
     return `
       <div class="sub-card" data-open="${esc(key)}" style="cursor:pointer;">
         <div class="sub-card-top">
-          <span><span class="status-pill ${esc(rec.status)}">${esc(STATUS_LABELS[rec.status]||rec.status)}</span>${ddayBadge(rec)}</span>
+          <span class="pill-pair"><span class="status-pill ${esc(rec.status)}">${esc(STATUS_LABELS[rec.status]||rec.status)}</span>${ddayBadge(rec)}</span>
           <span style="font-size:12px; color:var(--ink-faint);">${esc(fmtDateTime(rec.submittedAt))}</span>
         </div>
         <p class="sub-title">${esc(rec.title||'(제목 없음)')}</p>
@@ -5551,7 +5568,7 @@ function svaRenderList(){
     const [st, cls] = svaState(it), d0 = it.dates[0], d1 = it.dates[it.dates.length - 1];
     const span = it.dates.length > 1 ? `${d0.label}~${d1.label} · ${it.dates.length}일` : d0.label;
     const need = it.dates.reduce((t, d) => t + (Number(d.need) || 0), 0);
-    return `<div class="ev-card sva-card"><span class="sva-st ${cls}">${st}</span><b>${abEsc(it.title)}</b>
+    return `<div class="ev-card sva-card"><div class="ev-head"><b>${abEsc(it.title)}</b><span class="sva-st ${cls}">${st}</span></div>
       <div class="ev-meta">${esc(span)} · 필요 ${need}명 · ${esc(svaAudText(it))}</div>
       <div class="ev-meta">마감 ${esc(String(it.until).slice(5).replace('-', '/'))} · 응답 ${esc(it.answered)}/${esc(it.total)}명</div>
       ${r.admin ? `<div class="sva-acts"><button type="button" class="mt-quick" data-svaed="${esc(it.id)}">수정</button>`
@@ -7741,11 +7758,11 @@ function evRender(){
   const el = document.getElementById('evList');
   const plansOnly = evPlans.filter(x => !evEvents.some(e => e.date === x.date && e.title === x.title));
   el.innerHTML = (plansOnly.length || evEvents.length) ? plansOnly.map((x, i) => `<div class="ev-card ev-plan" data-p="${i}">
-      <span class="ev-pts">+${esc(x.points)}점</span><b>${abEsc(x.title)}</b>
+      <div class="ev-head"><b>${abEsc(x.title)}</b><span class="ev-pts">+${esc(x.points)}점</span></div>
       <div class="ev-meta">${esc(x.date.slice(5).replace('-','/'))} · 예정${x.time ? ' · 집합 ' + esc(x.time) : ''}${x.place ? ' · ' + pinIc() + abEsc(x.place.name) + ' ' + esc(x.place.r) + 'm' : ''} · 지원 ${(x.applicants || []).length}명${x.leader ? ' · 리더 ' + abEsc(x.leader) : ''}</div>
       ${evMissing({ date: x.date, title: x.title, names: [] }).length ? `<div class="ev-meta ev-miss">불참 후보: ${evMissing({ date: x.date, title: x.title, names: [] }).map(abEsc).join(', ')}</div>` : ''}
     </div>`).join('') + evEvents.map((ev, i) => { const pl = evPlanOf(ev.date, ev.title), au = ev.auto || [], lt = ev.late || [], miss = evMissing(ev); return `<div class="ev-card" data-i="${i}">
-      <span class="ev-pts">+${esc(ev.points)}점</span><b>${abEsc(ev.title)}</b>
+      <div class="ev-head"><b>${abEsc(ev.title)}</b><span class="ev-pts">+${esc(ev.points)}점</span></div>
       <div class="ev-meta">${esc(ev.date.slice(5).replace('-','/'))}${pl && pl.time ? ' · 집합 ' + esc(pl.time) : ''} · ${ev.names.length}명${pl && pl.leader ? ' · 리더 ' + abEsc(pl.leader) : ''} — ${ev.names.map(n => abEsc(n) + (au.includes(n) ? pinIc() : '') + (lt.includes(n) ? '(지각)' : '')).join(', ')}</div>
       ${miss.length ? `<div class="ev-meta ev-miss">불참 후보: ${miss.map(abEsc).join(', ')}</div>` : ''}
     </div>`; }).join('') : '<p style="font-size:12.5px;color:var(--ink-faint);">등록된 행사가 없어요. <b>+ 새 행사</b>로 추가하세요.</p>';
@@ -7983,7 +8000,7 @@ function tkRender(){
     const c = st => t.records.filter(r => r.status === st).length;
     const left = tg.filter(n => !t.records.some(r => r.name === n)).length;
     return `<div class="ev-card" data-i="${tkTasks.indexOf(t)}">
-      <span class="ev-pts" style="background:#EEEEEE;color:#646464;">${p['제출'] > 0 ? esc(tkFmtPt(p['제출'])) + ' · ' : ''}${esc(tkFmtPt(p['지연제출']))} / ${esc(tkFmtPt(p['미제출']))}</span><b>${abEsc(t.title)}</b>
+      <div class="ev-head"><b>${abEsc(t.title)}</b><span class="ev-pts" style="background:#EEEEEE;color:#646464;">${p['제출'] > 0 ? esc(tkFmtPt(p['제출'])) + ' · ' : ''}${esc(tkFmtPt(p['지연제출']))} / ${esc(tkFmtPt(p['미제출']))}</span></div>
       <div class="ev-meta">마감 ${esc(mtFmt(t.date))} · ${t.targets === '전원' || !Array.isArray(t.targets) ? '전원' : tg.length + '명'} · 제출 ${c('제출')} · 지연 ${c('지연제출')} · 미제출 ${c('미제출')}${left > 0 ? (t.date >= mtYmd(new Date()) ? ` · 마감 전` : ` · <span style="color:#646464;">미입력 ${left}</span>`) : ''}${t.form ? ' · 응답 시트 자동' : ''}</div>
       ${t.form && tkNoteBad(t.note) ? `<div class="ev-meta" style="color:#646464;">${abEsc(t.note)}</div>` : ''}
     </div>`; }).join('') : `<p style="font-size:12.5px;color:var(--ink-faint);">등록된 ${tkKind}이 없어요. <b>+ 새 ${tkKind}</b>으로 추가하세요.</p>`.replace('이벤트이', '이벤트가').replace('이벤트</b>으로', '이벤트</b>로');

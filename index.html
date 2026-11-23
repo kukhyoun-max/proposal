@@ -464,6 +464,7 @@
     border-radius:10px; margin-bottom:6px; cursor:pointer;
   }
   .equip-item input[type=checkbox]{width:17px; height:17px; accent-color:var(--purple); flex-shrink:0;}
+  .equip-item .equip-code{flex:none; min-width:30px; font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink);}
   .equip-item .equip-name{font-size:13.5px; flex:1;}
   .equip-item .equip-brand{font-size:12px; color:var(--ink-faint);}
   .equip-item.booked{
@@ -3731,67 +3732,76 @@ function initNamePicker(key){
 }
 
 const EQUIPMENT_LIST = [
-  {cat:'카메라', label:1, name:'A7C2', brand:'SONY'},
-  {cat:'카메라', label:2, name:'A7C2', brand:'SONY'},
-  {cat:'카메라', label:3, name:'A7C2', brand:'SONY'},
-  {cat:'카메라', label:4, name:'EOS 6D mark2', brand:'CANON'},
-  {cat:'카메라', label:5, name:'EOS 6D mark2', brand:'CANON'},
-  {cat:'카메라', label:6, name:'EOS 6D mark2', brand:'CANON'},
-  {cat:'카메라', label:7, name:'고프로 세트(+체스트마운트)', brand:'고프로'},
-  {cat:'카메라', label:8, name:'MAVIC 2 PRO', brand:'DJI'},
-  {cat:'렌즈', label:9, name:'24-70 GM F2.8', brand:'SONY'},
-  {cat:'렌즈', label:10, name:'20-70 G F4', brand:'SONY'},
-  {cat:'렌즈', label:11, name:'20-70 G F4', brand:'SONY'},
-  {cat:'렌즈', label:12, name:'ef 24-105mm', brand:'CANON'},
-  {cat:'렌즈', label:13, name:'ef 24-105mm', brand:'CANON'},
-  {cat:'렌즈', label:14, name:'ef 24-105mm', brand:'CANON'},
-  {cat:'렌즈 필터', label:15, name:'1-5 스탑 가변 ND필터', brand:'NISI'},
-  {cat:'렌즈 필터', label:16, name:'1-5 스탑 가변 ND필터', brand:'NISI'},
-  {cat:'배터리', label:17, name:'NP-FZ100', brand:'SONY'},
-  {cat:'배터리', label:18, name:'NP-FZ100', brand:'SONY'},
-  {cat:'배터리', label:19, name:'NP-FZ100', brand:'SONY'},
-  {cat:'배터리', label:20, name:'NP-FZ100', brand:'SONY'},
-  {cat:'배터리', label:21, name:'NP-FZ100', brand:'SONY'},
-  {cat:'배터리', label:22, name:'NP-FZ100', brand:'SONY'},
-  {cat:'배터리', label:23, name:'캐논 카메라 배터리', brand:'CANON'},
-  {cat:'마이크', label:24, name:'와이어리스 프로(+악세사리 케이스)', brand:'RODE'},
-  {cat:'마이크', label:25, name:'와이어리스 프로(+악세사리 케이스)', brand:'RODE'},
-  {cat:'마이크', label:26, name:'카메라 마이크 (윈드스크린 포함)', brand:'RODE'},
-  {cat:'마이크', label:27, name:'카메라 마이크 (윈드스크린 포함)', brand:'SmallRig'},
-  {cat:'마이크', label:28, name:'카메라 마이크 (윈드스크린 포함)', brand:'SmallRig'},
-  {cat:'마이크', label:29, name:'MV7+ (팟캐스트 마이크)', brand:'SHURE'},
-  {cat:'마이크', label:30, name:'MV7+ (팟캐스트 마이크)', brand:'SHURE'},
-  {cat:'삼각대', label:31, name:'여행용 삼각대', brand:'레오포토'},
-  {cat:'삼각대', label:32, name:'여행용 삼각대', brand:'레오포토'},
-  {cat:'삼각대', label:33, name:'여행용 삼각대', brand:'레오포토'},
-  {cat:'삼각대', label:34, name:'아이풋티지 삼각대', brand:'아이풋티지'},
-  {cat:'삼각대', label:35, name:'아이풋티지 삼각대', brand:'아이풋티지'},
-  {cat:'삼각대', label:36, name:'아이풋티지 삼각대', brand:'아이풋티지'},
-  {cat:'조명', label:37, name:'패널라이트 EX600U', brand:'포멕스'},
-  {cat:'조명', label:38, name:'패널라이트 EX600U', brand:'포멕스'},
-  {cat:'조명', label:39, name:'SL200', brand:'고독스'},
-  {cat:'조명', label:40, name:'SL60', brand:'고독스'},
-  {cat:'조명', label:41, name:'SL60', brand:'고독스'},
-  {cat:'조명', label:42, name:'LEDP260C', brand:'고독스'},
-  {cat:'조명', label:43, name:'LEDP260C', brand:'고독스'},
-  {cat:'기타', label:44, name:'폴리 완장', brand:'반사판'},
-  {cat:'기타', label:45, name:'폴리 반장', brand:'반사판'},
-  {cat:'조명', label:46, name:'반사판', brand:'고독스'},
-  {cat:'배터리', label:47, name:'970배터리', brand:''},
-  {cat:'기타', label:48, name:'캠핑웨건', brand:'캠프365'},
-  {cat:'기타', label:49, name:'부감샷 세트(C스탠드 + 카메라 마운트 홀더)', brand:''},
-  {cat:'기타', label:50, name:'크랩 클램프 매직암', brand:'스몰리그'},
-  {cat:'기타', label:51, name:'크랩 클램프 매직암', brand:'스몰리그'},
-  {cat:'기타', label:52, name:'T자 붐 마이크스탠드', brand:'SMI'},
-  {cat:'기타', label:53, name:'T자 붐 마이크스탠드', brand:'SMI'},
-  {cat:'SD 카드', label:54, name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
-  {cat:'SD 카드', label:55, name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
-  {cat:'SD 카드', label:56, name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
-  {cat:'SD 카드', label:57, name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
-  {cat:'SD 카드', label:58, name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
-  {cat:'SD 카드', label:59, name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
-  {cat:'SD 카드', label:60, name:'Extreme Pro 256GB SD카드', brand:'SanDisk'}
+  {cat:'카메라', label:1, code:'1-1', name:'A7C2', brand:'SONY'},
+  {cat:'카메라', label:2, code:'1-2', name:'A7C2', brand:'SONY'},
+  {cat:'카메라', label:3, code:'1-3', name:'A7C2', brand:'SONY'},
+  {cat:'카메라', label:4, code:'1-4', name:'EOS 6D mark2', brand:'CANON'},
+  {cat:'카메라', label:5, code:'1-5', name:'EOS 6D mark2', brand:'CANON'},
+  {cat:'카메라', label:6, code:'1-6', name:'EOS 6D mark2', brand:'CANON'},
+  {cat:'카메라', label:7, code:'1-7', name:'고프로 세트(+체스트마운트)', brand:'고프로'},
+  {cat:'카메라', label:8, code:'1-8', name:'MAVIC 2 PRO', brand:'DJI'},
+  {cat:'렌즈', label:9, code:'2-1', name:'24-70 GM F2.8', brand:'SONY'},
+  {cat:'렌즈', label:10, code:'2-2', name:'20-70 G F4', brand:'SONY'},
+  {cat:'렌즈', label:11, code:'2-3', name:'20-70 G F4', brand:'SONY'},
+  {cat:'렌즈', label:12, code:'2-4', name:'ef 24-105mm', brand:'CANON'},
+  {cat:'렌즈', label:13, code:'2-5', name:'ef 24-105mm', brand:'CANON'},
+  {cat:'렌즈', label:14, code:'2-6', name:'ef 24-105mm', brand:'CANON'},
+  {cat:'렌즈 필터', label:15, code:'3-1', name:'1-5 스탑 가변 ND필터', brand:'NISI'},
+  {cat:'렌즈 필터', label:16, code:'3-2', name:'1-5 스탑 가변 ND필터', brand:'NISI'},
+  {cat:'배터리', label:17, code:'4-1', name:'NP-FZ100', brand:'SONY'},
+  {cat:'배터리', label:18, code:'4-2', name:'NP-FZ100', brand:'SONY'},
+  {cat:'배터리', label:19, code:'4-3', name:'NP-FZ100', brand:'SONY'},
+  {cat:'배터리', label:20, code:'4-4', name:'NP-FZ100', brand:'SONY'},
+  {cat:'배터리', label:21, code:'4-5', name:'NP-FZ100', brand:'SONY'},
+  {cat:'배터리', label:22, code:'4-6', name:'NP-FZ100', brand:'SONY'},
+  {cat:'배터리', label:23, code:'4-7', name:'캐논 카메라 배터리', brand:'CANON'},
+  {cat:'마이크', label:24, code:'5-1', name:'와이어리스 프로(+악세사리 케이스)', brand:'RODE'},
+  {cat:'마이크', label:25, code:'5-2', name:'와이어리스 프로(+악세사리 케이스)', brand:'RODE'},
+  {cat:'마이크', label:26, code:'5-3', name:'카메라 마이크 (윈드스크린 포함)', brand:'RODE'},
+  {cat:'마이크', label:27, code:'5-4', name:'카메라 마이크 (윈드스크린 포함)', brand:'SmallRig'},
+  {cat:'마이크', label:28, code:'5-5', name:'카메라 마이크 (윈드스크린 포함)', brand:'SmallRig'},
+  {cat:'마이크', label:29, code:'5-6', name:'MV7+ (팟캐스트 마이크)', brand:'SHURE'},
+  {cat:'마이크', label:30, code:'5-7', name:'MV7+ (팟캐스트 마이크)', brand:'SHURE'},
+  {cat:'삼각대', label:31, code:'6-1', name:'여행용 삼각대', brand:'레오포토'},
+  {cat:'삼각대', label:32, code:'6-2', name:'여행용 삼각대', brand:'레오포토'},
+  {cat:'삼각대', label:33, code:'6-3', name:'여행용 삼각대', brand:'레오포토'},
+  {cat:'삼각대', label:34, code:'6-4', name:'아이풋티지 삼각대', brand:'아이풋티지'},
+  {cat:'삼각대', label:35, code:'6-5', name:'아이풋티지 삼각대', brand:'아이풋티지'},
+  {cat:'삼각대', label:36, code:'6-6', name:'아이풋티지 삼각대', brand:'아이풋티지'},
+  {cat:'조명', label:37, code:'7-1', name:'패널라이트 EX600U', brand:'포멕스'},
+  {cat:'조명', label:38, code:'7-2', name:'패널라이트 EX600U', brand:'포멕스'},
+  {cat:'조명', label:39, code:'7-3', name:'SL200', brand:'고독스'},
+  {cat:'조명', label:40, code:'7-4', name:'SL60', brand:'고독스'},
+  {cat:'조명', label:41, code:'7-5', name:'SL60', brand:'고독스'},
+  {cat:'조명', label:42, code:'7-6', name:'LEDP260C', brand:'고독스'},
+  {cat:'조명', label:43, code:'7-7', name:'LEDP260C', brand:'고독스'},
+  {cat:'기타', label:44, code:'8-1', name:'폴리 완장', brand:'반사판'},
+  {cat:'기타', label:45, code:'8-2', name:'폴리 반장', brand:'반사판'},
+  {cat:'기타', label:46, code:'8-3', name:'반사판', brand:'고독스'},
+  {cat:'배터리', label:47, code:'4-8', name:'970배터리', brand:''},
+  {cat:'기타', label:48, code:'8-4', name:'캠핑웨건', brand:'캠프365'},
+  {cat:'기타', label:49, code:'8-5', name:'부감샷 세트(C스탠드 + 카메라 마운트 홀더)', brand:''},
+  {cat:'기타', label:50, code:'8-6', name:'크랩 클램프 매직암', brand:'스몰리그'},
+  {cat:'기타', label:51, code:'8-7', name:'크랩 클램프 매직암', brand:'스몰리그'},
+  {cat:'기타', label:52, code:'8-8', name:'T자 붐 마이크스탠드', brand:'SMI'},
+  {cat:'기타', label:53, code:'8-9', name:'T자 붐 마이크스탠드', brand:'SMI'},
+  {cat:'SD 카드', label:54, code:'9-1', name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
+  {cat:'SD 카드', label:55, code:'9-2', name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
+  {cat:'SD 카드', label:56, code:'9-3', name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
+  {cat:'SD 카드', label:57, code:'9-4', name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
+  {cat:'SD 카드', label:58, code:'9-5', name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
+  {cat:'SD 카드', label:59, code:'9-6', name:'Extreme Pro 128GB SD카드', brand:'SanDisk'},
+  {cat:'SD 카드', label:60, code:'9-7', name:'Extreme Pro 256GB SD카드', brand:'SanDisk'}
 ];
+
+// 2026-11-23 담당자 「장비창에 지금 정해진 라벨 번호 추가」: 스티커 번호(분류-순번, 1-2)를 화면에만 보여 줌. 시트·서버에 저장하는 값은 예전 그대로 「이름 #번호(1~60)」
+// 순서 = 스티커 번호 순(반사판 #44~46 → 8-1~8-3, 970배터리 #47 → 4-8). 표는 `05_JJ스튜디오/장비 번호 라벨 목록.xlsx`
+const eqCodeKey = c => { const [a, b] = String(c || '').split('-').map(Number); return (a || 99) * 100 + (b || 0); };
+EQUIPMENT_LIST.sort((x, y) => eqCodeKey(x.code) - eqCodeKey(y.code));
+function eqCode(label){ const e = EQUIPMENT_LIST.find(x => x.label === Number(label)); return e && e.code ? e.code : '#' + label; }
+function eqLabelText(label){ const e = EQUIPMENT_LIST.find(x => x.label === Number(label)); return e ? eqCode(label) + ' ' + e.name : '#' + label; }
+// 저장된 「이름 #번호」 글을 「1-2 이름」으로 바꿔 보여 줌(못 알아보면 그대로)
+function eqShowText(t){ const m = String(t || '').trim().match(/^(.*?)\s*#(\d+)$/); return m && EQUIPMENT_LIST.some(x => x.label === Number(m[2])) ? eqLabelText(m[2]) : String(t || '').trim(); }
 
 const BOOKED_STATUSES = ['approved','filming','editing','completed','uploaded'];
 
@@ -3811,7 +3821,7 @@ function equipmentItemText(item){
 function equipmentTagsHTML(equipmentStr){
   const items = (equipmentStr||'').split(',').map(s=>s.trim()).filter(Boolean);
   if(items.length===0) return '-';
-  return `<div class="equip-tags">${items.map(i=>`<span class="equip-tag">${esc(i)}</span>`).join('')}</div>`;
+  return `<div class="equip-tags">${items.map(i=>`<span class="equip-tag">${esc(eqShowText(i))}</span>`).join('')}</div>`;
 }
 
 function renderSelectedEquipmentChips(){
@@ -3824,7 +3834,7 @@ function renderSelectedEquipmentChips(){
   wrap.style.display='block';
   countEl.textContent = `(${items.length}개)`;
   chipsEl.innerHTML = items.map(item=>`
-    <span class="chip">${item.name} #${item.label}<button type="button" data-label="${item.label}">✕</button></span>
+    <span class="chip">${eqLabelText(item.label)}<button type="button" data-label="${item.label}">✕</button></span>
   `).join('');
   chipsEl.querySelectorAll('button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -3881,6 +3891,7 @@ async function renderEquipmentPicker(){
       return `
         <label class="equip-item ${booked?'booked':''}">
           <input type="checkbox" data-label="${item.label}" ${checked?'checked':''} ${booked?'disabled':''}>
+          <span class="equip-code">${item.code||''}</span>
           <span class="equip-name">${item.name}</span>
           <span class="equip-brand">${item.brand||''}</span>
           ${booked? '<span class="booked-tag">예약됨</span>' : ''}
@@ -8167,9 +8178,9 @@ function eqTimeText(it){
   return it.start === it.end ? t : mtFmt(it.start) + '~' + mtFmt(it.end) + (t === '종일' ? '' : ' ' + t);
 }
 function eqRowHTML(it, showDate, inTeam){
-  if(inTeam) return `<div class="eq-row"><div><b>${abEsc(eqItemName(it.label))}</b><span class="t">${esc(eqTimeText(it))}</span>${eqBad.has(it.id) ? '<span class="eq-bad">겹침</span>' : ''}${it.memo ? `<small>${abEsc(it.memo)}</small>` : ''}</div>
+  if(inTeam) return `<div class="eq-row"><div><b>${abEsc(eqLabelText(it.label))}</b><span class="t">${esc(eqTimeText(it))}</span>${eqBad.has(it.id) ? '<span class="eq-bad">겹침</span>' : ''}${it.memo ? `<small>${abEsc(it.memo)}</small>` : ''}</div>
     <button class="ab-btn" data-eq="${abEsc(it.id)}">수정</button></div>`;
-  return `<div class="eq-row"><div><b>${abEsc(eqItemName(it.label))}</b><span class="t">${showDate && it.start === it.end ? mtFmt(it.start) + ' ' : ''}${esc(eqTimeText(it))}</span>${eqBad.has(it.id) ? '<span class="eq-bad">겹침</span>' : ''}
+  return `<div class="eq-row"><div><b>${abEsc(eqLabelText(it.label))}</b><span class="t">${showDate && it.start === it.end ? mtFmt(it.start) + ' ' : ''}${esc(eqTimeText(it))}</span>${eqBad.has(it.id) ? '<span class="eq-bad">겹침</span>' : ''}
     <small>${abEsc(it.who || '-')}${it.title ? ' · ' + abEsc(it.title) : ''}${it.memo ? ' · ' + abEsc(it.memo) : ''}</small></div>
     <button class="ab-btn" data-eq="${abEsc(it.id)}">수정</button></div>`;
 }
@@ -8528,7 +8539,7 @@ function eqRenderItem(){
     const now = mine.some(it => it.start <= today), bad = mine.some(it => eqBad.has(it.id));
     const fut = mine.filter(it => it.start > today).length;
     const tail = [now ? '대여 중' : '', fut ? '예정 ' + fut : '', bad ? '겹침' : ''].filter(Boolean).join('·');
-    return `<option value="${e.label}">[${e.cat}] ${e.name} #${e.label}${tail ? ' (' + tail + ')' : ''}</option>`;
+    return `<option value="${e.label}">${e.code} ${e.name}${tail ? ' (' + tail + ')' : ''}</option>`;
   }).join('');
   if(prev) sel.value = prev;
   if(!sel.dataset.bound){ sel.dataset.bound = '1'; sel.addEventListener('change', eqRenderItem); }
@@ -8550,7 +8561,7 @@ function eqRenderItem(){
     // 팀콘을 누르면 그 기획이 함께 빌리는 장비 전체를 펼침 (2026-11-18 담당자 「팀콘 누르면 무슨 장비 대여하는지 나오게」)
     const dept = eqIsDept(it);
     const kit = (it.planId || dept) ? eqItems.filter(o => eqGroupKey(o) === eqGroupKey(it)).sort((a, b) => Number(a.label) - Number(b.label)) : [];
-    const kitHtml = kit.length ? `<div class="eqi-kit"><ul>${kit.map(o => { const e = EQUIPMENT_LIST.find(x => x.label === Number(o.label)) || {}; return `<li${o.id === it.id ? ' class="me"' : ''}><span class="c">${esc(e.cat || '장비')}</span><span class="n">${esc(e.name || '')} #${esc(String(o.label))}</span>${o.id === it.id ? '<span class="m">이 장비</span>' : ''}</li>`; }).join('')}</ul></div>` : '';
+    const kitHtml = kit.length ? `<div class="eqi-kit"><ul>${kit.map(o => { const e = EQUIPMENT_LIST.find(x => x.label === Number(o.label)) || {}; return `<li${o.id === it.id ? ' class="me"' : ''}><span class="c">${esc(e.cat || '장비')}</span><span class="n">${esc(eqLabelText(o.label))}</span>${o.id === it.id ? '<span class="m">이 장비</span>' : ''}</li>`; }).join('')}</ul></div>` : '';
     return `<div class="eqi-card${clash.length ? ' bad' : ''}${isPast ? ' past' : ''}${kit.length ? ' has-kit' : ''}">${date}
       <div class="eqi-body"${kit.length ? ' role="button" tabindex="0" aria-expanded="false"' : ''}><div class="eqi-top"><span class="eqi-time">${esc(time)}</span>${tag}</div>
         <div class="eqi-title">${it.mask ? '홍보실 사용' : dept ? `<span class="eqi-dept">다른 부서</span>${abEsc(it.who || '-')}` : abEsc(it.title || '직접 추가')}</div>
@@ -8588,7 +8599,7 @@ function eqSetKind(kind, isNew, dept){
     if(!box.dataset.built){
       box.dataset.built = '1';
       const cats = [...new Set(EQUIPMENT_LIST.map(e => e.cat))];
-      box.innerHTML = cats.map(c => `<div class="eq-multi-cat">${esc(c)}</div><div class="eq-multi-row">${EQUIPMENT_LIST.filter(e => e.cat === c).map(e => `<label class="eq-chk"><input type="checkbox" value="${e.label}"><span>${esc(e.name)} #${e.label}</span></label>`).join('')}</div>`).join('');
+      box.innerHTML = cats.map(c => `<div class="eq-multi-cat">${esc(c)}</div><div class="eq-multi-row">${EQUIPMENT_LIST.filter(e => e.cat === c).map(e => `<label class="eq-chk"><input type="checkbox" value="${e.label}"><span>${esc(e.code + ' ' + e.name)}</span></label>`).join('')}</div>`).join('');
     }
     box.querySelectorAll('input').forEach(x => { x.checked = false; });
   }
@@ -8598,7 +8609,7 @@ function eqOpen(it){
   eqEditing = it || null; eqBulk = null;
   eqSetKind('ours', !it, !!(it && eqIsDept(it)));
   const sel = document.getElementById('eqLabel');
-  if(!sel.options.length) sel.innerHTML = EQUIPMENT_LIST.map(e => `<option value="${e.label}">[${e.cat}] ${e.name} #${e.label}</option>`).join('');
+  if(!sel.options.length) sel.innerHTML = EQUIPMENT_LIST.map(e => `<option value="${e.label}">${e.code} ${e.name}</option>`).join('');
   const day = it ? it.start : (eqMode === 'cal' ? eqDay : mtYmd(new Date()));
   sel.value = it ? it.label : (eqMode === 'item' ? document.getElementById('eqItemSel').value : EQUIPMENT_LIST[0].label);
   sel.disabled = !!(it && it.planId);
@@ -8673,7 +8684,7 @@ async function eqSaveForm(){
   }
   const cand = { id: it ? it.id : '_new', label, start, end, from, to };
   const clash = eqItems.filter(x => x.id !== cand.id && Number(x.label) === label).find(x => { const [a0, a1] = eqSpan(cand), [b0, b1] = eqSpan(x); return a0 < b1 && b0 < a1; });
-  if(clash && !(await showConfirm(`${eqItemName(label)}이(가) ${clash.who || '다른 대여'} (${mtFmt(clash.start)} ${eqTimeText(clash)})와 겹쳐요. 그래도 저장할까요?`))) return;
+  if(clash && !(await showConfirm(`${eqLabelText(label)}이(가) ${clash.who || '다른 대여'} (${mtFmt(clash.start)} ${eqTimeText(clash)})와 겹쳐요. 그래도 저장할까요?`))) return;
   const body = { action:'equipSave', id: it ? it.id : '', planId: it ? it.planId || '' : '', label, name: eqItemName(label).replace(/ #\d+$/, ''),
     start, end, from, to, who: g('eqWho'), memo: g('eqMemo') };
   document.getElementById('eqForm').style.display = 'none';
@@ -8692,7 +8703,7 @@ async function eqRemove(){
     bgSave('대여 빼기', () => eqPost(body)).then(() => eqLoad());
     return;
   }
-  if(!(await showConfirm(`${eqItemName(it.label)} 대여(${mtFmt(it.start)})를 ${it.planId ? '달력에서 뺄까요? 기획서 내용은 그대로예요.' : '삭제할까요?'}`))) return;
+  if(!(await showConfirm(`${eqLabelText(it.label)} 대여(${mtFmt(it.start)})를 ${it.planId ? '달력에서 뺄까요? 기획서 내용은 그대로예요.' : '삭제할까요?'}`))) return;
   const body = { action:'equipDelete', id: it.id, planId: it.planId || '', label: it.label, name: it.name || '' };
   eqItems = eqItems.filter(x => x.id !== it.id); document.getElementById('eqForm').style.display = 'none'; eqRender();
   showToast(it.planId ? '달력에서 뺐어요' : '삭제했어요');

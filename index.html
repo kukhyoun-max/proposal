@@ -307,7 +307,7 @@
   .overview-label{display:block; font-size:10.5px; color:var(--ink-soft); margin-top:6px; line-height:1.3;}
   .dl-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
   /* 2026-11-23 담당자 「모바일에선 옆으로 넘기면 볼 수 있게, 칸 넘기지 말고」: 휴대폰은 한 줄 가로 넘김(세 번째 카드가 살짝 보이게) */
-  @media (max-width:420px){
+  @media (max-width:480px){
     .dl-grid{display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
     .dl-grid::-webkit-scrollbar{display:none;}
     .dl-grid > .dl-main{flex:0 0 58%; scroll-snap-align:start; word-break:keep-all;}
@@ -1037,6 +1037,8 @@
   .jjh-names button.more{border-style:dashed;color:#757575;font-weight:500}
   .jjh-names button[data-n]::before{content:''; display:inline-block; width:1.3em;}   /* 2026-11-20 「가운데 안맞추냐?」: 이름 뒤 C·별 칸(1.3em)과 같은 빈칸을 앞에도 → 이름이 칩 가운데 */
   .jjh-names button.on{background:var(--point);border-color:var(--point);color:#000}
+  /* 2026-11-23 담당자 「버튼 폭을 줄이면 좀 더 많은 칸이 보이지 않을까」: 좌우 여백 15→10px, C·별 칸과 앞 빈칸 1.3em→.8em, 사이 8→6px (112px → 약 89px, 휴대폰에서 3칸 → 4칸 넘게) */
+  .jjh-names{gap:6px} .jjh-names button{padding:10px 10px} .jjh-names button[data-n]::before, .jjh-names .nmk{width:.8em}
   .jjh-plan{margin-top:22px;padding:16px 16px 14px}
   .jjh-plan .jjh-plan-h{margin:2px 0 4px}
   .jjh-plan h2.heading{font-size:21px;margin:0 0 2px}

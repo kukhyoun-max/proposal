@@ -940,6 +940,38 @@
   .tt-band{position:absolute; top:0; bottom:0; background:rgba(107,107,107,.18); border-left:2px solid var(--purple); border-right:2px solid var(--purple); pointer-events:none;}
   .tt-ticks{position:relative; height:16px; margin-left:56px; font-size:12px; color:var(--ink-faint);}
   .tt-ticks span{position:absolute; transform:translateX(-50%);}
+  /* 시간표 격자 (2026-11-23) */
+  .tt-grid{--tg-blk:#BDBDBD; --tg-blk-ink:#2E2E2E; --tg-hour:#E2E2E2; --tg-half:#F2F2F2; --tg-bg:#fff; margin:12px 0 0; border:1.5px solid var(--line); border-radius:14px; background:var(--tg-bg); overflow:hidden;}
+  .tg-top{padding:14px 14px 10px;}
+  .tg-top h4{margin:0 0 2px; font-size:15px; font-weight:800; color:var(--ink);}
+  .tg-top p{margin:0; font-size:12px; color:var(--ink-soft);}
+  .tg-lg{display:flex; align-items:center; gap:5px; margin-top:8px; font-size:12px; color:var(--ink-soft);}
+  .tg-lg i{width:12px; height:12px; border-radius:3px; display:inline-block; margin-left:6px; background:var(--page-bg);}
+  .tg-lg i:first-child{margin-left:0;}
+  .tg-lg i.all{background:var(--point);}
+  .tg-lg i.part{box-shadow:inset 0 0 0 1.5px var(--point);}
+  .tg-lg i.no{opacity:.55;}
+  .tg-scroll{overflow-x:auto; padding:0 10px 12px 0;}
+  .tg-in{min-width:calc(30px + var(--n) * 46px);}
+  .tg-head{display:grid; grid-template-columns:30px repeat(var(--n), minmax(46px, 1fr));}
+  .tg-corner{position:sticky; left:0; z-index:3; background:var(--tg-bg);}
+  .tg-nm{position:relative; margin:0 2px 6px; padding:7px 0; border-radius:8px; text-align:center; font-size:12.5px; font-weight:700; letter-spacing:-.4px; color:var(--ink-soft); background:var(--page-bg); white-space:nowrap;}
+  .tg-nm.all{background:var(--point); color:#181818;}
+  .tg-nm.part{color:var(--ink); box-shadow:inset 0 0 0 1.5px var(--point);}
+  .tg-nm.no{opacity:.55;}
+  .tg-nm i{position:absolute; top:-5px; right:-3px; width:15px; height:15px; border-radius:50%; background:#6A6A6A; color:#fff; font-size:12px; line-height:15px; font-style:normal; font-weight:800;}
+  .tg-body{display:flex; position:relative;}
+  .tg-time{position:sticky; left:0; z-index:3; width:30px; flex:none; background:var(--tg-bg);}
+  .tg-time span{position:absolute; right:6px; transform:translateY(-50%); font-size:12px; color:var(--ink-faint); font-variant-numeric:tabular-nums;}
+  .tg-time span:first-child{transform:none;}
+  .tg-cols{flex:1; display:grid; grid-template-columns:repeat(var(--n), minmax(46px, 1fr)); position:relative; cursor:pointer;
+    background-image:repeating-linear-gradient(to bottom, var(--tg-hour) 0 1px, transparent 1px 22px, var(--tg-half) 22px 23px, transparent 23px 44px);}
+  .tg-col{position:relative; border-left:1px solid var(--tg-half);}
+  .tg-col.no{opacity:.75;}
+  .tg-blk{position:absolute; left:2px; right:2px; background:var(--tg-blk); border-radius:4px; overflow:hidden; z-index:1;}
+  .tg-blk.q{background:repeating-linear-gradient(135deg, var(--tg-blk) 0 5px, transparent 5px 9px); box-shadow:inset 0 0 0 1px var(--tg-blk);}
+  .tg-blk em{display:block; padding:3px 3px 0; font-size:12px; line-height:1.2; font-style:normal; font-weight:600; color:var(--tg-blk-ink); word-break:break-all; overflow:hidden;}
+  .tg-band{position:absolute; left:0; right:0; background:rgba(242,206,0,.22); border-top:2px solid var(--point); border-bottom:2px solid var(--point); pointer-events:none; z-index:2;}
   .tt-foot{font-size:12px; color:var(--ink-faint); margin:12px 0 0; line-height:1.6;}
   .tt-foot a{color:var(--purple);}
   .sc-seg button.on{background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.08);}
@@ -1901,6 +1933,8 @@
 :root[data-theme="dark"] .sc-why-k{background:#242424;color:#C3C3C3}
 :root[data-theme="dark"] .sc-seg{background:#242424}
 :root[data-theme="dark"] .sc-seg button{border:none;background:none;color:var(--ink-soft)}
+:root[data-theme="dark"] .tt-grid{--tg-blk:#4A4A4A;--tg-blk-ink:#E0E0E0;--tg-hour:#2E2E2E;--tg-half:#262626;--tg-bg:#202020;border:1.5px solid var(--line)}
+:root[data-theme="dark"] .tg-nm.all{background:var(--point);color:#181818}
 :root[data-theme="dark"] .tt-days button{border:1.5px solid var(--line);background:#202020;color:var(--ink-soft)}
 :root[data-theme="dark"] .tt-days button b{color:var(--ink)}
 :root[data-theme="dark"] .tt-days button.on{background:var(--point);border-color:var(--point)}
@@ -7483,6 +7517,7 @@ function ttInit(){
   document.getElementById('ttDays').addEventListener('click', e => { const b = e.target.closest('button[data-d]'); if(!b) return; TT.day = b.dataset.d; ttRender(); });
   document.getElementById('ttPresets').addEventListener('click', e => { const b = e.target.closest('button[data-p]'); if(!b) return; const p = TT_PRESETS[Number(b.dataset.p)]; TT.from = p[1]; TT.to = p[2]; ttRender(); });
   document.getElementById('ttGo').addEventListener('click', ttSearch);
+  document.getElementById('ttOut').addEventListener('click', e => { const c = e.target.closest('.tg-cols'); if(!c) return; const h = Math.floor(TT_S/60 + (e.clientY - c.getBoundingClientRect().top) / (TT_ROW*2)); if(h < TT_S/60 || h >= TT_E/60) return; TT.from = ttStr(h*60); TT.to = ttStr(Math.min(h*60+60, TT_E)); ttSearch(); });
   document.getElementById('ttBars').addEventListener('click', e => { const b = e.target.closest('button[data-h]'); if(!b) return; const h = Number(b.dataset.h); TT.from = ttStr(h*60); TT.to = ttStr(Math.min(h*60+60, TT_E)); ttSearch(); });
 }
 async function ttLoad(force){
@@ -7537,7 +7572,7 @@ function ttRender(){
   document.getElementById('ttGo').textContent = `${TT.day} ${ttNextDate(di)} ${ttHm(TT.from)}~${ttHm(TT.to)} 찾기`;
   const svN = Object.keys(D.survey || {}).length;
   document.getElementById('ttFoot').innerHTML = `수업 시간표는 각자 보낸 사진을 옮긴 거고, 설문은 10월 홍보대사 설문의 「촬영할 수 있는 시간대」(오전·오후·저녁, ${svN}명)예요. 틀릴 수 있으니 부르기 전에 본인에게 확인해 주세요.<br>${esc(D.updated || '')} 기준 · <a href="${esc(D.sheet || '#')}" target="_blank" rel="noopener">시간표 시트 고치기</a>`;
-  if(TT.applied !== TT.day + TT.from + TT.to){ document.getElementById('ttOut').innerHTML = '<p class="tt-wait">요일과 시간을 고르고 위 버튼을 누르면<br>가능한 사람이 나와요.</p>'; return; }
+  if(TT.applied !== TT.day + TT.from + TT.to){ document.getElementById('ttOut').innerHTML = '<p class="tt-wait">요일과 시간을 고르고 위 버튼을 누르면<br>가능한 사람이 나와요.</p>' + ttGrid(rows, a, b, null); return; }
   const all = rows.filter(r => !r.hit.length), part = rows.filter(r => r.hit.length && r.gaps.length), no = rows.filter(r => r.hit.length && !r.gaps.length);
   const svTag = v => v === 'yes' ? '<span class="tt-tag">설문 ○</span>' : v === 'no' ? '<span class="tt-tag no">설문 ✕</span>' : v === 'part' ? '<span class="tt-tag">설문 일부</span>' : '';
   const nm = r => `<span class="tt-name">${esc(r.name)}${r.q ? '<span class="tt-qm" title="그날 시간표에 확인이 필요한 칸이 있어요">?</span>' : ''}</span>`;
@@ -7558,18 +7593,28 @@ function ttRender(){
     h += `<div class="tt-sec"><h5><span class="tt-dot no"></span>수업 시간표 없음 <em>${ms.length}명</em></h5><ul class="tt-lines">${ms.map(r => `<li><b>${esc(r.name)}</b><span>${r.sv === 'yes' ? '설문상 이 시간 촬영 가능' : r.sv === 'part' ? '설문상 일부 가능' : r.sv === 'no' ? '설문상 이 시간 어려움' : '설문 응답도 없음'}</span></li>`).join('')}</ul><p class="tt-sv">수업 시간표는 시트에 넣으면 5분 안에 반영돼요.</p></div>`;
   }
   h += '</div>';
-  // 사람별 하루 (접어 둠)
-  const pct = m => ((Math.min(Math.max(m, TT_S), TT_E) - TT_S) / (TT_E - TT_S) * 100).toFixed(2);
-  let tl = '<div class="tt-tl"><div class="tt-ticks">' + [9,12,15,18].map(t => `<span style="left:${pct(t*60)}%">${t}시</span>`).join('') + '</div>';
-  all.concat(part, no).forEach(r => {
-    tl += `<div class="tt-row"><span class="nm">${esc(r.name)}</span><div class="tt-track">`;
-    r.day.forEach(x => { const l = pct(ttMin(x.s)); tl += `<span class="tt-blk${x.q ? ' q' : ''}" style="left:${l}%; width:${(pct(ttMin(x.e)) - l).toFixed(2)}%;" title="${esc((x.c || '일정') + ' ' + x.s + '–' + x.e)}"></span>`; });
-    tl += `<span class="tt-band" style="left:${pct(a)}%; width:${(pct(b) - pct(a)).toFixed(2)}%;"></span></div></div>`;
-  });
-  tl += '</div>';
-  const wasOpen = !!document.querySelector('#ttOut .tt-more[open]');
-  h += `<details class="tt-more"${wasOpen ? ' open' : ''}><summary>사람별 ${TT.day}요일 수업 보기</summary>${tl}</details>`;
+  h += ttGrid(all.concat(part, no), a, b, { all, part });
   document.getElementById('ttOut').innerHTML = h;
+}
+// 그날 시간표 (사람 = 열, 30분 = 한 칸, 2026-11-23). 회색 = 수업, 노란 띠 = 고른 시간, 칸을 누르면 그 1시간으로 찾기
+const TT_ROW = 22;
+function ttGrid(rows, a, b, res){
+  const H = (TT_E - TT_S) / 30 * TT_ROW, y = m => (Math.min(Math.max(m, TT_S), TT_E) - TT_S) / 30 * TT_ROW;
+  const st = r => !res ? '' : res.all.includes(r) ? 'all' : res.part.includes(r) ? 'part' : 'no';
+  let hd = '<div class="tg-corner"></div>', tc = '', cols = '';
+  rows.forEach(r => { const k = st(r); hd += `<div class="tg-nm ${k}" title="${k === 'all' ? '전부 가능' : k === 'part' ? '일부 가능' : k === 'no' ? '안 돼요' : ''}">${esc(r.name)}${r.q ? '<i>?</i>' : ''}</div>`; });
+  for(let m = TT_S; m < TT_E; m += 60) tc += `<span style="top:${y(m)}px">${m/60}</span>`;
+  rows.forEach(r => {
+    cols += `<div class="tg-col ${st(r)}">` + r.day.map(x => {
+      const t = y(ttMin(x.s)), hh = y(ttMin(x.e)) - t; if(hh <= 0) return '';
+      return `<span class="tg-blk${x.q ? ' q' : ''}" style="top:${t}px; height:${hh}px" title="${esc((x.c || '일정') + ' ' + x.s + '–' + x.e)}">${hh >= 30 ? `<em>${esc(x.c || '일정')}</em>` : ''}</span>`;
+    }).join('') + '</div>';
+  });
+  const band = `<div class="tg-band" style="top:${y(a)}px; height:${y(b) - y(a)}px"></div>`;
+  const leg = res ? '<span class="tg-lg"><i class="all"></i>전부 가능 <i class="part"></i>일부 가능 <i class="no"></i>안 돼요</span>' : '';
+  return `<div class="tt-grid"><div class="tg-top"><h4>${TT.day}요일 시간표</h4><p>회색은 수업, 노란 띠는 고른 시간이에요. 칸을 누르면 그 1시간으로 찾아요.</p>${leg}</div>`
+    + `<div class="tg-scroll"><div class="tg-in" style="--n:${rows.length}"><div class="tg-head">${hd}</div>`
+    + `<div class="tg-body" style="height:${H}px"><div class="tg-time">${tc}</div><div class="tg-cols">${cols}${band}</div></div></div></div></div>`;
 }
 document.getElementById('btnTtBack').addEventListener('click', ()=>{ showView('form'); });
 

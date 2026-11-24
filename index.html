@@ -3731,6 +3731,7 @@ function initNamePicker(key){
   searchEl.addEventListener('input', renderSuggestions);
   searchEl.addEventListener('focus', renderSuggestions);
   searchEl.addEventListener('keydown', e=>{
+    if(e.isComposing || e.keyCode === 229) return;   // 한글 조합 중 Enter는 무시(맥에서 마지막 글자가 이름으로 한 번 더 들어감)
     if(e.key==='Enter'){
       e.preventDefault();
       const q = searchEl.value.trim();

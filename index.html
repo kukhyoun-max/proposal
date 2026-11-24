@@ -740,7 +740,7 @@
   .gd-top{position:fixed; right:16px; bottom:20px; z-index:20; min-width:48px; min-height:48px; border:1px solid var(--line-input); border-radius:24px; background:var(--surface, #fff); color:var(--ink); font:inherit; font-size:14px; font-weight:700; box-shadow:0 2px 10px rgba(0,0,0,.12); cursor:pointer;}
   @media (max-width:520px){ .gd-mark{background-size:150px 86px;} .gd-body table{font-size:13px;} .gd-body th,.gd-body td{padding:8px 7px;} }
   .gd-note{margin:20px 0 0; font-size:12.5px; line-height:1.6; color:var(--ink-faint); text-align:center;}
-  @media (max-width:340px){ .admin-topbar{padding-left:10px !important; padding-right:10px !important;} .admin-topbar button{padding:6px 4px !important; font-size:11px !important;} .admin-topbar > div{gap:3px !important;} #pendingBadge{margin-left:2px !important; padding:1px 5px !important;} }
+  @media (max-width:340px){ .admin-topbar{padding-left:10px !important; padding-right:10px !important;} .admin-topbar button{padding:6px 4px !important; font-size:11px !important;} .admin-topbar > div{gap:3px !important;} }
   @media (max-width:400px){ .admin-topbar{padding:10px 14px;} .admin-topbar button{padding:6px 9px; font-size:12px;} #btnHome{font-size:12px !important; text-align:left;} .admin-topbar > div{gap:5px !important;} }
   /* 장비별 보기 (2026-10-25): 날짜 블록 카드 · 다가오는/지난 구분 · 겹침 상대 표시 */
   .eqi-lab{display:block; font-size:13px; font-weight:700; color:var(--ink-soft); margin:10px 0 6px;}
@@ -1466,6 +1466,9 @@
   .ldb-btn .pin-ic{top:.075em}
   .mt-auto .pin-ic, .sv-s .pin-ic, .ev-meta .pin-ic{width:.95em; height:.95em; margin-right:.15em}
   .mt-auto .pin-ic{width:1.15em; height:1.15em; margin-right:0}   /* 2026-11-19 담당자 「자동 글씨는 빼고 아이콘만」 */
+  /* 승인 대기 표시 (2026-11-24 담당자 「숫자 말고 작은 노란 점으로 해당 탭 우측 상단에」): 글자 오른쪽 위에 얹어 탭 폭은 그대로 */
+  .nav-lb{position:relative; font-style:normal}
+  .nav-dot{position:absolute; left:100%; top:-2px; margin-left:1px; width:6px; height:6px; border-radius:50%; background:var(--point); pointer-events:none}
   /* 관리자 화면 제목 (2026-11-18 담당자 「여기도 관리자 검토 타이틀 넣으면 좋을 듯」): 다른 화면(내 성과·활동 가이드) 제목과 같은 크기 */
   .topbar > .adm-h{order:0; margin:0; font-size:17px; font-weight:700; white-space:nowrap}
   #equipView.ro .adm-h{display:none}
@@ -2460,7 +2463,7 @@
     <button id="btnMy" type="button">내 성과</button>
     <button id="btnEquipPublic" aria-label="일정·장비">일정<span class="hide-m">·장비</span></button>
     <button id="btnStatusToggle" aria-label="기획서 현황"><span class="hide-m">기획서 </span>현황</button>
-    <button id="btnAdminToggle" style="display:none">관리자 검토 <span id="pendingBadge" style="display:none; background:#808080; border-radius:10px; padding:1px 7px; margin-left:4px;">0</span></button>
+    <button id="btnAdminToggle" style="display:none"><i class="nav-lb">관리자 검토<i class="nav-dot" id="pendingBadge" style="display:none" aria-hidden="true"></i></i></button>
   </div>
 </div>
 
@@ -4905,8 +4908,8 @@ async function refreshPendingBadge(){
     const rows = await sheetGetAll();
     const pending = rows.filter(r=>r['상태']==='pending').length;
     const badge = document.getElementById('pendingBadge');
-    if(pending > 0 && adminRole() && adminRole().full){ badge.style.display='inline-block'; badge.textContent = pending; }
-    else{ badge.style.display='none'; }
+    if(pending > 0 && adminRole() && adminRole().full){ badge.style.display='block'; badge.closest('button').setAttribute('aria-label', '관리자 검토, 승인 대기 ' + pending + '건'); }
+    else{ badge.style.display='none'; badge.closest('button').removeAttribute('aria-label'); }
   }catch(e){ console.error('refreshPendingBadge failed:', e); }
 }
 

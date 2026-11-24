@@ -7259,8 +7259,7 @@ function pcRenderList(){
     + (pcOnlyMissing && !list.length ? '<div class="miss-empty">모두 입력했어요</div>' : '') + list.map(n => {
     const s = pcState[n] || {};
     const pts = pcPts(s);
-    // 콘텐츠는 지각 없음(2026-11-24 담당자 「갠콘은 지각 의미 없고 미제출」), 예전 지각 기록만 보이게 남김
-    const seg = key => `<div class="seg">${(key === 'content' ? PC_OPTS.filter(v => v !== '지각' || s.content === '지각') : PC_OPTS).map(v => `<button data-n="${n}" data-k="${key}" data-v="${v}" class="${s[key]===v?'on':''}">${v}</button>`).join('')}</div>`;
+    const seg = key => `<div class="seg">${PC_OPTS.map(v => `<button data-n="${n}" data-k="${key}" data-v="${v}" class="${s[key]===v?'on':''}">${v}</button>`).join('')}</div>`;
     const plan = pcPlans[n];
     const open = plan && pcPlanOpen.has(n);
     const planUrl = plan ? safeUrl(plan.link) : '';
@@ -7507,7 +7506,7 @@ document.getElementById('ppBack').addEventListener('click', () => { if(ppState){
 
 function pcFillAll(key){ pcNames().forEach(n => { const s = pcState[n] || (pcState[n] = {}); if(!s[key]) s[key] = '제출'; }); pcDirty = true; pcRenderList(); pcUpdateInfo(); }
 
-document.getElementById('pcRule').innerHTML = `<span>감점: 기획서 지각 ${PC_POINTS.plan['지각']} / 미제출 ${PC_POINTS.plan['미제출']}</span> · <span>콘텐츠 미제출 ${PC_POINTS.content['미제출']}(마감 뒤 제출도 미제출)</span>`;
+document.getElementById('pcRule').innerHTML = `<span>감점: 기획서 지각 ${PC_POINTS.plan['지각']} / 미제출 ${PC_POINTS.plan['미제출']}</span> · <span>콘텐츠 지각 ${PC_POINTS.content['지각']} / 미제출 ${PC_POINTS.content['미제출']}</span>`;
 document.getElementById('pcAllPlan').addEventListener('click', ()=>pcFillAll('plan'));
 document.getElementById('pcAllContent').addEventListener('click', ()=>pcFillAll('content'));
 document.getElementById('pcSave').addEventListener('click', pcSave);

@@ -1349,6 +1349,13 @@
   .sv-chip{border:1px solid var(--line-input);background:transparent;border-radius:999px;padding:6px 11px;font:inherit;font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;min-height:34px}
   .sv-chip.yes{color:var(--ink)}
   .sv-chip.yes::before{content:"● ";color:#6A6A6A}
+  .sv-chip.none{border-style:dashed;color:var(--ink-faint)}
+  .sv-miss{margin-top:12px;padding:12px 14px;border:1px solid var(--line-input);border-radius:12px}
+  .sv-miss-t{margin:0;font-size:14.5px;font-weight:800;color:var(--ink)}
+  .sv-miss-t small{margin-left:6px;font-size:12.5px;font-weight:500;color:var(--ink-soft)}
+  .sv-miss-n{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .sv-miss-n span{padding:5px 12px;border-radius:999px;border:1px dashed var(--line-input);font-size:14px;font-weight:700;color:var(--ink)}
+  .sv-miss.done{padding:10px 14px}
   .sv-chip[aria-pressed="true"]{background:var(--point);border-color:var(--point);color:#000}
   .sv-chip[aria-pressed="true"]::before{content:"✓ ";color:#fff}
   .sv-chip:focus-visible{outline:3px solid var(--purple-line);outline-offset:2px}
@@ -2379,6 +2386,8 @@
   :root[data-theme="dark"] .btn-approve, :root[data-theme="dark"] .save-edit-btn, :root[data-theme="dark"] .cta.active, :root[data-theme="dark"] .submit-main, :root[data-theme="dark"] .modal-ok, :root[data-theme="dark"] .mt-save, :root[data-theme="dark"] .sv-save, :root[data-theme="dark"] .evm-ok, :root[data-theme="dark"] .tt-go, :root[data-theme="dark"] .ab-act.main, :root[data-theme="dark"] .mc-card button.mc-main{background:#333333; border:1px solid #4D4D4D; color:#F2F2F2}
   :root[data-theme="dark"] .btn-approve:hover, :root[data-theme="dark"] .save-edit-btn:hover, :root[data-theme="dark"] .cta.active:hover, :root[data-theme="dark"] .submit-main:hover, :root[data-theme="dark"] .modal-ok:hover, :root[data-theme="dark"] .mt-save:hover, :root[data-theme="dark"] .sv-save:hover, :root[data-theme="dark"] .evm-ok:hover, :root[data-theme="dark"] .tt-go:hover, :root[data-theme="dark"] .ab-act.main:hover, :root[data-theme="dark"] .mc-card button.mc-main:hover{background:#3B3B3B}
   :root[data-theme="dark"] .btn-approve:active, :root[data-theme="dark"] .save-edit-btn:active, :root[data-theme="dark"] .cta.active:active, :root[data-theme="dark"] .submit-main:active, :root[data-theme="dark"] .modal-ok:active, :root[data-theme="dark"] .mt-save:active, :root[data-theme="dark"] .sv-save:active, :root[data-theme="dark"] .evm-ok:active, :root[data-theme="dark"] .tt-go:active, :root[data-theme="dark"] .ab-act.main:active, :root[data-theme="dark"] .mc-card button.mc-main:active{background:#444444}
+  /* 지원 조사 미응답 (2026-11-24): 어두운 화면 칩 점선 유지 */
+  :root[data-theme="dark"] .sv-chip.none{border-style:dashed;color:var(--ink-faint)}
 </style>
 <style>/* 일정·장비 달력 읽기 쉽게(2026-11-19): PC는 글씨·막대 키움, 회색 막대는 검정 글자, 어두운 화면 진한 막대는 테두리 */
 .eq-bar.prod,.eq-bar.completed,:root[data-theme="dark"] .eq-bar.prod,:root[data-theme="dark"] .eq-bar.completed{color:#111}
@@ -5550,9 +5559,13 @@ function svaResBody(it){
       + `<span class="sv-d">${esc(d.detail)}</span>${who}${svChips(it, d)}</div></li>`;
   }).join('');
   const cf = svCf[it.id] || {}, nDone = it.dates.filter(d => (cf[d.date] || []).length).length, m = svaResMsg[it.id];
-  return `<ul class="sv-list">${rows}</ul><div class="sv-foot">`
-    + `<p class="sv-msg">응답 ${esc(it.answered)}/${esc(it.total)}명${it.missing && it.missing.length ? ` · 아직: ${it.missing.map(abEsc).join(', ')}` : ''}</p>`
-    + `<p class="sv-msg">이름을 눌러 날짜마다 갈 사람을 고른 뒤 「확정 저장」을 누르세요. ● = 가능이라고 답한 사람 · 확정 ${nDone}/${it.dates.length}일</p>`
+  // 2026-11-24 담당자 「투표를 안 한 사람이 누구인지 파악하기 쉽게」: 미응답자를 목록 위에 크게, 확정 칩은 점선
+  const ms = it.missing || [];
+  const miss = ms.length
+    ? `<div class="sv-miss"><p class="sv-miss-t">아직 응답 안 한 사람 ${ms.length}명 <small>응답 ${esc(it.answered)}/${esc(it.total)}명</small></p><div class="sv-miss-n">${ms.map(n => `<span>${abEsc(n)}</span>`).join('')}</div></div>`
+    : `<div class="sv-miss done"><p class="sv-miss-t">모두 응답했어요 <small>응답 ${esc(it.answered)}/${esc(it.total)}명</small></p></div>`;
+  return miss + `<ul class="sv-list">${rows}</ul><div class="sv-foot">`
+    + `<p class="sv-msg">이름을 눌러 날짜마다 갈 사람을 고른 뒤 「확정 저장」을 누르세요. ● = 가능이라고 답한 사람 · 점선 = 아직 응답 안 한 사람 · 확정 ${nDone}/${it.dates.length}일</p>`
     + `<div class="sv-btns"><button type="button" class="sv-save" data-cfsave="${esc(it.id)}" ${svCfDirty[it.id] ? '' : 'disabled'}>${svCfDirty[it.id] ? '확정 저장' : '확정 저장됨'}</button>`
     + `<button type="button" class="sv-save alt" data-cfxl="${esc(it.id)}" ${nDone && !svCfDirty[it.id] ? '' : 'disabled'}>홍보실 엑셀 받기</button></div>`
     + `<p class="sv-msg">「홍보실 엑셀 받기」: 홍보실 협조 엑셀 파일을 고르면 J열(홍보대사 협조 인원)에 확정한 이름을 넣은 새 파일을 내려받아요. 파일은 이 휴대폰·PC 안에서만 고치고 어디에도 올리지 않아요.</p>`
@@ -5560,12 +5573,12 @@ function svaResBody(it){
 }
 // 관리자 확정 칩: 대상(모델팀) 전원, 가능이라고 답한 사람 먼저
 function svChips(it, d){
-  const cf = (svCf[it.id] || {})[d.date] || [], yes = d.yesNames || [];
+  const cf = (svCf[it.id] || {})[d.date] || [], yes = d.yesNames || [], miss = it.missing || [];
   const names = (it.targets || []).slice();
   cf.forEach(n => { if(!names.includes(n)) names.push(n); });
   names.sort((a, b) => (yes.includes(b) - yes.includes(a)) || a.localeCompare(b, 'ko'));
   return `<span class="sv-who">확정<span class="sv-cf-n">${cf.length}/${esc(d.need)}명</span></span><div class="sv-chips" role="group" aria-label="${esc(d.label)} 확정 인원">`
-    + names.map(n => `<button type="button" class="sv-chip${yes.includes(n) ? ' yes' : ''}" data-cfid="${esc(it.id)}" data-cfd="${esc(d.date)}" data-cfn="${esc(n)}" aria-pressed="${cf.includes(n)}">${abEsc(n)}</button>`).join('') + '</div>';
+    + names.map(n => `<button type="button" class="sv-chip${yes.includes(n) ? ' yes' : ''}${miss.includes(n) ? ' none' : ''}" data-cfid="${esc(it.id)}" data-cfd="${esc(d.date)}" data-cfn="${esc(n)}" aria-pressed="${cf.includes(n)}">${abEsc(n)}</button>`).join('') + '</div>';
 }
 /* ── 행사 탭 「지원 조사」: 상단 게시·수정·내리기 (2026-11-21 담당자 「행사 탭에서 상단 게시 버튼(노출 대상 설정도 가능하게) 누르면 지금처럼 상단에 노출」)
  * 서버 Support.gs svPost(만들기·고치기)·svOff(내리기·다시 올리기), 전체 관리자 계정만. 목록은 svList(관리자는 내린·끝난 조사도 받음) */
@@ -5600,7 +5613,7 @@ function svaRenderList(){
     const need = it.dates.reduce((t, d) => t + (Number(d.need) || 0), 0);
     return `<div class="ev-card sva-card"><div class="ev-head"><b>${abEsc(it.title)}</b><span class="sva-st ${cls}">${st}</span></div>
       <div class="ev-meta">${esc(span)} · 필요 ${need}명 · ${esc(svaAudText(it))}</div>
-      <div class="ev-meta">마감 ${esc(String(it.until).slice(5).replace('-', '/'))} · 응답 ${esc(it.answered)}/${esc(it.total)}명</div>
+      <div class="ev-meta">마감 ${esc(String(it.until).slice(5).replace('-', '/'))} · 응답 ${esc(it.answered)}/${esc(it.total)}명${(it.missing || []).length ? ` · 아직 ${it.missing.length}명` : ''}</div>
       ${r.admin ? `<div class="sva-acts"><button type="button" class="mt-quick" data-svaed="${esc(it.id)}">수정</button>`
         + (it.ended ? '' : `<button type="button" class="mt-quick" data-svaoff="${esc(it.id)}" data-off="${it.off ? '0' : '1'}">${it.off ? '다시 상단 게시' : '홈에서 내리기'}</button>`)
         + `<button type="button" class="mt-quick" data-svalink="${esc(it.id)}">링크 복사</button></div>` : ''}

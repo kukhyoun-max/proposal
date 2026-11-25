@@ -2391,6 +2391,26 @@
   :root[data-theme="dark"] .btn-approve:active, :root[data-theme="dark"] .save-edit-btn:active, :root[data-theme="dark"] .cta.active:active, :root[data-theme="dark"] .submit-main:active, :root[data-theme="dark"] .modal-ok:active, :root[data-theme="dark"] .mt-save:active, :root[data-theme="dark"] .sv-save:active, :root[data-theme="dark"] .evm-ok:active, :root[data-theme="dark"] .tt-go:active, :root[data-theme="dark"] .ab-act.main:active, :root[data-theme="dark"] .mc-card button.mc-main:active{background:#444444}
   /* 지원 조사 미응답 (2026-11-24): 어두운 화면 칩 점선 유지 */
   :root[data-theme="dark"] .sv-chip.none{border-style:dashed;color:var(--ink-faint)}
+  /* 팀콘 기획서 회차 표(2026-11-25) */
+  .tp-box summary{position:relative; padding-right:26px;}
+  .tp-box summary::after{content:""; position:absolute; right:4px; top:50%; width:8px; height:8px; border:solid var(--ink-soft); border-width:0 1.75px 1.75px 0; transform:translateY(-70%) rotate(45deg);}
+  .tp-box[open] summary::after{transform:translateY(-30%) rotate(225deg);}
+  .tp-sum{display:block; margin-top:2px; font-size:12.5px; font-weight:400; color:var(--ink-soft); word-break:keep-all;}
+  .tp-sum b{color:var(--ink);}
+  .tp-t{width:100%; border-collapse:collapse; margin-top:10px; table-layout:fixed;}
+  .tp-t th{font-size:12.5px; font-weight:500; color:var(--ink-soft); padding:6px 2px; border-bottom:1.5px solid var(--line); text-align:center;}
+  .tp-t th.now{font-weight:700; color:var(--ink);}
+  .tp-t td{height:56px; padding:2px; border-bottom:1px solid var(--line); text-align:center; vertical-align:middle;}
+  .tp-t tr:last-child td{border-bottom:none;}
+  .tp-t th:first-child, .tp-t td:first-child{text-align:left; width:26%; font-size:13.5px; font-weight:700; color:var(--ink);}
+  .tp-go{width:100%; min-height:48px; padding:2px 0; border:none; background:none; cursor:pointer; font-family:inherit;}
+  .tp-go small{display:block; margin-top:3px; font-size:12px; color:var(--ink-soft); font-variant-numeric:tabular-nums; white-space:nowrap;}
+  .tp-go:hover small{color:var(--ink); text-decoration:underline;}
+  .tp-go:focus-visible{outline:2px solid var(--ink); outline-offset:-2px; border-radius:6px;}
+  .tp-c{display:inline-block; min-width:52px; border-radius:7px; padding:3px 8px; font-size:12px; font-weight:700; white-space:nowrap;}
+  .tp-c.ok{background:#181818; color:#fff;} .tp-c.late{background:#6B6B6B; color:#fff;} .tp-c.miss{background:#F2CE00; color:#000;}
+  .tp-c.wait{box-shadow:inset 0 0 0 1.5px var(--line); color:var(--ink-soft);} .tp-c.over{box-shadow:inset 0 0 0 1.5px #F2CE00; color:var(--ink);}
+  :root[data-theme="dark"] .tp-c.ok{background:#C8C8C8; color:#181818;} :root[data-theme="dark"] .tp-c.late{background:#8A8A8A; color:#000;}
 </style>
 <style>/* 일정·장비 달력 읽기 쉽게(2026-11-19): PC는 글씨·막대 키움, 회색 막대는 검정 글자, 어두운 화면 진한 막대는 테두리 */
 .eq-bar.prod,.eq-bar.completed,:root[data-theme="dark"] .eq-bar.prod,:root[data-theme="dark"] .eq-bar.completed{color:#111}
@@ -2791,6 +2811,7 @@
   <div class="content" id="cmPending" style="padding-top:0; padding-bottom:0;"></div>
   <div class="content" id="mlPending" style="padding-top:0; padding-bottom:0;"></div>
   <div class="content" id="srPending" style="padding-top:0; padding-bottom:0;"></div>
+  <div class="content" id="tpRound" style="padding-top:0; padding-bottom:0;"></div>
   <div class="content" id="areaCov" style="padding-top:0; padding-bottom:0;"></div>
   <div class="content" id="adminList" style="padding-top:0;">
     <p style="font-size:12.5px; color:var(--ink-faint);">불러오는 중...</p>
@@ -6263,11 +6284,56 @@ async function loadSubmissions(){
     const items = rows.map(row=>{ const rec = mapRowToRecord(row); return { key: rec.id, rec }; });
     items.sort((a,b)=> (b.rec.submittedAt||'').localeCompare(a.rec.submittedAt||''));
     try{ renderAreaCoverage(items.map(i=>i.rec)); }catch(e){ console.error('coverage failed:', e); }
+    try{ renderTeamRounds(items.map(i=>i.rec)); }catch(e){ console.error('team rounds failed:', e); }
     renderAdminList(items);
   }catch(e){
     console.error('loadSubmissions failed:', e);
     listEl.innerHTML = '<p style="font-size:12.5px;color:var(--ink-faint);">목록을 불러오지 못했어요. (' + esc(e && e.message ? e.message : '오류') + ')</p>';
   }
+}
+
+// 팀콘 기획서 회차(격주 목요일 자정 마감) × 팀장 — 관리자 검토에서 보기만. 점수와 연결하지 않음
+const TP_ANCHOR = Date.parse('2026-11-27T00:00:00+09:00'), TP_STEP = 14 * 864e5, TP_LATE = (3 * 24 + 18) * 36e5;   // 목 24시 = 금 0시, 다음 월요일 18시 회의 전까지 지각
+function tpRounds(recs, now){
+  const cur = TP_ANCHOR + Math.ceil((now - TP_ANCHOR) / TP_STEP) * TP_STEP;
+  // 마감 직후(월 18시 전)에는 막 끝난 회차도 화면에 남음: 끝난 회차 2개 + 지금 회차
+  const rounds = [cur - 2 * TP_STEP, cur - TP_STEP, cur];
+  const by = {};
+  recs.forEach(r => {
+    const t = Date.parse(r.submittedAt), n = String(r.lead || r.name || '').split(/[,/]/)[0].trim();
+    if(!n || !t || r.category === 'original') return;
+    (by[n] = by[n] || []).push({ t, id: r.id });
+  });
+  const leads = Object.keys(by).filter(n => by[n].filter(p => p.t > now - 90 * 864e5).length >= 2 || by[n].some(p => p.t > cur - 2 * TP_STEP));
+  const rows = leads.filter(n => !AMBASSADOR_ROSTER.length || AMBASSADOR_ROSTER.includes(n)).sort((a,b) => a.localeCompare(b,'ko')).map(n => {
+    const got = {};
+    by[n].sort((a,b) => a.t - b.t).forEach(({ t, id }) => {
+      const due = TP_ANCHOR + Math.ceil((t - TP_ANCHOR) / TP_STEP) * TP_STEP, prev = due - TP_STEP;
+      if(t - prev < TP_LATE && !got[prev]){ got[prev] = { t, id, late: true }; return; }   // 앞 회차를 안 냈으면 월요일 18시 전 제출은 앞 회차 지각
+      if(!got[due]) got[due] = { t, id, late: false };
+    });
+    return { n, cells: rounds.map(d => { const g = got[d]; return g ? { k: g.late ? 'late' : 'ok', t: g.t, id: g.id } : { k: now < d ? 'wait' : now < d + TP_LATE ? 'over' : 'miss' }; }) };
+  });
+  return { rounds, rows };
+}
+let tpOpen = false;   // 펼친 상태는 목록을 다시 그려도 유지
+function renderTeamRounds(recs, now){
+  now = now || Date.now();
+  const el = document.getElementById('tpRound'); if(!el) return;
+  const { rounds, rows } = tpRounds(recs, now);
+  if(!rows.length){ el.innerHTML = ''; return; }
+  const kst = t => new Date(t + 9 * 36e5), md = t => { const d = kst(t - 1); return (d.getUTCMonth()+1) + '/' + d.getUTCDate() + '(' + '일월화수목금토'[d.getUTCDay()] + ')'; };
+  const at = t => { const d = kst(t); return (d.getUTCMonth()+1) + '/' + d.getUTCDate() + ' ' + String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0'); };
+  const L = { ok:'제출', late:'지각', miss:'미제출', wait:'아직', over:'마감 지남' };
+  const left = rows.filter(r => r.cells[2].k === 'wait').map(r => r.n);
+  el.innerHTML = `<details class="cov-box tp-box"${tpOpen ? ' open' : ''}><summary>팀콘 기획서 제출<span class="tp-sum">${md(rounds[2])} 자정 마감 <b>${rows.length - left.length}/${rows.length}명 제출</b>${left.length ? ', 아직 ' + left.map(esc).join(', ') : ''}</span></summary>
+    <table class="tp-t"><tr><th>팀장</th>${rounds.map((d,i) => `<th class="${i === 2 ? 'now' : ''}">${md(d)}</th>`).join('')}</tr>
+    ${rows.map(r => `<tr><td>${esc(r.n)}${nb(r.n)}</td>${r.cells.map(c => `<td>${c.t ? `<button type="button" class="tp-go" data-tp="${esc(c.id)}" aria-label="${esc(r.n)} 기획서 열기"><span class="tp-c ${c.k}">${L[c.k]}</span><small>${at(c.t)}</small></button>` : `<span class="tp-c ${c.k}">${L[c.k]}</span>`}</td>`).join('')}</tr>`).join('')}</table></details>`;
+  el.querySelector('details').addEventListener('toggle', e => { tpOpen = e.target.open; });
+  el.querySelectorAll('[data-tp]').forEach(b => b.addEventListener('click', () => {
+    const rec = recs.find(r => r.id === b.dataset.tp); if(!rec) return;
+    detailFromAdmin = true; showView('status'); renderStatusDetail(rec.id, rec); window.scrollTo(0, 0);
+  }));
 }
 
 function renderAdminList(items){

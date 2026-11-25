@@ -2400,14 +2400,16 @@
   .tp-t{width:100%; border-collapse:collapse; margin-top:10px; table-layout:fixed;}
   .tp-t th{font-size:12.5px; font-weight:500; color:var(--ink-soft); padding:6px 2px; border-bottom:1.5px solid var(--line); text-align:center;}
   .tp-t th.now{font-weight:700; color:var(--ink);}
-  .tp-t td{height:56px; padding:2px; border-bottom:1px solid var(--line); text-align:center; vertical-align:middle;}
+  .tp-t td{padding:4px 2px; border-bottom:1px solid var(--line); text-align:center; vertical-align:middle;}
   .tp-t tr:last-child td{border-bottom:none;}
   .tp-t th:first-child, .tp-t td:first-child{text-align:left; width:26%; font-size:13.5px; font-weight:700; color:var(--ink);}
-  .tp-go{width:100%; min-height:48px; padding:2px 0; border:none; background:none; cursor:pointer; font-family:inherit;}
-  .tp-go small{display:block; margin-top:3px; font-size:12px; color:var(--ink-soft); font-variant-numeric:tabular-nums; white-space:nowrap;}
+  .tp-cell{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; box-sizing:border-box; width:100%; min-height:48px; margin:0; padding:2px 0;}
+  .tp-cell small{font-size:12px; line-height:16px; font-weight:400; color:var(--ink-soft); font-variant-numeric:tabular-nums; white-space:nowrap;}
+  .tp-name{align-items:flex-start;} .tp-name span{line-height:24px;}
+  .tp-go{border:none; background:none; cursor:pointer; font-family:inherit;}
   .tp-go:hover small{color:var(--ink); text-decoration:underline;}
   .tp-go:focus-visible{outline:2px solid var(--ink); outline-offset:-2px; border-radius:6px;}
-  .tp-c{display:inline-block; min-width:52px; border-radius:7px; padding:3px 8px; font-size:12px; font-weight:700; white-space:nowrap;}
+  .tp-c{display:block; box-sizing:border-box; min-width:56px; max-width:100%; height:24px; line-height:24px; border-radius:7px; padding:0 8px; font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .tp-c.ok{background:#181818; color:#fff;} .tp-c.late{background:#6B6B6B; color:#fff;} .tp-c.miss{background:#F2CE00; color:#000;}
   .tp-c.wait{box-shadow:inset 0 0 0 1.5px var(--line); color:var(--ink-soft);} .tp-c.over{box-shadow:inset 0 0 0 1.5px #F2CE00; color:var(--ink);}
   :root[data-theme="dark"] .tp-c.ok{background:#C8C8C8; color:#181818;} :root[data-theme="dark"] .tp-c.late{background:#8A8A8A; color:#000;}
@@ -6328,7 +6330,7 @@ function renderTeamRounds(recs, now){
   const left = rows.filter(r => r.cells[2].k === 'wait').map(r => r.n);
   el.innerHTML = `<details class="cov-box tp-box"${tpOpen ? ' open' : ''}><summary>팀콘 기획서 제출<span class="tp-sum">${md(rounds[2])} 자정 마감 <b>${rows.length - left.length}/${rows.length}명 제출</b>${left.length ? ', 아직 ' + left.map(esc).join(', ') : ''}</span></summary>
     <table class="tp-t"><tr><th>팀장</th>${rounds.map((d,i) => `<th class="${i === 2 ? 'now' : ''}">${md(d)}</th>`).join('')}</tr>
-    ${rows.map(r => `<tr><td>${esc(r.n)}${nb(r.n)}</td>${r.cells.map(c => `<td>${c.t ? `<button type="button" class="tp-go" data-tp="${esc(c.id)}" aria-label="${esc(r.n)} 기획서 열기"><span class="tp-c ${c.k}">${L[c.k]}</span><small>${at(c.t)}</small></button>` : `<span class="tp-c ${c.k}">${L[c.k]}</span>`}</td>`).join('')}</tr>`).join('')}</table></details>`;
+    ${rows.map(r => `<tr><td><div class="tp-cell tp-name"><span>${esc(r.n)}${nb(r.n)}</span><small>&nbsp;</small></div></td>${r.cells.map(c => `<td>${c.t ? `<button type="button" class="tp-cell tp-go" data-tp="${esc(c.id)}" aria-label="${esc(r.n)} 기획서 열기"><span class="tp-c ${c.k}">${L[c.k]}</span><small>${at(c.t)}</small></button>` : `<div class="tp-cell"><span class="tp-c ${c.k}">${L[c.k]}</span><small>&nbsp;</small></div>`}</td>`).join('')}</tr>`).join('')}</table></details>`;
   el.querySelector('details').addEventListener('toggle', e => { tpOpen = e.target.open; });
   el.querySelectorAll('[data-tp]').forEach(b => b.addEventListener('click', () => {
     const rec = recs.find(r => r.id === b.dataset.tp); if(!rec) return;

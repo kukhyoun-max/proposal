@@ -2409,8 +2409,24 @@
   .tp-go{border:none; background:none; cursor:pointer; font-family:inherit;}
   .tp-go:hover small{color:var(--ink); text-decoration:underline;}
   .tp-go:focus-visible{outline:2px solid var(--ink); outline-offset:-2px; border-radius:6px;}
-  .tp-c{display:block; box-sizing:border-box; min-width:56px; max-width:100%; height:24px; line-height:24px; border-radius:7px; padding:0 8px; font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .tp-c{display:block; box-sizing:border-box; width:72px; max-width:100%; height:24px; line-height:24px; border-radius:7px; padding:0 4px; font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .tp-c.ok{background:#181818; color:#fff;} .tp-c.late{background:#6B6B6B; color:#fff;} .tp-c.miss{background:#F2CE00; color:#000;}
+  .tp-c.why{box-shadow:inset 0 0 0 1.5px var(--ink-soft); color:var(--ink);}
+  #tpModal{display:none; position:fixed; inset:0; background:rgba(25,25,25,0.5); align-items:center; justify-content:center; z-index:900; padding:24px;}
+  #tpModal .modal-box{background:#fff; border-radius:16px; padding:20px; max-width:340px; width:100%; box-sizing:border-box;}
+  #tpModal h3{margin:0 0 4px; font-size:16px; font-weight:700; color:var(--ink);}
+  #tpModal .tp-help{margin:0 0 14px; font-size:12.5px; line-height:1.5; color:var(--ink-soft); word-break:keep-all;}
+  .tp-why{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;}
+  .tp-why button, .tp-own button{min-height:44px; border:1.5px solid var(--line); border-radius:8px; background:none; color:var(--ink); font:500 14px 'Noto Sans KR',sans-serif; cursor:pointer; white-space:nowrap;}
+  .tp-why button:last-child:nth-child(odd){grid-column:1 / -1;}
+  .tp-why button:hover{border-color:var(--ink);}
+  .tp-why button[aria-pressed="true"]{background:#181818; border-color:#181818; color:#fff; font-weight:700;}
+  .tp-own{display:flex; gap:8px; margin-bottom:16px;}
+  #tpModal .tp-own input{flex:1; min-width:0; margin:0; min-height:44px; box-sizing:border-box; font-size:16px; background:none;}
+  .tp-own button{flex:none; padding:0 16px;}
+  .tp-why button:focus-visible, .tp-own button:focus-visible{outline:2px solid var(--ink); outline-offset:2px;}
+  :root[data-theme="dark"] #tpModal .modal-box{background:#2A2A2A; border:1px solid #444;}
+  :root[data-theme="dark"] .tp-why button[aria-pressed="true"]{background:#C8C8C8; border-color:#C8C8C8; color:#181818;}
   .tp-c.wait{box-shadow:inset 0 0 0 1.5px var(--line); color:var(--ink-soft);} .tp-c.over{box-shadow:inset 0 0 0 1.5px #F2CE00; color:var(--ink);}
   :root[data-theme="dark"] .tp-c.ok{background:#C8C8C8; color:#181818;} :root[data-theme="dark"] .tp-c.late{background:#8A8A8A; color:#000;}
 </style>
@@ -3148,6 +3164,15 @@
       <button type="button" class="modal-cancel" id="ppBack">취소</button>
       <button type="button" class="modal-ok" id="ppNext">다음</button>
     </div>
+  </div>
+</div>
+<div id="tpModal" role="dialog" aria-modal="true" aria-labelledby="tpWhyHead">
+  <div class="modal-box">
+    <h3 id="tpWhyHead"></h3>
+    <p class="tp-help">고른 사유가 「미제출」 대신 보여요. 점수는 바뀌지 않아요.</p>
+    <div class="tp-why" id="tpWhyList"></div>
+    <div class="tp-own"><input type="text" id="tpWhyInput" maxlength="12" placeholder="다른 사유 (12자까지)" aria-label="다른 사유"><button type="button" id="tpWhyOk">저장</button></div>
+    <div class="modal-actions"><button type="button" class="modal-cancel" id="tpWhyClear">미제출로 되돌리기</button><button type="button" class="modal-cancel" id="tpWhyCancel">닫기</button></div>
   </div>
 </div>
 <div id="confirmModal">
@@ -6287,6 +6312,7 @@ async function loadSubmissions(){
     items.sort((a,b)=> (b.rec.submittedAt||'').localeCompare(a.rec.submittedAt||''));
     try{ renderAreaCoverage(items.map(i=>i.rec)); }catch(e){ console.error('coverage failed:', e); }
     try{ renderTeamRounds(items.map(i=>i.rec)); }catch(e){ console.error('team rounds failed:', e); }
+    tpLoadReasons();
     renderAdminList(items);
   }catch(e){
     console.error('loadSubmissions failed:', e);
@@ -6319,19 +6345,73 @@ function tpRounds(recs, now){
   return { rounds, rows };
 }
 let tpOpen = false;   // 펼친 상태는 목록을 다시 그려도 유지
+// 미제출 사유(「팀콘회차사유」 탭, 전체 관리자만, 서버 Round.gs). 못 읽으면 사유 고르기 없이 미제출로만 보임
+let tpReasons = {}, tpCanReason = false, tpLast = null;
+const TP_WHY = ['시험', '일정 조정', '개인 사정', '팀 변경', '회차 쉼'];
+async function tpLoadReasons(){
+  try{
+    const r = await attendJsonpRaw({ action:'tpReasonList', tk: adminToken() });
+    if(!r || !r.ok) return;
+    tpReasons = r.reasons || {}; tpCanReason = true;
+    if(tpLast) renderTeamRounds(tpLast);
+  }catch(e){}
+}
+function tpPickReason(round, name){
+  return new Promise(resolve => {
+    const $id = x => document.getElementById(x), m = $id('tpModal'), inp = $id('tpWhyInput'), cur = tpReasons[round + '|' + name] || '';
+    $id('tpWhyHead').textContent = name + ' ' + mtFmt(round) + ' 회차';
+    inp.value = cur && !TP_WHY.includes(cur) ? cur : '';
+    $id('tpWhyList').innerHTML = TP_WHY.map(w => `<button type="button" data-w="${w}" aria-pressed="${w === cur}">${w}</button>`).join('');
+    $id('tpWhyClear').style.display = cur ? '' : 'none';
+    m.style.display = 'flex';
+    const done = v => { m.style.display = 'none'; m.onclick = null; document.removeEventListener('keydown', onKey); resolve(v); };
+    const onKey = e => {
+      if(e.key === 'Escape') done(null);
+      if(e.key === 'Enter' && e.target === inp && !e.isComposing && inp.value.trim()) done(inp.value.trim());
+    };
+    document.addEventListener('keydown', onKey);
+    m.onclick = e => {
+      const b = e.target.closest('[data-w]');
+      if(b) return done(b.dataset.w);
+      if(e.target.id === 'tpWhyOk'){ const v = inp.value.trim(); if(!v) return inp.focus(); return done(v); }
+      if(e.target.id === 'tpWhyClear') return done('');
+      if(e.target === m || e.target.id === 'tpWhyCancel') done(null);
+    };
+    m.querySelector('#tpWhyList button').focus({ preventScroll:true });
+  });
+}
+async function tpSaveReason(round, name){
+  const v = await tpPickReason(round, name); if(v === null) return;
+  const key = round + '|' + name, prev = tpReasons[key] || ''; if(v === prev) return;
+  const put = x => { if(x) tpReasons[key] = x; else delete tpReasons[key]; if(tpLast) renderTeamRounds(tpLast); };
+  put(v);
+  try{
+    const res = await fetch(ATTEND_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'tpReasonSave', round, name, reason: v }) });
+    const r = await res.json();
+    if(!r || !r.ok) throw new Error(r && r.error === 'auth' ? '관리자 로그인이 만료됐어요. 다시 들어와 주세요.' : '저장하지 못했어요. 다시 눌러 주세요.');
+    showToast(v ? `${name} 「${v}」로 바꿨어요` : `${name} 미제출로 되돌렸어요`);
+  }catch(e){ put(prev); showAlert(/^(관리자|저장)/.test(e && e.message || '') ? e.message : '저장하지 못했어요. 다시 눌러 주세요.'); }
+}
 function renderTeamRounds(recs, now){
   now = now || Date.now();
   const el = document.getElementById('tpRound'); if(!el) return;
+  tpLast = recs;
   const { rounds, rows } = tpRounds(recs, now);
   if(!rows.length){ el.innerHTML = ''; return; }
   const kst = t => new Date(t + 9 * 36e5), md = t => { const d = kst(t - 1); return (d.getUTCMonth()+1) + '/' + d.getUTCDate() + '(' + '일월화수목금토'[d.getUTCDay()] + ')'; };
   const at = t => { const d = kst(t); return (d.getUTCMonth()+1) + '/' + d.getUTCDate() + ' ' + String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0'); };
   const L = { ok:'제출', late:'지각', miss:'미제출', wait:'아직', over:'마감 지남' };
+  const ymd = t => kst(t - 1).toISOString().slice(0, 10);
+  const missCell = (n, d) => {
+    const why = tpReasons[ymd(d) + '|' + n] || '';
+    return `<button type="button" class="tp-cell tp-go" data-why="${ymd(d)}" data-n="${esc(n)}" title="${esc(why)}"><span class="tp-c ${why ? 'why' : 'miss'}">${esc(why || L.miss)}</span><small>${why ? '사유 변경' : '사유 선택'}</small></button>`;
+  };
   const left = rows.filter(r => r.cells[2].k === 'wait').map(r => r.n);
   el.innerHTML = `<details class="cov-box tp-box"${tpOpen ? ' open' : ''}><summary>팀콘 기획서 제출<span class="tp-sum">${md(rounds[2])} 자정 마감 <b>${rows.length - left.length}/${rows.length}명 제출</b>${left.length ? ', 아직 ' + left.map(esc).join(', ') : ''}</span></summary>
     <table class="tp-t"><tr><th>팀장</th>${rounds.map((d,i) => `<th class="${i === 2 ? 'now' : ''}">${md(d)}</th>`).join('')}</tr>
-    ${rows.map(r => `<tr><td><div class="tp-cell tp-name"><span>${esc(r.n)}${nb(r.n)}</span><small>&nbsp;</small></div></td>${r.cells.map(c => `<td>${c.t ? `<button type="button" class="tp-cell tp-go" data-tp="${esc(c.id)}" aria-label="${esc(r.n)} 기획서 열기"><span class="tp-c ${c.k}">${L[c.k]}</span><small>${at(c.t)}</small></button>` : `<div class="tp-cell"><span class="tp-c ${c.k}">${L[c.k]}</span><small>&nbsp;</small></div>`}</td>`).join('')}</tr>`).join('')}</table></details>`;
+    ${rows.map(r => `<tr><td><div class="tp-cell tp-name"><span>${esc(r.n)}${nb(r.n)}</span><small>&nbsp;</small></div></td>${r.cells.map((c, i) => `<td>${c.k === 'miss' && tpCanReason ? missCell(r.n, rounds[i]) : c.t ? `<button type="button" class="tp-cell tp-go" data-tp="${esc(c.id)}" aria-label="${esc(r.n)} 기획서 열기"><span class="tp-c ${c.k}">${L[c.k]}</span><small>${at(c.t)}</small></button>` : `<div class="tp-cell"><span class="tp-c ${c.k}">${L[c.k]}</span><small>&nbsp;</small></div>`}</td>`).join('')}</tr>`).join('')}</table></details>`;
   el.querySelector('details').addEventListener('toggle', e => { tpOpen = e.target.open; });
+  el.querySelectorAll('[data-why]').forEach(b => b.addEventListener('click', () => tpSaveReason(b.dataset.why, b.dataset.n)));
   el.querySelectorAll('[data-tp]').forEach(b => b.addEventListener('click', () => {
     const rec = recs.find(r => r.id === b.dataset.tp); if(!rec) return;
     detailFromAdmin = true; showView('status'); renderStatusDetail(rec.id, rec); window.scrollTo(0, 0);

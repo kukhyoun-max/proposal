@@ -4971,6 +4971,8 @@ function ovYmd(v){
   return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
 }
 function ovFmt(ymd){ const d = new Date(ymd + 'T00:00:00'); return (d.getMonth()+1) + '/' + d.getDate() + '(' + '일월화수목금토'[d.getDay()] + ')'; }
+// 쉬는 팀콘 기획서 회차(마감 목요일). 홈 마감 카드와 기획서 관리 회차 표가 함께 씀 — 12/10은 기말시험(12/14~19) 직전이라 쉼(2026-11-25 담당자)
+function tpOff(ymd){ return ['2026-12-10'].includes(ymd); }
 function ovRenderDeadline(){
   const p = n => String(n).padStart(2,'0');
   const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -4981,12 +4983,12 @@ function ovRenderDeadline(){
   const cards = DL.map(x => {
     let diff = (x.dow - today.getDay() + 7) % 7;   // 오늘이 마감일이면 0
     if(diff === 0 && now.getHours() + now.getMinutes() / 60 >= x.hour) diff = 7;   // 마감 시각이 지나면 다음 주로
-    if(x.every){   // 격주: 기준일에서 2주 배수인 목요일만
+    if(x.every){   // 격주: 기준일에서 2주 배수인 목요일만, 쉬는 회차는 건너뜀
       const a = new Date(x.anchor + 'T00:00:00');
-      for(let i = 0; i < x.every; i++){
+      for(let i = 0; i < 26; i++){
         const d = new Date(today); d.setDate(today.getDate() + diff);
         const wk = Math.round((d - a) / 86400000 / 7);
-        if(((wk % x.every) + x.every) % x.every === 0) break;
+        if(((wk % x.every) + x.every) % x.every === 0 && !tpOff(d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()))) break;
         diff += 7;
       }
     }
@@ -6322,21 +6324,24 @@ async function loadSubmissions(){
 
 // 팀콘 기획서 회차(격주 목요일 자정 마감) × 팀장 — 관리자 검토에서 보기만. 점수와 연결하지 않음
 const TP_ANCHOR = Date.parse('2026-11-27T00:00:00+09:00'), TP_STEP = 14 * 864e5, TP_LATE = (3 * 24 + 18) * 36e5;   // 목 24시 = 금 0시, 다음 월요일 18시 회의 전까지 지각
+const tpOffAt = due => tpOff(new Date(due - 1 + 9 * 36e5).toISOString().slice(0, 10));
+const tpPrev = due => { do due -= TP_STEP; while(tpOffAt(due)); return due; };
+const tpDue = t => { let d = TP_ANCHOR + Math.ceil((t - TP_ANCHOR) / TP_STEP) * TP_STEP; while(tpOffAt(d)) d += TP_STEP; return d; };   // 그 시각이 속한 회차의 마감
 function tpRounds(recs, now){
-  const cur = TP_ANCHOR + Math.ceil((now - TP_ANCHOR) / TP_STEP) * TP_STEP;
+  const cur = tpDue(now);
   // 마감 직후(월 18시 전)에는 막 끝난 회차도 화면에 남음: 끝난 회차 2개 + 지금 회차
-  const rounds = [cur - 2 * TP_STEP, cur - TP_STEP, cur];
+  const rounds = [tpPrev(tpPrev(cur)), tpPrev(cur), cur];
   const by = {};
   recs.forEach(r => {
     const t = Date.parse(r.submittedAt), n = String(r.lead || r.name || '').split(/[,/]/)[0].trim();
     if(!n || !t || r.category === 'original') return;
     (by[n] = by[n] || []).push({ t, id: r.id });
   });
-  const leads = Object.keys(by).filter(n => by[n].filter(p => p.t > now - 90 * 864e5).length >= 2 || by[n].some(p => p.t > cur - 2 * TP_STEP));
+  const leads = Object.keys(by).filter(n => by[n].filter(p => p.t > now - 90 * 864e5).length >= 2 || by[n].some(p => p.t > rounds[0]));
   const rows = leads.filter(n => !AMBASSADOR_ROSTER.length || AMBASSADOR_ROSTER.includes(n)).sort((a,b) => a.localeCompare(b,'ko')).map(n => {
     const got = {};
     by[n].sort((a,b) => a.t - b.t).forEach(({ t, id }) => {
-      const due = TP_ANCHOR + Math.ceil((t - TP_ANCHOR) / TP_STEP) * TP_STEP, prev = due - TP_STEP;
+      const due = tpDue(t), prev = tpPrev(due);
       if(t - prev < TP_LATE && !got[prev]){ got[prev] = { t, id, late: true }; return; }   // 앞 회차를 안 냈으면 월요일 18시 전 제출은 앞 회차 지각
       if(!got[due]) got[due] = { t, id, late: false };
     });

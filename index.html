@@ -3927,26 +3927,45 @@ function normalizeDateStr(val){
   return s;
 }
 
+// 2026-11-26 담당자 「속도 개선」: 장비 단계에 올 때마다 예약 현황(서버 2~3초)을 기다리느라 목록이 비어 있었음.
+// 지난번 받은 예약 현황으로 목록을 먼저 그리고, 최신 답이 오면 「예약됨」 표시만 다시 맞춘다.
+let equipPickSeq = 0;
 async function renderEquipmentPicker(){
   const wrap = document.getElementById('equipmentPicker');
   const hint = document.getElementById('equipHint');
-  wrap.innerHTML = '<p class="equip-loading">예약 현황 확인 중...</p>';
-
-  let bookedLabels = new Set();
-  let fetchFailed = false;
-  if(data.filmdate){
-    try{
-      const res = await attendJsonp({ action:'equipList' });
-      const a0 = data.filmdate + ' ' + (data.filmfrom || '00:00'), a1 = data.filmdate + ' ' + (data.filmto || '23:59');
-      (res.items || []).forEach(it => { const [b0, b1] = eqSpan(it); if(b0 < a1 && a0 < b1) bookedLabels.add(Number(it.label)); });
-      hint.textContent = mtFmt(data.filmdate) + ' ' + (data.filmfrom || '') + (data.filmto ? '~' + data.filmto : '') + ' 에 이미 대여된 장비는 선택할 수 없어요.';
-    }catch(e){
-      fetchFailed = true;
-      hint.textContent = '예약 현황을 불러오지 못했어요 — 중복 예약이 있을 수 있으니 담당자에게 한 번 더 확인해주세요.';
-    }
-  }else{
+  const seq = ++equipPickSeq;
+  const bookedOf = res => { const set = new Set();
+    const a0 = data.filmdate + ' ' + (data.filmfrom || '00:00'), a1 = data.filmdate + ' ' + (data.filmto || '23:59');
+    ((res && res.items) || []).forEach(it => { const [b0, b1] = eqSpan(it); if(b0 < a1 && a0 < b1) set.add(Number(it.label)); });
+    return set; };
+  const when = () => mtFmt(data.filmdate) + ' ' + (data.filmfrom || '') + (data.filmto ? '~' + data.filmto : '');
+  if(!data.filmdate){
     hint.textContent = '촬영일을 먼저 선택하면 예약 현황을 확인해드려요.';
+    equipPickerDraw(new Set());
+    return;
   }
+  const mem = attendCache.get(JSON.stringify({ action:'equipList' }));
+  const cached = (mem && Date.now() - mem.t < 60000) ? null : attCacheGet({ action:'equipList' });   // 방금 받은 답이 있으면 그걸 바로 씀
+  if(cached && !cached.error){
+    try{ equipPickerDraw(bookedOf(cached)); hint.textContent = when() + ' 예약 현황을 다시 확인하고 있어요.'; }catch(e){ wrap.innerHTML = '<p class="equip-loading">예약 현황 확인 중...</p>'; }
+  }else if(!wrap.querySelector('.equip-group')){ wrap.innerHTML = '<p class="equip-loading">예약 현황 확인 중...</p>'; }
+  try{
+    const res = await attendJsonp({ action:'equipList' });
+    if(seq !== equipPickSeq) return;   // 그사이 다시 그리기 시작했으면 새 쪽에 맡김
+    if(res && res.error) throw new Error(res.error);
+    equipPickerDraw(bookedOf(res));
+    hint.textContent = when() + ' 에 이미 대여된 장비는 선택할 수 없어요.';
+  }catch(e){
+    if(seq !== equipPickSeq) return;
+    if(!(cached && !cached.error)) equipPickerDraw(new Set());
+    hint.textContent = '예약 현황을 불러오지 못했어요 — 중복 예약이 있을 수 있으니 담당자에게 한 번 더 확인해주세요.';
+  }
+}
+function equipPickerDraw(bookedLabels){
+  const wrap = document.getElementById('equipmentPicker');
+  // 다시 그려도 펼쳐 둔 묶음은 그대로
+  const openCats = new Set([...wrap.querySelectorAll('.equip-group-body.open')].map(b => b.previousElementSibling && b.previousElementSibling.dataset.cat));
+  const hadGroups = !!wrap.querySelector('.equip-group');
 
   const selected = selectedEquipmentLabels();
   const cats = [];
@@ -3968,7 +3987,7 @@ async function renderEquipmentPicker(){
         </label>
       `;
     }).join('');
-    const openByDefault = selectedCount > 0;
+    const openByDefault = hadGroups ? openCats.has(cat) : selectedCount > 0;
     return `
       <div class="equip-group">
         <button type="button" class="equip-group-header" data-cat="${cat}">
@@ -8365,26 +8384,48 @@ function eqRowHTML(it, showDate, inTeam){
     <button class="ab-btn" data-eq="${abEsc(it.id)}">수정</button></div>`;
 }
 function eqBindRows(el){ el.querySelectorAll('[data-eq]').forEach(b => b.addEventListener('click', ()=>eqOpen(eqItems.find(x => x.id === b.dataset.eq)))); }
-async function eqLoad(){
-  document.getElementById('eqInfo').textContent = '불러오는 중...';
-  try{
-    attendCache.delete(JSON.stringify({ action:'equipList' }));   // 일정·장비 화면은 열 때마다 최신 대여 목록으로
-    const ok = r => (r && !r.error) ? r : {};
-    const [res, rows, evr, tkr, acr] = await jjLoading(Promise.all([attendJsonp({ action:'equipList' }), sheetGetAll().catch(()=>[]),
-      attendJsonp({ action:'eventList' }).then(ok).catch(()=>({})), attendJsonp({ action:'taskList' }).then(ok).catch(()=>({})), acadLoad()]));
-    if(res && res.error) throw new Error(res.error);
-    // 다른 부서 대여는 관리자 탭에서만 부서 이름이 보임. 홍보대사 화면엔 「홍보실 사용」으로만 (2026-11-18 담당자 「홍보실에서 사용하는 걸로 보여주면 될 거 같음」)
-    const eqRo = document.getElementById('equipView').classList.contains('ro');
-    eqItems = (res.items || []).map(it => (eqRo && eqIsDept(it)) ? Object.assign({}, it, { who: '홍보실', memo: '', mask: true }) : it);
-    eqBuildEvents(rows || []);
-    eqAddDuty(evr.events || [], tkr.tasks || []);
-    eqAddAcad(acr);
-    eqAddCalDuty(ACAD_DUTY);
-    document.getElementById('eqInfo').textContent = '';
-  }catch(e){ document.getElementById('eqInfo').textContent = '불러오기 실패: ' + (e && e.message ? e.message : '오류'); }
+// 2026-11-26 담당자 「속도 개선」: 열 때마다 서버 4곳 답(2~3초)을 기다리던 화면. 지난번 받은 내용을 먼저 그리고, 최신 답이 오면 다시 그린다.
+// 저장 직후(fresh=true)에는 옛 목록을 다시 그리지 않고 예전처럼 새 답만 기다린다.
+function eqPlanCached(){ if(planMem) return planMem; try{ const c = JSON.parse(localStorage.getItem(PLAN_CACHE_KEY) || 'null'); return c && Array.isArray(c.rows) ? c.rows : null; }catch(e){ return null; } }
+function eqApply(res, rows, evr, tkr, acr){
+  // 다른 부서 대여는 관리자 탭에서만 부서 이름이 보임. 홍보대사 화면엔 「홍보실 사용」으로만 (2026-11-18 담당자 「홍보실에서 사용하는 걸로 보여주면 될 거 같음」)
+  const eqRo = document.getElementById('equipView').classList.contains('ro');
+  eqItems = (res.items || []).map(it => (eqRo && eqIsDept(it)) ? Object.assign({}, it, { who: '홍보실', memo: '', mask: true }) : it);
+  eqBuildEvents(rows || []);
+  eqAddDuty(evr.events || [], tkr.tasks || []);
+  eqAddAcad(acr);
+  eqAddCalDuty(ACAD_DUTY);
   if(!eqMonth) eqMonth = mtYmd(new Date()).slice(0, 7);
   if(!eqDay) eqDay = mtYmd(new Date());
   eqRender();
+}
+async function eqLoad(fresh){
+  const info = document.getElementById('eqInfo');
+  const ok = r => (r && !r.error) ? r : {};
+  let shown = false;
+  if(!fresh){
+    try{
+      const cEq = attCacheGet({ action:'equipList' }), cRows = eqPlanCached();
+      if(cEq && !cEq.error && cRows){
+        const cAc = attCacheGet({ action:'academic' });
+        if(cAc && Array.isArray(cAc.duty) && !ACAD_DUTY.length) ACAD_DUTY = cAc.duty;
+        eqApply(cEq, cRows, ok(attCacheGet({ action:'eventList' })), ok(attCacheGet({ action:'taskList' })), ACAD || (cAc && !cAc.error && Array.isArray(cAc.items) ? cAc.items : []));
+        shown = true;
+      }
+    }catch(e){ shown = false; }
+  }
+  info.textContent = shown ? '최신 기록 확인 중...' : '불러오는 중...';
+  try{
+    attendCache.delete(JSON.stringify({ action:'equipList' }));   // 일정·장비 화면은 열 때마다 최신 대여 목록으로
+    const all = Promise.all([attendJsonp({ action:'equipList' }), sheetGetAll().catch(()=>[]),
+      attendJsonp({ action:'eventList' }).then(ok).catch(()=>({})), attendJsonp({ action:'taskList' }).then(ok).catch(()=>({})), acadLoad()]);
+    const [res, rows, evr, tkr, acr] = await (shown ? all : jjLoading(all));
+    if(res && res.error) throw new Error(res.error);
+    eqApply(res, rows, evr, tkr, acr);
+    info.textContent = '';
+    return;
+  }catch(e){ info.textContent = shown ? '최신 기록을 받지 못해 지난번 내용을 보여 드려요' : '불러오기 실패: ' + (e && e.message ? e.message : '오류'); }
+  if(!shown){ if(!eqMonth) eqMonth = mtYmd(new Date()).slice(0, 7); if(!eqDay) eqDay = mtYmd(new Date()); eqRender(); }
 }
 // 콘텐츠 제작 일정: 기획서별 촬영일 → 영상 제출일 기간을 막대로 (구글 캘린더처럼)
 let eqSpans = [];
@@ -8830,7 +8871,7 @@ async function eqSaveForm(){
     document.getElementById('eqForm').style.display = 'none';
     if(eqMode === 'cal'){ eqDay = start; eqMonth = start.slice(0, 7); }
     showToast(`다른 부서 대여 ${labels.length}개를 저장했어요 · 달력은 곧 바뀌어요`);
-    bgSave('대여 저장', () => eqPost(body)).then(() => eqLoad());
+    bgSave('대여 저장', () => eqPost(body)).then(() => eqLoad(true));
     return;
   }
   if(eqBulk && eqIsDept(eqBulk[0])){
@@ -8847,7 +8888,7 @@ async function eqSaveForm(){
     document.getElementById('eqForm').style.display = 'none';
     if(eqMode === 'cal'){ eqDay = start; eqMonth = start.slice(0, 7); }
     showToast('대여를 저장했어요 · 달력은 곧 바뀌어요');
-    bgSave('대여 저장', async () => { await eqPost({ action:'equipSaveMany', items: keep }); if(drop.length) await eqPost({ action:'equipDeleteMany', items: drop }); }).then(() => eqLoad());
+    bgSave('대여 저장', async () => { await eqPost({ action:'equipSaveMany', items: keep }); if(drop.length) await eqPost({ action:'equipDeleteMany', items: drop }); }).then(() => eqLoad(true));
     return;
   }
   if(eqBulk){
@@ -8859,7 +8900,7 @@ async function eqSaveForm(){
     document.getElementById('eqForm').style.display = 'none';
     eqDay = start; eqMonth = start.slice(0, 7);
     showToast('대여를 저장했어요 · 달력은 곧 바뀌어요');
-    bgSave('대여 저장', () => eqPost(body)).then(() => eqLoad());
+    bgSave('대여 저장', () => eqPost(body)).then(() => eqLoad(true));
     return;
   }
   const cand = { id: it ? it.id : '_new', label, start, end, from, to };
@@ -8870,7 +8911,7 @@ async function eqSaveForm(){
   document.getElementById('eqForm').style.display = 'none';
   if(eqMode === 'cal'){ eqDay = start; eqMonth = start.slice(0, 7); }
   showToast('대여를 저장했어요 · 달력은 곧 바뀌어요');
-  bgSave('대여 저장', () => eqPost(body)).then(() => eqLoad());
+  bgSave('대여 저장', () => eqPost(body)).then(() => eqLoad(true));
 }
 async function eqRemove(){
   const it = eqEditing; if(!it) return;
@@ -8880,14 +8921,14 @@ async function eqRemove(){
     const ids = new Set(eqBulk.map(x => x.id));
     eqItems = eqItems.filter(x => !ids.has(x.id)); document.getElementById('eqForm').style.display = 'none'; eqRender();
     showToast('대여를 뺐어요');
-    bgSave('대여 빼기', () => eqPost(body)).then(() => eqLoad());
+    bgSave('대여 빼기', () => eqPost(body)).then(() => eqLoad(true));
     return;
   }
   if(!(await showConfirm(`${eqLabelText(it.label)} 대여(${mtFmt(it.start)})를 ${it.planId ? '달력에서 뺄까요? 기획서 내용은 그대로예요.' : '삭제할까요?'}`))) return;
   const body = { action:'equipDelete', id: it.id, planId: it.planId || '', label: it.label, name: it.name || '' };
   eqItems = eqItems.filter(x => x.id !== it.id); document.getElementById('eqForm').style.display = 'none'; eqRender();
   showToast(it.planId ? '달력에서 뺐어요' : '삭제했어요');
-  bgSave('대여 삭제', () => eqPost(body)).then(() => eqLoad());
+  bgSave('대여 삭제', () => eqPost(body)).then(() => eqLoad(true));
 }
 document.getElementById('eqNew').addEventListener('click', ()=>eqOpen(null));
 document.getElementById('eqSave').addEventListener('click', eqSaveForm);
